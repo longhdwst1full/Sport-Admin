@@ -6,9 +6,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreateRoleDto {
+export interface CreateBrandDto {
   code: string;
   name: string;
+  slug: string;
   description?: string;
-  permissionCodes: string[];
+  logoAssetId?: string;
 }
