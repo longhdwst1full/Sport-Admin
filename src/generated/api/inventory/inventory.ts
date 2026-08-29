@@ -25,11 +25,10 @@ import type {
   CreateStockAdjustmentDto,
   InventoryBalanceListDto,
   StockAdjustmentResultDto,
-} from '.././models';
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
-
 /**
  * @summary List warehouse balances
  */

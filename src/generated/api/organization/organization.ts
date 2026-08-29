@@ -27,11 +27,10 @@ import type {
   CreateBranchDto,
   ErrorResponseDto,
   WarehouseListDto,
-} from '.././models';
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
-
 /**
  * @summary List sales branches
  */
@@ -222,6 +221,7 @@ export const useCreateAdminBranchWithWarehouse = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
 /**
  * @summary List branch warehouses
  */

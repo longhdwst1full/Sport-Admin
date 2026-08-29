@@ -18,11 +18,10 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { SystemModuleListDto } from '.././models';
+import type { SystemModuleListDto } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
-
 /**
  * @summary List V1 business modules and models
  */

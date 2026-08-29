@@ -27,11 +27,10 @@ import type {
   ProductDetailDto,
   ProductListResponseDto,
   UpdateProductDto,
-} from '.././models';
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
-
 /**
  * @summary List products for admin
  */
@@ -227,6 +226,7 @@ export const useCreateAdminProduct = <TError = ErrorType<unknown>, TContext = un
 
   return useMutation(mutationOptions, queryClient);
 };
+
 /**
  * @summary Update product
  */

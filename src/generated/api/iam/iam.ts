@@ -30,11 +30,10 @@ import type {
   RoleListDto,
   UserListDto,
   UserRoleAssignmentDto,
-} from '.././models';
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
-
 /**
  * @summary List staff users with role scopes
  */
@@ -317,6 +316,7 @@ export const useCreateAdminRole = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
 /**
  * @summary List stable permission codes
  */

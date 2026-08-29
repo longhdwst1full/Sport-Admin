@@ -21,11 +21,10 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { ContentPostDto, ContentPostListDto, CreateContentPostDto } from '.././models';
+import type { ContentPostDto, ContentPostListDto, CreateContentPostDto } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
-
 /**
  * @summary List posts for administration
  */

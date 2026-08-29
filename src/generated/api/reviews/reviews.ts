@@ -21,11 +21,10 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { ModerateReviewDto, ProductReviewDto, ProductReviewListDto } from '.././models';
+import type { ModerateReviewDto, ProductReviewDto, ProductReviewListDto } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
-
 /**
  * @summary List reviews for moderation
  */

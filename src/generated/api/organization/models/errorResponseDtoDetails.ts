@@ -6,9 +6,4 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface HealthResponseDto {
-  status: string;
-  service: string;
-  version: string;
-  timestamp: string;
-}
+export type ErrorResponseDtoDetails = { [key: string]: unknown };
