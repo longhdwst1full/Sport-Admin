@@ -6,13 +6,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreateCategoryDto {
-  parentId?: string;
-  code: string;
-  name: string;
-  slug: string;
+export interface UpdateBrandDto {
+  name?: string;
+  slug?: string;
   description?: string;
-  imageAssetId?: string;
+  logoAssetId?: string;
   /** @minimum 0 */
-  sortOrder?: number;
+  expectedVersion: number;
 }

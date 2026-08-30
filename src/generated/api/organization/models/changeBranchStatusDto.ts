@@ -6,13 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreateCategoryDto {
-  parentId?: string;
-  code: string;
-  name: string;
-  slug: string;
-  description?: string;
-  imageAssetId?: string;
+export interface ChangeBranchStatusDto {
   /** @minimum 0 */
-  sortOrder?: number;
+  expectedVersion: number;
+  /** @minimum 0 */
+  warehouseExpectedVersion: number;
 }

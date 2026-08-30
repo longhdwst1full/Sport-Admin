@@ -6,13 +6,8 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreateCategoryDto {
-  parentId?: string;
+export interface ErrorDetailDto {
+  field?: string;
   code: string;
-  name: string;
-  slug: string;
-  description?: string;
-  imageAssetId?: string;
-  /** @minimum 0 */
-  sortOrder?: number;
+  message: string;
 }
