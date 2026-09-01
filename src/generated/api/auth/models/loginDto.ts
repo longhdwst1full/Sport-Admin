@@ -7,7 +7,14 @@
  */
 
 export interface LoginDto {
-  email: string;
-  /** @minLength 8 */
+  /**
+   * Email or Vietnamese phone number
+   * @maxLength 255
+   */
+  identifier: string;
+  /**
+   * @minLength 8
+   * @maxLength 128
+   */
   password: string;
 }
