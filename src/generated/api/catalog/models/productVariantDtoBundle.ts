@@ -5,10 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { ProductBundleDto } from './productBundleDto';
 
-export interface CreatePriceDto {
-  /** VAT-included VND amount greater than zero */
-  amount: string;
-  startsAt: string;
-  endsAt?: string;
-}
+/**
+ * @nullable
+ */
+export type ProductVariantDtoBundle = ProductBundleDto | null;

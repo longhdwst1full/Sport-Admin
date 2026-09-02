@@ -6,9 +6,12 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreatePriceDto {
+export interface ReplacePriceDto {
   /** VAT-included VND amount greater than zero */
   amount: string;
   startsAt: string;
   endsAt?: string;
+  expectedCurrentPriceId: string;
+  /** @minimum 0 */
+  expectedCurrentPriceVersion: number;
 }
