@@ -6,7 +6,8 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface RefreshTokenDto {
-  /** Required in BODY transport; omitted when the refresh token is in HttpOnly cookie */
-  refreshToken?: string;
+export interface ErrorDetailDto {
+  field?: string;
+  code: string;
+  message: string;
 }

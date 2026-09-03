@@ -5,8 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { ProductPriceWindowDto } from './productPriceWindowDto';
 
-export interface RefreshTokenDto {
-  /** Required in BODY transport; omitted when the refresh token is in HttpOnly cookie */
-  refreshToken?: string;
-}
+/**
+ * @nullable
+ */
+export type ProductPriceTimelineDtoCurrent = ProductPriceWindowDto | null;

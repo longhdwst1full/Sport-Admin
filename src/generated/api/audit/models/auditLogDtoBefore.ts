@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface RefreshTokenDto {
-  /** Required in BODY transport; omitted when the refresh token is in HttpOnly cookie */
-  refreshToken?: string;
-}
+/**
+ * @nullable
+ */
+export type AuditLogDtoBefore = { [key: string]: unknown } | null;

@@ -5,8 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { AuditLogDto } from './auditLogDto';
 
-export interface RefreshTokenDto {
-  /** Required in BODY transport; omitted when the refresh token is in HttpOnly cookie */
-  refreshToken?: string;
+export interface AuditListDto {
+  items: AuditLogDto[];
+  /** @nullable */
+  nextCursor?: string | null;
 }
