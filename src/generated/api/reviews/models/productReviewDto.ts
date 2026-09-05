@@ -21,6 +21,10 @@ export interface ProductReviewDto {
   content: string;
   verifiedPurchase: boolean;
   status: ProductReviewDtoStatus;
+  /** @minimum 0 */
+  version: number;
+  moderationReason?: string;
+  moderatedAt?: string;
   comments: ReviewCommentDto[];
   createdAt: string;
 }

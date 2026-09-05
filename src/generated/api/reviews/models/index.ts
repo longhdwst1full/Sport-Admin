@@ -6,6 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './deleteReviewDto';
+export * from './errorDetailDto';
+export * from './errorResponseDto';
 export * from './moderateReviewDto';
 export * from './moderateReviewDtoStatus';
 export * from './productReviewDto';

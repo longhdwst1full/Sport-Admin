@@ -21,7 +21,13 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { ContentPostDto, ContentPostListDto, CreateContentPostDto } from './models';
+import type {
+  ArchiveContentPostDto,
+  ContentPostDto,
+  ContentPostListDto,
+  CreateContentPostDto,
+  ErrorResponseDto,
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
@@ -42,7 +48,7 @@ export const getListAdminPostsQueryKey = () => {
 
 export const getListAdminPostsQueryOptions = <
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>>;
 }) => {
@@ -61,11 +67,11 @@ export const getListAdminPostsQueryOptions = <
 };
 
 export type ListAdminPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminPosts>>>;
-export type ListAdminPostsQueryError = ErrorType<unknown>;
+export type ListAdminPostsQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
 
 export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>> &
@@ -82,7 +88,7 @@ export function useListAdminPosts<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>> &
@@ -99,7 +105,7 @@ export function useListAdminPosts<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>>;
@@ -112,7 +118,7 @@ export function useListAdminPosts<
 
 export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>>;
@@ -147,7 +153,7 @@ export const createAdminPost = (
 };
 
 export const getCreateAdminPostMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -185,12 +191,15 @@ export type CreateAdminPostMutationResult = NonNullable<
   Awaited<ReturnType<typeof createAdminPost>>
 >;
 export type CreateAdminPostMutationBody = BodyType<CreateContentPostDto>;
-export type CreateAdminPostMutationError = ErrorType<unknown>;
+export type CreateAdminPostMutationError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
 
 /**
  * @summary Create and publish a content post
  */
-export const useCreateAdminPost = <TError = ErrorType<unknown>, TContext = unknown>(
+export const useCreateAdminPost = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof createAdminPost>>,
@@ -207,6 +216,95 @@ export const useCreateAdminPost = <TError = ErrorType<unknown>, TContext = unkno
   TContext
 > => {
   const mutationOptions = getCreateAdminPostMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Logically delete a content post by archiving it
+ */
+export const deleteAdminPost = (
+  id: string,
+  archiveContentPostDto: BodyType<ArchiveContentPostDto>,
+) => {
+  return apiFetcher<ContentPostDto>({
+    url: `/api/v1/admin/content/posts/${id}`,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    data: archiveContentPostDto,
+  });
+};
+
+export const getDeleteAdminPostMutationOptions = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAdminPost>>,
+    TError,
+    { id: string; data: BodyType<ArchiveContentPostDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAdminPost>>,
+  TError,
+  { id: string; data: BodyType<ArchiveContentPostDto> },
+  TContext
+> => {
+  const mutationKey = ['deleteAdminPost'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAdminPost>>,
+    { id: string; data: BodyType<ArchiveContentPostDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return deleteAdminPost(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAdminPostMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAdminPost>>
+>;
+export type DeleteAdminPostMutationBody = BodyType<ArchiveContentPostDto>;
+export type DeleteAdminPostMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Logically delete a content post by archiving it
+ */
+export const useDeleteAdminPost = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAdminPost>>,
+      TError,
+      { id: string; data: BodyType<ArchiveContentPostDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAdminPost>>,
+  TError,
+  { id: string; data: BodyType<ArchiveContentPostDto> },
+  TContext
+> => {
+  const mutationOptions = getDeleteAdminPostMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

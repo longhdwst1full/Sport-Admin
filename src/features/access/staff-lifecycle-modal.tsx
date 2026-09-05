@@ -3,13 +3,14 @@ import { Alert, App, Input, Modal, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import {
   getListAdminUsersQueryKey,
+  useDeleteAdminStaffUser,
   useLockAdminStaffUser,
   useUnlockAdminStaffUser,
 } from '@/generated/api/iam/iam';
 import type { UserDto } from '@/generated/api/iam/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 
-export type StaffLifecycleAction = 'LOCK' | 'UNLOCK';
+export type StaffLifecycleAction = 'LOCK' | 'UNLOCK' | 'DELETE';
 
 interface StaffLifecycleModalProps {
   action?: StaffLifecycleAction;
@@ -32,6 +33,13 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể khóa tài khoản.')),
     },
   });
+  const deleteUser = useDeleteAdminStaffUser({
+    mutation: {
+      onSuccess: () => finish('Đã ngừng hoạt động tài khoản và thu hồi toàn bộ phiên đăng nhập.'),
+      onError: (error) =>
+        void message.error(getApiErrorMessage(error, 'Không thể xóa tài khoản nhân viên.')),
+    },
+  });
   const unlockUser = useUnlockAdminStaffUser({
     mutation: {
       onSuccess: () => finish('Đã mở khóa và reset mật khẩu về Aa@123456.'),
@@ -44,9 +52,15 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
   }, [action]);
 
   const isLock = action === 'LOCK';
-  const pending = lockUser.isPending || unlockUser.isPending;
+  const isDelete = action === 'DELETE';
+  const requiresReason = isLock || isDelete;
+  const pending = lockUser.isPending || deleteUser.isPending || unlockUser.isPending;
   const submit = () => {
     if (!user || !action) return;
+    if (isDelete) {
+      deleteUser.mutate({ userId: user.id, data: { reason: reason.trim() } });
+      return;
+    }
     if (isLock) {
       lockUser.mutate({ userId: user.id, data: { reason: reason.trim() } });
       return;
@@ -57,9 +71,24 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
   return (
     <Modal
       open={Boolean(action && user)}
-      title={isLock ? 'Khóa tài khoản nhân viên' : 'Mở khóa tài khoản nhân viên'}
-      okText={isLock ? 'Khóa tài khoản' : 'Mở khóa & reset mật khẩu'}
-      okButtonProps={{ danger: isLock, disabled: isLock && reason.trim().length < 3 }}
+      title={
+        isDelete
+          ? 'Xóa tài khoản nhân viên'
+          : isLock
+            ? 'Khóa tài khoản nhân viên'
+            : 'Mở khóa tài khoản nhân viên'
+      }
+      okText={
+        isDelete
+          ? 'Xóa & thu hồi phiên'
+          : isLock
+            ? 'Khóa tài khoản'
+            : 'Mở khóa & reset mật khẩu'
+      }
+      okButtonProps={{
+        danger: requiresReason,
+        disabled: requiresReason && reason.trim().length < 3,
+      }}
       confirmLoading={pending}
       cancelText="Hủy"
       onCancel={onClose}
@@ -69,16 +98,20 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
       <Typography.Paragraph>
         Nhân viên: <Typography.Text strong>{user?.displayName}</Typography.Text>
       </Typography.Paragraph>
-      {isLock ? (
+      {requiresReason ? (
         <>
           <Alert
             className="mb-4"
             type="warning"
             showIcon
-            message="Tất cả phiên đăng nhập sẽ bị thu hồi ngay"
-            description="Access token và refresh token hiện tại của nhân viên sẽ không còn sử dụng được."
+            message={
+              isDelete
+                ? 'Tài khoản sẽ chuyển sang trạng thái đã khóa'
+                : 'Tất cả phiên đăng nhập sẽ bị thu hồi ngay'
+            }
+            description="Không xóa vật lý dữ liệu nhân viên. Access token và refresh token hiện tại sẽ không còn sử dụng được."
           />
-          <Typography.Text>Lý do khóa</Typography.Text>
+          <Typography.Text>{isDelete ? 'Lý do xóa/ngừng hoạt động' : 'Lý do khóa'}</Typography.Text>
           <Input.TextArea
             className="mt-2"
             value={reason}

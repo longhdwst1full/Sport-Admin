@@ -21,7 +21,13 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { ModerateReviewDto, ProductReviewDto, ProductReviewListDto } from './models';
+import type {
+  DeleteReviewDto,
+  ErrorResponseDto,
+  ModerateReviewDto,
+  ProductReviewDto,
+  ProductReviewListDto,
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
@@ -38,7 +44,7 @@ export const getListAdminReviewsQueryKey = () => {
 
 export const getListAdminReviewsQueryOptions = <
   TData = Awaited<ReturnType<typeof listAdminReviews>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminReviews>>, TError, TData>>;
 }) => {
@@ -57,11 +63,11 @@ export const getListAdminReviewsQueryOptions = <
 };
 
 export type ListAdminReviewsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminReviews>>>;
-export type ListAdminReviewsQueryError = ErrorType<unknown>;
+export type ListAdminReviewsQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
 
 export function useListAdminReviews<
   TData = Awaited<ReturnType<typeof listAdminReviews>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminReviews>>, TError, TData>> &
@@ -78,7 +84,7 @@ export function useListAdminReviews<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListAdminReviews<
   TData = Awaited<ReturnType<typeof listAdminReviews>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminReviews>>, TError, TData>> &
@@ -95,7 +101,7 @@ export function useListAdminReviews<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListAdminReviews<
   TData = Awaited<ReturnType<typeof listAdminReviews>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminReviews>>, TError, TData>>;
@@ -108,7 +114,7 @@ export function useListAdminReviews<
 
 export function useListAdminReviews<
   TData = Awaited<ReturnType<typeof listAdminReviews>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminReviews>>, TError, TData>>;
@@ -139,7 +145,7 @@ export const moderateAdminReview = (id: string, moderateReviewDto: BodyType<Mode
 };
 
 export const getModerateAdminReviewMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -177,12 +183,15 @@ export type ModerateAdminReviewMutationResult = NonNullable<
   Awaited<ReturnType<typeof moderateAdminReview>>
 >;
 export type ModerateAdminReviewMutationBody = BodyType<ModerateReviewDto>;
-export type ModerateAdminReviewMutationError = ErrorType<unknown>;
+export type ModerateAdminReviewMutationError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
 
 /**
  * @summary Approve or reject a review
  */
-export const useModerateAdminReview = <TError = ErrorType<unknown>, TContext = unknown>(
+export const useModerateAdminReview = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof moderateAdminReview>>,
@@ -199,6 +208,92 @@ export const useModerateAdminReview = <TError = ErrorType<unknown>, TContext = u
   TContext
 > => {
   const mutationOptions = getModerateAdminReviewMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Logically delete a review by hiding it from the storefront
+ */
+export const deleteAdminReview = (id: string, deleteReviewDto: BodyType<DeleteReviewDto>) => {
+  return apiFetcher<ProductReviewDto>({
+    url: `/api/v1/admin/reviews/${id}`,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    data: deleteReviewDto,
+  });
+};
+
+export const getDeleteAdminReviewMutationOptions = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAdminReview>>,
+    TError,
+    { id: string; data: BodyType<DeleteReviewDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAdminReview>>,
+  TError,
+  { id: string; data: BodyType<DeleteReviewDto> },
+  TContext
+> => {
+  const mutationKey = ['deleteAdminReview'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAdminReview>>,
+    { id: string; data: BodyType<DeleteReviewDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return deleteAdminReview(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAdminReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAdminReview>>
+>;
+export type DeleteAdminReviewMutationBody = BodyType<DeleteReviewDto>;
+export type DeleteAdminReviewMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Logically delete a review by hiding it from the storefront
+ */
+export const useDeleteAdminReview = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAdminReview>>,
+      TError,
+      { id: string; data: BodyType<DeleteReviewDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAdminReview>>,
+  TError,
+  { id: string; data: BodyType<DeleteReviewDto> },
+  TContext
+> => {
+  const mutationOptions = getDeleteAdminReviewMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

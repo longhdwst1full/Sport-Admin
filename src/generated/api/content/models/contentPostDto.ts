@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ContentPostDtoPostType } from './contentPostDtoPostType';
+import type { ContentPostDtoStatus } from './contentPostDtoStatus';
 
 export interface ContentPostDto {
   id: string;
@@ -17,4 +18,9 @@ export interface ContentPostDto {
   coverUrl: string;
   relatedProductSlugs: string[];
   publishedAt: string;
+  status: ContentPostDtoStatus;
+  /** @minimum 0 */
+  version: number;
+  archivedAt?: string;
+  archiveReason?: string;
 }

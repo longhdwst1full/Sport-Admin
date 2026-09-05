@@ -321,6 +321,95 @@ export const useLockAdminStaffUser = <
 };
 
 /**
+ * @summary Logically delete a subordinate staff account by locking it and revoking sessions
+ */
+export const deleteAdminStaffUser = (
+  userId: string,
+  lockStaffUserDto: BodyType<LockStaffUserDto>,
+) => {
+  return apiFetcher<UserDto>({
+    url: `/api/v1/admin/iam/users/${userId}`,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    data: lockStaffUserDto,
+  });
+};
+
+export const getDeleteAdminStaffUserMutationOptions = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAdminStaffUser>>,
+    TError,
+    { userId: string; data: BodyType<LockStaffUserDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAdminStaffUser>>,
+  TError,
+  { userId: string; data: BodyType<LockStaffUserDto> },
+  TContext
+> => {
+  const mutationKey = ['deleteAdminStaffUser'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAdminStaffUser>>,
+    { userId: string; data: BodyType<LockStaffUserDto> }
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return deleteAdminStaffUser(userId, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAdminStaffUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAdminStaffUser>>
+>;
+export type DeleteAdminStaffUserMutationBody = BodyType<LockStaffUserDto>;
+export type DeleteAdminStaffUserMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Logically delete a subordinate staff account by locking it and revoking sessions
+ */
+export const useDeleteAdminStaffUser = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAdminStaffUser>>,
+      TError,
+      { userId: string; data: BodyType<LockStaffUserDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAdminStaffUser>>,
+  TError,
+  { userId: string; data: BodyType<LockStaffUserDto> },
+  TContext
+> => {
+  const mutationOptions = getDeleteAdminStaffUserMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
  * @summary Root Admin unlocks a subordinate account and resets its password
  */
 export const unlockAdminStaffUser = (userId: string, signal?: AbortSignal) => {

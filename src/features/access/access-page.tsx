@@ -223,9 +223,9 @@ export function AccessPage() {
                                   <Button
                                     type="link"
                                     danger
-                                    onClick={() => setLifecycle({ action: 'LOCK', user })}
+                                    onClick={() => setLifecycle({ action: 'DELETE', user })}
                                   >
-                                    Khóa
+                                    Xóa
                                   </Button>
                                 )}
                                 {canManageUsers && !isOwner && user.status === 'LOCKED' && (

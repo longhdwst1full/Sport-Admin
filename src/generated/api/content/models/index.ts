@@ -6,8 +6,12 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './archiveContentPostDto';
 export * from './contentPostDto';
 export * from './contentPostDtoPostType';
+export * from './contentPostDtoStatus';
 export * from './contentPostListDto';
 export * from './createContentPostDto';
 export * from './createContentPostDtoPostType';
+export * from './errorDetailDto';
+export * from './errorResponseDto';

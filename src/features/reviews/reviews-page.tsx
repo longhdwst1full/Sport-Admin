@@ -1,10 +1,11 @@
-import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { CheckOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Button, Card, Popconfirm, Rate, Space, Table, Tag, Typography } from 'antd';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import {
   getListAdminReviewsQueryKey,
+  useDeleteAdminReview,
   useListAdminReviews,
   useModerateAdminReview,
 } from '@/generated/api/reviews/reviews';
@@ -22,6 +23,16 @@ export function ReviewsPage() {
       },
       onError: (error) =>
         void message.error(getApiErrorMessage(error, 'Không thể kiểm duyệt đánh giá.')),
+    },
+  });
+  const deleteReview = useDeleteAdminReview({
+    mutation: {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: getListAdminReviewsQueryKey() });
+        void message.success('Đã ẩn đánh giá khỏi website.');
+      },
+      onError: (error) =>
+        void message.error(getApiErrorMessage(error, 'Không thể xóa đánh giá.')),
     },
   });
   return (
@@ -106,23 +117,26 @@ export function ReviewsPage() {
                       </Button>
                     </Popconfirm>
                     <Popconfirm
-                      title="Từ chối đánh giá này?"
-                      description="Đánh giá sẽ không hiển thị công khai."
+                      title="Xóa đánh giá này?"
+                      description="Đánh giá sẽ được giữ trong lịch sử quản trị nhưng bị ẩn khỏi website."
                       disabled={row.status === 'REJECTED'}
                       onConfirm={() =>
-                        moderate.mutate({
+                        deleteReview.mutate({
                           id: row.id,
-                          data: { status: 'REJECTED', reason: 'Không phù hợp chính sách hiển thị' },
+                          data: {
+                            expectedVersion: row.version,
+                            reason: 'Không phù hợp chính sách hiển thị',
+                          },
                         })
                       }
                     >
                       <Button
                         danger
                         disabled={row.status === 'REJECTED'}
-                        loading={moderate.isPending && moderate.variables?.id === row.id}
-                        icon={<CloseOutlined />}
+                        loading={deleteReview.isPending && deleteReview.variables?.id === row.id}
+                        icon={<DeleteOutlined />}
                       >
-                        Từ chối
+                        Xóa/Ẩn
                       </Button>
                     </Popconfirm>
                   </Space>
