@@ -10,6 +10,7 @@ export interface UpdateCategoryDto {
   name?: string;
   slug?: string;
   description?: string;
+  /** @pattern ^[1-9][0-9]*$ */
   imageAssetId?: string;
   /** @minimum 0 */
   sortOrder?: number;

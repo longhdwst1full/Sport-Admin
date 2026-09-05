@@ -191,7 +191,8 @@ paths:
           in: query
           description: Restrict lookup to one branch
           schema:
-            format: uuid
+            pattern: ^[1-9][0-9]*$
+            example: "1"
             type: string
       responses:
         "200":
@@ -585,7 +586,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
           example: CN-HCM-01
@@ -667,10 +669,12 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         branchId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
           example: KHO-HCM-01
@@ -701,7 +705,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
           example: CN-HCM-01

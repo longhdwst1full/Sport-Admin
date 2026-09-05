@@ -10,6 +10,7 @@ import type { UserDtoStatus } from './userDtoStatus';
 import type { UserRoleAssignmentDto } from './userRoleAssignmentDto';
 
 export interface UserDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   displayName: string;
   maskedEmail: string;

@@ -16,6 +16,7 @@ export interface ReplacePriceDto {
    * @maxLength 500
    */
   reason?: string;
+  /** @pattern ^[1-9][0-9]*$ */
   expectedCurrentPriceId: string;
   /** @minimum 0 */
   expectedCurrentPriceVersion: number;

@@ -8,6 +8,7 @@
 import type { ProductPriceWindowDtoEndsAt } from './productPriceWindowDtoEndsAt';
 
 export interface ProductPriceWindowDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   amount: string;
   startsAt: string;

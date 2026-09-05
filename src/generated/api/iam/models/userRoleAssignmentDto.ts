@@ -9,11 +9,15 @@ import type { UserRoleAssignmentDtoScopeType } from './userRoleAssignmentDtoScop
 import type { UserRoleAssignmentDtoStatus } from './userRoleAssignmentDtoStatus';
 
 export interface UserRoleAssignmentDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
+  /** @pattern ^[1-9][0-9]*$ */
   userId: string;
+  /** @pattern ^[1-9][0-9]*$ */
   roleId: string;
   roleCode: string;
   scopeType: UserRoleAssignmentDtoScopeType;
+  /** @pattern ^[1-9][0-9]*$ */
   branchId?: string;
   status: UserRoleAssignmentDtoStatus;
   validFrom: string;

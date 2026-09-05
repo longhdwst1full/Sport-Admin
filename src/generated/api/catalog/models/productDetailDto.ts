@@ -13,6 +13,7 @@ import type { ProductMediaDto } from './productMediaDto';
 import type { ProductCategoryDto } from './productCategoryDto';
 
 export interface ProductDetailDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   productNo: string;
   name: string;
@@ -27,9 +28,15 @@ export interface ProductDetailDto {
   currency: ProductDetailDtoCurrency;
   /** @nullable */
   imageUrl?: string | null;
-  /** @nullable */
+  /**
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
   brandId?: string | null;
-  /** @nullable */
+  /**
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
   primaryCategoryId?: string | null;
   shortDescription?: string;
   description?: string;

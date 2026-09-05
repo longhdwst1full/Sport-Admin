@@ -13,5 +13,6 @@ export interface CreateStaffUserDto {
   /** @maxLength 255 */
   email: string;
   roleCode: CreateStaffUserDtoRoleCode;
+  /** @pattern ^[1-9][0-9]*$ */
   branchId: string;
 }

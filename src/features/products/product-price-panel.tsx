@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { ENTITY_ID_PATTERN } from '../../lib/validation/entity-id';
 import {
   getGetAdminProductPriceTimelineQueryKey,
   useCreateAdminProductPrice,
@@ -22,7 +23,7 @@ interface PriceFormValues {
 }
 
 const schema: yup.ObjectSchema<PriceFormValues> = yup.object({
-  variantId: yup.string().uuid('SKU không hợp lệ').required('Chọn SKU'),
+  variantId: yup.string().matches(ENTITY_ID_PATTERN, 'SKU không hợp lệ').required('Chọn SKU'),
   amount: yup.string().trim().matches(/^(?=.*[1-9])\d+(?:\.\d{1,2})?$/, 'Giá phải lớn hơn 0').required('Nhập giá bán'),
   startsAt: yup.string().required('Chọn thời điểm áp dụng'),
   reason: yup.string().trim().max(500, 'Tối đa 500 ký tự').optional(),

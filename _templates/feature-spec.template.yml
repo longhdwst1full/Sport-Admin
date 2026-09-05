@@ -1,0 +1,16 @@
+feature: management-feature
+version: 1
+route: null
+menu_key: null
+actors: []
+permissions: []
+api_operations: []
+list_columns: []
+filters: []
+form_fields: []
+validation_rules: []
+actions: []
+ui_states: [loading, empty, error, disabled, success]
+storybook_states: []
+acceptance_criteria: []
+open_questions: []

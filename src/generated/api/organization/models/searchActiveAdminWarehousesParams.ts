@@ -23,6 +23,7 @@ export type SearchActiveAdminWarehousesParams = {
   limit?: number;
   /**
    * Restrict lookup to one branch
+   * @pattern ^[1-9][0-9]*$
    */
   branchId?: string;
 };

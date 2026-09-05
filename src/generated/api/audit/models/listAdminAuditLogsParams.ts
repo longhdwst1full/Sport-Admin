@@ -24,7 +24,14 @@ export type ListAdminAuditLogsParams = {
    * @maxLength 100
    */
   entityType?: string;
+  /**
+   * Numeric entity ID, or a historical UUID retained by migrated audit/ledger data
+   * @pattern ^(?:[1-9][0-9]*|[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,})$
+   */
   entityId?: string;
+  /**
+   * @pattern ^[1-9][0-9]*$
+   */
   actorUserId?: string;
   /**
    * @maxLength 100

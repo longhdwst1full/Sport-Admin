@@ -11,5 +11,6 @@ export interface CreateBrandDto {
   name: string;
   slug: string;
   description?: string;
+  /** @pattern ^[1-9][0-9]*$ */
   logoAssetId?: string;
 }

@@ -411,7 +411,8 @@ components:
             - STAFF
         branchId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
       required:
         - displayName
         - email
@@ -422,7 +423,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         displayName:
           type: string
           example: Long Hoàng
@@ -564,7 +566,8 @@ components:
             - BRANCH
         branchId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
       required:
         - roleCode
         - scopeType
@@ -574,13 +577,16 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         userId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         roleId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         roleCode:
           type: string
         scopeType:
@@ -590,7 +596,8 @@ components:
             - BRANCH
         branchId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         status:
           type: string
           enum:
@@ -636,7 +643,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
           example: BRANCH_MANAGER
@@ -692,7 +700,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
           example: CN-HCM-01

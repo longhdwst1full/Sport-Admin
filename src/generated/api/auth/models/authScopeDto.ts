@@ -9,5 +9,6 @@ import type { AuthScopeDtoType } from './authScopeDtoType';
 
 export interface AuthScopeDto {
   type: AuthScopeDtoType;
+  /** @pattern ^[1-9][0-9]*$ */
   branchId?: string;
 }

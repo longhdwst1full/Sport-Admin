@@ -9,6 +9,7 @@ import type { ProductVariantDtoStatus } from './productVariantDtoStatus';
 import type { ProductVariantDtoBundle } from './productVariantDtoBundle';
 
 export interface ProductVariantDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   sku: string;
   barcode?: string;
@@ -34,7 +35,10 @@ export interface ProductVariantDto {
   version: number;
   /** @nullable */
   effectivePrice?: string | null;
-  /** @nullable */
+  /**
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
   effectivePriceId?: string | null;
   /** @nullable */
   effectivePriceVersion?: number | null;

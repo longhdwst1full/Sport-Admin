@@ -8,6 +8,7 @@
 import type { CreateBundleItemDto } from './createBundleItemDto';
 
 export interface CreateBundleDto {
+  /** @pattern ^[1-9][0-9]*$ */
   bundleVariantId: string;
   items: CreateBundleItemDto[];
 }

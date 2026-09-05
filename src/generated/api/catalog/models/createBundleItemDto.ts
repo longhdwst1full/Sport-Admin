@@ -7,6 +7,7 @@
  */
 
 export interface CreateBundleItemDto {
+  /** @pattern ^[1-9][0-9]*$ */
   componentVariantId: string;
   /** @minimum 1 */
   quantity: number;

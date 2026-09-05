@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
+import { ENTITY_ID_PATTERN } from '../../lib/validation/entity-id';
 import {
   getListAdminUsersQueryKey,
   useCreateAdminStaffUser,
@@ -24,7 +25,7 @@ const schema: yup.ObjectSchema<StaffFormValues> = yup.object({
     .mixed<StaffRoleCode>()
     .oneOf(Object.values(CreateStaffUserDtoRoleCode))
     .required('Chọn vai trò'),
-  branchId: yup.string().uuid('Chi nhánh không hợp lệ').required('Chọn chi nhánh'),
+  branchId: yup.string().matches(ENTITY_ID_PATTERN, 'Chi nhánh không hợp lệ').required('Chọn chi nhánh'),
 });
 
 export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {

@@ -4,6 +4,7 @@ import { App, Button, Drawer, Form, Input, InputNumber, Select } from 'antd';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { ENTITY_ID_PATTERN } from '../../lib/validation/entity-id';
 import {
   getListAdminBrandsQueryKey,
   getListAdminCategoriesQueryKey,
@@ -38,7 +39,7 @@ const brandSchema: yup.ObjectSchema<BrandFormValues> = yup.object({
 });
 
 const categorySchema: yup.ObjectSchema<CategoryFormValues> = brandSchema.shape({
-  parentId: yup.string().uuid('Danh mục cha không hợp lệ').optional(),
+  parentId: yup.string().matches(ENTITY_ID_PATTERN, 'Danh mục cha không hợp lệ').optional(),
   sortOrder: yup.number().integer().min(0).required(),
 });
 

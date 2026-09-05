@@ -12,9 +12,11 @@ export interface CreateProductDto {
   productNo: string;
   name: string;
   slug: string;
+  /** @pattern ^[1-9][0-9]*$ */
   brandId?: string;
   shortDescription?: string;
   description?: string;
   categoryIds: string[];
+  /** @pattern ^[1-9][0-9]*$ */
   primaryCategoryId: string;
 }

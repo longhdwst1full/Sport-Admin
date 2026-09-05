@@ -8,7 +8,9 @@
 import type { WarehouseDtoStatus } from './warehouseDtoStatus';
 
 export interface WarehouseDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
+  /** @pattern ^[1-9][0-9]*$ */
   branchId: string;
   code: string;
   name: string;

@@ -225,7 +225,8 @@ components:
       properties:
         userId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         displayName:
           type: string
         permissions:
@@ -270,7 +271,8 @@ components:
             - BRANCH
         branchId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
       required:
         - type
   securitySchemes:

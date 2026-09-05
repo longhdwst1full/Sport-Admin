@@ -8,6 +8,7 @@
 import type { AuthScopeDto } from './authScopeDto';
 
 export interface CurrentUserDto {
+  /** @pattern ^[1-9][0-9]*$ */
   userId: string;
   displayName: string;
   permissions: string[];

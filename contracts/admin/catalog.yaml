@@ -1920,7 +1920,8 @@ components:
           type: string
         logoAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
       required:
         - code
         - name
@@ -1930,7 +1931,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
         name:
@@ -1941,7 +1943,8 @@ components:
           type: string
         logoAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         status:
           type: string
           enum:
@@ -1979,7 +1982,8 @@ components:
           type: string
         logoAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         expectedVersion:
           type: number
           minimum: 0
@@ -2010,7 +2014,8 @@ components:
       properties:
         parentId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
         name:
@@ -2021,7 +2026,8 @@ components:
           type: string
         imageAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         sortOrder:
           type: number
           minimum: 0
@@ -2035,10 +2041,12 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         parentId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
         name:
@@ -2053,7 +2061,8 @@ components:
           type: string
         imageAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         sortOrder:
           type: number
         status:
@@ -2084,7 +2093,8 @@ components:
           type: string
         imageAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         sortOrder:
           type: number
           minimum: 0
@@ -2122,19 +2132,23 @@ components:
           type: string
         brandId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         shortDescription:
           type: string
         description:
           type: string
         categoryIds:
+          example:
+            - "1"
           type: array
           items:
             type: string
-            format: uuid
+            pattern: ^[1-9][0-9]*$
         primaryCategoryId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
       required:
         - productNo
         - name
@@ -2146,7 +2160,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         productNo:
           type: string
         name:
@@ -2186,11 +2201,13 @@ components:
           nullable: true
         brandId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
           nullable: true
         primaryCategoryId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
           nullable: true
         shortDescription:
           type: string
@@ -2209,10 +2226,12 @@ components:
           items:
             $ref: "#/components/schemas/ProductCategoryDto"
         categoryIds:
+          example:
+            - "1"
           type: array
           items:
             type: string
-            format: uuid
+            pattern: ^[1-9][0-9]*$
       required:
         - id
         - productNo
@@ -2242,16 +2261,20 @@ components:
         slug:
           type: string
         categoryIds:
+          example:
+            - "1"
           type: array
           items:
             type: string
-            format: uuid
+            pattern: ^[1-9][0-9]*$
         primaryCategoryId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         brandId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
           nullable: true
         shortDescription:
           type: string
@@ -2326,10 +2349,12 @@ components:
       properties:
         mediaAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         variantId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         altText:
           type: string
           maxLength: 500
@@ -2347,13 +2372,16 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         mediaAssetId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         variantId:
-          type: object
-          format: uuid
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
           nullable: true
         secureUrl:
           type: string
@@ -2442,7 +2470,8 @@ components:
       properties:
         productVariantId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         current:
           nullable: true
           type: object
@@ -2479,7 +2508,8 @@ components:
           description: Business reason; mandatory when reducing the reference price by more than 20%
         expectedCurrentPriceId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         expectedCurrentPriceVersion:
           type: number
           minimum: 0
@@ -2493,7 +2523,8 @@ components:
       properties:
         bundleVariantId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         items:
           type: array
           items:
@@ -2521,7 +2552,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         code:
           type: string
           example: CN-HCM-01
@@ -2557,7 +2589,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         productNo:
           type: string
         name:
@@ -2629,7 +2662,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         sku:
           type: string
         barcode:
@@ -2665,7 +2699,8 @@ components:
           nullable: true
         effectivePriceId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
           nullable: true
         effectivePriceVersion:
           type: number
@@ -2688,7 +2723,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         name:
           type: string
         isPrimary:
@@ -2702,7 +2738,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         sortOrder:
           type: number
           minimum: 0
@@ -2714,7 +2751,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         amount:
           type: string
           example: "18990000.00"
@@ -2745,7 +2783,8 @@ components:
       properties:
         componentVariantId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         quantity:
           type: number
           minimum: 1
@@ -2777,7 +2816,8 @@ components:
       properties:
         componentVariantId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         componentSku:
           type: string
         componentName:

@@ -7,6 +7,7 @@
  */
 
 export interface ReorderProductMediaItemDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   /** @minimum 0 */
   sortOrder: number;

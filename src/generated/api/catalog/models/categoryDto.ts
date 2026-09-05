@@ -8,7 +8,9 @@
 import type { CategoryDtoStatus } from './categoryDtoStatus';
 
 export interface CategoryDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
+  /** @pattern ^[1-9][0-9]*$ */
   parentId?: string;
   code: string;
   name: string;
@@ -16,6 +18,7 @@ export interface CategoryDto {
   path: string;
   depth: number;
   description?: string;
+  /** @pattern ^[1-9][0-9]*$ */
   imageAssetId?: string;
   sortOrder: number;
   status: CategoryDtoStatus;

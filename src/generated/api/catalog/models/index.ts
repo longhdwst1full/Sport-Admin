@@ -45,7 +45,6 @@ export * from './productListMetaDto';
 export * from './productListResponseDto';
 export * from './productMediaDto';
 export * from './productMediaDtoStatus';
-export * from './productMediaDtoVariantId';
 export * from './productPriceTimelineDto';
 export * from './productPriceTimelineDtoCurrent';
 export * from './productPriceWindowDto';

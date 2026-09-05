@@ -9,6 +9,7 @@ import type { BranchDtoStatus } from './branchDtoStatus';
 import type { AddressDto } from './addressDto';
 
 export interface BranchDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   code: string;
   name: string;

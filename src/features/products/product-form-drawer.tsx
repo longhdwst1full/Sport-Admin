@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
+import { ENTITY_ID_PATTERN } from '../../lib/validation/entity-id';
 import {
   getListAdminProductsQueryKey,
   useCreateAdminProduct,
@@ -41,11 +42,11 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
   productNo: yup.string().trim().matches(/^[A-Z0-9-]+$/, 'Chỉ dùng chữ hoa, số và dấu gạch ngang').required('Nhập mã sản phẩm'),
   name: yup.string().trim().required('Nhập tên sản phẩm'),
   slug: yup.string().trim().matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug không hợp lệ').required('Nhập slug'),
-  brandId: yup.string().uuid('Thương hiệu không hợp lệ').optional(),
-  categoryIds: yup.array().of(yup.string().uuid('Danh mục không hợp lệ').required()).min(1, 'Chọn ít nhất một danh mục').required(),
+  brandId: yup.string().matches(ENTITY_ID_PATTERN, 'Thương hiệu không hợp lệ').optional(),
+  categoryIds: yup.array().of(yup.string().matches(ENTITY_ID_PATTERN, 'Danh mục không hợp lệ').required()).min(1, 'Chọn ít nhất một danh mục').required(),
   primaryCategoryId: yup
     .string()
-    .uuid('Danh mục chính không hợp lệ')
+    .matches(ENTITY_ID_PATTERN, 'Danh mục chính không hợp lệ')
     .required('Chọn danh mục chính')
     .test('selected-category', 'Danh mục chính phải nằm trong danh mục đã chọn', function (value) {
       return Boolean(value && (this.parent.categoryIds ?? []).includes(value));

@@ -10,6 +10,7 @@ export interface UpdateBrandDto {
   name?: string;
   slug?: string;
   description?: string;
+  /** @pattern ^[1-9][0-9]*$ */
   logoAssetId?: string;
   /** @minimum 0 */
   expectedVersion: number;

@@ -8,6 +8,7 @@
 import type { RoleDtoStatus } from './roleDtoStatus';
 
 export interface RoleDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   code: string;
   name: string;

@@ -42,14 +42,17 @@ paths:
         - name: entityId
           required: false
           in: query
+          description: Numeric entity ID, or a historical UUID retained by migrated audit/ledger data
           schema:
-            format: uuid
+            pattern: ^(?:[1-9][0-9]*|[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,})$
+            example: "1"
             type: string
         - name: actorUserId
           required: false
           in: query
           schema:
-            format: uuid
+            pattern: ^[1-9][0-9]*$
+            example: "1"
             type: string
         - name: requestId
           required: false
@@ -146,7 +149,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         requestId:
           type: string
         sequenceNo:
@@ -155,7 +159,8 @@ components:
           type: string
         actorUserId:
           type: string
-          format: uuid
+          pattern: ^[1-9][0-9]*$
+          example: "1"
           nullable: true
         actorDisplayName:
           type: string
@@ -166,7 +171,9 @@ components:
           type: string
         entityId:
           type: string
-          format: uuid
+          pattern: ^(?:[1-9][0-9]*|[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,})$
+          example: "1"
+          description: Numeric entity ID, or a historical UUID retained by migrated audit/ledger data
           nullable: true
         before:
           type: object

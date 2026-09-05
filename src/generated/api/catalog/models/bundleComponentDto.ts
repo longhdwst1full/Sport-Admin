@@ -7,6 +7,7 @@
  */
 
 export interface BundleComponentDto {
+  /** @pattern ^[1-9][0-9]*$ */
   componentVariantId: string;
   componentSku: string;
   componentName: string;

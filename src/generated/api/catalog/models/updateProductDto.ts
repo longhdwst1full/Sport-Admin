@@ -13,8 +13,12 @@ export interface UpdateProductDto {
   name?: string;
   slug?: string;
   categoryIds?: string[];
+  /** @pattern ^[1-9][0-9]*$ */
   primaryCategoryId?: string;
-  /** @nullable */
+  /**
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
   brandId?: string | null;
   /** @nullable */
   shortDescription?: string | null;

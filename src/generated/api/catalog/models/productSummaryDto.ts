@@ -10,6 +10,7 @@ import type { ProductSummaryDtoStatus } from './productSummaryDtoStatus';
 import type { ProductSummaryDtoCurrency } from './productSummaryDtoCurrency';
 
 export interface ProductSummaryDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   productNo: string;
   name: string;

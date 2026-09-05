@@ -5,14 +5,18 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ProductMediaDtoVariantId } from './productMediaDtoVariantId';
 import type { ProductMediaDtoStatus } from './productMediaDtoStatus';
 
 export interface ProductMediaDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
+  /** @pattern ^[1-9][0-9]*$ */
   mediaAssetId: string;
-  /** @nullable */
-  variantId?: ProductMediaDtoVariantId;
+  /**
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
+  variantId?: string | null;
   secureUrl: string;
   /** @nullable */
   thumbnailUrl?: string | null;

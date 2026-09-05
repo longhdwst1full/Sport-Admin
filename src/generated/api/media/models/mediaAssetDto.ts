@@ -9,6 +9,7 @@ import type { MediaAssetDtoProvider } from './mediaAssetDtoProvider';
 import type { MediaAssetDtoStatus } from './mediaAssetDtoStatus';
 
 export interface MediaAssetDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   provider: MediaAssetDtoProvider;
   providerAssetId: string;

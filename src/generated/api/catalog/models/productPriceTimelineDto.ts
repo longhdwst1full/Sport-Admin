@@ -9,6 +9,7 @@ import type { ProductPriceTimelineDtoCurrent } from './productPriceTimelineDtoCu
 import type { ProductPriceWindowDto } from './productPriceWindowDto';
 
 export interface ProductPriceTimelineDto {
+  /** @pattern ^[1-9][0-9]*$ */
   productVariantId: string;
   /** @nullable */
   current?: ProductPriceTimelineDtoCurrent;

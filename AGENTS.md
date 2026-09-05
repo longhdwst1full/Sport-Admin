@@ -1,6 +1,6 @@
 # Admin application instructions
 
-Scope: `admin/` only. Do not load storefront PWA rules or backend implementation rules for ordinary admin work.
+Scope: this Admin repository only. Do not load Storefront PWA rules or backend implementation rules for ordinary Admin work.
 
 ## Stack and boundaries
 

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
+import { ENTITY_ID_PATTERN } from '../../lib/validation/entity-id';
 import { PermissionGate } from '@/core/auth/permissions';
 import {
   getGetAdminProductQueryKey,
@@ -46,12 +47,12 @@ const variantSchema: yup.ObjectSchema<VariantFormValues> = yup.object({
 });
 
 const bundleSchema: yup.ObjectSchema<BundleFormValues> = yup.object({
-  bundleVariantId: yup.string().uuid('SKU combo không hợp lệ').required('Chọn SKU combo'),
+  bundleVariantId: yup.string().matches(ENTITY_ID_PATTERN, 'SKU combo không hợp lệ').required('Chọn SKU combo'),
   items: yup
     .array()
     .of(
       yup.object({
-        componentVariantId: yup.string().uuid('SKU thành phần không hợp lệ').required('Chọn SKU thành phần'),
+        componentVariantId: yup.string().matches(ENTITY_ID_PATTERN, 'SKU thành phần không hợp lệ').required('Chọn SKU thành phần'),
         quantity: yup.number().integer('Số lượng phải là số nguyên').min(1, 'Tối thiểu 1').required(),
       }),
     )

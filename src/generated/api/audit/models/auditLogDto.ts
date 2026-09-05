@@ -9,17 +9,25 @@ import type { AuditLogDtoBefore } from './auditLogDtoBefore';
 import type { AuditLogDtoAfter } from './auditLogDtoAfter';
 
 export interface AuditLogDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   requestId: string;
   sequenceNo: number;
   actorType: string;
-  /** @nullable */
+  /**
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
   actorUserId?: string | null;
   /** @nullable */
   actorDisplayName?: string | null;
   action: string;
   entityType: string;
-  /** @nullable */
+  /**
+   * Numeric entity ID, or a historical UUID retained by migrated audit/ledger data
+   * @nullable
+   * @pattern ^(?:[1-9][0-9]*|[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,})$
+   */
   entityId?: string | null;
   /** @nullable */
   before?: AuditLogDtoBefore;

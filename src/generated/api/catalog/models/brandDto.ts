@@ -8,11 +8,13 @@
 import type { BrandDtoStatus } from './brandDtoStatus';
 
 export interface BrandDto {
+  /** @pattern ^[1-9][0-9]*$ */
   id: string;
   code: string;
   name: string;
   slug: string;
   description?: string;
+  /** @pattern ^[1-9][0-9]*$ */
   logoAssetId?: string;
   status: BrandDtoStatus;
   version: number;

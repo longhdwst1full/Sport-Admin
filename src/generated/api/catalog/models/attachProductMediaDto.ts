@@ -7,7 +7,9 @@
  */
 
 export interface AttachProductMediaDto {
+  /** @pattern ^[1-9][0-9]*$ */
   mediaAssetId: string;
+  /** @pattern ^[1-9][0-9]*$ */
   variantId?: string;
   /** @maxLength 500 */
   altText?: string;
