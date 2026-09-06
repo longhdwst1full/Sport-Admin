@@ -6,7 +6,6 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import { useLoginAdmin } from '@/generated/api/auth/auth';
 import type { LoginDto } from '@/generated/api/auth/models';
-import { saveAuthTokens } from '@/core/auth/auth-token.store';
 import { useAuth } from '@/core/auth/auth-context';
 import { getApiErrorMessage } from '@/lib/api/error';
 
@@ -27,13 +26,21 @@ export function LoginPage() {
   const login = useLoginAdmin({
     mutation: {
       onSuccess: (tokens) => {
-        saveAuthTokens(tokens);
-        if (tokens.mustChangePassword) {
-          navigate('/change-password', { replace: true });
-          return;
-        }
-        const from = (location.state as { from?: string } | null)?.from ?? '/';
-        navigate(from, { replace: true });
+        void auth
+          .establishSession(tokens)
+          .then((currentUser) => {
+            if (currentUser.mustChangePassword) {
+              navigate('/change-password', { replace: true });
+              return;
+            }
+            const from = (location.state as { from?: string } | null)?.from ?? '/';
+            navigate(from, { replace: true });
+          })
+          .catch((error: unknown) => {
+            void message.error(
+              getApiErrorMessage(error, 'Đăng nhập thành công nhưng không thể tải phiên quản trị.'),
+            );
+          });
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Đăng nhập thất bại.')),
     },

@@ -1,8 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { logoutAdmin, refreshAdminToken, useGetAdminCurrentUser } from '@/generated/api/auth/auth';
-import type { CurrentUserDto } from '@/generated/api/auth/models';
+import {
+  getAdminCurrentUser,
+  getGetAdminCurrentUserQueryKey,
+  logoutAdmin,
+  refreshAdminToken,
+  useGetAdminCurrentUser,
+} from '@/generated/api/auth/auth';
+import type { CurrentUserDto, TokenPairDto } from '@/generated/api/auth/models';
 import {
   clearAuthTokens,
   readAuthTokens,
@@ -16,6 +22,7 @@ interface AuthContextValue {
   authenticated: boolean;
   loading: boolean;
   developmentBypass: boolean;
+  establishSession: (tokens: TokenPairDto) => Promise<CurrentUserDto>;
   signOut: () => Promise<void>;
 }
 
@@ -56,6 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [hasTokens]);
 
+  const establishSession = async (tokens: TokenPairDto): Promise<CurrentUserDto> => {
+    saveAuthTokens(tokens);
+    const queryKey = getGetAdminCurrentUserQueryKey();
+    try {
+      return await queryClient.fetchQuery({
+        queryKey,
+        queryFn: ({ signal }) => getAdminCurrentUser(signal),
+        staleTime: 0,
+      });
+    } catch (error) {
+      clearAuthTokens();
+      queryClient.removeQueries({ queryKey });
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     const refreshToken = readAuthTokens()?.refreshToken;
     try {
@@ -76,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading:
           restoringCookieSession || (hasTokens && currentUserQuery.isPending),
         developmentBypass,
+        establishSession,
         signOut,
       }}
     >
