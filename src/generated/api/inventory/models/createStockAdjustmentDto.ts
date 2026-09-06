@@ -5,10 +5,24 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { CreateStockAdjustmentDtoAdjustmentType } from './createStockAdjustmentDtoAdjustmentType';
+import type { CreateStockAdjustmentDtoReasonCode } from './createStockAdjustmentDtoReasonCode';
 import type { StockAdjustmentItemInputDto } from './stockAdjustmentItemInputDto';
 
 export interface CreateStockAdjustmentDto {
   warehouseCode: string;
+  adjustmentType?: CreateStockAdjustmentDtoAdjustmentType;
+  reasonCode?: CreateStockAdjustmentDtoReasonCode;
+  /**
+   * Required for MANUAL_RECEIPT; external receipt or delivery-note number
+   * @maxLength 100
+   */
+  externalReference?: string;
+  /**
+   * Supplier or external source label
+   * @maxLength 255
+   */
+  sourceName?: string;
   reason: string;
   items: StockAdjustmentItemInputDto[];
 }

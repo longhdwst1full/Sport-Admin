@@ -10,4 +10,6 @@ import type { InventoryBalanceDto } from './inventoryBalanceDto';
 export interface InventoryBalanceListDto {
   items: InventoryBalanceDto[];
   total: number;
+  page: number;
+  limit: number;
 }

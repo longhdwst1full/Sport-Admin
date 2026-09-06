@@ -7,9 +7,26 @@
  */
 
 export * from './createStockAdjustmentDto';
+export * from './createStockAdjustmentDtoAdjustmentType';
+export * from './createStockAdjustmentDtoReasonCode';
+export * from './errorDetailDto';
+export * from './errorResponseDto';
 export * from './inventoryBalanceDto';
 export * from './inventoryBalanceDtoStatus';
 export * from './inventoryBalanceListDto';
+export * from './inventoryMovementDto';
+export * from './inventoryMovementDtoMovementType';
+export * from './inventoryMovementListDto';
+export * from './listInventoryBalancesParams';
+export * from './listInventoryMovementsMovementType';
+export * from './listInventoryMovementsParams';
+export * from './listStockAdjustmentsParams';
+export * from './stockAdjustmentDetailDto';
+export * from './stockAdjustmentItemDto';
+export * from './stockAdjustmentItemDtoNote';
 export * from './stockAdjustmentItemInputDto';
+export * from './stockAdjustmentListDto';
 export * from './stockAdjustmentResultDto';
+export * from './stockAdjustmentResultDtoAdjustmentType';
 export * from './stockAdjustmentResultDtoStatus';
+export * from './stockAdjustmentSummaryDto';

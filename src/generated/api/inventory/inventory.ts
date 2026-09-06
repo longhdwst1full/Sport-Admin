@@ -23,7 +23,14 @@ import type {
 
 import type {
   CreateStockAdjustmentDto,
+  ErrorResponseDto,
   InventoryBalanceListDto,
+  InventoryMovementListDto,
+  ListInventoryBalancesParams,
+  ListInventoryMovementsParams,
+  ListStockAdjustmentsParams,
+  StockAdjustmentDetailDto,
+  StockAdjustmentListDto,
   StockAdjustmentResultDto,
 } from './models';
 
@@ -35,32 +42,39 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 /**
  * @summary List warehouse balances
  */
-export const listInventoryBalances = (signal?: AbortSignal) => {
+export const listInventoryBalances = (
+  params?: ListInventoryBalancesParams,
+  signal?: AbortSignal,
+) => {
   return apiFetcher<InventoryBalanceListDto>({
     url: `/api/v1/admin/inventory/balances`,
     method: 'GET',
+    params,
     signal,
   });
 };
 
-export const getListInventoryBalancesQueryKey = () => {
-  return [`/api/v1/admin/inventory/balances`] as const;
+export const getListInventoryBalancesQueryKey = (params?: ListInventoryBalancesParams) => {
+  return [`/api/v1/admin/inventory/balances`, ...(params ? [params] : [])] as const;
 };
 
 export const getListInventoryBalancesQueryOptions = <
   TData = Awaited<ReturnType<typeof listInventoryBalances>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof listInventoryBalances>>, TError, TData>
-  >;
-}) => {
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListInventoryBalancesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listInventoryBalances>>, TError, TData>
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListInventoryBalancesQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getListInventoryBalancesQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listInventoryBalances>>> = ({ signal }) =>
-    listInventoryBalances(signal);
+    listInventoryBalances(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listInventoryBalances>>,
@@ -72,12 +86,15 @@ export const getListInventoryBalancesQueryOptions = <
 export type ListInventoryBalancesQueryResult = NonNullable<
   Awaited<ReturnType<typeof listInventoryBalances>>
 >;
-export type ListInventoryBalancesQueryError = ErrorType<unknown>;
+export type ListInventoryBalancesQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
 
 export function useListInventoryBalances<
   TData = Awaited<ReturnType<typeof listInventoryBalances>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
+  params: undefined | ListInventoryBalancesParams,
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof listInventoryBalances>>, TError, TData>
@@ -95,8 +112,9 @@ export function useListInventoryBalances<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListInventoryBalances<
   TData = Awaited<ReturnType<typeof listInventoryBalances>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
+  params?: ListInventoryBalancesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof listInventoryBalances>>, TError, TData>
@@ -114,8 +132,9 @@ export function useListInventoryBalances<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListInventoryBalances<
   TData = Awaited<ReturnType<typeof listInventoryBalances>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
+  params?: ListInventoryBalancesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof listInventoryBalances>>, TError, TData>
@@ -129,8 +148,9 @@ export function useListInventoryBalances<
 
 export function useListInventoryBalances<
   TData = Awaited<ReturnType<typeof listInventoryBalances>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
+  params?: ListInventoryBalancesParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof listInventoryBalances>>, TError, TData>
@@ -138,7 +158,264 @@ export function useListInventoryBalances<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListInventoryBalancesQueryOptions(options);
+  const queryOptions = getListInventoryBalancesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary List immutable stock ledger entries
+ */
+export const listInventoryMovements = (
+  params?: ListInventoryMovementsParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<InventoryMovementListDto>({
+    url: `/api/v1/admin/inventory/movements`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getListInventoryMovementsQueryKey = (params?: ListInventoryMovementsParams) => {
+  return [`/api/v1/admin/inventory/movements`, ...(params ? [params] : [])] as const;
+};
+
+export const getListInventoryMovementsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listInventoryMovements>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListInventoryMovementsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listInventoryMovements>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListInventoryMovementsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listInventoryMovements>>> = ({ signal }) =>
+    listInventoryMovements(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listInventoryMovements>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListInventoryMovementsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listInventoryMovements>>
+>;
+export type ListInventoryMovementsQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useListInventoryMovements<
+  TData = Awaited<ReturnType<typeof listInventoryMovements>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ListInventoryMovementsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listInventoryMovements>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listInventoryMovements>>,
+          TError,
+          Awaited<ReturnType<typeof listInventoryMovements>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListInventoryMovements<
+  TData = Awaited<ReturnType<typeof listInventoryMovements>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListInventoryMovementsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listInventoryMovements>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listInventoryMovements>>,
+          TError,
+          Awaited<ReturnType<typeof listInventoryMovements>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListInventoryMovements<
+  TData = Awaited<ReturnType<typeof listInventoryMovements>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListInventoryMovementsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listInventoryMovements>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List immutable stock ledger entries
+ */
+
+export function useListInventoryMovements<
+  TData = Awaited<ReturnType<typeof listInventoryMovements>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListInventoryMovementsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listInventoryMovements>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListInventoryMovementsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary List posted stock adjustment documents
+ */
+export const listStockAdjustments = (params?: ListStockAdjustmentsParams, signal?: AbortSignal) => {
+  return apiFetcher<StockAdjustmentListDto>({
+    url: `/api/v1/admin/inventory/adjustments`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getListStockAdjustmentsQueryKey = (params?: ListStockAdjustmentsParams) => {
+  return [`/api/v1/admin/inventory/adjustments`, ...(params ? [params] : [])] as const;
+};
+
+export const getListStockAdjustmentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStockAdjustments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStockAdjustmentsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStockAdjustments>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStockAdjustmentsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStockAdjustments>>> = ({ signal }) =>
+    listStockAdjustments(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStockAdjustments>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListStockAdjustmentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStockAdjustments>>
+>;
+export type ListStockAdjustmentsQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useListStockAdjustments<
+  TData = Awaited<ReturnType<typeof listStockAdjustments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ListStockAdjustmentsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStockAdjustments>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockAdjustments>>,
+          TError,
+          Awaited<ReturnType<typeof listStockAdjustments>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStockAdjustments<
+  TData = Awaited<ReturnType<typeof listStockAdjustments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStockAdjustmentsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStockAdjustments>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockAdjustments>>,
+          TError,
+          Awaited<ReturnType<typeof listStockAdjustments>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStockAdjustments<
+  TData = Awaited<ReturnType<typeof listStockAdjustments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStockAdjustmentsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStockAdjustments>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List posted stock adjustment documents
+ */
+
+export function useListStockAdjustments<
+  TData = Awaited<ReturnType<typeof listStockAdjustments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStockAdjustmentsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStockAdjustments>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListStockAdjustmentsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -170,7 +447,12 @@ export const createStockAdjustment = (
 };
 
 export const getCreateStockAdjustmentMutationOptions = <
-  TError = unknown,
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -209,12 +491,25 @@ export type CreateStockAdjustmentMutationResult = NonNullable<
   Awaited<ReturnType<typeof createStockAdjustment>>
 >;
 export type CreateStockAdjustmentMutationBody = CreateStockAdjustmentDto;
-export type CreateStockAdjustmentMutationError = unknown;
+export type CreateStockAdjustmentMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
 
 /**
  * @summary Post a basic stock adjustment
  */
-export const useCreateStockAdjustment = <TError = unknown, TContext = unknown>(
+export const useCreateStockAdjustment = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof createStockAdjustment>>,
@@ -235,3 +530,131 @@ export const useCreateStockAdjustment = <TError = unknown, TContext = unknown>(
 
   return useMutation(mutationOptions, queryClient);
 };
+
+/**
+ * @summary Get a posted stock adjustment document
+ */
+export const getStockAdjustment = (id: string, signal?: AbortSignal) => {
+  return apiFetcher<StockAdjustmentDetailDto>({
+    url: `/api/v1/admin/inventory/adjustments/${id}`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getGetStockAdjustmentQueryKey = (id?: string) => {
+  return [`/api/v1/admin/inventory/adjustments/${id}`] as const;
+};
+
+export const getGetStockAdjustmentQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStockAdjustment>>,
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockAdjustment>>, TError, TData>>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStockAdjustmentQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStockAdjustment>>> = ({ signal }) =>
+    getStockAdjustment(id, signal);
+
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStockAdjustment>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetStockAdjustmentQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStockAdjustment>>
+>;
+export type GetStockAdjustmentQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useGetStockAdjustment<
+  TData = Awaited<ReturnType<typeof getStockAdjustment>>,
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockAdjustment>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockAdjustment>>,
+          TError,
+          Awaited<ReturnType<typeof getStockAdjustment>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStockAdjustment<
+  TData = Awaited<ReturnType<typeof getStockAdjustment>>,
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getStockAdjustment>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockAdjustment>>,
+          TError,
+          Awaited<ReturnType<typeof getStockAdjustment>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStockAdjustment<
+  TData = Awaited<ReturnType<typeof getStockAdjustment>>,
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockAdjustment>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get a posted stock adjustment document
+ */
+
+export function useGetStockAdjustment<
+  TData = Awaited<ReturnType<typeof getStockAdjustment>>,
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockAdjustment>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetStockAdjustmentQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}

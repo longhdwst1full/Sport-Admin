@@ -1,125 +1,90 @@
-import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, Progress, Table, Tag, Typography } from 'antd';
+import {
+  AuditOutlined,
+  InboxOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SwapOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
+import { useQueryClient } from '@tanstack/react-query';
+import { Button, Tabs } from 'antd';
 import { useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
-import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { useListInventoryBalances } from '@/generated/api/inventory/inventory';
+import { ManagementPage } from '@/foundation/management';
+import {
+  getListInventoryBalancesQueryKey,
+  getListInventoryMovementsQueryKey,
+  getListStockAdjustmentsQueryKey,
+} from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/models';
+import { InventoryBalancePanel } from './inventory-balance-panel';
+import { InventoryMovementPanel } from './inventory-movement-panel';
 import { StockAdjustmentDrawer } from './stock-adjustment-drawer';
-
-const status = {
-  IN_STOCK: { color: 'green', label: 'Còn hàng' },
-  LOW_STOCK: { color: 'orange', label: 'Sắp hết' },
-  OUT_OF_STOCK: { color: 'red', label: 'Hết hàng' },
-} as const;
+import { StockAdjustmentPanel } from './stock-adjustment-panel';
 
 export function InventoryPage() {
+  const queryClient = useQueryClient();
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
   const [selectedBalance, setSelectedBalance] = useState<InventoryBalanceDto>();
-  const query = useListInventoryBalances();
+  const [metrics, setMetrics] = useState({ total: 0, low: 0, out: 0, available: 0 });
 
   const openAdjustment = (balance?: InventoryBalanceDto) => {
     setSelectedBalance(balance);
     setAdjustmentOpen(true);
   };
-
-  const closeAdjustment = () => {
-    setAdjustmentOpen(false);
-    setSelectedBalance(undefined);
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
+    ]);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <Typography.Text type="secondary">INVENTORY</Typography.Text>
-          <Typography.Title level={2} className="!mb-0 !mt-1">
-            Tồn kho cơ bản
-          </Typography.Title>
-        </div>
-        <div className="flex gap-2">
-          <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>Làm mới</Button>
+    <ManagementPage
+      eyebrow="Inventory control"
+      title="Tồn kho & sổ kho"
+      description="Theo dõi tồn khả dụng theo kho, phiếu điều chỉnh và ledger bất biến từ cùng nguồn dữ liệu PostgreSQL."
+      dataNotice="Không sửa trực tiếp số lượng sản phẩm. Mọi biến động tồn phải tạo chứng từ và dòng movement có thể truy vết."
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button icon={<ReloadOutlined />} onClick={() => void refresh()}>Làm mới dữ liệu</Button>
           <PermissionGate permission="inventory.stock.adjust">
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>Điều chỉnh tồn</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>
+              Tạo phiếu điều chỉnh
+            </Button>
           </PermissionGate>
         </div>
-      </div>
-      <Card>
-        {query.isError && (
-          <div className="mb-4">
-            <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />
-          </div>
-        )}
-        <Table
-          rowKey="id"
-          loading={query.isPending}
-          dataSource={query.data?.items ?? []}
-          pagination={false}
-          columns={[
-            {
-              title: 'SKU',
-              dataIndex: 'sku',
-              render: (value, row) => (
-                <div>
-                  <strong>{value}</strong>
-                  <div className="text-xs text-gray-500">{row.productName}</div>
-                </div>
-              ),
-            },
-            { title: 'Kho', dataIndex: 'warehouseCode' },
-            { title: 'Tồn vật lý', dataIndex: 'onHand', align: 'right' },
-            { title: 'Đang giữ', dataIndex: 'reserved', align: 'right' },
-            {
-              title: 'Có thể bán',
-              dataIndex: 'available',
-              align: 'right',
-              render: (value, row) => (
-                <div className="min-w-28">
-                  <strong>{value}</strong>
-                  <Progress
-                    percent={row.onHand ? Math.round((value / row.onHand) * 100) : 0}
-                    showInfo={false}
-                    size="small"
-                  />
-                </div>
-              ),
-            },
-            {
-              title: 'Trạng thái',
-              dataIndex: 'status',
-              render: (value: keyof typeof status) => (
-                <Tag color={status[value].color}>{status[value].label}</Tag>
-              ),
-            },
-            {
-              title: 'Thao tác',
-              key: 'actions',
-              fixed: 'right',
-              width: 120,
-              render: (_, row) => (
-                <PermissionGate permission="inventory.stock.adjust">
-                  <Button
-                    type="link"
-                    size="small"
-                    icon={<EditOutlined />}
-                    onClick={() => openAdjustment(row)}
-                  >
-                    Điều chỉnh
-                  </Button>
-                </PermissionGate>
-              ),
-            },
-          ]}
-        />
-      </Card>
+      }
+      metrics={[
+        { key: 'sku', label: 'Dòng tồn', value: metrics.total, icon: <InboxOutlined /> },
+        { key: 'available', label: 'Có thể bán trên trang', value: metrics.available, icon: <SwapOutlined />, tone: 'green' },
+        { key: 'low', label: 'Sắp hết trên trang', value: metrics.low, icon: <WarningOutlined />, tone: 'orange' },
+        { key: 'out', label: 'Hết hàng trên trang', value: metrics.out, icon: <AuditOutlined />, tone: 'blue' },
+      ]}
+    >
+      <Tabs
+        destroyInactiveTabPane={false}
+        items={[
+          {
+            key: 'balances',
+            label: 'Tồn theo kho',
+            children: <InventoryBalancePanel onAdjust={openAdjustment} onMetricsChange={setMetrics} />,
+          },
+          { key: 'movements', label: 'Sổ kho', children: <InventoryMovementPanel /> },
+          { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel /> },
+        ]}
+      />
       {adjustmentOpen && (
         <StockAdjustmentDrawer
-          open={adjustmentOpen}
-          balances={query.data?.items ?? []}
+          open
           balance={selectedBalance}
-          onClose={closeAdjustment}
+          onClose={() => {
+            setAdjustmentOpen(false);
+            setSelectedBalance(undefined);
+          }}
         />
       )}
-    </div>
+    </ManagementPage>
   );
 }

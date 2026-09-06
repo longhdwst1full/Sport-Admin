@@ -6,11 +6,18 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { StockAdjustmentResultDtoStatus } from './stockAdjustmentResultDtoStatus';
+import type { StockAdjustmentResultDtoAdjustmentType } from './stockAdjustmentResultDtoAdjustmentType';
 import type { InventoryBalanceDto } from './inventoryBalanceDto';
 
 export interface StockAdjustmentResultDto {
   adjustmentNo: string;
   status: StockAdjustmentResultDtoStatus;
+  adjustmentType: StockAdjustmentResultDtoAdjustmentType;
+  reasonCode: string;
+  /** @nullable */
+  externalReference?: string | null;
+  /** @nullable */
+  sourceName?: string | null;
   reason: string;
   balances: InventoryBalanceDto[];
   postedAt: string;
