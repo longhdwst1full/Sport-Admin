@@ -1,12 +1,17 @@
 import { AuditOutlined, InboxOutlined, PlusOutlined, SwapOutlined, WarningOutlined } from '@ant-design/icons';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Alert, Button, Empty, Input, Progress, Select, Table, Tabs, Tag } from 'antd';
+import { Alert, Button, Empty, Input, Progress, Select, Table, Tabs, Tag, Typography } from 'antd';
 import { ManagementPage } from '@/foundation/management';
 
 const balances = [
   { id: '1', sku: 'TA-CAO-SU-5KG', productName: 'Tạ tay cao su 5kg', warehouseCode: 'KHO-HCM-01', onHand: 12, reserved: 2, available: 10, reorderPoint: 3, status: 'IN_STOCK' },
   { id: '2', sku: 'THAM-YOGA-PRO', productName: 'Thảm yoga Pro', warehouseCode: 'KHO-HCM-01', onHand: 4, reserved: 1, available: 3, reorderPoint: 5, status: 'LOW_STOCK' },
   { id: '3', sku: 'DAY-KHANG-LUC', productName: 'Dây kháng lực', warehouseCode: 'KHO-HCM-01', onHand: 0, reserved: 0, available: 0, reorderPoint: 4, status: 'OUT_OF_STOCK' },
+];
+
+const transfers = [
+  { id: '10', transferNo: 'TRF-2026-HCM-HN-001', from: 'KHO-HCM-01', to: 'KHO-HN-01', status: 'SHIPPED', itemCount: 3 },
+  { id: '11', transferNo: 'TRF-2026-HN-DN-002', from: 'KHO-HN-01', to: 'KHO-DN-01', status: 'DRAFT', itemCount: 2 },
 ];
 
 const status = {
@@ -62,7 +67,18 @@ function InventoryReview({ state }: { state: 'loaded' | 'empty' | 'error' }) {
               )}
             </div>
           ),
-        }, { key: 'movements', label: 'Sổ kho', children: 'Ledger dùng cursor và bộ lọc kho/SKU/loại.' }, { key: 'adjustments', label: 'Phiếu điều chỉnh', children: 'Danh sách và chi tiết chứng từ điều chỉnh.' }]}
+        }, { key: 'movements', label: 'Sổ kho', children: 'Ledger dùng cursor và bộ lọc kho/SKU/loại.' }, { key: 'adjustments', label: 'Phiếu điều chỉnh', children: 'Danh sách và chi tiết chứng từ điều chỉnh.' }, {
+          key: 'transfers',
+          label: 'Chuyển kho',
+          children: <Table rowKey="id" dataSource={state === 'loaded' ? transfers : []} pagination={false} columns={[
+            { title: 'Số phiếu', dataIndex: 'transferNo', render: (value) => <Typography.Text code>{value}</Typography.Text> },
+            { title: 'Kho xuất', dataIndex: 'from' },
+            { title: 'Kho nhận', dataIndex: 'to' },
+            { title: 'Số SKU', dataIndex: 'itemCount', align: 'right' },
+            { title: 'Trạng thái', dataIndex: 'status', render: (value) => <Tag color={value === 'SHIPPED' ? 'orange' : 'default'}>{value === 'SHIPPED' ? 'Đang vận chuyển' : 'Nháp'}</Tag> },
+            { title: 'Thao tác', render: () => <Button type="link">Xem & xử lý</Button> },
+          ]} />,
+        }]}
       />
     </ManagementPage>
   );

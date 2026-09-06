@@ -15,17 +15,22 @@ import {
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
   getListStockAdjustmentsQueryKey,
+  getListStockTransfersQueryKey,
 } from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/models';
 import { InventoryBalancePanel } from './inventory-balance-panel';
 import { InventoryMovementPanel } from './inventory-movement-panel';
 import { StockAdjustmentDrawer } from './stock-adjustment-drawer';
 import { StockAdjustmentPanel } from './stock-adjustment-panel';
+import { StockTransferCreateDrawer } from './stock-transfer-create-drawer';
+import { StockTransferPanel } from './stock-transfer-panel';
 
 export function InventoryPage() {
   const queryClient = useQueryClient();
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
   const [selectedBalance, setSelectedBalance] = useState<InventoryBalanceDto>();
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [selectedTransferId, setSelectedTransferId] = useState<string>();
   const [metrics, setMetrics] = useState({ total: 0, low: 0, out: 0, available: 0 });
 
   const openAdjustment = (balance?: InventoryBalanceDto) => {
@@ -37,6 +42,7 @@ export function InventoryPage() {
       queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() }),
     ]);
   };
 
@@ -52,6 +58,11 @@ export function InventoryPage() {
           <PermissionGate permission="inventory.stock.adjust">
             <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>
               Tạo phiếu điều chỉnh
+            </Button>
+          </PermissionGate>
+          <PermissionGate permission="inventory.transfer.create">
+            <Button icon={<SwapOutlined />} onClick={() => setTransferOpen(true)}>
+              Tạo phiếu chuyển kho
             </Button>
           </PermissionGate>
         </div>
@@ -73,6 +84,11 @@ export function InventoryPage() {
           },
           { key: 'movements', label: 'Sổ kho', children: <InventoryMovementPanel /> },
           { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel /> },
+          {
+            key: 'transfers',
+            label: 'Chuyển kho',
+            children: <StockTransferPanel selectedId={selectedTransferId} onSelectedIdChange={setSelectedTransferId} />,
+          },
         ]}
       />
       {adjustmentOpen && (
@@ -83,6 +99,13 @@ export function InventoryPage() {
             setAdjustmentOpen(false);
             setSelectedBalance(undefined);
           }}
+        />
+      )}
+      {transferOpen && (
+        <StockTransferCreateDrawer
+          open
+          onClose={() => setTransferOpen(false)}
+          onCreated={setSelectedTransferId}
         />
       )}
     </ManagementPage>

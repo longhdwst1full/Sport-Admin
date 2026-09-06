@@ -26,6 +26,13 @@ function createDomainConfig(domain: string) {
                     name: 'apiFetcherWithOptions',
                   },
                 },
+                createStockTransfer: {
+                  requestOptions: true,
+                  mutator: {
+                    path: './src/lib/api/api-fetcher-with-options.ts',
+                    name: 'apiFetcherWithOptions',
+                  },
+                },
               },
             }
           : {}),
