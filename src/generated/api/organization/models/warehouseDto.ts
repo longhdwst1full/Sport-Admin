@@ -15,6 +15,5 @@ export interface WarehouseDto {
   code: string;
   name: string;
   status: WarehouseDtoStatus;
-  isPrimary: boolean;
   version: number;
 }
