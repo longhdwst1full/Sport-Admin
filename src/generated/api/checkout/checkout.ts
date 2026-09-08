@@ -5,18 +5,163 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { CheckoutQuoteDto, ErrorResponseDto, UpdateManualShippingQuoteDto } from './models';
+import type {
+  AdminShippingConsultationListDto,
+  CheckoutQuoteDto,
+  ErrorResponseDto,
+  ListAdminShippingConsultationsParams,
+  UpdateManualShippingQuoteDto,
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+/**
+ * @summary List manual shipping quotes visible in the assigned branch scope
+ */
+export const listAdminShippingConsultations = (
+  params?: ListAdminShippingConsultationsParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<AdminShippingConsultationListDto>({
+    url: `/api/v1/admin/checkouts/shipping-consultations`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getListAdminShippingConsultationsQueryKey = (
+  params?: ListAdminShippingConsultationsParams,
+) => {
+  return [`/api/v1/admin/checkouts/shipping-consultations`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAdminShippingConsultationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params?: ListAdminShippingConsultationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminShippingConsultations>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAdminShippingConsultationsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminShippingConsultations>>> = ({
+    signal,
+  }) => listAdminShippingConsultations(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAdminShippingConsultationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminShippingConsultations>>
+>;
+export type ListAdminShippingConsultationsQueryError = ErrorType<ErrorResponseDto>;
+
+export function useListAdminShippingConsultations<
+  TData = Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: undefined | ListAdminShippingConsultationsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminShippingConsultations>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminShippingConsultations>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminShippingConsultations<
+  TData = Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params?: ListAdminShippingConsultationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminShippingConsultations>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminShippingConsultations>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminShippingConsultations<
+  TData = Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params?: ListAdminShippingConsultationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminShippingConsultations>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List manual shipping quotes visible in the assigned branch scope
+ */
+
+export function useListAdminShippingConsultations<
+  TData = Awaited<ReturnType<typeof listAdminShippingConsultations>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params?: ListAdminShippingConsultationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminShippingConsultations>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAdminShippingConsultationsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 /**
  * @summary Record an agreed manual/coach shipping fee and reopen the quote for customer confirmation
  */
