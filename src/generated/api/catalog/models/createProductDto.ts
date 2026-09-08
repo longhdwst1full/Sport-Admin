@@ -9,9 +9,7 @@ import type { CreateProductDtoProductType } from './createProductDtoProductType'
 
 export interface CreateProductDto {
   productType?: CreateProductDtoProductType;
-  productNo: string;
   name: string;
-  slug: string;
   /** @pattern ^[1-9][0-9]*$ */
   brandId?: string;
   shortDescription?: string;

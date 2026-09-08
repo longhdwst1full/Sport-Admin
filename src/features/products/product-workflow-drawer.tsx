@@ -30,7 +30,6 @@ import { VariantEditDrawer } from './variant-edit-drawer';
 import { ProductPricePanel } from './product-price-panel';
 
 interface VariantFormValues {
-  sku: string;
   name: string;
   barcode?: string;
 }
@@ -41,7 +40,6 @@ interface BundleFormValues {
 }
 
 const variantSchema: yup.ObjectSchema<VariantFormValues> = yup.object({
-  sku: yup.string().trim().required('Nhập SKU').max(64, 'Tối đa 64 ký tự'),
   name: yup.string().trim().required('Nhập tên phiên bản').max(255, 'Tối đa 255 ký tự'),
   barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
 });
@@ -72,7 +70,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
   const detail = useGetAdminProduct(slug ?? '', { query: { enabled: Boolean(slug) } });
   const variantForm = useForm<VariantFormValues>({
     resolver: yupResolver(variantSchema),
-    defaultValues: { sku: '', name: '', barcode: '' },
+    defaultValues: { name: '', barcode: '' },
   });
   const bundleForm = useForm<BundleFormValues>({
     resolver: yupResolver(bundleSchema),
@@ -98,7 +96,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     mutation: {
       onSuccess: async () => {
         await refresh();
-        variantForm.reset({ sku: '', name: '', barcode: '' });
+        variantForm.reset({ name: '', barcode: '' });
         void message.success('Đã thêm SKU.');
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể thêm SKU.')),
@@ -176,7 +174,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     if (!product) return;
     createVariant.mutate({
       id: product.id,
-      data: { sku: values.sku, name: values.name, ...(values.barcode ? { barcode: values.barcode } : {}) },
+      data: { name: values.name, ...(values.barcode ? { barcode: values.barcode } : {}) },
     });
   });
 
@@ -359,8 +357,8 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
               <div>
                 <Form layout="vertical" onFinish={() => void submitVariant()}>
                   <Typography.Title level={5}>Thêm SKU</Typography.Title>
-                  <Form.Item label="SKU" required validateStatus={variantForm.formState.errors.sku ? 'error' : undefined} help={variantForm.formState.errors.sku?.message}>
-                    <Controller name="sku" control={variantForm.control} render={({ field }) => <Input {...field} />} />
+                  <Form.Item label="SKU" extra="Backend tự sinh sau khi lưu; SKU không thể thay đổi.">
+                    <Input value="Tự động" disabled />
                   </Form.Item>
                   <Form.Item label="Tên phiên bản" required validateStatus={variantForm.formState.errors.name ? 'error' : undefined} help={variantForm.formState.errors.name?.message}>
                     <Controller name="name" control={variantForm.control} render={({ field }) => <Input {...field} />} />

@@ -8,7 +8,6 @@
 import type { CreateVariantDtoWeightGrams } from './createVariantDtoWeightGrams';
 
 export interface CreateVariantDto {
-  sku: string;
   barcode?: string;
   name: string;
   weightGrams?: CreateVariantDtoWeightGrams;

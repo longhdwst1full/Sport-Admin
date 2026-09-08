@@ -1,8 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Button, Drawer, Form, Input, Select } from 'antd';
-import { useEffect, useRef, useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
 import { ENTITY_ID_PATTERN } from '../../lib/validation/entity-id';
@@ -20,13 +20,11 @@ import {
 } from '@/generated/api/catalog/models';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
-import { createProductSlug } from './product-slug';
 
 interface ProductFormValues {
   productType: ProductType;
-  productNo: string;
   name: string;
-  slug: string;
+  slug?: string;
   brandId?: string;
   categoryIds: string[];
   primaryCategoryId: string;
@@ -39,9 +37,8 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
     .mixed<ProductType>()
     .oneOf(Object.values(CreateProductDtoProductType))
     .required('Chọn loại sản phẩm'),
-  productNo: yup.string().trim().matches(/^[A-Z0-9-]+$/, 'Chỉ dùng chữ hoa, số và dấu gạch ngang').required('Nhập mã sản phẩm'),
   name: yup.string().trim().required('Nhập tên sản phẩm'),
-  slug: yup.string().trim().matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug không hợp lệ').required('Nhập slug'),
+  slug: yup.string().trim().matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug không hợp lệ').optional(),
   brandId: yup.string().matches(ENTITY_ID_PATTERN, 'Thương hiệu không hợp lệ').optional(),
   categoryIds: yup.array().of(yup.string().matches(ENTITY_ID_PATTERN, 'Danh mục không hợp lệ').required()).min(1, 'Chọn ít nhất một danh mục').required(),
   primaryCategoryId: yup
@@ -57,7 +54,7 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
 
 const defaults: ProductFormValues = {
   productType: CreateProductDtoProductType.STANDARD,
-  productNo: '', name: '', slug: '', brandId: undefined, categoryIds: [], primaryCategoryId: '', shortDescription: '', description: '',
+  name: '', slug: undefined, brandId: undefined, categoryIds: [], primaryCategoryId: '', shortDescription: '', description: '',
 };
 
 export function ProductFormDrawer({
@@ -75,12 +72,9 @@ export function ProductFormDrawer({
   const queryClient = useQueryClient();
   const [brandSearch, setBrandSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
-  const slugManuallyEditedRef = useRef(false);
   const [debouncedBrand] = useDebounce(brandSearch.trim(), 300);
   const [debouncedCategory] = useDebounce(categorySearch.trim(), 300);
   const form = useForm<ProductFormValues>({ resolver: yupResolver(schema), defaultValues: defaults });
-  const watchedName = useWatch({ control: form.control, name: 'name' });
-  const watchedProductNo = useWatch({ control: form.control, name: 'productNo' });
   const isEdit = Boolean(product);
   const brands = useSearchActiveAdminBrands(
     { search: debouncedBrand || undefined, page: 1, limit: 20 },
@@ -125,10 +119,8 @@ export function ProductFormDrawer({
 
   useEffect(() => {
     if (!open) return;
-    slugManuallyEditedRef.current = false;
     form.reset(product ? {
       productType: product.productType,
-      productNo: product.productNo,
       name: product.name,
       slug: product.slug,
       brandId: product.brandId ?? undefined,
@@ -139,20 +131,14 @@ export function ProductFormDrawer({
     } : defaults);
   }, [form, open, product]);
 
-  useEffect(() => {
-    if (!open || product || slugManuallyEditedRef.current) return;
-    form.setValue('slug', createProductSlug(watchedName, watchedProductNo), {
-      shouldDirty: false,
-      shouldValidate: Boolean(form.formState.errors.slug),
-    });
-  }, [form, open, product, watchedName, watchedProductNo]);
-
   const submit = form.handleSubmit((values) => {
+    if (product && !values.slug?.trim()) {
+      form.setError('slug', { message: 'Nhập slug' });
+      return;
+    }
     const fields = {
       productType: values.productType,
-      productNo: values.productNo.trim(),
       name: values.name.trim(),
-      slug: values.slug.trim(),
       shortDescription: values.shortDescription?.trim() || undefined,
       description: values.description?.trim() || undefined,
       categoryIds: values.categoryIds,
@@ -163,6 +149,7 @@ export function ProductFormDrawer({
         id: product.id,
         data: {
           ...fields,
+          ...(product.status === 'DRAFT' && values.slug ? { slug: values.slug.trim() } : {}),
           brandId: values.brandId ?? null,
           shortDescription: values.shortDescription?.trim() || null,
           description: values.description?.trim() || null,
@@ -176,7 +163,7 @@ export function ProductFormDrawer({
     }
   });
 
-  const textField = (name: 'productNo' | 'name', label: string) => (
+  const textField = (name: 'name', label: string) => (
     <Form.Item label={label} required validateStatus={form.formState.errors[name] ? 'error' : undefined} help={form.formState.errors[name]?.message}>
       <Controller name={name} control={form.control} render={({ field }) => <Input {...field} />} />
     </Form.Item>
@@ -223,13 +210,22 @@ export function ProductFormDrawer({
           />
         </Form.Item>
         <div className="grid gap-4 sm:grid-cols-2">
-          {textField('productNo', 'Mã sản phẩm')}
+          <Form.Item
+            label="Mã sản phẩm"
+            extra={product ? 'Mã do backend sinh và không thể thay đổi.' : 'Backend tự sinh sau khi lưu.'}
+          >
+            <Input value={product?.productNo ?? 'Tự động'} disabled />
+          </Form.Item>
           <Form.Item
             label="Slug"
-            required
+            required={Boolean(product)}
             validateStatus={form.formState.errors.slug ? 'error' : undefined}
             help={form.formState.errors.slug?.message}
-            extra={product ? 'Slug hiện tại có thể ảnh hưởng URL sản phẩm.' : 'Tự tạo từ tên và mã sản phẩm; có thể chỉnh thủ công.'}
+            extra={product
+              ? product.status === 'DRAFT'
+                ? 'Có thể chỉnh trước publish; đổi tên không tự đổi slug.'
+                : 'Slug đã khóa sau publish để giữ URL ổn định.'
+              : 'Backend tự sinh từ tên và mã sản phẩm sau khi lưu.'}
           >
             <Controller
               name="slug"
@@ -237,25 +233,8 @@ export function ProductFormDrawer({
               render={({ field }) => (
                 <Input
                   {...field}
-                  onChange={(event) => {
-                    slugManuallyEditedRef.current = true;
-                    field.onChange(event);
-                  }}
-                  addonAfter={!product ? (
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={() => {
-                        slugManuallyEditedRef.current = false;
-                        form.setValue('slug', createProductSlug(watchedName, watchedProductNo), {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        });
-                      }}
-                    >
-                      Tạo lại
-                    </Button>
-                  ) : undefined}
+                  value={product ? field.value : 'Tự động'}
+                  disabled={!product || product.status !== 'DRAFT'}
                 />
               )}
             />

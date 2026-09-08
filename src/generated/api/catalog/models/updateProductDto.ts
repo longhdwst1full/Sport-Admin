@@ -9,12 +9,12 @@ import type { UpdateProductDtoProductType } from './updateProductDtoProductType'
 
 export interface UpdateProductDto {
   productType?: UpdateProductDtoProductType;
-  productNo?: string;
   name?: string;
-  slug?: string;
   categoryIds?: string[];
   /** @pattern ^[1-9][0-9]*$ */
   primaryCategoryId?: string;
+  /** Only mutable while the product is DRAFT */
+  slug?: string;
   /**
    * @nullable
    * @pattern ^[1-9][0-9]*$
