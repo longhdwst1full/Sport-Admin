@@ -52,4 +52,5 @@ export default defineConfig({
   reviews: createDomainConfig('reviews'),
   media: createDomainConfig('media'),
   system: createDomainConfig('system'),
+  checkout: createDomainConfig('checkout'),
 });

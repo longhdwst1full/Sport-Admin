@@ -8,9 +8,11 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Alert,
   Descriptions,
   Drawer,
   Input,
+  InputNumber,
   Select,
   Space,
   Table,
@@ -18,6 +20,7 @@ import {
   Timeline,
   Typography,
 } from "antd";
+import { useUpdateAdminManualShippingQuote } from "@/generated/api/checkout/checkout";
 import { ManagementPage, StatusTag } from "@/foundation/management";
 import {
   ORDER_FIXTURES,
@@ -43,6 +46,13 @@ export function OrdersPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<OrderStatus | undefined>();
   const [selectedOrder, setSelectedOrder] = useState<OrderFixture | null>(null);
+  const [checkoutToken, setCheckoutToken] = useState("");
+  const [shippingFee, setShippingFee] = useState(200000);
+  const [etaMinDays, setEtaMinDays] = useState(1);
+  const [etaMaxDays, setEtaMaxDays] = useState(3);
+  const [expectedVersion, setExpectedVersion] = useState(0);
+  const [agreementNote, setAgreementNote] = useState("");
+  const manualQuote = useUpdateAdminManualShippingQuote();
   const rows = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase("vi");
     return ORDER_FIXTURES.filter(
@@ -65,7 +75,7 @@ export function OrdersPage() {
         eyebrow="Sales operations"
         title="Quản lý đơn hàng"
         description="Theo dõi một luồng thống nhất từ tiếp nhận, thanh toán một lần, giao hàng đến hoàn về kho."
-        dataNotice="Danh sách hiện dùng fixture tách biệt để duyệt UX. Module order của API chưa có endpoint active; khi có OpenAPI sẽ thay nguồn dữ liệu bằng generated SDK."
+        dataNotice="Danh sách Order vẫn là fixture đến Sprint 4. Khối tư vấn giao hàng bên dưới đã gọi API thật bằng OpenAPI generated SDK."
         metrics={[
           {
             key: "all",
@@ -125,6 +135,43 @@ export function OrdersPage() {
           </div>
         }
       >
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <Typography.Title level={5} className="!mb-1">Chốt phí giao đặc thù với khách</Typography.Title>
+          <Typography.Paragraph type="secondary">
+            Dùng khi checkout đang chờ tư vấn giao xe khách/cồng kềnh. Nhập đúng token và version hiện tại; Backend kiểm tra quyền chi nhánh và ghi audit.
+          </Typography.Paragraph>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <Input value={checkoutToken} onChange={(event) => setCheckoutToken(event.target.value)} placeholder="Checkout token *" />
+            <InputNumber className="!w-full" min={0} value={shippingFee} onChange={(value) => setShippingFee(value ?? 0)} addonAfter="VND" />
+            <div className="flex gap-2">
+              <InputNumber className="!w-full" min={0} value={etaMinDays} onChange={(value) => setEtaMinDays(value ?? 0)} addonAfter="ngày" />
+              <InputNumber className="!w-full" min={0} value={etaMaxDays} onChange={(value) => setEtaMaxDays(value ?? 0)} addonAfter="ngày" />
+            </div>
+            <InputNumber className="!w-full" min={0} value={expectedVersion} onChange={(value) => setExpectedVersion(value ?? 0)} addonBefore="Version" />
+            <Input.TextArea className="md:col-span-2" rows={2} value={agreementNote} onChange={(event) => setAgreementNote(event.target.value)} placeholder="Nội dung khách đã đồng ý qua điện thoại (tối thiểu 10 ký tự) *" />
+          </div>
+          <Button
+            type="primary"
+            className="mt-3"
+            loading={manualQuote.isPending}
+            disabled={!checkoutToken.trim() || agreementNote.trim().length < 10 || etaMaxDays < etaMinDays}
+            onClick={() => manualQuote.mutate({
+              checkoutToken: checkoutToken.trim(),
+              data: {
+                shippingFee: String(shippingFee),
+                etaMinDays,
+                etaMaxDays,
+                expectedVersion,
+                agreementNote: agreementNote.trim(),
+                provider: "MANUAL",
+              },
+            })}
+          >
+            Lưu phí đã thỏa thuận
+          </Button>
+          {manualQuote.isSuccess && <Alert className="mt-3" type="success" showIcon message={`Đã cập nhật ${manualQuote.data.branchName}: phí ${money.format(Number(manualQuote.data.shippingTotal ?? 0))}`} />}
+          {manualQuote.isError && <Alert className="mt-3" type="error" showIcon message="Không cập nhật được quote" description="Kiểm tra token, version, trạng thái AWAITING_SHIPPING_CONSULTATION và quyền chi nhánh." />}
+        </div>
         <Table
           rowKey="id"
           dataSource={rows}

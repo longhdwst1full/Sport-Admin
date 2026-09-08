@@ -10,4 +10,20 @@ export interface AddressDto {
   addressLine: string;
   district: string;
   province: string;
+  /** Canonical/provider province code when available */
+  provinceCode?: string;
+  /** Carrier district code when available */
+  districtCode?: string;
+  /** Carrier ward code when available */
+  wardCode?: string;
+  /**
+   * @minimum -90
+   * @maximum 90
+   */
+  latitude?: number;
+  /**
+   * @minimum -180
+   * @maximum 180
+   */
+  longitude?: number;
 }
