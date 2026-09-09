@@ -1,4 +1,5 @@
-const { mkdir, writeFile } = require('node:fs/promises');
+const { existsSync } = require('node:fs');
+const { mkdir, readFile, writeFile } = require('node:fs/promises');
 const { resolve } = require('node:path');
 
 const domains = [
@@ -17,16 +18,21 @@ const domains = [
 const defaultBaseUrl =
   'https://raw.githubusercontent.com/longhdwst1full/dctd-utc/main/document/api/admin';
 const baseUrl = (process.env.SPORT_API_CONTRACT_BASE_URL || defaultBaseUrl).replace(/\/$/, '');
+const siblingContractDirectory = resolve(__dirname, '../../api/document/api/admin');
+const contractDirectory = process.env.SPORT_API_CONTRACT_DIR
+  ? resolve(process.env.SPORT_API_CONTRACT_DIR)
+  : (existsSync(siblingContractDirectory) ? siblingContractDirectory : undefined);
 const outputDirectory = resolve(__dirname, '../contracts/admin');
 
 async function main() {
   const contracts = await Promise.all(
     domains.map(async (domain) => {
-      const response = await fetch(`${baseUrl}/${domain}.yaml`);
-      if (!response.ok) {
-        throw new Error(`Cannot download ${domain}.yaml: HTTP ${response.status}`);
-      }
-      const content = await response.text();
+      const content = contractDirectory
+        ? await readFile(resolve(contractDirectory, `${domain}.yaml`), 'utf8')
+        : await fetch(`${baseUrl}/${domain}.yaml`).then(async (response) => {
+            if (!response.ok) throw new Error(`Cannot download ${domain}.yaml: HTTP ${response.status}`);
+            return response.text();
+          });
       if (!/^openapi:\s*3\./m.test(content)) {
         throw new Error(`${domain}.yaml is not an OpenAPI 3 contract`);
       }
@@ -40,7 +46,7 @@ async function main() {
       writeFile(resolve(outputDirectory, `${domain}.yaml`), content, 'utf8'),
     ),
   );
-  console.log(`Synced ${contracts.length} Admin API contracts from ${baseUrl}`);
+  console.log(`Synced ${contracts.length} Admin API contracts from ${contractDirectory ?? baseUrl}`);
 }
 
 main().catch((error) => {

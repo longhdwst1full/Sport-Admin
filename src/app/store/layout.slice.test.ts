@@ -20,7 +20,7 @@ describe('layoutSlice', () => {
   it('opens, activates and closes navigation tabs predictably', () => {
     const withOrders = layoutSlice.reducer(
       undefined,
-      openNavigationTab({ path: '/orders', label: 'Đơn hàng' }),
+      openNavigationTab({ path: '/shipping-consultations', label: 'Tư vấn giao hàng' }),
     );
     const withCustomers = layoutSlice.reducer(
       withOrders,
@@ -31,7 +31,7 @@ describe('layoutSlice', () => {
     expect(withCustomers.openTabs).toHaveLength(2);
 
     const closed = layoutSlice.reducer(withCustomers, closeNavigationTab('/customers'));
-    expect(closed.activePath).toBe('/orders');
-    expect(closed.openTabs.map((tab) => tab.path)).toEqual(['/orders']);
+    expect(closed.activePath).toBe('/shipping-consultations');
+    expect(closed.openTabs.map((tab) => tab.path)).toEqual(['/shipping-consultations']);
   });
 });

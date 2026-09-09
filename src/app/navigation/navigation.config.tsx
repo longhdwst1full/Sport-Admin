@@ -40,8 +40,8 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     permission: 'system.module.view',
   },
   {
-    path: '/orders',
-    label: 'Đơn hàng',
+    path: '/shipping-consultations',
+    label: 'Tư vấn giao hàng',
     group: 'sales',
     icon: <ShoppingCartOutlined />,
     permission: 'order.view',
