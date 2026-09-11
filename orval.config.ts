@@ -53,4 +53,5 @@ export default defineConfig({
   media: createDomainConfig('media'),
   system: createDomainConfig('system'),
   checkout: createDomainConfig('checkout'),
+  orders: createDomainConfig('orders'),
 });

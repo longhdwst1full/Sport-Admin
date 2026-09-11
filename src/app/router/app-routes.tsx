@@ -43,9 +43,9 @@ const ReviewsPage = lazy(() =>
     default: module.ReviewsPage,
   })),
 );
-const ShippingConsultationsPage = lazy(() =>
-  import('@/features/shipping-consultations').then((module) => ({
-    default: module.ShippingConsultationsPage,
+const OrdersPage = lazy(() =>
+  import('@/features/orders').then((module) => ({
+    default: module.OrdersPage,
   })),
 );
 const CustomersPage = lazy(() =>
@@ -135,14 +135,14 @@ export function AppRoutes() {
           }
         />
         <Route
-          path="shipping-consultations"
+          path="orders"
           element={
             <PermissionRoute permission="order.view">
-              <ShippingConsultationsPage />
+              <OrdersPage />
             </PermissionRoute>
           }
         />
-        <Route path="orders" element={<Navigate to="/shipping-consultations" replace />} />
+        <Route path="shipping-consultations" element={<Navigate to="/orders" replace />} />
         <Route
           path="customers"
           element={
