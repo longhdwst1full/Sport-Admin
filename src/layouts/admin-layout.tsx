@@ -21,6 +21,7 @@ import { NAVIGATION_GROUP_LABELS, NAVIGATION_ITEMS } from '@/app/navigation/navi
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import { setSidebarCollapsed, toggleSidebar } from '@/app/store/layout.slice';
 import { usePermissions } from '@/core/auth/permissions';
+import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { PageContainer } from '@/foundation/layout/page-container';
 import { NavigationTabs } from '@/layouts/components/navigation-tabs';
 import { useAuth } from '@/core/auth/auth-context';
@@ -53,16 +54,18 @@ export function AdminLayout() {
 
   return (
     <Layout className="h-screen overflow-hidden bg-slate-50">
-      <Header className="!flex !h-16 !items-center !bg-white !px-0 shadow-sm">
+      <Header className="!flex !h-[72px] !items-center !border-b !border-slate-200/80 !bg-white !px-0 shadow-[0_1px_12px_rgb(15_23_42/0.04)]">
         <div
-          className={`flex h-full shrink-0 items-center gap-3 border-r border-slate-100 px-4 transition-[width] duration-200 ${collapsed ? 'w-[88px] justify-center' : 'w-[260px]'}`}
+          className={`flex h-full shrink-0 items-center border-r border-slate-200/80 px-4 transition-[width] duration-200 ${collapsed ? 'w-[88px] justify-center' : 'w-[260px]'}`}
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-400 font-bold text-white shadow-sm">
-            D
-          </span>
-          {!collapsed && (
-            <span className="whitespace-nowrap text-base font-bold text-slate-800">DCTD ADMIN</span>
-          )}
+          <button
+            type="button"
+            aria-label="Về trang tổng quan"
+            className="rounded-xl p-1 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-500/40"
+            onClick={() => navigate('/')}
+          >
+            <BrandLogo compact={collapsed} />
+          </button>
         </div>
 
         <div className="flex min-w-0 flex-1 items-center gap-4 px-4">
@@ -104,7 +107,7 @@ export function AdminLayout() {
           onCollapse={(nextCollapsed) => {
             if (nextCollapsed !== collapsed) dispatch(setSidebarCollapsed(nextCollapsed));
           }}
-          className="!flex !h-full !flex-col !border-r !border-slate-200 !bg-white"
+          className="!flex !h-full !flex-col !border-r !border-slate-200 !bg-white shadow-[3px_0_18px_rgb(15_23_42/0.025)]"
         >
           <div className="flex h-full min-h-0 flex-col py-3">
             <Menu
@@ -133,7 +136,7 @@ export function AdminLayout() {
         </Sider>
 
         <Layout className="min-w-0 bg-slate-50">
-          <Content className="overflow-auto bg-slate-50 p-5 lg:p-8">
+          <Content className="overflow-auto bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] p-5 lg:p-8">
             <PageContainer>
               <Outlet />
             </PageContainer>

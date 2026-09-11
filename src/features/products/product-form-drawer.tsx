@@ -24,7 +24,6 @@ import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 interface ProductFormValues {
   productType: ProductType;
   name: string;
-  slug?: string;
   brandId?: string;
   categoryIds: string[];
   primaryCategoryId: string;
@@ -38,7 +37,6 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
     .oneOf(Object.values(CreateProductDtoProductType))
     .required('Chọn loại sản phẩm'),
   name: yup.string().trim().required('Nhập tên sản phẩm'),
-  slug: yup.string().trim().matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug không hợp lệ').optional(),
   brandId: yup.string().matches(ENTITY_ID_PATTERN, 'Thương hiệu không hợp lệ').optional(),
   categoryIds: yup.array().of(yup.string().matches(ENTITY_ID_PATTERN, 'Danh mục không hợp lệ').required()).min(1, 'Chọn ít nhất một danh mục').required(),
   primaryCategoryId: yup
@@ -54,7 +52,7 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
 
 const defaults: ProductFormValues = {
   productType: CreateProductDtoProductType.STANDARD,
-  name: '', slug: undefined, brandId: undefined, categoryIds: [], primaryCategoryId: '', shortDescription: '', description: '',
+  name: '', brandId: undefined, categoryIds: [], primaryCategoryId: '', shortDescription: '', description: '',
 };
 
 export function ProductFormDrawer({
@@ -122,7 +120,6 @@ export function ProductFormDrawer({
     form.reset(product ? {
       productType: product.productType,
       name: product.name,
-      slug: product.slug,
       brandId: product.brandId ?? undefined,
       categoryIds: product.categoryIds,
       primaryCategoryId: product.primaryCategoryId ?? product.categoryIds[0] ?? '',
@@ -132,10 +129,6 @@ export function ProductFormDrawer({
   }, [form, open, product]);
 
   const submit = form.handleSubmit((values) => {
-    if (product && !values.slug?.trim()) {
-      form.setError('slug', { message: 'Nhập slug' });
-      return;
-    }
     const fields = {
       productType: values.productType,
       name: values.name.trim(),
@@ -149,7 +142,6 @@ export function ProductFormDrawer({
         id: product.id,
         data: {
           ...fields,
-          ...(product.status === 'DRAFT' && values.slug ? { slug: values.slug.trim() } : {}),
           brandId: values.brandId ?? null,
           shortDescription: values.shortDescription?.trim() || null,
           description: values.description?.trim() || null,
@@ -209,37 +201,6 @@ export function ProductFormDrawer({
             )}
           />
         </Form.Item>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Form.Item
-            label="Mã sản phẩm"
-            extra={product ? 'Mã do backend sinh và không thể thay đổi.' : 'Backend tự sinh sau khi lưu.'}
-          >
-            <Input value={product?.productNo ?? 'Tự động'} disabled />
-          </Form.Item>
-          <Form.Item
-            label="Slug"
-            required={Boolean(product)}
-            validateStatus={form.formState.errors.slug ? 'error' : undefined}
-            help={form.formState.errors.slug?.message}
-            extra={product
-              ? product.status === 'DRAFT'
-                ? 'Có thể chỉnh trước publish; đổi tên không tự đổi slug.'
-                : 'Slug đã khóa sau publish để giữ URL ổn định.'
-              : 'Backend tự sinh từ tên và mã sản phẩm sau khi lưu.'}
-          >
-            <Controller
-              name="slug"
-              control={form.control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  value={product ? field.value : 'Tự động'}
-                  disabled={!product || product.status !== 'DRAFT'}
-                />
-              )}
-            />
-          </Form.Item>
-        </div>
         {textField('name', 'Tên sản phẩm')}
         <div className="grid gap-4 sm:grid-cols-2">
           <Form.Item label="Thương hiệu" validateStatus={form.formState.errors.brandId ? 'error' : undefined} help={form.formState.errors.brandId?.message}>

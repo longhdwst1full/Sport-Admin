@@ -83,7 +83,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   {
     path: '/content',
-    label: 'Nội dung',
+    label: 'Bài viết',
     group: 'experience',
     icon: <FileTextOutlined />,
     permission: 'content.post.view',

@@ -8,6 +8,12 @@ body {
   background: #f8fafc;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
+
+button,
+a,
+.ant-menu-item {
+  -webkit-tap-highlight-color: transparent;
+}
 * {
   box-sizing: border-box;
 }
@@ -26,6 +32,12 @@ body {
 .dctd-side-menu .ant-menu-submenu-title {
   min-height: 44px;
   border-radius: 12px;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.dctd-side-menu .ant-menu-item:not(.ant-menu-item-selected):hover {
+  background: #f1f5f9 !important;
+  transform: translateX(2px);
 }
 
 .dctd-side-menu .ant-menu-item-group-title {
