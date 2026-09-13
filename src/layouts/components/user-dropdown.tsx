@@ -9,7 +9,7 @@ import { useAuth } from '@/core/auth/auth-context';
 
 import { ProfileModal } from './profile-modal';
 import { SettingsModal } from './settings-modal';
-import { getInitials } from '@/lib/utils/user';
+import { getInitials } from '@/shared/utils';
 
 export function UserDropdown() {
   const auth = useAuth();
@@ -18,8 +18,6 @@ export function UserDropdown() {
   const user = auth.currentUser;
   const displayName = user?.displayName ?? 'Admin';
   const initials = getInitials(displayName);
-  const userRecord = user as (Record<string, unknown> | undefined);
-  const avatarUrl = (user?.avatarUrl ?? user?.avatar ?? userRecord?.imageUrl ?? userRecord?.photoUrl) as string | undefined;
   const scopeLabels = Array.isArray(user?.scopes)
     ? user.scopes.map((scope) => scope.type).join(', ')
     : '';
@@ -66,12 +64,11 @@ export function UserDropdown() {
         className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-500/40"
       >
         <Avatar
-          src={avatarUrl}
           size={36}
           alt={displayName}
           className="!flex !items-center !justify-center !text-xs !font-bold shrink-0 border border-emerald-500/20"
           style={{
-            background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
             boxShadow: '0 2px 8px rgb(5 150 105 / 0.25)',
           }}
         >

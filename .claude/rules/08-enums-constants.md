@@ -6,3 +6,4 @@
 - Prefer `as const` objects with derived union types for local values used at runtime and compile time. Use TypeScript `enum` only when library interoperability requires it.
 - Reuse constants in form options, permission gates, table filters and transition labels; keep Vietnamese display labels in a deliberate label map rather than embedding them in business comparisons.
 - Do not extract one-off copy, CSS classes or endpoint strings. Endpoint paths and contract DTOs always remain generated.
+

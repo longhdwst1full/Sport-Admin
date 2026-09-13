@@ -57,7 +57,6 @@ function EstablishSessionProbe() {
 describe('AuthProvider', () => {
   afterEach(() => {
     clearAuthTokens();
-    window.sessionStorage.clear();
     vi.clearAllMocks();
   });
 

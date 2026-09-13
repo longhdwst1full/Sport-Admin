@@ -2,13 +2,13 @@
  * Export table data to CSV with UTF-8 BOM so Vietnamese characters display properly in Excel.
  * Inspired by dragon-admin-web export utility.
  */
-export function exportTableToCsv<T extends Record<string, any>>({
+export function exportTableToCsv<T extends object>({
   filename = 'danh-sach.csv',
   columns,
   data,
 }: {
   filename?: string;
-  columns: Array<{ key: string; label: string; format?: (value: any, row: T) => string }>;
+  columns: Array<{ key: string; label: string; format?: (value: unknown, row: T) => string }>;
   data: T[];
 }) {
   if (!data || data.length === 0) return;
@@ -18,7 +18,8 @@ export function exportTableToCsv<T extends Record<string, any>>({
   const dataRows = data.map((row) =>
     columns
       .map((col) => {
-        const raw = col.format ? col.format(row[col.key], row) : row[col.key];
+        const cell = (row as Record<string, unknown>)[col.key];
+        const raw = col.format ? col.format(cell, row) : cell;
         const val = raw === null || raw === undefined ? '' : String(raw);
         return `"${val.replace(/"/g, '""')}"`;
       })

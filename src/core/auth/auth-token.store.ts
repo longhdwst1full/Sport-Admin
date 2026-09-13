@@ -1,32 +1,22 @@
 import type { TokenPairDto } from '@/generated/api/auth/models';
+import { AuthService } from '@/core/storage';
 
-const STORAGE_KEY = 'dctd.admin.auth.v1';
 const cookieTransport = import.meta.env.VITE_AUTH_TOKEN_TRANSPORT === 'COOKIE';
-let memoryTokens: TokenPairDto | undefined;
 const listeners = new Set<() => void>();
 
-function getStorage(): Storage | undefined {
-  return typeof window === 'undefined' ? undefined : window.sessionStorage;
+function notify(): void {
+  listeners.forEach((listener) => listener());
 }
 
 export function readAuthTokens(): TokenPairDto | undefined {
-  if (memoryTokens) return memoryTokens;
   if (cookieTransport) return undefined;
-  const raw = getStorage()?.getItem(STORAGE_KEY);
-  if (!raw) return undefined;
-  try {
-    memoryTokens = JSON.parse(raw) as TokenPairDto;
-    return memoryTokens;
-  } catch {
-    getStorage()?.removeItem(STORAGE_KEY);
-    return undefined;
-  }
+  return AuthService.read();
 }
 
 export function saveAuthTokens(tokens: TokenPairDto): void {
-  memoryTokens = tokens;
-  if (!cookieTransport) getStorage()?.setItem(STORAGE_KEY, JSON.stringify(tokens));
-  listeners.forEach((listener) => listener());
+  // COOKIE transport: server đã set HttpOnly cookie, client không giữ bản sao.
+  if (!cookieTransport) AuthService.save(tokens);
+  notify();
 }
 
 export function usesAuthCookieTransport(): boolean {
@@ -34,9 +24,8 @@ export function usesAuthCookieTransport(): boolean {
 }
 
 export function clearAuthTokens(): void {
-  memoryTokens = undefined;
-  getStorage()?.removeItem(STORAGE_KEY);
-  listeners.forEach((listener) => listener());
+  AuthService.clear();
+  notify();
 }
 
 export function getAccessToken(): string | undefined {

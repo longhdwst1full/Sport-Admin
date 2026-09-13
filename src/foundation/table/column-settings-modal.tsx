@@ -1,5 +1,5 @@
 import { CheckOutlined, CloseOutlined, SettingOutlined, UndoOutlined } from '@ant-design/icons';
-import { Button, Modal, Space, Switch, Typography } from 'antd';
+import { Button, Modal, Switch, Typography } from 'antd';
 
 export interface ColumnItem<TId extends string = string> {
   id: TId;

@@ -1,13 +1,11 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  CheckCircleOutlined,
   CloseCircleOutlined,
   CopyOutlined,
   CreditCardOutlined,
   EnvironmentOutlined,
   HistoryOutlined,
-  InboxOutlined,
   PrinterOutlined,
   ShoppingOutlined,
   UserOutlined,
@@ -18,7 +16,6 @@ import {
   Avatar,
   Button,
   Card,
-  Descriptions,
   Drawer,
   Space,
   Spin,
@@ -27,7 +24,6 @@ import {
   Tag,
   Timeline,
   Tooltip,
-  Typography,
 } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import {

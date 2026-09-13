@@ -12,6 +12,17 @@ import type { ProductSummaryDtoCurrency } from './productSummaryDtoCurrency';
 export interface ProductSummaryDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
+  /**
+   * Sellable variant represented by minPrice; use this ID for quick-add cart actions
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
+  defaultVariantId?: string | null;
+  /**
+   * Immutable SKU of defaultVariantId
+   * @nullable
+   */
+  defaultVariantSku?: string | null;
   productNo: string;
   name: string;
   slug: string;

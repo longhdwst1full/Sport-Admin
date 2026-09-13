@@ -5,41 +5,41 @@ import { PermissionRoute } from '@/core/auth/permission-route';
 import { AuthenticatedRoute } from '@/core/auth/authenticated-route';
 
 const LoginPage = lazy(() =>
-  import('@/features/auth/login-page').then((module) => ({ default: module.LoginPage })),
+  import('@/features/auth').then((module) => ({ default: module.LoginPage })),
 );
 const ChangePasswordPage = lazy(() =>
-  import('@/features/auth/change-password-page').then((module) => ({
+  import('@/features/auth').then((module) => ({
     default: module.ChangePasswordPage,
   })),
 );
 
 const DashboardPage = lazy(() =>
-  import('@/features/dashboard/dashboard-page').then((module) => ({
+  import('@/features/dashboard').then((module) => ({
     default: module.DashboardPage,
   })),
 );
 const ProductsPage = lazy(() =>
-  import('@/features/products/products-page').then((module) => ({
+  import('@/features/products').then((module) => ({
     default: module.ProductsPage,
   })),
 );
 const CatalogMastersPage = lazy(() =>
-  import('@/features/catalog-masters/catalog-masters-page').then((module) => ({
+  import('@/features/catalog-masters').then((module) => ({
     default: module.CatalogMastersPage,
   })),
 );
 const InventoryPage = lazy(() =>
-  import('@/features/inventory/inventory-page').then((module) => ({
+  import('@/features/inventory').then((module) => ({
     default: module.InventoryPage,
   })),
 );
 const ContentPage = lazy(() =>
-  import('@/features/content/content-page').then((module) => ({
+  import('@/features/content').then((module) => ({
     default: module.ContentPage,
   })),
 );
 const ReviewsPage = lazy(() =>
-  import('@/features/reviews/reviews-page').then((module) => ({
+  import('@/features/reviews').then((module) => ({
     default: module.ReviewsPage,
   })),
 );
@@ -52,22 +52,22 @@ const PaymentsPage = lazy(() =>
   import('@/features/payments').then((module) => ({ default: module.PaymentsPage })),
 );
 const CustomersPage = lazy(() =>
-  import('@/features/customers/customers-page').then((module) => ({
+  import('@/features/customers').then((module) => ({
     default: module.CustomersPage,
   })),
 );
 const OrganizationPage = lazy(() =>
-  import('@/features/organization/organization-page').then((module) => ({
+  import('@/features/organization').then((module) => ({
     default: module.OrganizationPage,
   })),
 );
 const AccessPage = lazy(() =>
-  import('@/features/access/access-page').then((module) => ({
+  import('@/features/access').then((module) => ({
     default: module.AccessPage,
   })),
 );
 const AuditPage = lazy(() =>
-  import('@/features/audit/audit-page').then((module) => ({ default: module.AuditPage })),
+  import('@/features/audit').then((module) => ({ default: module.AuditPage })),
 );
 
 export function AppRoutes() {

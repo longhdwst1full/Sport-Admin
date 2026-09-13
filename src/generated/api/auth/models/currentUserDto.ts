@@ -14,6 +14,4 @@ export interface CurrentUserDto {
   permissions: string[];
   scopes: AuthScopeDto[];
   mustChangePassword: boolean;
-  avatarUrl?: string | null;
-  avatar?: string | null;
 }

@@ -8,12 +8,18 @@ import {
   type NavigationTab,
 } from './layout.slice';
 import type { RootState } from './store';
+import { createBrowserStore, LocalStorageKey } from '@/core/storage';
 
-const LAYOUT_STORAGE_KEY = 'dctd-admin-layout-v2';
+const LAYOUT_STORAGE_KEY = LocalStorageKey.LAYOUT;
+
+// Hydration phải loại bỏ field lạ và chịu được bản ghi cũ/hỏng (RULE-CORE-01).
+const layoutStore = createBrowserStore<LayoutState>(LAYOUT_STORAGE_KEY, {
+  parse: (parsed) => (isPersistedLayout(parsed) ? normalizePersistedLayout(parsed) : undefined),
+});
 
 function* persistLayout() {
   const layout: LayoutState = yield select((state: RootState) => state.layout);
-  localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(layout));
+  layoutStore.write(layout);
 }
 
 function isNavigationTab(value: unknown): value is NavigationTab {
@@ -27,32 +33,30 @@ function isNavigationTab(value: unknown): value is NavigationTab {
   );
 }
 
+function isPersistedLayout(parsed: unknown): parsed is LayoutState {
+  return (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    'sidebarCollapsed' in parsed &&
+    typeof parsed.sidebarCollapsed === 'boolean' &&
+    'openTabs' in parsed &&
+    Array.isArray(parsed.openTabs) &&
+    parsed.openTabs.every(isNavigationTab) &&
+    'activePath' in parsed &&
+    (typeof parsed.activePath === 'string' || parsed.activePath === null)
+  );
+}
+
+function normalizePersistedLayout(parsed: LayoutState): LayoutState {
+  return {
+    sidebarCollapsed: parsed.sidebarCollapsed,
+    openTabs: parsed.openTabs.slice(0, 12),
+    activePath: parsed.activePath,
+  };
+}
+
 export function readPersistedLayout(): LayoutState | undefined {
-  try {
-    const value = localStorage.getItem(LAYOUT_STORAGE_KEY);
-    if (!value) return undefined;
-    const parsed: unknown = JSON.parse(value);
-    if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'sidebarCollapsed' in parsed &&
-      typeof parsed.sidebarCollapsed === 'boolean' &&
-      'openTabs' in parsed &&
-      Array.isArray(parsed.openTabs) &&
-      parsed.openTabs.every(isNavigationTab) &&
-      'activePath' in parsed &&
-      (typeof parsed.activePath === 'string' || parsed.activePath === null)
-    ) {
-      return {
-        sidebarCollapsed: parsed.sidebarCollapsed,
-        openTabs: parsed.openTabs.slice(0, 12),
-        activePath: parsed.activePath,
-      };
-    }
-  } catch {
-    localStorage.removeItem(LAYOUT_STORAGE_KEY);
-  }
-  return undefined;
+  return layoutStore.read();
 }
 
 export function* rootSaga() {

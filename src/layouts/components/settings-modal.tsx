@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   App,
   Badge,
   Button,
   Card,
   Descriptions,
-  Divider,
   Modal,
   Radio,
   Select,
@@ -14,10 +13,8 @@ import {
   Tag,
 } from 'antd';
 import {
-  ApiOutlined,
   AppstoreOutlined,
   BellOutlined,
-  CheckOutlined,
   DatabaseOutlined,
   DesktopOutlined,
   InfoCircleOutlined,
@@ -27,6 +24,7 @@ import {
   SoundOutlined,
   SunOutlined,
 } from '@ant-design/icons';
+import { createBrowserStore, LocalStorageKey } from '@/core/storage';
 
 interface SettingsModalProps {
   open: boolean;
@@ -49,17 +47,14 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   autoCloseTabs: false,
 };
 
-const STORAGE_KEY = 'baoan_admin_preferences';
+const STORAGE_KEY = LocalStorageKey.PREFERENCES;
+
+const preferencesStore = createBrowserStore<UserPreferences>(STORAGE_KEY);
 
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const { message } = App.useApp();
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? (JSON.parse(saved) as UserPreferences) : DEFAULT_PREFERENCES;
-    } catch {
-      return DEFAULT_PREFERENCES;
-    }
+    return preferencesStore.read() ?? DEFAULT_PREFERENCES;
   });
 
   const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'auto'>('light');
@@ -67,17 +62,13 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const updatePreference = <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
     const updated = { ...preferences, [key]: value };
     setPreferences(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      void message.success('Đã lưu thiết lập');
-    } catch {
-      // ignore
-    }
+    preferencesStore.write(updated);
+    void message.success('Đã lưu thiết lập');
   };
 
   const handleReset = () => {
     setPreferences(DEFAULT_PREFERENCES);
-    localStorage.removeItem(STORAGE_KEY);
+    preferencesStore.clear();
     void message.info('Đã khôi phục cài đặt gốc');
   };
 

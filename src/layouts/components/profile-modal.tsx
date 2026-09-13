@@ -9,12 +9,10 @@ import {
   Input,
   Modal,
   Progress,
-  Tabs,
   Tag,
   Tooltip,
 } from 'antd';
 import {
-  CameraOutlined,
   CheckCircleOutlined,
   CopyOutlined,
   KeyOutlined,
@@ -22,7 +20,6 @@ import {
   MailOutlined,
   PhoneOutlined,
   SafetyCertificateOutlined,
-  UserOutlined,
 } from '@ant-design/icons';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -35,8 +32,8 @@ import {
 } from '@/generated/api/auth/auth';
 import type { ChangePasswordDto } from '@/generated/api/auth/models';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { getPasswordStrength } from '@/lib/utils/password-strength';
-import { getInitials } from '@/lib/utils/user';
+import { getPasswordStrength } from '@/shared/utils';
+import { getInitials } from '@/shared/utils';
 
 interface ProfileModalProps {
   open: boolean;
@@ -65,11 +62,6 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
   const user = auth.currentUser;
   const displayName = user?.displayName ?? 'Admin';
   const initials = getInitials(displayName);
-  const userRecord = user as Record<string, unknown> | undefined;
-  const avatarUrl = (user?.avatarUrl ??
-    user?.avatar ??
-    userRecord?.imageUrl ??
-    userRecord?.photoUrl) as string | undefined;
 
   const [activeTab, setActiveTab] = useState<'info' | 'password'>('info');
 
@@ -138,19 +130,15 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
         <div className="flex flex-wrap items-end justify-between gap-4 -mt-10 mb-4">
           <div className="relative group">
             <Avatar
-              src={avatarUrl}
               size={76}
               alt={displayName}
               className="!flex !items-center !justify-center !text-2xl !font-bold ring-4 ring-white shadow-lg shrink-0"
               style={{
-                background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
               }}
             >
               {initials}
             </Avatar>
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-              <CameraOutlined className="text-white text-lg" />
-            </div>
           </div>
 
           <div className="flex gap-2">

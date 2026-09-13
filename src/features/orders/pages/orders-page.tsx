@@ -11,7 +11,6 @@ import { useDebounce } from 'use-debounce';
 import { useListAdminOrders } from '@/generated/api/orders/orders';
 import type { ListAdminOrdersStatusGroup } from '@/generated/api/orders/models';
 import { ManagementPage } from '@/foundation/management';
-import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { getApiErrorMessage } from '@/lib/api/error';
