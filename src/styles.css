@@ -2,12 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Custom Properties (Dark-mode ready) ─────────────────── */
+:root {
+  --color-primary: #059669;
+  --color-primary-light: #10b981;
+  --color-primary-dark: #047857;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f1f5f9;
+  --color-surface-raised: #ffffff;
+  --color-ink: #0f172a;
+  --color-ink-secondary: #64748b;
+  --color-ink-tertiary: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-border-subtle: #f1f5f9;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 80px;
+  --header-height: 72px;
+}
+
+/* ─── Base resets ─────────────────────────────────────────────── */
 body {
   margin: 0;
   min-width: 360px;
-  background: #f8f7fa;
-  color: #434050;
-  font-family: 'Noto Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background: var(--color-surface-sunken);
+  color: var(--color-ink);
+  font-family: 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 button,
@@ -15,25 +43,81 @@ a,
 .ant-menu-item {
   -webkit-tap-highlight-color: transparent;
 }
-* {
-  box-sizing: border-box;
+
+/* ─── Scrollbar styling ───────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.dctd-rich-text-editor[data-editor-state='read-only'] .cke_contents {
-  background: #f8f7fa;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Sidebar scrollbar — slimmer */
+.dctd-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dctd-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+}
+
+/* Header nav tabs scrollbar — horizontal & subtle */
+.dctd-nav-tabs-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dctd-nav-tabs-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.dctd-nav-tabs-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dctd-nav-tabs-scroll::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 9999px;
+}
+
+.dctd-nav-tabs-scroll::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* ─── Sidebar menu ────────────────────────────────────────────── */
 .dctd-side-menu .ant-menu-item-selected {
-  background: linear-gradient(135deg, #006c5b, #00bf6f) !important;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 6px 18px rgb(16 185 129 / 18%);
+  box-shadow: 0 4px 12px rgb(5 150 105 / 0.2);
+  font-weight: 600;
+}
+
+.dctd-side-menu .ant-menu-item-selected .anticon {
+  color: #ffffff !important;
 }
 
 .dctd-side-menu .ant-menu-item,
 .dctd-side-menu .ant-menu-submenu-title {
   min-height: 44px;
-  border-radius: 12px;
-  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .dctd-side-menu .ant-menu-item:not(.ant-menu-item-selected):hover {
@@ -42,10 +126,313 @@ a,
 }
 
 .dctd-side-menu .ant-menu-item-group-title {
-  padding-top: 18px;
+  padding-top: 20px;
+  padding-bottom: 4px;
   color: #94a3b8;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+/* ─── CKEditor read-only state ────────────────────────────────── */
+.dctd-rich-text-editor[data-editor-state='read-only'] .cke_contents {
+  background: var(--color-surface-sunken);
+}
+
+/* ─── Page enter animation ────────────────────────────────────── */
+.dctd-page-enter {
+  animation: dctdPageEnter 0.4s ease-out both;
+}
+
+@keyframes dctdPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Card hover lift ─────────────────────────────────────────── */
+.dctd-card-interactive {
+  transition:
+    box-shadow 250ms ease,
+    transform 250ms ease;
+}
+
+.dctd-card-interactive:hover {
+  box-shadow:
+    0 10px 25px -3px rgb(0 0 0 / 0.08),
+    0 4px 6px -4px rgb(0 0 0 / 0.04);
+  transform: translateY(-2px);
+}
+
+/* ─── Metric card accent ──────────────────────────────────────── */
+.dctd-metric-card {
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow 250ms ease,
+    transform 250ms ease;
+}
+
+.dctd-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px 0 0 4px;
+  background: var(--metric-accent, #059669);
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.dctd-metric-card:hover {
+  box-shadow:
+    0 8px 20px -3px rgb(0 0 0 / 0.06),
+    0 4px 6px -4px rgb(0 0 0 / 0.03);
+  transform: translateY(-1px);
+}
+
+.dctd-metric-card:hover::before {
+  opacity: 1;
+}
+
+/* ─── Glassmorphism ───────────────────────────────────────────── */
+.dctd-glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+.dctd-glass-strong {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+}
+
+/* ─── Shimmer skeleton ────────────────────────────────────────── */
+.dctd-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 25%,
+    #e8edf3 37%,
+    #f1f5f9 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ─── Gradient text utility ───────────────────────────────────── */
+.dctd-gradient-text {
+  background: linear-gradient(135deg, #059669, #0ea5e9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Animated background blobs ───────────────────────────────── */
+.dctd-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.3;
+  animation: blob 8s ease-in-out infinite;
+}
+
+.dctd-blob-1 {
+  background: #059669;
+  animation-delay: 0s;
+}
+
+.dctd-blob-2 {
+  background: #0ea5e9;
+  animation-delay: 2s;
+}
+
+.dctd-blob-3 {
+  background: #8b5cf6;
+  animation-delay: 4s;
+}
+
+@keyframes blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-10px, 15px) scale(0.95);
+  }
+  75% {
+    transform: translate(-20px, -10px) scale(1.02);
+  }
+}
+
+/* ─── Header shadow on scroll ─────────────────────────────────── */
+.dctd-header-scrolled {
+  box-shadow: 0 1px 12px rgb(15 23 42 / 0.06);
+}
+
+/* ─── Scroll shadow indicator (sidebar) ───────────────────────── */
+.dctd-scroll-shadow-top {
+  box-shadow: inset 0 8px 8px -8px rgb(0 0 0 / 0.08);
+}
+
+.dctd-scroll-shadow-bottom {
+  box-shadow: inset 0 -8px 8px -8px rgb(0 0 0 / 0.08);
+}
+
+/* ─── Status dot indicator ────────────────────────────────────── */
+.dctd-status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dctd-status-dot::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ─── Table row transition ────────────────────────────────────── */
+.ant-table-tbody > tr {
+  transition: background-color 200ms ease;
+}
+
+/* ─── Drawer header accent & responsive drawer ────────────────── */
+.dctd-drawer-accent .ant-drawer-header {
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(to right, #059669, #0ea5e9) 1;
+}
+
+.ant-drawer .ant-drawer-content-wrapper {
+  max-width: 100vw !important;
+}
+
+@media (max-width: 640px) {
+  .ant-drawer .ant-drawer-content-wrapper {
+    width: 100% !important;
+  }
+  .ant-modal {
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+  }
+}
+
+/* ─── Ant Design overrides for premium feel ───────────────────── */
+.ant-card {
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.02);
+  transition:
+    box-shadow 250ms ease,
+    border-color 250ms ease;
+}
+
+.ant-card:hover {
+  border-color: #e2e8f0;
+}
+
+.ant-btn-primary {
+  font-weight: 600;
+}
+
+.ant-table-thead > tr > th {
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Tab pill variation ──────────────────────────────────────── */
+.dctd-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+  user-select: none;
+  white-space: nowrap;
+  border: none;
+  background: transparent;
+}
+
+.dctd-nav-tab:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.dctd-nav-tab[data-active='true'] {
+  background: #ecfdf5;
+  color: #059669;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgb(5 150 105 / 0.1);
+}
+
+.dctd-nav-tab .dctd-tab-close {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 150ms ease, background 150ms ease;
+}
+
+.dctd-nav-tab:hover .dctd-tab-close,
+.dctd-nav-tab[data-active='true'] .dctd-tab-close {
+  opacity: 1;
+}
+
+.dctd-nav-tab .dctd-tab-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Focus visible ───────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+}
+
+/* ─── Selection color ─────────────────────────────────────────── */
+::selection {
+  background: #a7f3d0;
+  color: #064e3b;
 }

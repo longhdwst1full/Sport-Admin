@@ -1,24 +1,53 @@
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { App, Avatar, Button, Card, Popconfirm, Skeleton, Table, Tag, Typography } from 'antd';
+import {
+  BookOutlined,
+  CheckCircleOutlined,
+  DeleteOutlined,
+  FileTextOutlined,
+  InboxOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
+import { App, Avatar, Button, Popconfirm, Skeleton, Table, Tag } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
+import { ManagementPage, StatusTag } from '@/foundation/management';
+import { PageTransition } from '@/foundation/layout/page-transition';
 import {
   getListAdminPostsQueryKey,
   useDeleteAdminPost,
   useListAdminPosts,
 } from '@/generated/api/content/content';
+import type { ContentPostDto } from '@/generated/api/content/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 const ContentEditorDrawer = lazy(() =>
   import('./content-editor-drawer').then((module) => ({ default: module.ContentEditorDrawer })),
 );
 
+const POST_STATUSES = {
+  PUBLISHED: { color: 'green', label: 'Đang xuất bản' },
+  ARCHIVED: { color: 'default', label: 'Đã lưu trữ' },
+  DRAFT: { color: 'gold', label: 'Bản nháp' },
+};
+
 export function ContentPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [editorOpen, setEditorOpen] = useState(false);
   const query = useListAdminPosts();
+  const items = query.data?.items ?? [];
+
+  const metrics = useMemo(() => {
+    const total = items.length;
+    const published = items.filter((i) => i.status === 'PUBLISHED').length;
+    const archived = items.filter((i) => i.status === 'ARCHIVED').length;
+    const guides = items.filter(
+      (i) => i.postType === 'TRAINING_GUIDE' || i.postType === 'PRODUCT_GUIDE',
+    ).length;
+    return { total, published, archived, guides };
+  }, [items]);
+
   const deletePost = useDeleteAdminPost({
     mutation: {
       onSuccess: async () => {
@@ -29,75 +58,136 @@ export function ContentPage() {
         void message.error(getApiErrorMessage(error, 'Không thể xóa bài viết.')),
     },
   });
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Typography.Text type="secondary">CMS</Typography.Text>
-          <Typography.Title level={2} className="!mb-0 !mt-1">
-            Bài viết
-          </Typography.Title>
-        </div>
-        <PermissionGate permission="content.post.manage">
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setEditorOpen(true)}
-          >
-            Soạn bài viết
-          </Button>
-        </PermissionGate>
-      </div>
-      <Card>
+    <PageTransition>
+      <ManagementPage
+        eyebrow="Quản trị nội dung CMS"
+        title="Bài viết & Tin tức"
+        description="Soạn thảo, quản lý bài viết hướng dẫn thể thao, câu chuyện thương hiệu và tin tức trên storefront."
+        dataNotice="Bài viết đã xuất bản sẽ hiển thị công khai trên Storefront cho khách hàng tham khảo."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>
+              Làm mới
+            </Button>
+            <PermissionGate permission="content.post.manage">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setEditorOpen(true)}
+              >
+                Soạn bài viết
+              </Button>
+            </PermissionGate>
+          </div>
+        }
+        metrics={[
+          {
+            key: 'total',
+            label: 'Tổng bài viết',
+            value: metrics.total,
+            icon: <FileTextOutlined />,
+            tone: 'blue',
+          },
+          {
+            key: 'published',
+            label: 'Đang xuất bản',
+            value: metrics.published,
+            icon: <CheckCircleOutlined />,
+            tone: 'green',
+          },
+          {
+            key: 'archived',
+            label: 'Đã lưu trữ',
+            value: metrics.archived,
+            icon: <InboxOutlined />,
+            tone: 'orange',
+          },
+          {
+            key: 'guides',
+            label: 'Bài cẩm nang / Guide',
+            value: metrics.guides,
+            icon: <BookOutlined />,
+            tone: 'green',
+          },
+        ]}
+      >
         <Table
           rowKey="id"
           loading={query.isPending}
-          dataSource={query.data?.items ?? []}
-          pagination={false}
+          dataSource={items}
+          scroll={{ x: 920 }}
+          pagination={{ pageSize: 10, hideOnSinglePage: true }}
           columns={[
             {
               title: 'Bài viết',
               dataIndex: 'title',
-              render: (value, row) => (
+              render: (value: string, row: ContentPostDto) => (
                 <div className="flex items-center gap-3">
-                  <Avatar shape="square" size={48} src={row.coverUrl} />
-                  <div>
-                    <strong>{value}</strong>
-                    <div className="text-xs text-gray-500">/{row.slug}</div>
+                  <Avatar
+                    shape="square"
+                    size={48}
+                    src={row.coverUrl}
+                    className="rounded-lg bg-slate-100 flex-shrink-0 border border-slate-200"
+                  >
+                    {value ? value.slice(0, 1).toUpperCase() : 'P'}
+                  </Avatar>
+                  <div className="min-w-0">
+                    <strong className="text-slate-800 text-xs block truncate">{value}</strong>
+                    <div className="text-[11px] text-slate-400 font-mono">/{row.slug}</div>
                   </div>
                 </div>
               ),
             },
             {
-              title: 'Loại',
+              title: 'Chuyên mục',
               dataIndex: 'postType',
-              render: (value) => <Tag>{String(value).replaceAll('_', ' ')}</Tag>,
+              width: 140,
+              render: (value: string) => (
+                <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-medium">
+                  {String(value).replaceAll('_', ' ')}
+                </span>
+              ),
             },
             {
-              title: 'Liên quan SP',
+              title: 'SP liên kết',
               dataIndex: 'relatedProductSlugs',
-              render: (value: string[]) => value.length,
+              width: 110,
+              align: 'center' as const,
+              render: (value: string[]) => (
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                  {value?.length ?? 0}
+                </span>
+              ),
             },
             {
-              title: 'Xuất bản',
+              title: 'Ngày xuất bản',
               dataIndex: 'publishedAt',
-              render: (value) => new Date(value).toLocaleDateString('vi-VN'),
+              width: 150,
+              render: (value: string) => (
+                <span className="text-xs text-slate-600">
+                  {value ? new Date(value).toLocaleDateString('vi-VN') : '—'}
+                </span>
+              ),
             },
             {
               title: 'Trạng thái',
               dataIndex: 'status',
-              render: (value) => (
-                <Tag color={value === 'PUBLISHED' ? 'green' : 'default'}>
-                  {value === 'PUBLISHED' ? 'Đang xuất bản' : 'Đã lưu trữ'}
-                </Tag>
+              width: 140,
+              render: (value: string) => (
+                <StatusTag
+                  status={value}
+                  presentations={POST_STATUSES as Record<string, { label: string; color: string }>}
+                />
               ),
             },
             {
               title: 'Thao tác',
               key: 'actions',
-              align: 'right',
-              render: (_, row) => (
+              width: 110,
+              align: 'right' as const,
+              render: (_: unknown, row: ContentPostDto) => (
                 <PermissionGate permission="content.post.manage">
                   <Popconfirm
                     title="Xóa bài viết này?"
@@ -116,11 +206,13 @@ export function ContentPage() {
                     <Button
                       danger
                       type="link"
+                      size="small"
                       icon={<DeleteOutlined />}
                       disabled={row.status === 'ARCHIVED'}
                       loading={deletePost.isPending && deletePost.variables?.id === row.id}
+                      className="text-xs"
                     >
-                      Xóa
+                      Lưu trữ
                     </Button>
                   </Popconfirm>
                 </PermissionGate>
@@ -128,12 +220,13 @@ export function ContentPage() {
             },
           ]}
         />
-      </Card>
-      {editorOpen && (
-        <Suspense fallback={<Skeleton active />}>
-          <ContentEditorDrawer open={editorOpen} onClose={() => setEditorOpen(false)} />
-        </Suspense>
-      )}
-    </div>
+
+        {editorOpen && (
+          <Suspense fallback={<Skeleton active />}>
+            <ContentEditorDrawer open={editorOpen} onClose={() => setEditorOpen(false)} />
+          </Suspense>
+        )}
+      </ManagementPage>
+    </PageTransition>
   );
 }

@@ -54,7 +54,7 @@ export function AccessPage() {
     <ManagementPage
       eyebrow="Identity & access"
       title="Người dùng & phân quyền"
-      description="Hệ thống có một Admin gốc duy nhất; Admin tạo và phân quyền BRANCH_MANAGER hoặc STAFF theo chi nhánh."
+      description="Hệ thống có một tài khoản Admin duy nhất; Admin tạo và phân quyền BRANCH_MANAGER hoặc STAFF theo chi nhánh."
       dataNotice="OWNER là tài khoản bootstrap bất biến, không thể tạo thêm, khóa hoặc gán lại. Nhân viên mới hoặc vừa mở khóa phải đổi mật khẩu mặc định."
       metrics={[
         { key: 'users', label: 'Người dùng', value: users.length, icon: <UserOutlined /> },

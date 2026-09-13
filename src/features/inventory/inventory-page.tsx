@@ -11,6 +11,7 @@ import { Button, Tabs } from 'antd';
 import { useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
+import { PageTransition } from '@/foundation/layout/page-transition';
 import {
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
@@ -37,6 +38,7 @@ export function InventoryPage() {
     setSelectedBalance(balance);
     setAdjustmentOpen(true);
   };
+
   const refresh = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
@@ -47,67 +49,103 @@ export function InventoryPage() {
   };
 
   return (
-    <ManagementPage
-      eyebrow="Inventory control"
-      title="Tồn kho & sổ kho"
-      description="Theo dõi tồn khả dụng theo kho, phiếu điều chỉnh và ledger bất biến từ cùng nguồn dữ liệu PostgreSQL."
-      dataNotice="Không sửa trực tiếp số lượng sản phẩm. Mọi biến động tồn phải tạo chứng từ và dòng movement có thể truy vết."
-      actions={
-        <div className="flex flex-wrap gap-2">
-          <Button icon={<ReloadOutlined />} onClick={() => void refresh()}>Làm mới dữ liệu</Button>
-          <PermissionGate permission="inventory.stock.adjust">
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>
-              Tạo phiếu điều chỉnh
+    <PageTransition>
+      <ManagementPage
+        eyebrow="Quản trị kho vận"
+        title="Tồn kho & Sổ kho"
+        description="Theo dõi tồn khả dụng theo từng kho, đối soát phiếu điều chỉnh và audit sổ kho bất biến từ cơ sở dữ liệu."
+        dataNotice="Không sửa trực tiếp số lượng tồn sản phẩm. Mọi biến động tồn đều phải tạo chứng từ và phát sinh movement truy vết."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button icon={<ReloadOutlined />} onClick={() => void refresh()}>
+              Làm mới dữ liệu
             </Button>
-          </PermissionGate>
-          <PermissionGate permission="inventory.transfer.create">
-            <Button icon={<SwapOutlined />} onClick={() => setTransferOpen(true)}>
-              Tạo phiếu chuyển kho
-            </Button>
-          </PermissionGate>
-        </div>
-      }
-      metrics={[
-        { key: 'sku', label: 'Dòng tồn', value: metrics.total, icon: <InboxOutlined /> },
-        { key: 'available', label: 'Có thể bán trên trang', value: metrics.available, icon: <SwapOutlined />, tone: 'green' },
-        { key: 'low', label: 'Sắp hết trên trang', value: metrics.low, icon: <WarningOutlined />, tone: 'orange' },
-        { key: 'out', label: 'Hết hàng trên trang', value: metrics.out, icon: <AuditOutlined />, tone: 'blue' },
-      ]}
-    >
-      <Tabs
-        destroyInactiveTabPane={false}
-        items={[
+            <PermissionGate permission="inventory.stock.adjust">
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>
+                Tạo phiếu điều chỉnh
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission="inventory.transfer.create">
+              <Button icon={<SwapOutlined />} onClick={() => setTransferOpen(true)}>
+                Tạo phiếu chuyển kho
+              </Button>
+            </PermissionGate>
+          </div>
+        }
+        metrics={[
           {
-            key: 'balances',
-            label: 'Tồn theo kho',
-            children: <InventoryBalancePanel onAdjust={openAdjustment} onMetricsChange={setMetrics} />,
+            key: 'sku',
+            label: 'Dòng tồn kho',
+            value: metrics.total,
+            icon: <InboxOutlined />,
+            tone: 'blue',
           },
-          { key: 'movements', label: 'Sổ kho', children: <InventoryMovementPanel /> },
-          { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel /> },
           {
-            key: 'transfers',
-            label: 'Chuyển kho',
-            children: <StockTransferPanel selectedId={selectedTransferId} onSelectedIdChange={setSelectedTransferId} />,
+            key: 'available',
+            label: 'Có thể bán ngay',
+            value: metrics.available,
+            icon: <SwapOutlined />,
+            tone: 'green',
+          },
+          {
+            key: 'low',
+            label: 'Sắp hết hàng',
+            value: metrics.low,
+            icon: <WarningOutlined />,
+            tone: 'orange',
+          },
+          {
+            key: 'out',
+            label: 'Đã hết hàng',
+            value: metrics.out,
+            icon: <AuditOutlined />,
+            tone: 'red',
           },
         ]}
-      />
-      {adjustmentOpen && (
-        <StockAdjustmentDrawer
-          open
-          balance={selectedBalance}
-          onClose={() => {
-            setAdjustmentOpen(false);
-            setSelectedBalance(undefined);
-          }}
+      >
+        <Tabs
+          destroyInactiveTabPane={false}
+          items={[
+            {
+              key: 'balances',
+              label: 'Tồn theo kho',
+              children: <InventoryBalancePanel onAdjust={openAdjustment} onMetricsChange={setMetrics} />,
+            },
+            { key: 'movements', label: 'Sổ kho (Ledger)', children: <InventoryMovementPanel /> },
+            { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel /> },
+            {
+              key: 'transfers',
+              label: 'Phiếu chuyển kho',
+              children: (
+                <StockTransferPanel
+                  selectedId={selectedTransferId}
+                  onSelectedIdChange={setSelectedTransferId}
+                />
+              ),
+            },
+          ]}
         />
-      )}
-      {transferOpen && (
-        <StockTransferCreateDrawer
-          open
-          onClose={() => setTransferOpen(false)}
-          onCreated={setSelectedTransferId}
-        />
-      )}
-    </ManagementPage>
+
+        {adjustmentOpen && (
+          <StockAdjustmentDrawer
+            open
+            balance={selectedBalance}
+            onClose={() => {
+              setAdjustmentOpen(false);
+              setSelectedBalance(undefined);
+              void refresh();
+            }}
+          />
+        )}
+
+        {transferOpen && (
+          <StockTransferCreateDrawer
+            open
+            onClose={() => setTransferOpen(false)}
+            onCreated={() => void refresh()}
+          />
+        )}
+      </ManagementPage>
+    </PageTransition>
   );
 }

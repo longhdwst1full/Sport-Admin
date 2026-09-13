@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { KeyOutlined, LockOutlined } from '@ant-design/icons';
-import { App, Button, Card, Form, Input, Typography } from 'antd';
-import { Controller, useForm } from 'react-hook-form';
+import { App, Button, Card, Form, Input, Progress, Typography } from 'antd';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import { useQueryClient } from '@tanstack/react-query';
@@ -23,6 +23,26 @@ const schema: yup.ObjectSchema<ChangePasswordDto & { confirmPassword: string }> 
     .oneOf([yup.ref('newPassword')], 'Mật khẩu nhập lại chưa khớp'),
 });
 
+function getPasswordStrength(password: string): { percent: number; label: string; color: string } {
+  if (!password) return { percent: 0, label: '', color: '#e2e8f0' };
+  let score = 0;
+  if (password.length >= 8) score += 25;
+  if (password.length >= 12) score += 15;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 20;
+  if (/\d/.test(password)) score += 20;
+  if (/[^a-zA-Z0-9]/.test(password)) score += 20;
+
+  if (score < 40) return { percent: score, label: 'Yếu', color: '#ef4444' };
+  if (score < 70) return { percent: score, label: 'Trung bình', color: '#f59e0b' };
+  return { percent: score, label: 'Mạnh', color: '#22c55e' };
+}
+
+const fieldConfig = [
+  { name: 'currentPassword' as const, label: 'Mật khẩu hiện tại', autoComplete: 'current-password' },
+  { name: 'newPassword' as const, label: 'Mật khẩu mới', autoComplete: 'new-password' },
+  { name: 'confirmPassword' as const, label: 'Nhập lại mật khẩu mới', autoComplete: 'new-password' },
+];
+
 export function ChangePasswordPage() {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -31,6 +51,9 @@ export function ChangePasswordPage() {
     resolver: yupResolver(schema),
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   });
+  const newPassword = useWatch({ control: form.control, name: 'newPassword' });
+  const strength = getPasswordStrength(newPassword ?? '');
+
   const changePassword = useChangeAdminPassword({
     mutation: {
       onSuccess: async () => {
@@ -43,28 +66,60 @@ export function ChangePasswordPage() {
   });
 
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-100 p-4">
-      <Card className="w-full max-w-lg shadow-xl">
-        <div className="mb-7 text-center">
-          <div className="mx-auto mb-3 grid size-12 place-items-center rounded-2xl bg-amber-500 text-xl text-white">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+      {/* Background decoration */}
+      <div aria-hidden className="dctd-blob dctd-blob-1 -left-20 -top-20 size-72" />
+      <div aria-hidden className="dctd-blob dctd-blob-2 -bottom-20 -right-20 size-64" />
+
+      <Card
+        className="relative w-full max-w-lg !overflow-hidden !border-0 !shadow-elevated"
+        styles={{ body: { padding: 40 } }}
+      >
+        {/* Top accent */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-xl text-white shadow-lg shadow-amber-500/25">
             <KeyOutlined />
           </div>
-          <Typography.Title level={3} className="!mb-1">Đổi mật khẩu lần đầu</Typography.Title>
-          <Typography.Text type="secondary">
+          <Typography.Title level={3} className="!mb-2 !text-slate-900">
+            Đổi mật khẩu
+          </Typography.Title>
+          <Typography.Text className="!text-sm !text-slate-500">
             Tài khoản mới hoặc vừa được mở khóa phải đổi mật khẩu mặc định trước khi sử dụng.
           </Typography.Text>
         </div>
+
+        {/* Step indicator */}
+        <div className="mb-6 flex items-center gap-2">
+          {[1, 2, 3].map((step, index) => (
+            <div
+              key={step}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                index === 0
+                  ? 'bg-admin-500'
+                  : index === 1 && (newPassword?.length ?? 0) > 0
+                    ? 'bg-admin-400'
+                    : 'bg-slate-200'
+              }`}
+            />
+          ))}
+        </div>
+
         <Form
           layout="vertical"
-          onFinish={() => void form.handleSubmit(({ confirmPassword: _, ...data }) => {
-            void _;
-            changePassword.mutate({ data });
-          })()}
+          onFinish={() =>
+            void form.handleSubmit(({ confirmPassword: _, ...data }) => {
+              void _;
+              changePassword.mutate({ data });
+            })()
+          }
         >
-          {(['currentPassword', 'newPassword', 'confirmPassword'] as const).map((name) => (
+          {fieldConfig.map(({ name, label, autoComplete }) => (
             <Form.Item
               key={name}
-              label={name === 'currentPassword' ? 'Mật khẩu hiện tại' : name === 'newPassword' ? 'Mật khẩu mới' : 'Nhập lại mật khẩu mới'}
+              label={<span className="font-medium text-slate-700">{label}</span>}
               required
               validateStatus={form.formState.errors[name] ? 'error' : undefined}
               help={form.formState.errors[name]?.message}
@@ -75,14 +130,42 @@ export function ChangePasswordPage() {
                 render={({ field }) => (
                   <Input.Password
                     {...field}
-                    prefix={<LockOutlined />}
-                    autoComplete={name === 'currentPassword' ? 'current-password' : 'new-password'}
+                    size="large"
+                    prefix={<LockOutlined className="text-slate-400" />}
+                    placeholder="••••••••"
+                    autoComplete={autoComplete}
                   />
                 )}
               />
+              {/* Password strength indicator for newPassword */}
+              {name === 'newPassword' && strength.percent > 0 && (
+                <div className="mt-2 flex items-center gap-2">
+                  <Progress
+                    percent={strength.percent}
+                    showInfo={false}
+                    size="small"
+                    strokeColor={strength.color}
+                    trailColor="#f1f5f9"
+                    className="flex-1"
+                  />
+                  <span
+                    className="text-xs font-medium"
+                    style={{ color: strength.color }}
+                  >
+                    {strength.label}
+                  </span>
+                </div>
+              )}
             </Form.Item>
           ))}
-          <Button block type="primary" htmlType="submit" loading={changePassword.isPending}>
+
+          <Button
+            block
+            type="primary"
+            htmlType="submit"
+            loading={changePassword.isPending}
+            className="!mt-2 !h-12 !rounded-xl !text-base !font-semibold"
+          >
             Đổi mật khẩu và tiếp tục
           </Button>
         </Form>

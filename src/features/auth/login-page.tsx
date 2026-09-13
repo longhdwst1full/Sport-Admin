@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { App, Button, Card, Form, Input, Typography } from 'antd';
+import { App, Button, Form, Input } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
@@ -24,6 +24,7 @@ export function LoginPage() {
     resolver: yupResolver(schema),
     defaultValues: { identifier: '', password: '' },
   });
+
   const login = useLoginAdmin({
     mutation: {
       onSuccess: (tokens) => {
@@ -52,50 +53,129 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-slate-100 p-4">
-      <div aria-hidden className="absolute -left-28 -top-28 size-80 rounded-full bg-emerald-300/25 blur-3xl" />
-      <div aria-hidden className="absolute -bottom-36 -right-24 size-96 rounded-full bg-red-300/20 blur-3xl" />
-      <Card className="relative w-full max-w-md overflow-hidden !border-0 shadow-[0_24px_70px_rgb(15_23_42/0.16)]">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-800 to-red-500" />
-        <div className="mb-7 pt-3 text-center">
-          <div className="mx-auto mb-5 flex min-h-16 max-w-[280px] items-center justify-center rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
-            <BrandLogo className="max-w-[250px]" />
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 px-4 py-12">
+      {/* ── Background ambient decorative gradients ───────────── */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        {/* Soft radial glow from the top */}
+        <div className="absolute left-1/2 -top-[300px] -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-gradient-to-b from-emerald-200/50 via-teal-100/30 to-transparent blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-slate-200/40 blur-2xl" />
+        <div className="absolute -bottom-40 -right-40 h-[400px] w-[400px] rounded-full bg-emerald-100/30 blur-2xl" />
+
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.25]"
+          style={{
+            backgroundImage: `radial-gradient(circle, #cbd5e1 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
+      </div>
+
+      {/* ── Main card container ──────────────────────────────── */}
+      <div className="relative z-10 w-full max-w-[420px] animate-fade-in-up">
+        {/* Brand header */}
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-soft backdrop-blur-sm">
+            <BrandLogo className="!max-w-[170px]" />
           </div>
-          <Typography.Title level={3} className="!mb-1 !text-slate-900">Hệ thống quản trị</Typography.Title>
-          <Typography.Text type="secondary">Đăng nhập để vận hành bán hàng và kho</Typography.Text>
+
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-3 py-1 text-xs font-medium text-emerald-800 backdrop-blur-xs">
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Cổng Quản Trị Hệ Thống</span>
+          </div>
         </div>
-        <Form layout="vertical" onFinish={() => void form.handleSubmit((data) => login.mutate({ data }))()}>
-          <Form.Item
-            label="Email hoặc số điện thoại"
-            required
-            validateStatus={form.formState.errors.identifier ? 'error' : undefined}
-            help={form.formState.errors.identifier?.message}
+
+        {/* Card */}
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-7 shadow-elevated backdrop-blur-xl sm:p-9">
+          {/* Subtle top primary line */}
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+
+          {/* Form Header */}
+          <div className="mb-6 text-center">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+              Đăng nhập
+            </h1>
+            <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">
+              Nhập thông tin xác thực để truy cập bảng điều khiển
+            </p>
+          </div>
+
+          {/* Form */}
+          <Form
+            layout="vertical"
+            requiredMark={false}
+            onFinish={() => void form.handleSubmit((data) => login.mutate({ data }))()}
+            className="space-y-4"
           >
-            <Controller
-              name="identifier"
-              control={form.control}
-              render={({ field }) => <Input {...field} prefix={<UserOutlined />} autoComplete="username" />}
-            />
-          </Form.Item>
-          <Form.Item
-            label="Mật khẩu"
-            required
-            validateStatus={form.formState.errors.password ? 'error' : undefined}
-            help={form.formState.errors.password?.message}
-          >
-            <Controller
-              name="password"
-              control={form.control}
-              render={({ field }) => (
-                <Input.Password {...field} prefix={<LockOutlined />} autoComplete="current-password" />
-              )}
-            />
-          </Form.Item>
-          <Button block size="large" type="primary" htmlType="submit" loading={login.isPending}>
-            Đăng nhập
-          </Button>
-        </Form>
-      </Card>
+            <Form.Item
+              label={<span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Tài khoản</span>}
+              validateStatus={form.formState.errors.identifier ? 'error' : undefined}
+              help={form.formState.errors.identifier?.message}
+              className="!mb-4"
+            >
+              <Controller
+                name="identifier"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    size="large"
+                    prefix={<UserOutlined className="mr-1 text-slate-400" />}
+                    placeholder="email@baoansport.vn hoặc SĐT"
+                    autoComplete="username"
+                    className="!rounded-xl !border-slate-200 hover:!border-emerald-500 focus:!border-emerald-600 !py-2.5 !text-sm"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={
+                <div className="flex w-full items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Mật khẩu</span>
+                </div>
+              }
+              validateStatus={form.formState.errors.password ? 'error' : undefined}
+              help={form.formState.errors.password?.message}
+              className="!mb-6"
+            >
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field }) => (
+                  <Input.Password
+                    {...field}
+                    size="large"
+                    prefix={<LockOutlined className="mr-1 text-slate-400" />}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    className="!rounded-xl !border-slate-200 hover:!border-emerald-500 focus:!border-emerald-600 !py-2.5 !text-sm"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Button
+              block
+              size="large"
+              type="primary"
+              htmlType="submit"
+              loading={login.isPending}
+              className="!h-11 !rounded-xl !bg-gradient-to-r !from-emerald-600 !to-teal-600 !text-sm !font-semibold !shadow-md !shadow-emerald-600/20 hover:!from-emerald-500 hover:!to-teal-500 active:scale-[0.99] transition-all"
+            >
+              {login.isPending ? 'Đang xác thực...' : 'Đăng nhập vào hệ thống'}
+            </Button>
+          </Form>
+        </div>
+
+        {/* Footer info */}
+        <div className="mt-6 text-center text-xs text-slate-400">
+          © {new Date().getFullYear()} Bảo An Sport · Quản trị phân quyền nội bộ
+        </div>
+      </div>
     </main>
   );
 }

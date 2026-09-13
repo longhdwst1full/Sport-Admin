@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Alert, Card, Col, Row, Statistic, Typography } from "antd";
+import type { ReactNode } from 'react';
+import { Alert, Card, Col, Row, Typography } from 'antd';
 
 export interface ManagementMetric {
   key: string;
@@ -7,7 +7,7 @@ export interface ManagementMetric {
   value: string | number;
   hint?: string;
   icon?: ReactNode;
-  tone?: "blue" | "green" | "orange" | "red";
+  tone?: 'blue' | 'green' | 'orange' | 'red';
 }
 
 interface ManagementPageProps {
@@ -21,11 +21,36 @@ interface ManagementPageProps {
   children: ReactNode;
 }
 
-const toneClasses: Record<NonNullable<ManagementMetric["tone"]>, string> = {
-  blue: "bg-blue-50 text-blue-600",
-  green: "bg-emerald-50 text-emerald-600",
-  orange: "bg-amber-50 text-amber-600",
-  red: "bg-rose-50 text-rose-600",
+const toneConfig: Record<
+  NonNullable<ManagementMetric['tone']>,
+  { iconBg: string; iconText: string; accent: string }
+> = {
+  blue: {
+    iconBg: 'bg-gradient-to-br from-blue-500 to-cyan-400',
+    iconText: 'text-white',
+    accent: '#3b82f6',
+  },
+  green: {
+    iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-400',
+    iconText: 'text-white',
+    accent: '#059669',
+  },
+  orange: {
+    iconBg: 'bg-gradient-to-br from-amber-500 to-orange-400',
+    iconText: 'text-white',
+    accent: '#f59e0b',
+  },
+  red: {
+    iconBg: 'bg-gradient-to-br from-rose-500 to-pink-400',
+    iconText: 'text-white',
+    accent: '#ef4444',
+  },
+};
+
+const defaultToneConfig = {
+  iconBg: 'bg-gradient-to-br from-slate-400 to-slate-500',
+  iconText: 'text-white',
+  accent: '#64748b',
 };
 
 export function ManagementPage({
@@ -40,64 +65,90 @@ export function ManagementPage({
 }: ManagementPageProps) {
   return (
     <div className="space-y-6">
+      {/* ── Page header ──────────────────────────────────── */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-3xl">
-          <Typography.Text
-            className="!text-xs !font-semibold !tracking-[0.16em]"
-            type="secondary"
-          >
+          <Typography.Text className="!text-[10px] !font-bold !tracking-[0.16em] !text-slate-400">
             {eyebrow.toUpperCase()}
           </Typography.Text>
-          <Typography.Title level={2} className="!mb-1 !mt-1">
+          <Typography.Title level={2} className="!mb-1 !mt-1 !text-slate-900">
             {title}
           </Typography.Title>
           {description && (
-            <Typography.Text type="secondary">{description}</Typography.Text>
+            <Typography.Text className="!text-sm !text-slate-500">
+              {description}
+            </Typography.Text>
           )}
         </div>
         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
       </div>
 
+      {/* ── Data notice ──────────────────────────────────── */}
       {dataNotice && (
         <Alert
           showIcon
           type="info"
-          message="Màn hình base để review"
-          description={dataNotice}
+          className="!rounded-xl !border-blue-100 !bg-blue-50/60"
+          message={
+            <span className="font-medium text-blue-800">
+              Thông tin dữ liệu
+            </span>
+          }
+          description={
+            <span className="text-blue-700">{dataNotice}</span>
+          }
         />
       )}
 
+      {/* ── Metric cards ─────────────────────────────────── */}
       {metrics.length > 0 && (
         <Row gutter={[16, 16]}>
-          {metrics.map((metric) => (
-            <Col key={metric.key} xs={24} sm={12} xl={6}>
-              <Card className="h-full" styles={{ body: { padding: 20 } }}>
-                <div className="flex items-start justify-between gap-3">
-                  <Statistic title={metric.label} value={metric.value} />
-                  {metric.icon && (
-                    <span
-                      className={`grid size-10 shrink-0 place-items-center rounded-xl text-lg ${toneClasses[metric.tone ?? "blue"]}`}
-                    >
-                      {metric.icon}
-                    </span>
-                  )}
-                </div>
-                {metric.hint && (
-                  <div className="mt-2 text-xs text-slate-500">
-                    {metric.hint}
+          {metrics.map((metric) => {
+            const config = toneConfig[metric.tone ?? 'blue'] ?? defaultToneConfig;
+            return (
+              <Col key={metric.key} xs={24} sm={12} xl={6}>
+                <Card
+                  className="dctd-metric-card !rounded-2xl !border-slate-100"
+                  style={{ '--metric-accent': config.accent } as React.CSSProperties}
+                  styles={{ body: { padding: 20 } }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-xs font-medium text-slate-500">
+                        {metric.label}
+                      </div>
+                      <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900">
+                        {metric.value}
+                      </div>
+                      {metric.hint && (
+                        <div className="mt-1.5 text-[11px] text-slate-400">
+                          {metric.hint}
+                        </div>
+                      )}
+                    </div>
+                    {metric.icon && (
+                      <span
+                        className={`grid size-11 shrink-0 place-items-center rounded-xl text-lg shadow-md ${config.iconBg} ${config.iconText}`}
+                      >
+                        {metric.icon}
+                      </span>
+                    )}
                   </div>
-                )}
-              </Card>
-            </Col>
-          ))}
+                </Card>
+              </Col>
+            );
+          })}
         </Row>
       )}
 
-      <Card styles={{ body: { padding: 0 } }}>
+      {/* ── Main content card ────────────────────────────── */}
+      <Card className="!rounded-2xl !border-slate-100" styles={{ body: { padding: 0 } }}>
         {filters && (
-          <div className="border-b border-slate-100 p-4 lg:p-5">{filters}</div>
+          <div className="border-b border-slate-100 px-5 py-4 lg:px-6">
+            {filters}
+          </div>
         )}
-        <div className="p-4 lg:p-5">{children}</div>
+        <div className="p-5 lg:p-6">{children}</div>
       </Card>
     </div>
   );

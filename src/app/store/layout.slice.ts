@@ -48,11 +48,21 @@ export const layoutSlice = createSlice({
       state.activePath =
         state.openTabs[Math.max(0, closingIndex - 1)]?.path ?? state.openTabs[0]?.path ?? null;
     },
+    closeOtherTabs: (state, action: PayloadAction<string>) => {
+      state.openTabs = state.openTabs.filter((tab) => tab.path === action.payload);
+      state.activePath = action.payload;
+    },
+    closeAllTabs: (state) => {
+      state.openTabs = [];
+      state.activePath = null;
+    },
   },
 });
 
 export const {
+  closeAllTabs,
   closeNavigationTab,
+  closeOtherTabs,
   hydrateLayout,
   openNavigationTab,
   setSidebarCollapsed,
