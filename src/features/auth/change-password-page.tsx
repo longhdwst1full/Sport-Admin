@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getGetAdminCurrentUserQueryKey, useChangeAdminPassword } from '@/generated/api/auth/auth';
 import type { ChangePasswordDto } from '@/generated/api/auth/models';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { getPasswordStrength } from '@/lib/utils/password-strength';
 
 const schema: yup.ObjectSchema<ChangePasswordDto & { confirmPassword: string }> = yup.object({
   currentPassword: yup.string().required('Nhập mật khẩu hiện tại').min(8).max(128),
@@ -22,20 +23,6 @@ const schema: yup.ObjectSchema<ChangePasswordDto & { confirmPassword: string }> 
     .required('Nhập lại mật khẩu mới')
     .oneOf([yup.ref('newPassword')], 'Mật khẩu nhập lại chưa khớp'),
 });
-
-function getPasswordStrength(password: string): { percent: number; label: string; color: string } {
-  if (!password) return { percent: 0, label: '', color: '#e2e8f0' };
-  let score = 0;
-  if (password.length >= 8) score += 25;
-  if (password.length >= 12) score += 15;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 20;
-  if (/\d/.test(password)) score += 20;
-  if (/[^a-zA-Z0-9]/.test(password)) score += 20;
-
-  if (score < 40) return { percent: score, label: 'Yếu', color: '#ef4444' };
-  if (score < 70) return { percent: score, label: 'Trung bình', color: '#f59e0b' };
-  return { percent: score, label: 'Mạnh', color: '#22c55e' };
-}
 
 const fieldConfig = [
   { name: 'currentPassword' as const, label: 'Mật khẩu hiện tại', autoComplete: 'current-password' },

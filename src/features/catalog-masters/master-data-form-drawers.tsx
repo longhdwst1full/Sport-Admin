@@ -15,6 +15,7 @@ import {
 } from '@/generated/api/catalog/catalog';
 import type { BrandDto, CategoryDto } from '@/generated/api/catalog/models';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { toSlug } from '@/lib/utils/slug';
 
 interface BrandFormValues {
   code: string;
@@ -45,17 +46,6 @@ const categorySchema: yup.ObjectSchema<CategoryFormValues> = brandSchema.shape({
 
 const brandDefaults: BrandFormValues = { code: '', name: '', slug: '', description: '' };
 const categoryDefaults: CategoryFormValues = { ...brandDefaults, parentId: undefined, sortOrder: 0 };
-
-function toSlug(str: string): string {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[đĐ]/g, 'd')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-}
 
 function FieldError({ message }: { message?: string }) {
   return message ? <span className="text-red-500 text-xs">{message}</span> : null;

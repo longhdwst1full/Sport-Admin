@@ -1,24 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   App,
   Avatar,
   Button,
-  Card,
   Checkbox,
   Drawer,
   Form,
-  Input,
   Select,
-  Space,
   Tag,
 } from 'antd';
 import {
   CheckOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
-  TeamOutlined,
-  UserOutlined,
 } from '@ant-design/icons';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -28,6 +23,7 @@ import * as yup from 'yup';
 import {
   getListAdminUsersQueryKey,
   useAssignAdminUserRole,
+  useListAdminRoles,
   useSearchActiveAdminRoles,
 } from '@/generated/api/iam/iam';
 import {
@@ -57,41 +53,6 @@ const schema: yup.ObjectSchema<AssignmentFormValues> = yup.object({
   branchId: yup.string().required('Vui lòng chọn chi nhánh'),
 });
 
-const ROLE_PREVIEWS: Record<
-  string,
-  { label: string; desc: string; tone: string; permissions: string[] }
-> = {
-  BRANCH_MANAGER: {
-    label: 'Quản lý chi nhánh',
-    desc: 'Toàn quyền điều hành kho, đơn hàng, phân quyền nhân sự chi nhánh',
-    tone: 'emerald',
-    permissions: [
-      'catalog.product.manage',
-      'catalog.category.manage',
-      'order.manage',
-      'order.cancel',
-      'inventory.stock.adjust',
-      'inventory.transfer.manage',
-      'iam.user.view',
-      'review.moderate',
-    ],
-  },
-  STAFF: {
-    label: 'Nhân viên vận hành',
-    desc: 'Tiếp nhận đơn hàng, xem tồn kho sản phẩm, xem thông tin khách hàng',
-    tone: 'blue',
-    permissions: [
-      'catalog.product.view',
-      'catalog.category.view',
-      'order.view',
-      'order.manage',
-      'inventory.stock.view',
-      'customer.view',
-      'review.view',
-    ],
-  },
-};
-
 export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDrawerProps) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -112,10 +73,23 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
 
   const selectedRole = useWatch({ control, name: 'roleCode' });
 
+  // Fetch real roles from OpenAPI
+  const rolesQuery = useListAdminRoles({ query: { enabled: open } });
   const branchesQuery = useSearchActiveAdminBranches(
     { search: debouncedBranchSearch || undefined, page: 1, limit: 20 },
     { query: { enabled: open } },
   );
+
+  const roles = rolesQuery.data?.items ?? [];
+
+  // Filter assignable staff roles: BRANCH_MANAGER and STAFF
+  const assignableRoles = useMemo(() => {
+    return roles.filter((r) => r.code === 'BRANCH_MANAGER' || r.code === 'STAFF');
+  }, [roles]);
+
+  const selectedRoleDto = useMemo(() => {
+    return roles.find((r) => r.code === selectedRole);
+  }, [roles, selectedRole]);
 
   const assignment = useAssignAdminUserRole({
     mutation: {
@@ -164,7 +138,7 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
           <div>
             <div className="text-base font-bold text-slate-900">Gán vai trò người dùng</div>
             <div className="text-xs text-slate-500 font-normal">
-              Phân bổ vai trò và chi nhánh hoạt động cho nhân sự
+              Phân bổ vai trò và chi nhánh hoạt động theo OpenAPI contract
             </div>
           </div>
         </div>
@@ -216,67 +190,66 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
       )}
 
       <Form layout="vertical">
-        {/* ── Checkbox Role Selection ───────────────────────────── */}
+        {/* ── Checkbox Role Selection (From OpenAPI) ─────────────── */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-semibold text-slate-700">
               Chọn vai trò cần gán <span className="text-red-500">*</span>
             </label>
-            <span className="text-[11px] text-slate-400">Dạng thẻ Checkbox chọn vai trò</span>
+            <span className="text-[11px] text-slate-400">Dạng thẻ Checkbox</span>
           </div>
 
           <div className="space-y-2.5">
-            {/* BRANCH_MANAGER */}
-            <div
-              onClick={() => setValue('roleCode', AssignUserRoleDtoRoleCode.BRANCH_MANAGER, { shouldValidate: true })}
-              className={`rounded-xl border p-3.5 cursor-pointer transition-all ${
-                selectedRole === AssignUserRoleDtoRoleCode.BRANCH_MANAGER
-                  ? 'border-emerald-500 bg-emerald-50/40 shadow-xs ring-1 ring-emerald-500/30'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2.5">
-                  <Checkbox
-                    checked={selectedRole === AssignUserRoleDtoRoleCode.BRANCH_MANAGER}
-                    className="dctd-role-checkbox"
-                  />
-                  <span className="text-sm font-bold text-slate-900">Quản lý chi nhánh</span>
+            {(assignableRoles.length > 0
+              ? assignableRoles
+              : [
+                  {
+                    code: 'BRANCH_MANAGER',
+                    name: 'Quản lý chi nhánh',
+                    description: 'Toàn quyền điều hành kho, đơn hàng, phân quyền nhân sự chi nhánh',
+                    permissionCodes: [],
+                  },
+                  {
+                    code: 'STAFF',
+                    name: 'Nhân viên vận hành',
+                    description: 'Tiếp nhận đơn hàng, xem tồn kho sản phẩm, xem thông tin khách hàng',
+                    permissionCodes: [],
+                  },
+                ]
+            ).map((r) => {
+              const isSelected = selectedRole === r.code;
+              return (
+                <div
+                  key={r.code}
+                  onClick={() =>
+                    setValue('roleCode', r.code as AssignmentFormValues['roleCode'], {
+                      shouldValidate: true,
+                    })
+                  }
+                  className={`rounded-xl border p-3.5 cursor-pointer transition-all ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-50/40 shadow-xs ring-1 ring-emerald-500/30'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2.5">
+                      <Checkbox checked={isSelected} className="dctd-role-checkbox" />
+                      <span className="text-sm font-bold text-slate-900">{r.name}</span>
+                    </div>
+                    <Tag
+                      color={r.code === 'BRANCH_MANAGER' ? 'emerald' : 'blue'}
+                      className="!mr-0 !text-[10px] !font-medium"
+                    >
+                      {r.code}
+                    </Tag>
+                  </div>
+                  <p className="text-xs text-slate-500 pl-7 m-0">
+                    {r.description || 'Vai trò vận hành hệ thống'}
+                  </p>
                 </div>
-                <Tag color="emerald" className="!mr-0 !text-[10px] !font-medium">
-                  BRANCH_MANAGER
-                </Tag>
-              </div>
-              <p className="text-xs text-slate-500 pl-7 m-0">
-                {ROLE_PREVIEWS.BRANCH_MANAGER.desc}
-              </p>
-            </div>
-
-            {/* STAFF */}
-            <div
-              onClick={() => setValue('roleCode', AssignUserRoleDtoRoleCode.STAFF, { shouldValidate: true })}
-              className={`rounded-xl border p-3.5 cursor-pointer transition-all ${
-                selectedRole === AssignUserRoleDtoRoleCode.STAFF
-                  ? 'border-emerald-500 bg-emerald-50/40 shadow-xs ring-1 ring-emerald-500/30'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2.5">
-                  <Checkbox
-                    checked={selectedRole === AssignUserRoleDtoRoleCode.STAFF}
-                    className="dctd-role-checkbox"
-                  />
-                  <span className="text-sm font-bold text-slate-900">Nhân viên vận hành</span>
-                </div>
-                <Tag color="blue" className="!mr-0 !text-[10px] !font-medium">
-                  STAFF
-                </Tag>
-              </div>
-              <p className="text-xs text-slate-500 pl-7 m-0">
-                {ROLE_PREVIEWS.STAFF.desc}
-              </p>
-            </div>
+              );
+            })}
           </div>
         </div>
 
@@ -310,18 +283,18 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
           />
         </Form.Item>
 
-        {/* ── Included Permissions Preview (Checkbox Tags) ─────── */}
+        {/* ── Real Permissions Preview from OpenAPI ────────────── */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
               <SafetyCertificateOutlined className="text-emerald-600" />
-              Quyền hạn đi kèm vai trò ({ROLE_PREVIEWS[selectedRole]?.permissions.length ?? 0})
+              Quyền hạn OpenAPI ({selectedRoleDto?.permissionCodes?.length ?? 0})
             </span>
-            <span className="text-[11px] text-emerald-700 font-medium">Tự động kích hoạt</span>
+            <span className="text-[11px] text-emerald-700 font-medium">Theo vai trò API</span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-            {(ROLE_PREVIEWS[selectedRole]?.permissions ?? []).map((perm) => (
+          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+            {(selectedRoleDto?.permissionCodes ?? []).map((perm) => (
               <Tag
                 key={perm}
                 color="default"

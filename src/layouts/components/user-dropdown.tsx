@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Avatar, Divider, Dropdown, type MenuProps } from 'antd';
+import { Avatar, Dropdown, type MenuProps } from 'antd';
 import {
   LogoutOutlined,
-  MoonOutlined,
   SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
@@ -10,15 +9,7 @@ import { useAuth } from '@/core/auth/auth-context';
 
 import { ProfileModal } from './profile-modal';
 import { SettingsModal } from './settings-modal';
-
-function getInitials(name: string): string {
-  if (!name) return 'AD';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
-}
+import { getInitials } from '@/lib/utils/user';
 
 export function UserDropdown() {
   const auth = useAuth();
@@ -34,36 +25,6 @@ export function UserDropdown() {
     : '';
 
   const items: MenuProps['items'] = [
-    {
-      key: 'header',
-      type: 'group',
-      label: (
-        <div
-          onClick={() => setProfileOpen(true)}
-          className="flex items-center gap-3 px-1 py-2 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors"
-        >
-          <Avatar
-            src={avatarUrl}
-            size={40}
-            alt={displayName}
-            className="!flex shrink-0 !items-center !justify-center !text-sm !font-bold border border-emerald-500/20"
-            style={{
-              background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-              boxShadow: '0 2px 8px rgb(5 150 105 / 0.15)',
-            }}
-          >
-            {initials}
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-slate-900 truncate">{displayName}</div>
-            <div className="text-xs text-slate-500 truncate">
-              {auth.developmentBypass ? 'DEV bypass' : scopeLabels || 'Chưa có phạm vi'}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    { type: 'divider' },
     {
       key: 'profile',
       icon: <UserOutlined />,
@@ -121,7 +82,7 @@ export function UserDropdown() {
             {displayName}
           </div>
           <div className="text-[11px] leading-tight text-slate-400">
-            {auth.developmentBypass ? 'DEV mode' : scopeLabels || 'Admin'}
+            {scopeLabels || 'Admin'}
           </div>
         </div>
         <svg

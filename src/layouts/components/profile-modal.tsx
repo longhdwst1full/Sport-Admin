@@ -35,6 +35,8 @@ import {
 } from '@/generated/api/auth/auth';
 import type { ChangePasswordDto } from '@/generated/api/auth/models';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { getPasswordStrength } from '@/lib/utils/password-strength';
+import { getInitials } from '@/lib/utils/user';
 
 interface ProfileModalProps {
   open: boolean;
@@ -55,29 +57,6 @@ const passwordSchema: yup.ObjectSchema<ChangePasswordDto & { confirmPassword: st
       .required('Vui lòng xác nhận mật khẩu mới')
       .oneOf([yup.ref('newPassword')], 'Mật khẩu xác nhận chưa trùng khớp'),
   });
-
-function getPasswordStrength(password: string): { percent: number; label: string; color: string } {
-  if (!password) return { percent: 0, label: '', color: '#e2e8f0' };
-  let score = 0;
-  if (password.length >= 8) score += 25;
-  if (password.length >= 12) score += 15;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 20;
-  if (/\d/.test(password)) score += 20;
-  if (/[^a-zA-Z0-9]/.test(password)) score += 20;
-
-  if (score < 40) return { percent: score, label: 'Yếu', color: '#ef4444' };
-  if (score < 70) return { percent: score, label: 'Khá', color: '#f59e0b' };
-  return { percent: score, label: 'Mạnh', color: '#10b981' };
-}
-
-function getInitials(name: string): string {
-  if (!name) return 'AD';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
-}
 
 export function ProfileModal({ open, onClose }: ProfileModalProps) {
   const { message } = App.useApp();
@@ -205,14 +184,6 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
             </span>
             <span>•</span>
             <span className="text-emerald-700 font-medium">{scopeLabels}</span>
-            {auth.developmentBypass && (
-              <>
-                <span>•</span>
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800 font-semibold text-[10px]">
-                  DEV BYPASS
-                </span>
-              </>
-            )}
           </div>
         </div>
       </div>

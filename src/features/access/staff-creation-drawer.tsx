@@ -1,29 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   App,
-  Badge,
   Button,
-  Card,
   Checkbox,
-  Collapse,
   Drawer,
   Form,
   Input,
   Select,
-  Space,
+  Spin,
   Tag,
-  Tooltip,
 } from 'antd';
 import {
-  CheckCircleFilled,
-  CheckCircleOutlined,
-  CheckOutlined,
-  EyeOutlined,
-  InfoCircleOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
-  TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -35,10 +25,14 @@ import { ENTITY_ID_PATTERN } from '../../lib/validation/entity-id';
 import {
   getListAdminUsersQueryKey,
   useCreateAdminStaffUser,
+  useListAdminPermissions,
+  useListAdminRoles,
 } from '@/generated/api/iam/iam';
 import {
   CreateStaffUserDtoRoleCode,
   type CreateStaffUserDtoRoleCode as StaffRoleCode,
+  type PermissionDto,
+  type RoleDto,
 } from '@/generated/api/iam/models';
 import { useSearchActiveAdminBranches } from '@/generated/api/organization/organization';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
@@ -54,73 +48,22 @@ const schema: yup.ObjectSchema<StaffFormValues> = yup.object({
   branchId: yup.string().matches(ENTITY_ID_PATTERN, 'Chi nhánh không hợp lệ').required('Vui lòng chọn chi nhánh'),
 });
 
-// Definition of permissions grouped by module for visual checkbox matrix
-interface PermissionGroup {
-  module: string;
-  label: string;
-  icon: string;
-  permissions: {
-    code: string;
-    label: string;
-    roles: StaffRoleCode[];
-  }[];
-}
-
-const PERMISSION_GROUPS: PermissionGroup[] = [
-  {
-    module: 'catalog',
-    label: 'Sản phẩm & Danh mục',
-    icon: '📦',
-    permissions: [
-      { code: 'catalog.product.view', label: 'Xem danh sách & chi tiết sản phẩm', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'catalog.product.manage', label: 'Tạo, sửa thông tin & giá sản phẩm', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER] },
-      { code: 'catalog.category.view', label: 'Xem danh mục & thương hiệu', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'catalog.category.manage', label: 'Quản lý danh mục & phân cấp', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER] },
-      { code: 'catalog.price.view', label: 'Xem bảng giá niêm yết & khuyến mãi', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-    ],
-  },
-  {
-    module: 'order',
-    label: 'Bán hàng & Đơn hàng',
-    icon: '🛒',
-    permissions: [
-      { code: 'order.view', label: 'Xem danh sách đơn đặt hàng chi nhánh', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'order.manage', label: 'Xử lý, xác nhận & cập nhật trạng thái đơn', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'order.cancel', label: 'Duyệt hủy đơn & điều phối hoàn trả', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER] },
-      { code: 'payment.view', label: 'Xem bằng chứng giao dịch & thanh toán', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-    ],
-  },
-  {
-    module: 'inventory',
-    label: 'Kho vận & Tồn kho',
-    icon: '🏭',
-    permissions: [
-      { code: 'inventory.stock.view', label: 'Tra cứu số lượng tồn kho khả dụng', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'inventory.stock.adjust', label: 'Tạo phiếu kiểm kê & điều chỉnh tồn kho', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER] },
-      { code: 'inventory.transfer.view', label: 'Xem danh sách phiếu điều chuyển', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'inventory.transfer.manage', label: 'Duyệt xuất - nhập chuyển kho liên chi nhánh', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER] },
-    ],
-  },
-  {
-    module: 'customer',
-    label: 'Khách hàng & Đánh giá',
-    icon: '👥',
-    permissions: [
-      { code: 'customer.view', label: 'Xem thông tin khách hàng & lịch sử mua', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'review.view', label: 'Xem danh sách đánh giá & bình luận', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'review.moderate', label: 'Kiểm duyệt & ẩn/hiện đánh giá', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER] },
-    ],
-  },
-  {
-    module: 'branch',
-    label: 'Nhân sự & Chi nhánh',
-    icon: '🛡️',
-    permissions: [
-      { code: 'org.branch.view', label: 'Xem thông tin chi nhánh & kho trực thuộc', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER, CreateStaffUserDtoRoleCode.STAFF] },
-      { code: 'iam.user.view', label: 'Xem danh sách nhân sự cùng chi nhánh', roles: [CreateStaffUserDtoRoleCode.BRANCH_MANAGER] },
-    ],
-  },
-];
+const MODULE_TRANSLATIONS: Record<string, { label: string; icon: string }> = {
+  Catalog: { label: 'Sản phẩm & Danh mục (Catalog)', icon: '📦' },
+  Pricing: { label: 'Bảng giá & Khuyến mãi (Pricing)', icon: '🏷️' },
+  Order: { label: 'Bán hàng & Đơn hàng (Order)', icon: '🛒' },
+  Payment: { label: 'Thanh toán & Đối soát (Payment)', icon: '💳' },
+  Fulfillment: { label: 'Xử lý đóng gói & Giao nhận (Fulfillment)', icon: '🚚' },
+  Inventory: { label: 'Kho vận & Tồn kho (Inventory)', icon: '🏭' },
+  Customer: { label: 'Khách hàng (Customer)', icon: '👥' },
+  Review: { label: 'Đánh giá & Bình luận (Review)', icon: '⭐' },
+  Organization: { label: 'Chi nhánh & Kho trực thuộc (Organization)', icon: '🏢' },
+  IAM: { label: 'Phân quyền & Tài khoản (IAM)', icon: '🛡️' },
+  CMS: { label: 'Nội dung & Bài viết (CMS)', icon: '📰' },
+  Media: { label: 'Quản lý File & Ảnh (Media)', icon: '🖼️' },
+  Reporting: { label: 'Báo cáo & Thống kê (Reporting)', icon: '📊' },
+  System: { label: 'Hệ thống (System)', icon: '⚙️' },
+};
 
 export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { message } = App.useApp();
@@ -148,10 +91,42 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
 
   const selectedRole = useWatch({ control, name: 'roleCode' });
 
+  // Fetch actual roles and permissions defined in OpenAPI / backend
+  const rolesQuery = useListAdminRoles({ query: { enabled: open } });
+  const permissionsQuery = useListAdminPermissions({ query: { enabled: open } });
+
   const branchesQuery = useSearchActiveAdminBranches(
     { search: debouncedBranchSearch || undefined, page: 1, limit: 20 },
     { query: { enabled: open } },
   );
+
+  const roles = rolesQuery.data?.items ?? [];
+  const permissions = permissionsQuery.data?.items ?? [];
+
+  // Group OpenAPI permissions by module
+  const permissionsByModule = useMemo(() => {
+    const map = new Map<string, PermissionDto[]>();
+    for (const perm of permissions) {
+      const list = map.get(perm.module) ?? [];
+      list.push(perm);
+      map.set(perm.module, list);
+    }
+    return Array.from(map.entries()).map(([moduleName, perms]) => ({
+      module: moduleName,
+      label: MODULE_TRANSLATIONS[moduleName]?.label ?? moduleName,
+      icon: MODULE_TRANSLATIONS[moduleName]?.icon ?? '📁',
+      permissions: perms,
+    }));
+  }, [permissions]);
+
+  // Find the selected RoleDto from API
+  const selectedRoleDto = useMemo(() => {
+    return roles.find((r) => r.code === selectedRole);
+  }, [roles, selectedRole]);
+
+  const grantedCodesSet = useMemo(() => {
+    return new Set(selectedRoleDto?.permissionCodes ?? []);
+  }, [selectedRoleDto]);
 
   const createStaff = useCreateAdminStaffUser({
     mutation: {
@@ -175,7 +150,12 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
 
   useEffect(() => {
     if (!open) {
-      reset();
+      reset({
+        displayName: '',
+        email: '',
+        roleCode: CreateStaffUserDtoRoleCode.STAFF,
+        branchId: '',
+      });
       setBranchSearch('');
     }
   }, [open, reset]);
@@ -186,17 +166,13 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
     });
   });
 
-  // Calculate total permissions granted for currently selected role
-  const totalGrantedCount = PERMISSION_GROUPS.reduce((acc, grp) => {
-    return acc + grp.permissions.filter((p) => p.roles.includes(selectedRole)).length;
-  }, 0);
-
-  const totalPossibleCount = PERMISSION_GROUPS.reduce((acc, grp) => acc + grp.permissions.length, 0);
+  const totalGranted = grantedCodesSet.size;
+  const totalPossible = permissions.length;
 
   return (
     <Drawer
       open={open}
-      width={600}
+      width={620}
       title={
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
@@ -216,7 +192,7 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
       footer={
         <div className="flex items-center justify-between">
           <span className="text-xs text-slate-500">
-            Đã gán: <strong className="text-emerald-700 font-semibold">{totalGrantedCount}</strong>/{totalPossibleCount} quyền
+            Quyền kích hoạt: <strong className="text-emerald-700 font-semibold">{totalGranted}</strong>/{totalPossible} quyền
           </span>
           <div className="flex gap-2">
             <Button onClick={onClose} className="!rounded-xl">
@@ -360,13 +336,14 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
                   </Tag>
                 </div>
                 <p className="text-xs text-slate-500 line-clamp-2 m-0">
-                  Toàn quyền điều hành hàng hóa, kiểm kê tồn kho, duyệt chuyển kho và quản lý đơn hàng tại chi nhánh.
+                  Toàn quyền điều hành hàng hóa, kiểm kê tồn kho, duyệt chuyển kho và đơn hàng tại chi nhánh.
                 </p>
               </div>
 
               <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-emerald-800 font-medium">
                 <span className="flex items-center gap-1">
-                  <SafetyCertificateOutlined /> 18 quyền hạn
+                  <SafetyCertificateOutlined />{' '}
+                  {roles.find((r) => r.code === 'BRANCH_MANAGER')?.permissionCodes.length ?? 32} quyền
                 </span>
                 <span className="font-mono text-[10px] text-slate-400">BRANCH_MANAGER</span>
               </div>
@@ -401,7 +378,8 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
 
               <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-blue-800 font-medium">
                 <span className="flex items-center gap-1">
-                  <SafetyCertificateOutlined /> 11 quyền hạn
+                  <SafetyCertificateOutlined />{' '}
+                  {roles.find((r) => r.code === 'STAFF')?.permissionCodes.length ?? 18} quyền
                 </span>
                 <span className="font-mono text-[10px] text-slate-400">STAFF</span>
               </div>
@@ -409,7 +387,7 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
           </div>
         </div>
 
-        {/* ── Checkbox Permissions Matrix (Ma trận quyền hạn dạng Checkbox) ─ */}
+        {/* ── Checkbox Permissions Matrix (Ma trận quyền hạn OpenAPI) ─ */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/40 overflow-hidden mb-2">
           <div
             onClick={() => setShowMatrix(!showMatrix)}
@@ -417,7 +395,7 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
           >
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
               <SafetyCertificateOutlined className="text-emerald-600" />
-              <span>Ma trận quyền hạn chi tiết ({totalGrantedCount}/{totalPossibleCount})</span>
+              <span>Ma trận quyền hạn theo hợp đồng API ({totalGranted}/{totalPossible})</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-emerald-700 font-semibold">
@@ -431,46 +409,56 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
 
           {showMatrix && (
             <div className="p-3.5 space-y-3.5 max-h-[340px] overflow-y-auto">
-              {PERMISSION_GROUPS.map((group) => {
-                const grantedInGroup = group.permissions.filter((p) => p.roles.includes(selectedRole)).length;
-                return (
-                  <div key={group.module} className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-2xs">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">{group.icon}</span>
-                        <span className="text-xs font-bold text-slate-800">{group.label}</span>
+              {permissionsQuery.isLoading ? (
+                <div className="py-6 text-center">
+                  <Spin size="small" />
+                </div>
+              ) : (
+                permissionsByModule.map((group) => {
+                  const grantedInGroup = group.permissions.filter((p) => grantedCodesSet.has(p.code)).length;
+                  return (
+                    <div key={group.module} className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-2xs">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{group.icon}</span>
+                          <span className="text-xs font-bold text-slate-800">{group.label}</span>
+                        </div>
+                        <span className="text-[11px] font-mono text-slate-500">
+                          {grantedInGroup}/{group.permissions.length} quyền
+                        </span>
                       </div>
-                      <span className="text-[11px] font-mono text-slate-500">
-                        {grantedInGroup}/{group.permissions.length} quyền
-                      </span>
-                    </div>
 
-                    <div className="grid grid-cols-1 gap-1.5 pl-6">
-                      {group.permissions.map((perm) => {
-                        const isGranted = perm.roles.includes(selectedRole);
-                        return (
-                          <div
-                            key={perm.code}
-                            className={`flex items-start gap-2 py-1 px-2 rounded-md text-xs transition-colors ${
-                              isGranted ? 'bg-emerald-50/50 text-slate-800 font-medium' : 'opacity-40 text-slate-400'
-                            }`}
-                          >
-                            <Checkbox
-                              checked={isGranted}
-                              disabled
-                              className="mt-0.5"
-                            />
-                            <div className="min-w-0 flex-1 flex flex-wrap items-center justify-between gap-1">
-                              <span>{perm.label}</span>
-                              <code className="text-[10px] text-slate-400 font-mono">{perm.code}</code>
+                      <div className="grid grid-cols-1 gap-1.5 pl-6">
+                        {group.permissions.map((perm) => {
+                          const isGranted = grantedCodesSet.has(perm.code);
+                          return (
+                            <div
+                              key={perm.code}
+                              className={`flex items-start gap-2 py-1 px-2 rounded-md text-xs transition-colors ${
+                                isGranted ? 'bg-emerald-50/50 text-slate-800 font-medium' : 'opacity-40 text-slate-400'
+                              }`}
+                            >
+                              <Checkbox
+                                checked={isGranted}
+                                disabled
+                                className="mt-0.5"
+                              />
+                              <div className="min-w-0 flex-1 flex flex-wrap items-center justify-between gap-1">
+                                <span className="font-mono text-xs">{perm.code}</span>
+                                {perm.sensitive && (
+                                  <Tag color="volcano" className="!mr-0 !text-[10px] !py-0 !px-1">
+                                    Sensitive
+                                  </Tag>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           )}
         </div>
