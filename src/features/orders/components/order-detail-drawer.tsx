@@ -1,11 +1,23 @@
-import { Alert, Avatar, Button, Descriptions, Drawer, Space, Spin, Table, Tag, Timeline, Typography } from 'antd';
-import { useGetAdminOrder } from '@/generated/api/orders/orders';
+import { useRef, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert, App, Avatar, Button, Descriptions, Drawer, Space, Spin, Table, Tag, Timeline, Typography } from 'antd';
+import { useCan } from '@/core/auth/permissions';
+import {
+  cancelAdminOrder,
+  completeAdminOrder,
+  confirmAdminOrder,
+  getGetAdminOrderQueryKey,
+  getListAdminOrdersQueryKey,
+  useGetAdminOrder,
+} from '@/generated/api/orders/orders';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {
   moneyFormatter,
   orderStatusPresentation,
   paymentStatusPresentation,
 } from '../constants/order.constants';
+import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
+import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
 
 interface OrderDetailDrawerProps {
   orderId?: string;
@@ -13,17 +25,78 @@ interface OrderDetailDrawerProps {
 }
 
 export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) {
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
+  const canManage = useCan('order.manage');
+  const [action, setAction] = useState<OrderAction>();
+  const [reason, setReason] = useState('');
+  const idempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
   const detail = useGetAdminOrder(orderId ?? '', {
     query: { enabled: Boolean(orderId) },
   });
   const order = detail.data;
+  const actionMutation = useMutation({
+    mutationFn: async () => {
+      if (!order || !action) throw new Error('Thiếu thông tin thao tác đơn hàng');
+      const normalizedReason = reason.trim();
+      const signature = `${action}:${order.id}:${order.version}:${normalizedReason}`;
+      if (idempotencyRef.current?.signature !== signature) {
+        idempotencyRef.current = { signature, key: crypto.randomUUID() };
+      }
+      const request = { headers: { 'Idempotency-Key': idempotencyRef.current.key } };
+      if (action === 'cancel') {
+        return cancelAdminOrder(order.id, { expectedVersion: order.version, reason: normalizedReason }, request);
+      }
+      if (action === 'confirm') {
+        return confirmAdminOrder(order.id, { expectedVersion: order.version, note: normalizedReason }, request);
+      }
+      return completeAdminOrder(order.id, { expectedVersion: order.version, reason: normalizedReason }, request);
+    },
+    retry: false,
+    onSuccess: async (updated) => {
+      // CACHE: transition làm thay đổi detail và có thể chuyển bản ghi sang tab khác.
+      queryClient.setQueryData(getGetAdminOrderQueryKey(updated.id), updated);
+      await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
+      idempotencyRef.current = undefined;
+      setAction(undefined);
+      setReason('');
+      void message.success(action === 'cancel'
+        ? 'Đã hủy đơn hàng'
+        : action === 'confirm'
+          ? 'Đã xác nhận đơn hàng'
+          : 'Đã hoàn tất đơn hàng');
+    },
+  });
+  const canCancel = canManage && order?.status === 'PENDING_CONFIRMATION'
+    && order.paymentStatus === 'PENDING'
+    && order.fulfillmentStatus === 'PENDING';
+  const canConfirm = canManage && order?.status === 'PENDING_CONFIRMATION'
+    && (order.paymentMethod === 'COD' || order.paymentStatus === 'SUCCESS')
+    && order.fulfillmentStatus === 'PENDING';
+  const canComplete = canManage && order?.status === 'DELIVERED'
+    && order.paymentStatus === 'SUCCESS'
+    && order.fulfillmentStatus === 'DELIVERED';
+
+  const closeAction = () => {
+    if (actionMutation.isPending) return;
+    actionMutation.reset();
+    idempotencyRef.current = undefined;
+    setAction(undefined);
+    setReason('');
+  };
+
+  const closeDrawer = () => {
+    if (actionMutation.isPending) return;
+    closeAction();
+    onClose();
+  };
 
   return (
     <Drawer
       width={760}
       open={Boolean(orderId)}
       title={order ? `Đơn hàng ${order.orderNo}` : 'Chi tiết đơn hàng'}
-      onClose={onClose}
+      onClose={closeDrawer}
       destroyOnClose
     >
       {detail.isLoading && (
@@ -122,9 +195,35 @@ export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) 
               }))}
             />
           </div>
+
+          <FulfillmentWorkflowPanel orderId={order.id} />
+
+          {canManage && (
+            <div className="flex flex-wrap justify-end gap-3 border-t pt-4">
+              <Button danger disabled={!canCancel} onClick={() => setAction('cancel')}>
+                Hủy đơn
+              </Button>
+              <Button disabled={!canConfirm} onClick={() => setAction('confirm')}>
+                Xác nhận đơn
+              </Button>
+              <Button type="primary" disabled={!canComplete} onClick={() => setAction('complete')}>
+                Hoàn tất đơn
+              </Button>
+            </div>
+          )}
         </Space>
       )}
+      <OrderActionConfirmation
+        action={action}
+        reason={reason}
+        pending={actionMutation.isPending}
+        errorMessage={actionMutation.isError
+          ? getApiErrorMessage(actionMutation.error, 'Không thực hiện được thao tác đơn hàng.')
+          : undefined}
+        onReasonChange={setReason}
+        onCancel={closeAction}
+        onConfirm={() => actionMutation.mutate()}
+      />
     </Drawer>
   );
 }
-

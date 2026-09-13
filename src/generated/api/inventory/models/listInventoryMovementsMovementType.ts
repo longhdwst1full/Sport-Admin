@@ -15,4 +15,6 @@ export const ListInventoryMovementsMovementType = {
   RECEIVE: 'RECEIVE',
   TRANSFER_OUT: 'TRANSFER_OUT',
   TRANSFER_IN: 'TRANSFER_IN',
+  SALE_SHIP: 'SALE_SHIP',
+  DELIVERY_RETURN_RESTOCK: 'DELIVERY_RETURN_RESTOCK',
 } as const;

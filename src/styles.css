@@ -5,8 +5,9 @@
 body {
   margin: 0;
   min-width: 360px;
-  background: #f8fafc;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background: #f8f7fa;
+  color: #434050;
+  font-family: 'Noto Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 button,
@@ -19,11 +20,11 @@ a,
 }
 
 .dctd-rich-text-editor[data-editor-state='read-only'] .cke_contents {
-  background: #f8fafc;
+  background: #f8f7fa;
 }
 
 .dctd-side-menu .ant-menu-item-selected {
-  background: linear-gradient(135deg, #087f5b, #20b875) !important;
+  background: linear-gradient(135deg, #006c5b, #00bf6f) !important;
   color: #ffffff !important;
   box-shadow: 0 6px 18px rgb(16 185 129 / 18%);
 }

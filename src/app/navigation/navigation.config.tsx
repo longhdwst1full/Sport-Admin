@@ -8,6 +8,7 @@ import {
   InboxOutlined,
   SafetyCertificateOutlined,
   ShoppingCartOutlined,
+  DollarOutlined,
   TagsOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
@@ -52,6 +53,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     group: 'sales',
     icon: <TeamOutlined />,
     permission: 'customer.view',
+  },
+  {
+    path: '/payments',
+    label: 'Thanh toán',
+    group: 'sales',
+    icon: <DollarOutlined />,
+    permission: 'payment.view',
   },
   {
     path: '/products',

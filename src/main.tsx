@@ -1,5 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '@fontsource/noto-sans/vietnamese-400.css';
+import '@fontsource/noto-sans/vietnamese-500.css';
+import '@fontsource/noto-sans/vietnamese-600.css';
+import '@fontsource/noto-sans/vietnamese-700.css';
+import '@fontsource/noto-sans/vietnamese-800.css';
 import { App } from './app/app';
 import { Providers } from './app/providers';
 import 'antd/dist/reset.css';

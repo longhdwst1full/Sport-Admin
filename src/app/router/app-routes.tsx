@@ -48,6 +48,9 @@ const OrdersPage = lazy(() =>
     default: module.OrdersPage,
   })),
 );
+const PaymentsPage = lazy(() =>
+  import('@/features/payments').then((module) => ({ default: module.PaymentsPage })),
+);
 const CustomersPage = lazy(() =>
   import('@/features/customers/customers-page').then((module) => ({
     default: module.CustomersPage,
@@ -143,6 +146,14 @@ export function AppRoutes() {
           }
         />
         <Route path="shipping-consultations" element={<Navigate to="/orders" replace />} />
+        <Route
+          path="payments"
+          element={
+            <PermissionRoute permission="payment.view">
+              <PaymentsPage />
+            </PermissionRoute>
+          }
+        />
         <Route
           path="customers"
           element={

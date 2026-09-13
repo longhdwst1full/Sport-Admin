@@ -5,28 +5,37 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 
 import type {
   AdminOrderListDto,
+  CompleteOrderCommandDto,
+  ConfirmOrderCommandDto,
   ErrorResponseDto,
   ListAdminOrdersParams,
+  OrderCancelCommandDto,
   OrderDetailDto,
 } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
+import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 /**
  * @summary Danh sách đơn hàng theo tab trạng thái, tìm kiếm và phạm vi chi nhánh
  */
@@ -45,7 +54,7 @@ export const getListAdminOrdersQueryKey = (params?: ListAdminOrdersParams) => {
 
 export const getListAdminOrdersQueryOptions = <
   TData = Awaited<ReturnType<typeof listAdminOrders>>,
-  TError = ErrorType<ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   params?: ListAdminOrdersParams,
   options?: {
@@ -67,11 +76,11 @@ export const getListAdminOrdersQueryOptions = <
 };
 
 export type ListAdminOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminOrders>>>;
-export type ListAdminOrdersQueryError = ErrorType<ErrorResponseDto>;
+export type ListAdminOrdersQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
 
 export function useListAdminOrders<
   TData = Awaited<ReturnType<typeof listAdminOrders>>,
-  TError = ErrorType<ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   params: undefined | ListAdminOrdersParams,
   options: {
@@ -89,7 +98,7 @@ export function useListAdminOrders<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListAdminOrders<
   TData = Awaited<ReturnType<typeof listAdminOrders>>,
-  TError = ErrorType<ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   params?: ListAdminOrdersParams,
   options?: {
@@ -107,7 +116,7 @@ export function useListAdminOrders<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useListAdminOrders<
   TData = Awaited<ReturnType<typeof listAdminOrders>>,
-  TError = ErrorType<ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   params?: ListAdminOrdersParams,
   options?: {
@@ -121,7 +130,7 @@ export function useListAdminOrders<
 
 export function useListAdminOrders<
   TData = Awaited<ReturnType<typeof listAdminOrders>>,
-  TError = ErrorType<ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
   params?: ListAdminOrdersParams,
   options?: {
@@ -153,7 +162,7 @@ export const getGetAdminOrderQueryKey = (id?: string) => {
 
 export const getGetAdminOrderQueryOptions = <
   TData = Awaited<ReturnType<typeof getAdminOrder>>,
-  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
   id: string,
   options?: {
@@ -175,11 +184,13 @@ export const getGetAdminOrderQueryOptions = <
 };
 
 export type GetAdminOrderQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminOrder>>>;
-export type GetAdminOrderQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+export type GetAdminOrderQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
 
 export function useGetAdminOrder<
   TData = Awaited<ReturnType<typeof getAdminOrder>>,
-  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
   id: string,
   options: {
@@ -197,7 +208,7 @@ export function useGetAdminOrder<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useGetAdminOrder<
   TData = Awaited<ReturnType<typeof getAdminOrder>>,
-  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
   id: string,
   options?: {
@@ -215,7 +226,7 @@ export function useGetAdminOrder<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useGetAdminOrder<
   TData = Awaited<ReturnType<typeof getAdminOrder>>,
-  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
   id: string,
   options?: {
@@ -229,7 +240,7 @@ export function useGetAdminOrder<
 
 export function useGetAdminOrder<
   TData = Awaited<ReturnType<typeof getAdminOrder>>,
-  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
 >(
   id: string,
   options?: {
@@ -247,3 +258,321 @@ export function useGetAdminOrder<
 
   return query;
 }
+
+/**
+ * @summary Admin hủy đơn chưa thanh toán/xử lý trong phạm vi chi nhánh
+ */
+export const cancelAdminOrder = (
+  id: string,
+  orderCancelCommandDto: OrderCancelCommandDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcherWithOptions<OrderDetailDto>(
+    {
+      url: `/api/v1/admin/orders/${id}/cancel`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: orderCancelCommandDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getCancelAdminOrderMutationOptions = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelAdminOrder>>,
+    TError,
+    { id: string; data: OrderCancelCommandDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelAdminOrder>>,
+  TError,
+  { id: string; data: OrderCancelCommandDto },
+  TContext
+> => {
+  const mutationKey = ['cancelAdminOrder'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelAdminOrder>>,
+    { id: string; data: OrderCancelCommandDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return cancelAdminOrder(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelAdminOrderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelAdminOrder>>
+>;
+export type CancelAdminOrderMutationBody = OrderCancelCommandDto;
+export type CancelAdminOrderMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
+
+/**
+ * @summary Admin hủy đơn chưa thanh toán/xử lý trong phạm vi chi nhánh
+ */
+export const useCancelAdminOrder = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelAdminOrder>>,
+      TError,
+      { id: string; data: OrderCancelCommandDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelAdminOrder>>,
+  TError,
+  { id: string; data: OrderCancelCommandDto },
+  TContext
+> => {
+  const mutationOptions = getCancelAdminOrderMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Admin xác nhận đơn đủ điều kiện để kho bắt đầu xử lý
+ */
+export const confirmAdminOrder = (
+  id: string,
+  confirmOrderCommandDto: ConfirmOrderCommandDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcherWithOptions<OrderDetailDto>(
+    {
+      url: `/api/v1/admin/orders/${id}/confirm`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: confirmOrderCommandDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getConfirmAdminOrderMutationOptions = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmAdminOrder>>,
+    TError,
+    { id: string; data: ConfirmOrderCommandDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmAdminOrder>>,
+  TError,
+  { id: string; data: ConfirmOrderCommandDto },
+  TContext
+> => {
+  const mutationKey = ['confirmAdminOrder'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmAdminOrder>>,
+    { id: string; data: ConfirmOrderCommandDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return confirmAdminOrder(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConfirmAdminOrderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof confirmAdminOrder>>
+>;
+export type ConfirmAdminOrderMutationBody = ConfirmOrderCommandDto;
+export type ConfirmAdminOrderMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
+
+/**
+ * @summary Admin xác nhận đơn đủ điều kiện để kho bắt đầu xử lý
+ */
+export const useConfirmAdminOrder = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof confirmAdminOrder>>,
+      TError,
+      { id: string; data: ConfirmOrderCommandDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof confirmAdminOrder>>,
+  TError,
+  { id: string; data: ConfirmOrderCommandDto },
+  TContext
+> => {
+  const mutationOptions = getConfirmAdminOrderMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Admin hoàn tất đơn bất kỳ lúc nào sau khi đã giao đủ và thu đủ tiền
+ */
+export const completeAdminOrder = (
+  id: string,
+  completeOrderCommandDto: CompleteOrderCommandDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcherWithOptions<OrderDetailDto>(
+    {
+      url: `/api/v1/admin/orders/${id}/complete`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: completeOrderCommandDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getCompleteAdminOrderMutationOptions = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof completeAdminOrder>>,
+    TError,
+    { id: string; data: CompleteOrderCommandDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof completeAdminOrder>>,
+  TError,
+  { id: string; data: CompleteOrderCommandDto },
+  TContext
+> => {
+  const mutationKey = ['completeAdminOrder'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof completeAdminOrder>>,
+    { id: string; data: CompleteOrderCommandDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return completeAdminOrder(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CompleteAdminOrderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof completeAdminOrder>>
+>;
+export type CompleteAdminOrderMutationBody = CompleteOrderCommandDto;
+export type CompleteAdminOrderMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
+
+/**
+ * @summary Admin hoàn tất đơn bất kỳ lúc nào sau khi đã giao đủ và thu đủ tiền
+ */
+export const useCompleteAdminOrder = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof completeAdminOrder>>,
+      TError,
+      { id: string; data: CompleteOrderCommandDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof completeAdminOrder>>,
+  TError,
+  { id: string; data: CompleteOrderCommandDto },
+  TContext
+> => {
+  const mutationOptions = getCompleteAdminOrderMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};

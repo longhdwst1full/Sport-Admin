@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.3.0
 >
-> **Last updated:** 2026-09-11
+> **Last updated:** 2026-09-13
 >
-> **Change summary:** Tạo màn quản lý Order thật, tab trạng thái, search server-side và detail timeline từ generated SDK.
+> **Change summary:** Ghép Admin confirm và toàn bộ Fulfillment workflow qua generated SDK.
 
 ## Phạm vi
 
@@ -15,10 +15,15 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 - `pages/orders-page.tsx` sở hữu tab/search/page và gọi `useListAdminOrders`.
 - `components/order-table.tsx` chỉ trình bày danh sách và phát action chọn order.
 - `components/order-detail-drawer.tsx` tự tải detail qua `useGetAdminOrder`; không dùng summary để đoán dữ liệu chi tiết.
+- `components/fulfillment-workflow-panel.tsx` tải Fulfillment theo Order và chỉ mở action hợp lệ với status/permission hiện tại.
 - Mọi request dùng `src/generated/api/orders`; không hard-code URL và không sửa file generated.
 - Backend bắt buộc kiểm tra `order.view` và branch scope. Permission route phía FE chỉ cải thiện UX.
 - Tab `Vận chuyển` map server-side sang `PICKING|PACKED|SHIPPED`; `Đã giao` map sang `DELIVERED|COMPLETED`.
 - Search chạy server-side theo `orderNo`, tên, SĐT và email người nhận.
+- `order.manage` mới hiển thị action. Hủy chỉ hợp lệ khi đơn chưa thanh toán/xử lý; manual complete chỉ hợp lệ sau khi giao đủ và thu đủ tiền, không giới hạn trong ngày.
+- Fulfillment transition dùng permission riêng (`pick/pack/ship/delivery_update`), expected version và Idempotency-Key; Backend vẫn kiểm tra state/payment/stock/scope.
+- Transition gửi `expectedVersion`, `Idempotency-Key` và lý do bắt buộc; Backend vẫn là nguồn quyết định cuối cùng.
+- Sau mutation, detail cache được cập nhật và toàn bộ list/tab Order được invalidate vì bản ghi có thể đổi tab.
 
 ## Checklist khi sửa
 
@@ -32,5 +37,8 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-09-13 | Thêm confirm Order và Fulfillment workflow/cache invalidation qua generated SDK. | DBAPI-20260913-FULFILLMENT-S43 |
+| 1.2.0 | 2026-09-12 | Đổi copy và rule UI sang manual complete không giới hạn ngày sau DELIVERED/SUCCESS. | API-20260912-ORDER-GUEST-HARDENING |
+| 1.1.1 | 2026-09-11 | Reset mutation/reason/idempotency khi đóng và thêm action confirmation stories. | ADMIN-20260911-ORDER-S41-HARDENING |
+| 1.1.0 | 2026-09-11 | Thêm cancel/manual-complete transition UI qua generated SDK. | API-20260911-ORDER-OWN-ACCESS-TRANSITIONS |
 | 1.0.0 | 2026-09-11 | Tạo Admin Order list/detail từ generated contract. | API-20260911-ORDER-FOUNDATION |
-

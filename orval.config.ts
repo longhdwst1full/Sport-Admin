@@ -3,6 +3,45 @@ import { defineConfig } from 'orval';
 const CONTRACT_BASE = './contracts/admin';
 const OUTPUT_BASE = './src/generated/api';
 
+interface OperationOverride {
+  requestOptions: boolean;
+  mutator?: { path: string; name: string };
+}
+
+function operationOverrides(domain: string): Record<string, OperationOverride> {
+  const withOptions = {
+    requestOptions: true,
+    mutator: {
+      path: './src/lib/api/api-fetcher-with-options.ts',
+      name: 'apiFetcherWithOptions',
+    },
+  };
+  if (domain === 'inventory') {
+    return { createStockAdjustment: withOptions, createStockTransfer: withOptions };
+  }
+  if (domain === 'orders') {
+    return {
+      confirmAdminOrder: withOptions,
+      cancelAdminOrder: withOptions,
+      completeAdminOrder: withOptions,
+    };
+  }
+  if (domain === 'payments') {
+    return { confirmAdminPayment: withOptions, rejectAdminPayment: withOptions };
+  }
+  if (domain === 'fulfillments') {
+    return {
+      pickAdminFulfillment: withOptions,
+      packAdminFulfillment: withOptions,
+      shipAdminFulfillment: withOptions,
+      deliverAdminFulfillment: withOptions,
+      failAdminFulfillmentDelivery: withOptions,
+      receiveAdminFulfillmentReturn: withOptions,
+    };
+  }
+  return {};
+}
+
 function createDomainConfig(domain: string) {
   return {
     input: { target: `${CONTRACT_BASE}/${domain}.yaml` },
@@ -16,26 +55,7 @@ function createDomainConfig(domain: string) {
       override: {
         mutator: { path: './src/lib/api/fetcher.ts', name: 'apiFetcher' },
         query: { useQuery: true, useMutation: true, signal: true },
-        ...(domain === 'inventory'
-          ? {
-              operations: {
-                createStockAdjustment: {
-                  requestOptions: true,
-                  mutator: {
-                    path: './src/lib/api/api-fetcher-with-options.ts',
-                    name: 'apiFetcherWithOptions',
-                  },
-                },
-                createStockTransfer: {
-                  requestOptions: true,
-                  mutator: {
-                    path: './src/lib/api/api-fetcher-with-options.ts',
-                    name: 'apiFetcherWithOptions',
-                  },
-                },
-              },
-            }
-          : {}),
+        operations: operationOverrides(domain),
       },
     },
   };
@@ -54,4 +74,6 @@ export default defineConfig({
   system: createDomainConfig('system'),
   checkout: createDomainConfig('checkout'),
   orders: createDomainConfig('orders'),
+  payments: createDomainConfig('payments'),
+  fulfillments: createDomainConfig('fulfillments'),
 });

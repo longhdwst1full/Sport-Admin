@@ -13,6 +13,7 @@ export type OrderDetailDtoPaymentStatus =
 export const OrderDetailDtoPaymentStatus = {
   PENDING: 'PENDING',
   AWAITING_CONFIRMATION: 'AWAITING_CONFIRMATION',
+  NEED_REVIEW: 'NEED_REVIEW',
   SUCCESS: 'SUCCESS',
   FAILED: 'FAILED',
   CANCELLED: 'CANCELLED',
