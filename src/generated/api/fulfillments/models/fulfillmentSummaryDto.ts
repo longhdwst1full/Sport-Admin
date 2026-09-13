@@ -24,6 +24,8 @@ export interface FulfillmentSummaryDto {
   trackingNo?: string | null;
   recipientName: string;
   recipientPhone: string;
+  /** @nullable */
+  recipientEmail?: string | null;
   createdAt: string;
   version: string;
 }

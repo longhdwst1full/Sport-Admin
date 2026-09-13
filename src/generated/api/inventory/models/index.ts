@@ -29,7 +29,6 @@ export * from './receiveStockTransferDto';
 export * from './receiveStockTransferItemDto';
 export * from './stockAdjustmentDetailDto';
 export * from './stockAdjustmentItemDto';
-export * from './stockAdjustmentItemDtoNote';
 export * from './stockAdjustmentItemInputDto';
 export * from './stockAdjustmentListDto';
 export * from './stockAdjustmentResultDto';

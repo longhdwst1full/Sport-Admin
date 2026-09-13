@@ -2,6 +2,7 @@ import {
   AppstoreOutlined,
   AuditOutlined,
   BankOutlined,
+  CarOutlined,
   CommentOutlined,
   DashboardOutlined,
   FileTextOutlined,
@@ -46,6 +47,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     group: 'sales',
     icon: <ShoppingCartOutlined />,
     permission: 'order.view',
+  },
+  {
+    path: '/fulfillments',
+    label: 'Giao vận',
+    group: 'sales',
+    icon: <CarOutlined />,
+    permission: 'fulfillment.view',
   },
   {
     path: '/customers',

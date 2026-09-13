@@ -19,7 +19,7 @@ export type ListAdminFulfillmentsParams = {
   limit?: number;
   status?: ListAdminFulfillmentsStatus;
   /**
-   * Mã fulfillment, mã đơn, tracking, tên hoặc SĐT người nhận
+   * Mã fulfillment, mã đơn, tracking, tên, SĐT hoặc email người nhận
    * @maxLength 100
    */
   search?: string;

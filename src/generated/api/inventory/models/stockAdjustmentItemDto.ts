@@ -5,7 +5,6 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { StockAdjustmentItemDtoNote } from './stockAdjustmentItemDtoNote';
 
 export interface StockAdjustmentItemDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -16,5 +15,5 @@ export interface StockAdjustmentItemDto {
   expectedOnHand: number;
   actualOnHand: number;
   /** @nullable */
-  note?: StockAdjustmentItemDtoNote;
+  note?: string | null;
 }
