@@ -51,6 +51,9 @@ const OrdersPage = lazy(() =>
 const FulfillmentsPage = lazy(() =>
   import('@/features/fulfillments').then((module) => ({ default: module.FulfillmentsPage })),
 );
+const FlashSalesPage = lazy(() =>
+  import('@/features/flash-sales').then((module) => ({ default: module.FlashSalesPage })),
+);
 const PaymentsPage = lazy(() =>
   import('@/features/payments').then((module) => ({ default: module.PaymentsPage })),
 );
@@ -153,6 +156,14 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="fulfillment.view">
               <FulfillmentsPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="flash-sales"
+          element={
+            <PermissionRoute permission="catalog.flash_sale.view">
+              <FlashSalesPage />
             </PermissionRoute>
           }
         />

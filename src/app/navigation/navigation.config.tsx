@@ -12,6 +12,7 @@ import {
   DollarOutlined,
   TagsOutlined,
   TeamOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import type { ReactNode } from 'react';
 
@@ -68,6 +69,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     group: 'sales',
     icon: <DollarOutlined />,
     permission: 'payment.view',
+  },
+  {
+    path: '/flash-sales',
+    label: 'Flash Sale',
+    group: 'catalog',
+    icon: <ThunderboltOutlined />,
+    permission: 'catalog.flash_sale.view',
   },
   {
     path: '/products',

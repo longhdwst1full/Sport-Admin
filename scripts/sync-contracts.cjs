@@ -17,6 +17,7 @@ const domains = [
   'orders',
   'payments',
   'fulfillments',
+  'promotions',
 ];
 const defaultBaseUrl =
   'https://raw.githubusercontent.com/longhdwst1full/dctd-utc/main/document/api/admin';
