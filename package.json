@@ -2,6 +2,10 @@
   "name": "@dctd/admin",
   "version": "0.1.0",
   "private": true,
+  "sideEffects": [
+    "*.css",
+    "*.scss"
+  ],
   "packageManager": "yarn@1.22.22",
   "type": "module",
   "scripts": {
