@@ -30,6 +30,15 @@ Branch và warehouse là gốc của scope phân quyền, tồn kho và fulfillm
 - [ ] Deactivate phải cảnh báo rõ hệ quả tới tồn kho và phân quyền.
 - [ ] Không cho sửa kho của chi nhánh khác ngoài scope người dùng.
 
+
+## Operation generated nhưng không gọi (RULE-CTR-06)
+
+| Operation | Lý do |
+| --- | --- |
+| `deleteAdminBranchWithWarehouse` | Alias của `deactivateAdminBranchWithWarehouse`; nút **Ngừng** đã dùng bản `deactivate`. |
+
+**Điều kiện gỡ ghi chú:** BE tách `DELETE` thành xoá cứng thật.
+
 ## Revision history
 
 | Version | Date | Change summary |

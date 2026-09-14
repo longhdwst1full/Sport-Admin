@@ -40,6 +40,16 @@ Storefront cache ISR 5 phút, nên thay đổi không xuất hiện tức thì.
 - [ ] Deactivate category làm nó biến mất khỏi Storefront — xác nhận trước khi làm.
 - [ ] Đổi field form phải cập nhật mapper + test.
 
+
+## Operation generated nhưng không gọi (RULE-CTR-06)
+
+| Operation | Lý do |
+| --- | --- |
+| `deleteAdminBrand` | Alias của `deactivateAdminBrand` — cùng gọi `changeBrandStatus(id, 'INACTIVE')` ở `api/src/modules/catalog/master-data/catalog-master.controller.ts`. Nút **Ngừng** đã dùng bản `deactivate`. Thêm nút thứ hai chỉ tạo hai lối vào cho cùng một hành vi. |
+| `deleteAdminCategory` | Như trên, alias của `deactivateAdminCategory`. |
+
+**Điều kiện gỡ ghi chú:** nếu BE tách `DELETE` thành xoá cứng thật (khác `changeStatus`), phải nối lại và phân biệt rõ hai hành vi trên giao diện.
+
 ## Revision history
 
 | Version | Date | Change summary |

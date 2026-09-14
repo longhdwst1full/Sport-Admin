@@ -77,6 +77,11 @@ const AccessPage = lazy(() =>
     default: module.AccessPage,
   })),
 );
+const RolesPage = lazy(() =>
+  import('@/features/roles').then((module) => ({
+    default: module.RolesPage,
+  })),
+);
 const AuditPage = lazy(() =>
   import('@/features/audit').then((module) => ({ default: module.AuditPage })),
 );
@@ -210,6 +215,14 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="iam.user.view">
               <AccessPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="roles"
+          element={
+            <PermissionRoute permission="iam.role.view">
+              <RolesPage />
             </PermissionRoute>
           }
         />

@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   Alert,
   App,
   Button,
+  DatePicker,
   Drawer,
   Descriptions,
   Form,
+  Input,
   InputNumber,
+  Modal,
   Popconfirm,
   Select,
   Space,
@@ -17,12 +20,14 @@ import {
 } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import {
   changeAdminFlashSaleStatus,
   getGetAdminFlashSaleQueryKey,
   getListAdminFlashSalesQueryKey,
   removeAdminFlashSaleItem,
+  updateAdminFlashSale,
   upsertAdminFlashSaleItem,
   useGetAdminFlashSale,
 } from '@/generated/api/promotions/promotions';
@@ -34,6 +39,12 @@ import {
   flashSaleStatusPresentation,
   moneyFormatter,
 } from '../constants/flash-sale.constants';
+
+interface CampaignFormValues {
+  name: string;
+  description?: string;
+  window: [Dayjs, Dayjs];
+}
 
 interface ItemFormValues {
   productVariantId?: string;
@@ -53,6 +64,8 @@ export function FlashSaleDetailDrawer({
   const queryClient = useQueryClient();
   const canManage = useCan('catalog.flash_sale.manage');
   const [form] = Form.useForm<ItemFormValues>();
+  const [campaignForm] = Form.useForm<CampaignFormValues>();
+  const [editOpen, setEditOpen] = useState(false);
   const [variantSearch, setVariantSearch] = useState('');
   const [debouncedVariantSearch] = useDebounce(variantSearch.trim(), 350);
 
@@ -75,6 +88,25 @@ export function FlashSaleDetailDrawer({
     queryClient.setQueryData(getGetAdminFlashSaleQueryKey(updated.id), updated);
     await queryClient.invalidateQueries({ queryKey: getListAdminFlashSalesQueryKey() });
   }
+
+  const campaignMutation = useMutation({
+    mutationFn: (values: CampaignFormValues) => {
+      if (!campaign) throw new Error('Chưa tải được chiến dịch');
+      return updateAdminFlashSale(campaign.id, {
+        expectedVersion: campaign.version,
+        name: values.name.trim(),
+        description: values.description?.trim() || undefined,
+        startsAt: values.window[0].toISOString(),
+        endsAt: values.window[1].toISOString(),
+      });
+    },
+    onSuccess: async (updated) => {
+      await refresh(updated);
+      setEditOpen(false);
+      void message.success('Đã cập nhật chiến dịch');
+    },
+    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+  });
 
   const statusMutation = useMutation({
     mutationFn: (status: string) => {
@@ -129,6 +161,23 @@ export function FlashSaleDetailDrawer({
       width={880}
       destroyOnClose
       title={campaign ? `${campaign.code} — ${campaign.name}` : 'Chi tiết chiến dịch'}
+      extra={
+        campaign && canManage ? (
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => {
+              campaignForm.setFieldsValue({
+                name: campaign.name,
+                description: campaign.description ?? undefined,
+                window: [dayjs(campaign.startsAt), dayjs(campaign.endsAt)],
+              });
+              setEditOpen(true);
+            }}
+          >
+            Sửa chiến dịch
+          </Button>
+        ) : undefined
+      }
     >
       {detail.isError && (
         <Alert
@@ -275,6 +324,43 @@ export function FlashSaleDetailDrawer({
           )}
         </>
       )}
+      <Modal
+        open={editOpen}
+        title="Sửa chiến dịch"
+        okText="Lưu"
+        cancelText="Hủy"
+        confirmLoading={campaignMutation.isPending}
+        onCancel={() => setEditOpen(false)}
+        onOk={() => void campaignForm.submit()}
+        destroyOnClose
+      >
+        <Alert
+          className="mb-4"
+          type="warning"
+          showIcon
+          message="Đổi khung giờ ảnh hưởng tới giá đang hiển thị"
+          description="Rút ngắn khung giờ của chiến dịch đang chạy sẽ khiến giá flash biến mất khỏi trang bán ngay khi qua thời điểm kết thúc mới."
+        />
+        <Form
+          form={campaignForm}
+          layout="vertical"
+          onFinish={(values) => campaignMutation.mutate(values)}
+        >
+          <Form.Item name="name" label="Tên hiển thị" rules={[{ required: true, message: 'Nhập tên chiến dịch' }]}>
+            <Input maxLength={255} />
+          </Form.Item>
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item
+            name="window"
+            label="Khung giờ chạy"
+            rules={[{ required: true, message: 'Chọn thời gian bắt đầu và kết thúc' }]}
+          >
+            <DatePicker.RangePicker showTime className="w-full" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Drawer>
   );
 }

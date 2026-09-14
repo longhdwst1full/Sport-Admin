@@ -24,13 +24,17 @@ import type {
 import type {
   ActiveLookupResponseDto,
   AssignUserRoleDto,
+  CreateRoleDto,
   CreateStaffUserDto,
+  DeleteRoleDto,
   ErrorResponseDto,
   LockStaffUserDto,
   PermissionListDto,
   RevokeRoleAssignmentDto,
+  RoleDto,
   RoleListDto,
   SearchActiveAdminRolesParams,
+  UpdateRoleDto,
   UserDto,
   UserListDto,
   UserRoleAssignmentDto,
@@ -596,6 +600,89 @@ export function useListAdminRoles<
 }
 
 /**
+ * @summary Create a custom role with an explicit permission set
+ */
+export const createAdminRole = (createRoleDto: BodyType<CreateRoleDto>, signal?: AbortSignal) => {
+  return apiFetcher<RoleDto>({
+    url: `/api/v1/admin/iam/roles`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: createRoleDto,
+    signal,
+  });
+};
+
+export const getCreateAdminRoleMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAdminRole>>,
+    TError,
+    { data: BodyType<CreateRoleDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAdminRole>>,
+  TError,
+  { data: BodyType<CreateRoleDto> },
+  TContext
+> => {
+  const mutationKey = ['createAdminRole'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAdminRole>>,
+    { data: BodyType<CreateRoleDto> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAdminRole(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAdminRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAdminRole>>
+>;
+export type CreateAdminRoleMutationBody = BodyType<CreateRoleDto>;
+export type CreateAdminRoleMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Create a custom role with an explicit permission set
+ */
+export const useCreateAdminRole = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAdminRole>>,
+      TError,
+      { data: BodyType<CreateRoleDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAdminRole>>,
+  TError,
+  { data: BodyType<CreateRoleDto> },
+  TContext
+> => {
+  const mutationOptions = getCreateAdminRoleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
  * @summary List stable permission codes
  */
 export const listAdminPermissions = (signal?: AbortSignal) => {
@@ -700,6 +787,109 @@ export function useListAdminPermissions<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListAdminPermissionsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary List every role including INACTIVE ones for role administration
+ */
+export const listAdminAllRoles = (signal?: AbortSignal) => {
+  return apiFetcher<RoleListDto>({ url: `/api/v1/admin/iam/roles/all`, method: 'GET', signal });
+};
+
+export const getListAdminAllRolesQueryKey = () => {
+  return [`/api/v1/admin/iam/roles/all`] as const;
+};
+
+export const getListAdminAllRolesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminAllRoles>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminAllRoles>>, TError, TData>>;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAdminAllRolesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminAllRoles>>> = ({ signal }) =>
+    listAdminAllRoles(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminAllRoles>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAdminAllRolesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminAllRoles>>
+>;
+export type ListAdminAllRolesQueryError = ErrorType<unknown>;
+
+export function useListAdminAllRoles<
+  TData = Awaited<ReturnType<typeof listAdminAllRoles>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminAllRoles>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminAllRoles>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminAllRoles>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminAllRoles<
+  TData = Awaited<ReturnType<typeof listAdminAllRoles>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminAllRoles>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminAllRoles>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminAllRoles>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminAllRoles<
+  TData = Awaited<ReturnType<typeof listAdminAllRoles>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminAllRoles>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List every role including INACTIVE ones for role administration
+ */
+
+export function useListAdminAllRoles<
+  TData = Awaited<ReturnType<typeof listAdminAllRoles>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminAllRoles>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAdminAllRolesQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -839,6 +1029,286 @@ export function useSearchActiveAdminRoles<
 
   return query;
 }
+
+/**
+ * @summary Read one role with its permission set
+ */
+export const getAdminRole = (roleId: string, signal?: AbortSignal) => {
+  return apiFetcher<RoleDto>({ url: `/api/v1/admin/iam/roles/${roleId}`, method: 'GET', signal });
+};
+
+export const getGetAdminRoleQueryKey = (roleId?: string) => {
+  return [`/api/v1/admin/iam/roles/${roleId}`] as const;
+};
+
+export const getGetAdminRoleQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminRole>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  roleId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminRole>>, TError, TData>>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminRoleQueryKey(roleId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminRole>>> = ({ signal }) =>
+    getAdminRole(roleId, signal);
+
+  return { queryKey, queryFn, enabled: !!roleId, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminRole>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAdminRoleQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminRole>>>;
+export type GetAdminRoleQueryError = ErrorType<ErrorResponseDto>;
+
+export function useGetAdminRole<
+  TData = Awaited<ReturnType<typeof getAdminRole>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  roleId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminRole>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminRole>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminRole>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminRole<
+  TData = Awaited<ReturnType<typeof getAdminRole>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  roleId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminRole>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminRole>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminRole>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminRole<
+  TData = Awaited<ReturnType<typeof getAdminRole>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  roleId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminRole>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read one role with its permission set
+ */
+
+export function useGetAdminRole<
+  TData = Awaited<ReturnType<typeof getAdminRole>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  roleId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminRole>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAdminRoleQueryOptions(roleId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Rename a role or replace its permission set
+ */
+export const updateAdminRole = (roleId: string, updateRoleDto: BodyType<UpdateRoleDto>) => {
+  return apiFetcher<RoleDto>({
+    url: `/api/v1/admin/iam/roles/${roleId}`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateRoleDto,
+  });
+};
+
+export const getUpdateAdminRoleMutationOptions = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminRole>>,
+    TError,
+    { roleId: string; data: BodyType<UpdateRoleDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAdminRole>>,
+  TError,
+  { roleId: string; data: BodyType<UpdateRoleDto> },
+  TContext
+> => {
+  const mutationKey = ['updateAdminRole'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAdminRole>>,
+    { roleId: string; data: BodyType<UpdateRoleDto> }
+  > = (props) => {
+    const { roleId, data } = props ?? {};
+
+    return updateAdminRole(roleId, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAdminRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAdminRole>>
+>;
+export type UpdateAdminRoleMutationBody = BodyType<UpdateRoleDto>;
+export type UpdateAdminRoleMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Rename a role or replace its permission set
+ */
+export const useUpdateAdminRole = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAdminRole>>,
+      TError,
+      { roleId: string; data: BodyType<UpdateRoleDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAdminRole>>,
+  TError,
+  { roleId: string; data: BodyType<UpdateRoleDto> },
+  TContext
+> => {
+  const mutationOptions = getUpdateAdminRoleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Delete a custom role that is not assigned to any user
+ */
+export const deleteAdminRole = (roleId: string, deleteRoleDto: BodyType<DeleteRoleDto>) => {
+  return apiFetcher<void>({
+    url: `/api/v1/admin/iam/roles/${roleId}`,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    data: deleteRoleDto,
+  });
+};
+
+export const getDeleteAdminRoleMutationOptions = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAdminRole>>,
+    TError,
+    { roleId: string; data: BodyType<DeleteRoleDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAdminRole>>,
+  TError,
+  { roleId: string; data: BodyType<DeleteRoleDto> },
+  TContext
+> => {
+  const mutationKey = ['deleteAdminRole'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAdminRole>>,
+    { roleId: string; data: BodyType<DeleteRoleDto> }
+  > = (props) => {
+    const { roleId, data } = props ?? {};
+
+    return deleteAdminRole(roleId, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAdminRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAdminRole>>
+>;
+export type DeleteAdminRoleMutationBody = BodyType<DeleteRoleDto>;
+export type DeleteAdminRoleMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Delete a custom role that is not assigned to any user
+ */
+export const useDeleteAdminRole = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAdminRole>>,
+      TError,
+      { roleId: string; data: BodyType<DeleteRoleDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAdminRole>>,
+  TError,
+  { roleId: string; data: BodyType<DeleteRoleDto> },
+  TContext
+> => {
+  const mutationOptions = getDeleteAdminRoleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 /**
  * @summary Root Admin assigns BRANCH_MANAGER or STAFF within an active branch

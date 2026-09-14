@@ -39,6 +39,19 @@ Import từ ngoài chỉ qua `index.ts`.
 - [ ] Mutation gửi `expectedVersion`; xung đột version hiển thị rõ, không im lặng ghi đè.
 - [ ] Không đọc trực tiếp field DTO trong JSX — đi qua mapper.
 
+
+## Operation generated nhưng không gọi (RULE-CTR-06)
+
+| Operation | Lý do |
+| --- | --- |
+| `deleteAdminProduct` | Alias của `archiveAdminProduct` (`changeStatus → ARCHIVED`). Nút **Lưu trữ** ở workflow drawer đã dùng bản `archive`. |
+| `deleteAdminProductVariant` | Alias của `archiveAdminProductVariant`. |
+| `deleteAdminProductMedia` | Alias của `archiveAdminProductMedia`; nút **Gỡ** ở panel ảnh đã dùng bản `archive`. |
+
+Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn tham chiếu tới biến thể. Lưu trữ là hành vi đúng.
+
+**Điều kiện gỡ ghi chú:** BE tách `DELETE` thành xoá cứng cho sản phẩm chưa từng phát sinh giao dịch.
+
 ## Revision history
 
 | Version | Date | Change summary |

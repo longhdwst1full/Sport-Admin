@@ -8,6 +8,7 @@ import {
   DashboardOutlined,
   FileTextOutlined,
   InboxOutlined,
+  KeyOutlined,
   SafetyCertificateOutlined,
   ShoppingCartOutlined,
   DollarOutlined,
@@ -126,6 +127,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     group: 'system',
     icon: <SafetyCertificateOutlined />,
     permission: 'iam.user.view',
+  },
+  {
+    path: '/roles',
+    label: 'Vai trò & phân quyền',
+    group: 'system',
+    icon: <KeyOutlined />,
+    permission: 'iam.role.view',
   },
   {
     path: '/system-parameters',
