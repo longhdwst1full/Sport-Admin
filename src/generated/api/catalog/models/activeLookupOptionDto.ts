@@ -11,4 +11,6 @@ export interface ActiveLookupOptionDto {
   id: string;
   code: string;
   label: string;
+  /** @nullable */
+  priceAmount?: string | null;
 }

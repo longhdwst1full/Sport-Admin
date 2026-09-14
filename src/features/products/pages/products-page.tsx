@@ -1,9 +1,16 @@
-import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Avatar, Button, Input, Table, Tag } from 'antd';
-import { useEffect, useState } from 'react';
+import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { App, Avatar, Button, Input, Select, Table, Tag } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
-import { PermissionGate } from '@/core/auth/permissions';
-import { useListAdminProducts } from '@/generated/api/catalog/catalog';
+import { PermissionGate, useCan } from '@/core/auth/permissions';
+import {
+  deleteAdminProduct,
+  getListAdminProductsQueryKey,
+  useListAdminCategories,
+  useListAdminProducts,
+} from '@/generated/api/catalog/catalog';
+import type { ProductSummaryDto } from '@/generated/api/catalog/models';
 import { ManagementPage } from '@/foundation/management';
 import { ProductFormDrawer } from '../components/product-form-drawer';
 import { ProductWorkflowDrawer } from '../components/product-workflow-drawer';
@@ -19,18 +26,67 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
 };
 
 export function ProductsPage() {
+  const { message, modal } = App.useApp();
+  const queryClient = useQueryClient();
+  const canManage = useCan('catalog.product.manage');
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState<string>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [debouncedSearch] = useDebounce(search.trim(), 350);
-  useEffect(() => setPage(1), [debouncedSearch]);
+  useEffect(() => setPage(1), [debouncedSearch, category]);
   const query = useListAdminProducts({
     page,
     limit: pageSize,
     search: debouncedSearch || undefined,
+    category,
   });
+
+  const categories = useListAdminCategories();
+  // Danh mục con thụt vào theo depth để thấy được quan hệ cha - con trong một Select phẳng.
+  const categoryOptions = useMemo(
+    () =>
+      (categories.data?.items ?? [])
+        .filter((item) => item.status === 'ACTIVE')
+        .map((item) => ({
+          value: item.slug,
+          label: `${'\u00A0\u00A0'.repeat(item.depth)}${item.name}`,
+        })),
+    [categories.data],
+  );
+
+  const deleteMutation = useMutation({
+    mutationFn: (row: ProductSummaryDto) =>
+      deleteAdminProduct(row.id, { expectedVersion: row.version }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() });
+      void message.success('Đã chuyển sản phẩm sang lưu trữ');
+    },
+    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+  });
+
+  function confirmDelete(row: ProductSummaryDto) {
+    modal.confirm({
+      title: `Xoá sản phẩm ${row.name}?`,
+      content: (
+        <div className="space-y-2 text-sm text-slate-500">
+          <p>
+            Sản phẩm chuyển sang trạng thái <strong>Lưu trữ</strong> và biến mất khỏi trang bán.
+          </p>
+          <p>
+            Không xoá hẳn khỏi database vì các đơn hàng đã phát sinh còn tham chiếu tới sản phẩm
+            này; xoá cứng sẽ làm hỏng lịch sử đơn hàng.
+          </p>
+        </div>
+      ),
+      okText: 'Xoá',
+      okButtonProps: { danger: true },
+      cancelText: 'Huỷ',
+      onOk: () => deleteMutation.mutateAsync(row),
+    });
+  }
 
   return (
     <>
@@ -88,6 +144,17 @@ export function ProductsPage() {
               placeholder="Tên, SKU hoặc thương hiệu..."
               className="max-w-md"
               onChange={(event) => setSearch(event.target.value)}
+            />
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              className="min-w-56"
+              placeholder="Lọc theo danh mục"
+              value={category}
+              onChange={setCategory}
+              loading={categories.isPending}
+              options={categoryOptions}
             />
             <Button
               icon={<ReloadOutlined />}
@@ -198,16 +265,28 @@ export function ProductsPage() {
               title: '',
               key: 'actions',
               align: 'right',
-              width: 100,
+              width: 150,
               render: (_, row) => (
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  className="!rounded-lg !text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
-                  onClick={() => setSelectedSlug(row.slug)}
-                >
-                  Chi tiết
-                </Button>
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    className="!rounded-lg !text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
+                    onClick={() => setSelectedSlug(row.slug)}
+                  >
+                    Chi tiết
+                  </Button>
+                  {canManage && row.status !== 'ARCHIVED' && (
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      className="!rounded-lg"
+                      loading={deleteMutation.isPending}
+                      onClick={() => confirmDelete(row)}
+                    />
+                  )}
+                </div>
               ),
             },
           ]}

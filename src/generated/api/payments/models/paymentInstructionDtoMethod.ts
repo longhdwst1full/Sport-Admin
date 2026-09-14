@@ -13,4 +13,5 @@ export type PaymentInstructionDtoMethod =
 export const PaymentInstructionDtoMethod = {
   BANK_TRANSFER: 'BANK_TRANSFER',
   COD: 'COD',
+  VNPAY: 'VNPAY',
 } as const;

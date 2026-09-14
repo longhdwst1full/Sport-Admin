@@ -13,4 +13,5 @@ export type AdminPaymentSummaryDtoMethod =
 export const AdminPaymentSummaryDtoMethod = {
   BANK_TRANSFER: 'BANK_TRANSFER',
   COD: 'COD',
+  VNPAY: 'VNPAY',
 } as const;

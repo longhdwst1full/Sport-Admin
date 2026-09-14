@@ -12,4 +12,6 @@ export interface PaymentInstructionDto {
   provider: string;
   reference: string;
   customerMessage: string;
+  /** Link chuyển sang cổng thanh toán, chỉ có với VNPay */
+  redirectUrl?: string;
 }

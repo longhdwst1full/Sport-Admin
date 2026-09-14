@@ -13,4 +13,5 @@ export type ListAdminPaymentsMethod =
 export const ListAdminPaymentsMethod = {
   BANK_TRANSFER: 'BANK_TRANSFER',
   COD: 'COD',
+  VNPAY: 'VNPAY',
 } as const;

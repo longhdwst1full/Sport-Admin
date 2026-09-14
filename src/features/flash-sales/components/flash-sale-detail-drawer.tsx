@@ -12,6 +12,7 @@ import {
   InputNumber,
   Modal,
   Popconfirm,
+  Radio,
   Select,
   Space,
   Table,
@@ -46,6 +47,18 @@ interface CampaignFormValues {
   window: [Dayjs, Dayjs];
 }
 
+type PricingMode = 'PERCENT_LIST' | 'PER_ITEM';
+
+/**
+ * Giảm theo % áp cho cả danh sách: giá từng suất do phần trăm quyết định nên khoá ô giá,
+ * tránh việc sửa tay làm lệch khỏi mức đã công bố. Đặt giá từng sản phẩm thì mở ô giá,
+ * và điền sẵn giá đang bán để không phải tự tra.
+ */
+function applyPercent(basePrice: number, percent: number): number {
+  // Làm tròn xuống để khách không bao giờ trả nhiều hơn mức % đã công bố.
+  return Math.max(1, Math.floor((basePrice * (100 - percent)) / 100));
+}
+
 interface ItemFormValues {
   productVariantId?: string;
   salePrice?: number;
@@ -67,6 +80,9 @@ export function FlashSaleDetailDrawer({
   const [campaignForm] = Form.useForm<CampaignFormValues>();
   const [editOpen, setEditOpen] = useState(false);
   const [variantSearch, setVariantSearch] = useState('');
+  const [pricingMode, setPricingMode] = useState<PricingMode>('PER_ITEM');
+  const [discountPercent, setDiscountPercent] = useState(10);
+  const [basePrice, setBasePrice] = useState<number>();
   const [debouncedVariantSearch] = useDebounce(variantSearch.trim(), 350);
 
   const detail = useGetAdminFlashSale(campaignId ?? '', {
@@ -278,6 +294,53 @@ export function FlashSaleDetailDrawer({
           />
 
           {canManage && campaign.status !== 'ENDED' && campaign.status !== 'CANCELLED' && (
+            <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
+              <Typography.Text strong className="text-sm">
+                Cách đặt giá
+              </Typography.Text>
+              <Radio.Group
+                value={pricingMode}
+                onChange={(event) => {
+                  const next = event.target.value as PricingMode;
+                  setPricingMode(next);
+                  if (basePrice === undefined) return;
+                  form.setFieldsValue({
+                    salePrice:
+                      next === 'PERCENT_LIST' ? applyPercent(basePrice, discountPercent) : basePrice,
+                  });
+                }}
+                optionType="button"
+                buttonStyle="solid"
+                options={[
+                  { value: 'PER_ITEM', label: 'Giá từng sản phẩm' },
+                  { value: 'PERCENT_LIST', label: 'Giảm % cho cả danh sách' },
+                ]}
+              />
+              {pricingMode === 'PERCENT_LIST' && (
+                <InputNumber
+                  min={1}
+                  max={99}
+                  value={discountPercent}
+                  onChange={(value) => {
+                    const percent = Number(value ?? 0);
+                    setDiscountPercent(percent);
+                    if (basePrice !== undefined) {
+                      form.setFieldsValue({ salePrice: applyPercent(basePrice, percent) });
+                    }
+                  }}
+                  addonAfter="%"
+                  className="!w-32"
+                />
+              )}
+              <Typography.Text type="secondary" className="text-xs">
+                {pricingMode === 'PERCENT_LIST'
+                  ? 'Giá từng suất tính theo phần trăm và bị khoá để không lệch mức đã công bố.'
+                  : 'Giá điền sẵn bằng giá đang bán, sửa được cho từng sản phẩm.'}
+              </Typography.Text>
+            </div>
+          )}
+
+          {canManage && campaign.status !== 'ENDED' && campaign.status !== 'CANCELLED' && (
             <Form
               form={form}
               layout="inline"
@@ -295,14 +358,46 @@ export function FlashSaleDetailDrawer({
                   placeholder="Tìm theo SKU"
                   onSearch={setVariantSearch}
                   loading={variantsQuery.isFetching}
+                  onChange={(variantId: string) => {
+                    const picked = (variantsQuery.data?.items ?? []).find(
+                      (item) => item.id === variantId,
+                    );
+                    const current = picked?.priceAmount ? Number(picked.priceAmount) : undefined;
+                    setBasePrice(current);
+                    if (current === undefined) return;
+                    form.setFieldsValue({
+                      salePrice:
+                        pricingMode === 'PERCENT_LIST'
+                          ? applyPercent(current, discountPercent)
+                          : current,
+                    });
+                  }}
                   options={(variantsQuery.data?.items ?? []).map((item) => ({
                     value: item.id,
-                    label: `${item.code} — ${item.label}`,
+                    label: item.priceAmount
+                      ? `${item.code} — ${item.label} · ${moneyFormatter.format(Number(item.priceAmount))}`
+                      : `${item.code} — ${item.label}`,
                   }))}
                 />
               </Form.Item>
-              <Form.Item name="salePrice" rules={[{ required: true, message: 'Nhập giá flash' }]}>
-                <InputNumber min={1} step={1000} placeholder="Giá flash" className="!w-40" />
+              <Form.Item
+                name="salePrice"
+                rules={[{ required: true, message: 'Nhập giá flash' }]}
+                extra={
+                  basePrice ? (
+                    <Typography.Text type="secondary" className="text-xs">
+                      Giá hiện tại {moneyFormatter.format(basePrice)}
+                    </Typography.Text>
+                  ) : undefined
+                }
+              >
+                <InputNumber
+                  min={1}
+                  step={1000}
+                  placeholder="Giá flash"
+                  className="!w-40"
+                  disabled={pricingMode === 'PERCENT_LIST'}
+                />
               </Form.Item>
               <Form.Item name="quota" rules={[{ required: true, message: 'Nhập quota' }]}>
                 <InputNumber min={1} placeholder="Quota" className="!w-28" />

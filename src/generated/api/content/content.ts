@@ -27,6 +27,7 @@ import type {
   ContentPostListDto,
   CreateContentPostDto,
   ErrorResponseDto,
+  ListAdminPostsParams,
 } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
@@ -34,30 +35,34 @@ import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
 /**
  * @summary List posts for administration
  */
-export const listAdminPosts = (signal?: AbortSignal) => {
+export const listAdminPosts = (params?: ListAdminPostsParams, signal?: AbortSignal) => {
   return apiFetcher<ContentPostListDto>({
     url: `/api/v1/admin/content/posts`,
     method: 'GET',
+    params,
     signal,
   });
 };
 
-export const getListAdminPostsQueryKey = () => {
-  return [`/api/v1/admin/content/posts`] as const;
+export const getListAdminPostsQueryKey = (params?: ListAdminPostsParams) => {
+  return [`/api/v1/admin/content/posts`, ...(params ? [params] : [])] as const;
 };
 
 export const getListAdminPostsQueryOptions = <
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
   TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>>;
-}) => {
+>(
+  params?: ListAdminPostsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>>;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListAdminPostsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getListAdminPostsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminPosts>>> = ({ signal }) =>
-    listAdminPosts(signal);
+    listAdminPosts(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listAdminPosts>>,
@@ -73,6 +78,7 @@ export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
   TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
+  params: undefined | ListAdminPostsParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>> &
       Pick<
@@ -90,6 +96,7 @@ export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
   TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
+  params?: ListAdminPostsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>> &
       Pick<
@@ -107,6 +114,7 @@ export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
   TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
+  params?: ListAdminPostsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>>;
   },
@@ -120,12 +128,13 @@ export function useListAdminPosts<
   TData = Awaited<ReturnType<typeof listAdminPosts>>,
   TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
 >(
+  params?: ListAdminPostsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListAdminPostsQueryOptions(options);
+  const queryOptions = getListAdminPostsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

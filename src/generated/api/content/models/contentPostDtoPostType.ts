@@ -15,4 +15,5 @@ export const ContentPostDtoPostType = {
   TRAINING_GUIDE: 'TRAINING_GUIDE',
   PRODUCT_GUIDE: 'PRODUCT_GUIDE',
   ABOUT: 'ABOUT',
+  POLICY: 'POLICY',
 } as const;

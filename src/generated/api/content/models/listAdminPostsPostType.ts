@@ -6,11 +6,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type CreateContentPostDtoPostType =
-  (typeof CreateContentPostDtoPostType)[keyof typeof CreateContentPostDtoPostType];
+export type ListAdminPostsPostType =
+  (typeof ListAdminPostsPostType)[keyof typeof ListAdminPostsPostType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateContentPostDtoPostType = {
+export const ListAdminPostsPostType = {
   NEWS: 'NEWS',
   TRAINING_GUIDE: 'TRAINING_GUIDE',
   PRODUCT_GUIDE: 'PRODUCT_GUIDE',
