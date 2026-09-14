@@ -6,6 +6,22 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './createSystemParameterDto';
+export * from './createSystemParameterDtoGroupCode';
+export * from './createSystemParameterDtoValueType';
+export * from './deleteSystemParameterDto';
+export * from './errorDetailDto';
+export * from './errorResponseDto';
+export * from './listAdminSystemParametersGroupCode';
+export * from './listAdminSystemParametersParams';
+export * from './listAdminSystemParametersSortBy';
+export * from './listAdminSystemParametersSortDirection';
+export * from './listAdminSystemParametersStatus';
 export * from './systemModuleDto';
 export * from './systemModuleDtoStatus';
 export * from './systemModuleListDto';
+export * from './systemParameterDto';
+export * from './systemParameterDtoGroupCode';
+export * from './systemParameterDtoValueType';
+export * from './systemParameterListDto';
+export * from './updateSystemParameterDto';

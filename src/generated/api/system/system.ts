@@ -5,23 +5,35 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { SystemModuleListDto } from './models';
+import type {
+  CreateSystemParameterDto,
+  DeleteSystemParameterDto,
+  ErrorResponseDto,
+  ListAdminSystemParametersParams,
+  SystemModuleListDto,
+  SystemParameterDto,
+  SystemParameterListDto,
+  UpdateSystemParameterDto,
+} from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
-import type { ErrorType } from '../../../lib/api/fetcher';
+import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
 /**
  * @summary List V1 business modules and models
  */
@@ -128,3 +140,388 @@ export function useListSystemModules<
 
   return query;
 }
+
+/**
+ * @summary Danh sách tham số nghiệp vụ cấu hình được từ Admin
+ */
+export const listAdminSystemParameters = (
+  params?: ListAdminSystemParametersParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<SystemParameterListDto>({
+    url: `/api/v1/admin/system/parameters`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getListAdminSystemParametersQueryKey = (params?: ListAdminSystemParametersParams) => {
+  return [`/api/v1/admin/system/parameters`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAdminSystemParametersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminSystemParameters>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminSystemParametersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminSystemParameters>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAdminSystemParametersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminSystemParameters>>> = ({
+    signal,
+  }) => listAdminSystemParameters(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminSystemParameters>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAdminSystemParametersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminSystemParameters>>
+>;
+export type ListAdminSystemParametersQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+
+export function useListAdminSystemParameters<
+  TData = Awaited<ReturnType<typeof listAdminSystemParameters>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ListAdminSystemParametersParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminSystemParameters>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminSystemParameters>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminSystemParameters>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminSystemParameters<
+  TData = Awaited<ReturnType<typeof listAdminSystemParameters>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminSystemParametersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminSystemParameters>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminSystemParameters>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminSystemParameters>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminSystemParameters<
+  TData = Awaited<ReturnType<typeof listAdminSystemParameters>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminSystemParametersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminSystemParameters>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Danh sách tham số nghiệp vụ cấu hình được từ Admin
+ */
+
+export function useListAdminSystemParameters<
+  TData = Awaited<ReturnType<typeof listAdminSystemParameters>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminSystemParametersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminSystemParameters>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAdminSystemParametersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Tạo tham số tuỳ biến; code không tham chiếu nên chỉ dùng để lưu giá trị vận hành
+ */
+export const createAdminSystemParameter = (
+  createSystemParameterDto: BodyType<CreateSystemParameterDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<SystemParameterDto>({
+    url: `/api/v1/admin/system/parameters`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: createSystemParameterDto,
+    signal,
+  });
+};
+
+export const getCreateAdminSystemParameterMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAdminSystemParameter>>,
+    TError,
+    { data: BodyType<CreateSystemParameterDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAdminSystemParameter>>,
+  TError,
+  { data: BodyType<CreateSystemParameterDto> },
+  TContext
+> => {
+  const mutationKey = ['createAdminSystemParameter'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAdminSystemParameter>>,
+    { data: BodyType<CreateSystemParameterDto> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAdminSystemParameter(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAdminSystemParameterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAdminSystemParameter>>
+>;
+export type CreateAdminSystemParameterMutationBody = BodyType<CreateSystemParameterDto>;
+export type CreateAdminSystemParameterMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Tạo tham số tuỳ biến; code không tham chiếu nên chỉ dùng để lưu giá trị vận hành
+ */
+export const useCreateAdminSystemParameter = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAdminSystemParameter>>,
+      TError,
+      { data: BodyType<CreateSystemParameterDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAdminSystemParameter>>,
+  TError,
+  { data: BodyType<CreateSystemParameterDto> },
+  TContext
+> => {
+  const mutationOptions = getCreateAdminSystemParameterMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Cập nhật giá trị tham số; có hiệu lực ngay, không cần deploy
+ */
+export const updateAdminSystemParameter = (
+  code: string,
+  updateSystemParameterDto: BodyType<UpdateSystemParameterDto>,
+) => {
+  return apiFetcher<SystemParameterDto>({
+    url: `/api/v1/admin/system/parameters/${code}`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateSystemParameterDto,
+  });
+};
+
+export const getUpdateAdminSystemParameterMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminSystemParameter>>,
+    TError,
+    { code: string; data: BodyType<UpdateSystemParameterDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAdminSystemParameter>>,
+  TError,
+  { code: string; data: BodyType<UpdateSystemParameterDto> },
+  TContext
+> => {
+  const mutationKey = ['updateAdminSystemParameter'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAdminSystemParameter>>,
+    { code: string; data: BodyType<UpdateSystemParameterDto> }
+  > = (props) => {
+    const { code, data } = props ?? {};
+
+    return updateAdminSystemParameter(code, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAdminSystemParameterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAdminSystemParameter>>
+>;
+export type UpdateAdminSystemParameterMutationBody = BodyType<UpdateSystemParameterDto>;
+export type UpdateAdminSystemParameterMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Cập nhật giá trị tham số; có hiệu lực ngay, không cần deploy
+ */
+export const useUpdateAdminSystemParameter = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAdminSystemParameter>>,
+      TError,
+      { code: string; data: BodyType<UpdateSystemParameterDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAdminSystemParameter>>,
+  TError,
+  { code: string; data: BodyType<UpdateSystemParameterDto> },
+  TContext
+> => {
+  const mutationOptions = getUpdateAdminSystemParameterMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Ngừng dùng tham số tuỳ biến (xoá mềm); tham số hệ thống không xoá được
+ */
+export const deleteAdminSystemParameter = (
+  code: string,
+  deleteSystemParameterDto: BodyType<DeleteSystemParameterDto>,
+) => {
+  return apiFetcher<void>({
+    url: `/api/v1/admin/system/parameters/${code}`,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    data: deleteSystemParameterDto,
+  });
+};
+
+export const getDeleteAdminSystemParameterMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAdminSystemParameter>>,
+    TError,
+    { code: string; data: BodyType<DeleteSystemParameterDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAdminSystemParameter>>,
+  TError,
+  { code: string; data: BodyType<DeleteSystemParameterDto> },
+  TContext
+> => {
+  const mutationKey = ['deleteAdminSystemParameter'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAdminSystemParameter>>,
+    { code: string; data: BodyType<DeleteSystemParameterDto> }
+  > = (props) => {
+    const { code, data } = props ?? {};
+
+    return deleteAdminSystemParameter(code, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAdminSystemParameterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAdminSystemParameter>>
+>;
+export type DeleteAdminSystemParameterMutationBody = BodyType<DeleteSystemParameterDto>;
+export type DeleteAdminSystemParameterMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Ngừng dùng tham số tuỳ biến (xoá mềm); tham số hệ thống không xoá được
+ */
+export const useDeleteAdminSystemParameter = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAdminSystemParameter>>,
+      TError,
+      { code: string; data: BodyType<DeleteSystemParameterDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAdminSystemParameter>>,
+  TError,
+  { code: string; data: BodyType<DeleteSystemParameterDto> },
+  TContext
+> => {
+  const mutationOptions = getDeleteAdminSystemParameterMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};

@@ -54,6 +54,11 @@ const FulfillmentsPage = lazy(() =>
 const FlashSalesPage = lazy(() =>
   import('@/features/flash-sales').then((module) => ({ default: module.FlashSalesPage })),
 );
+const SystemParametersPage = lazy(() =>
+  import('@/features/system-parameters').then((module) => ({
+    default: module.SystemParametersPage,
+  })),
+);
 const PaymentsPage = lazy(() =>
   import('@/features/payments').then((module) => ({ default: module.PaymentsPage })),
 );
@@ -164,6 +169,14 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="catalog.flash_sale.view">
               <FlashSalesPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="system-parameters"
+          element={
+            <PermissionRoute permission="system.parameter.view">
+              <SystemParametersPage />
             </PermissionRoute>
           }
         />

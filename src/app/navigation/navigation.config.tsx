@@ -4,6 +4,7 @@ import {
   BankOutlined,
   CarOutlined,
   CommentOutlined,
+  ControlOutlined,
   DashboardOutlined,
   FileTextOutlined,
   InboxOutlined,
@@ -125,6 +126,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     group: 'system',
     icon: <SafetyCertificateOutlined />,
     permission: 'iam.user.view',
+  },
+  {
+    path: '/system-parameters',
+    label: 'Tham số hệ thống',
+    group: 'system',
+    icon: <ControlOutlined />,
+    permission: 'system.parameter.view',
   },
   {
     path: '/audit',
