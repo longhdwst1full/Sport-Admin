@@ -21,6 +21,7 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
   }
   if (domain === 'orders') {
     return {
+      createPosOrder: withOptions,
       confirmAdminOrder: withOptions,
       cancelAdminOrder: withOptions,
       completeAdminOrder: withOptions,

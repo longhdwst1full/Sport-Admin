@@ -10,6 +10,7 @@ import {
   InboxOutlined,
   KeyOutlined,
   SafetyCertificateOutlined,
+  ShopOutlined,
   ShoppingCartOutlined,
   DollarOutlined,
   TagsOutlined,
@@ -50,6 +51,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     group: 'sales',
     icon: <ShoppingCartOutlined />,
     permission: 'order.view',
+  },
+  {
+    path: '/pos',
+    label: 'Bán tại quầy',
+    group: 'sales',
+    icon: <ShopOutlined />,
+    permission: 'order.manage',
   },
   {
     path: '/fulfillments',

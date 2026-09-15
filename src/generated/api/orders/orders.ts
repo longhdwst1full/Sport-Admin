@@ -25,16 +25,109 @@ import type {
   AdminOrderListDto,
   CompleteOrderCommandDto,
   ConfirmOrderCommandDto,
+  CreatePosOrderDto,
   ErrorResponseDto,
   ListAdminOrdersParams,
   OrderCancelCommandDto,
   OrderDetailDto,
 } from './models';
 
+import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
-import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Tạo đơn bán tại quầy: thu tiền ngay và giao hàng tại chỗ
+ */
+export const createPosOrder = (
+  createPosOrderDto: CreatePosOrderDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcherWithOptions<OrderDetailDto>(
+    {
+      url: `/api/v1/admin/orders/pos`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createPosOrderDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getCreatePosOrderMutationOptions = <
+  TError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPosOrder>>,
+    TError,
+    { data: CreatePosOrderDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPosOrder>>,
+  TError,
+  { data: CreatePosOrderDto },
+  TContext
+> => {
+  const mutationKey = ['createPosOrder'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPosOrder>>,
+    { data: CreatePosOrderDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPosOrder(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePosOrderMutationResult = NonNullable<Awaited<ReturnType<typeof createPosOrder>>>;
+export type CreatePosOrderMutationBody = CreatePosOrderDto;
+export type CreatePosOrderMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
+
+/**
+ * @summary Tạo đơn bán tại quầy: thu tiền ngay và giao hàng tại chỗ
+ */
+export const useCreatePosOrder = <
+  TError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createPosOrder>>,
+      TError,
+      { data: CreatePosOrderDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createPosOrder>>,
+  TError,
+  { data: CreatePosOrderDto },
+  TContext
+> => {
+  const mutationOptions = getCreatePosOrderMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 /**
  * @summary Danh sách đơn hàng theo tab trạng thái, tìm kiếm và phạm vi chi nhánh
