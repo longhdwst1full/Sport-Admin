@@ -1,5 +1,4 @@
-import type { ActiveLookupOptionDto } from '@/generated/api/catalog/models';
-import type { PosOrderItemDto } from '@/generated/api/orders/models';
+import type { PosCatalogItemDto, PosOrderItemDto } from '@/generated/api/orders/models';
 
 /**
  * Dòng hàng trên màn quầy. Giữ giá dưới dạng số để cộng tổng hiển thị, nhưng số tiền
@@ -12,24 +11,43 @@ export interface PosCartLine {
   /** null khi biến thể chưa có bảng giá hiệu lực; không cho bán cho tới khi có giá. */
   unitPrice: number | null;
   quantity: number;
+  isBundle: boolean;
+  /** Thành phần combo, hiển thị để nhân viên biết đang bán gì. Rỗng với hàng lẻ. */
+  components: Array<{ sku: string; name: string; quantity: number }>;
+  /**
+   * Tồn khả dụng lúc chọn hàng. Là ảnh chụp, không phải chỗ đã giữ: Backend vẫn kiểm
+   * lại khi tạo đơn, nên đây chỉ để cảnh báo sớm cho nhân viên.
+   */
+  availableQuantity: number;
 }
 
-export function toCartLine(option: ActiveLookupOptionDto): PosCartLine {
-  const price = option.priceAmount == null ? null : Number(option.priceAmount);
+export function toCartLine(item: PosCatalogItemDto): PosCartLine {
+  const price = item.unitPrice == null ? null : Number(item.unitPrice);
   return {
-    variantId: option.id,
-    sku: option.code,
-    name: option.label,
+    variantId: item.id,
+    sku: item.sku,
+    name: item.name,
     unitPrice: price == null || Number.isNaN(price) ? null : price,
     quantity: 1,
+    isBundle: item.isBundle,
+    components: item.components.map((component) => ({
+      sku: component.sku,
+      name: component.name,
+      quantity: component.quantity,
+    })),
+    availableQuantity: item.availableQuantity,
   };
 }
 
-export function addLine(lines: PosCartLine[], option: ActiveLookupOptionDto): PosCartLine[] {
-  const existing = lines.find((line) => line.variantId === option.id);
-  if (!existing) return [...lines, toCartLine(option)];
+export function addLine(lines: PosCartLine[], item: PosCatalogItemDto): PosCartLine[] {
+  const existing = lines.find((line) => line.variantId === item.id);
+  if (!existing) return [...lines, toCartLine(item)];
+  // Không cho vượt tồn ngay khi bấm: Backend sẽ từ chối cả đơn chứ không cắt bớt dòng.
+  const quantity = Math.min(existing.quantity + 1, Math.max(item.availableQuantity, 1));
   return lines.map((line) =>
-    line.variantId === option.id ? { ...line, quantity: line.quantity + 1 } : line,
+    line.variantId === item.id
+      ? { ...line, quantity, availableQuantity: item.availableQuantity }
+      : line,
   );
 }
 
@@ -61,6 +79,11 @@ export function cartQuantity(lines: PosCartLine[]): number {
 /** Biến thể chưa có giá thì không gửi lên được — Backend sẽ từ chối cả đơn. */
 export function linesWithoutPrice(lines: PosCartLine[]): PosCartLine[] {
   return lines.filter((line) => line.unitPrice == null);
+}
+
+/** Dòng đã đặt quá tồn khả dụng lúc chọn hàng. */
+export function linesOverStock(lines: PosCartLine[]): PosCartLine[] {
+  return lines.filter((line) => line.quantity > line.availableQuantity);
 }
 
 export function toOrderItems(lines: PosCartLine[]): PosOrderItemDto[] {

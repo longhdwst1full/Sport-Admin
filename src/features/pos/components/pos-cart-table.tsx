@@ -1,5 +1,5 @@
 import { DeleteOutlined } from '@ant-design/icons';
-import { Button, Empty, InputNumber, Popconfirm, Table, Tag } from 'antd';
+import { Button, Empty, InputNumber, Popconfirm, Table, Tag, Tooltip } from 'antd';
 import { moneyFormatter } from '../constants/pos.constants';
 import { lineTotal, type PosCartLine } from '../model/pos-cart';
 
@@ -37,6 +37,17 @@ export function PosCartTable({
             <div>
               <div className="font-semibold text-slate-800">{line.name}</div>
               <div className="font-mono text-xs text-slate-500">{line.sku}</div>
+              {line.isBundle && (
+                <Tooltip
+                  title={line.components
+                    .map((component) => `${component.name} × ${component.quantity}`)
+                    .join(' · ')}
+                >
+                  <Tag color="purple" className="mt-1">
+                    Combo {line.components.length} món
+                  </Tag>
+                </Tooltip>
+              )}
             </div>
           ),
         },
@@ -58,13 +69,25 @@ export function PosCartTable({
           width: 120,
           align: 'center',
           render: (_value, line) => (
-            <InputNumber
-              min={1}
-              max={999}
-              value={line.quantity}
-              disabled={disabled}
-              onChange={(value) => onQuantityChange(line.variantId, Number(value ?? 1))}
-            />
+            <div>
+              <InputNumber
+                min={1}
+                max={999}
+                value={line.quantity}
+                status={line.quantity > line.availableQuantity ? 'error' : undefined}
+                disabled={disabled}
+                onChange={(value) => onQuantityChange(line.variantId, Number(value ?? 1))}
+              />
+              <div
+                className={
+                  line.quantity > line.availableQuantity
+                    ? 'mt-1 text-xs font-semibold text-red-600'
+                    : 'mt-1 text-xs text-slate-400'
+                }
+              >
+                Còn {line.availableQuantity}
+              </div>
+            </div>
           ),
         },
         {

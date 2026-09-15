@@ -1,32 +1,54 @@
 import { describe, expect, it } from 'vitest';
-import type { ActiveLookupOptionDto } from '@/generated/api/catalog/models';
+import type { PosCatalogItemDto } from '@/generated/api/orders/models';
 import {
   addLine,
   cartQuantity,
   cartTotal,
+  linesOverStock,
   linesWithoutPrice,
   removeLine,
   setQuantity,
   toOrderItems,
 } from './pos-cart';
 
-const gianTa: ActiveLookupOptionDto = {
+const gianTa: PosCatalogItemDto = {
   id: '1554',
-  code: 'HQ-909S',
-  label: 'Giàn tạ đa năng HQ-909S',
-  priceAmount: '16000000.00',
+  sku: 'HQ-909S',
+  name: 'Giàn tạ đa năng HQ-909S',
+  unitPrice: '16000000.00',
+  isBundle: false,
+  components: [],
+  availableQuantity: 21,
 };
-const gheTap: ActiveLookupOptionDto = {
+const gheTap: PosCatalogItemDto = {
   id: '1555',
-  code: 'T059',
-  label: 'Ghế tập tạ đa năng T059',
-  priceAmount: '4100000.00',
+  sku: 'T059',
+  name: 'Ghế tập tạ đa năng T059',
+  unitPrice: '4100000.00',
+  isBundle: false,
+  components: [],
+  availableQuantity: 20,
 };
-const chuaCoGia: ActiveLookupOptionDto = {
+const chuaCoGia: PosCatalogItemDto = {
   id: '1556',
-  code: 'JL-065',
-  label: 'Xà đơn JL-065',
-  priceAmount: null,
+  sku: 'JL-065',
+  name: 'Xà đơn JL-065',
+  unitPrice: null,
+  isBundle: false,
+  components: [],
+  availableQuantity: 2,
+};
+const combo: PosCatalogItemDto = {
+  id: '20',
+  sku: 'COMBO-GYM',
+  name: 'Combo gym tại nhà',
+  unitPrice: '20000000.00',
+  isBundle: true,
+  components: [
+    { productVariantId: '1554', sku: 'HQ-909S', name: 'Giàn tạ', quantity: 2 },
+    { productVariantId: '1557', sku: 'THAM-YOGA', name: 'Thảm', quantity: 1 },
+  ],
+  availableQuantity: 3,
 };
 
 describe('giỏ hàng tại quầy', () => {
@@ -64,6 +86,30 @@ describe('giỏ hàng tại quầy', () => {
     const lines = addLine(addLine([], gianTa), chuaCoGia);
     expect(linesWithoutPrice(lines).map((line) => line.sku)).toEqual(['JL-065']);
     expect(cartTotal(lines)).toBe(16_000_000);
+  });
+
+  it('giữ lại thành phần combo để nhân viên biết đang bán gì', () => {
+    const lines = addLine([], combo);
+    expect(lines[0].isBundle).toBe(true);
+    expect(lines[0].components.map((component) => component.sku)).toEqual([
+      'HQ-909S',
+      'THAM-YOGA',
+    ]);
+  });
+
+  /**
+   * Backend từ chối cả đơn khi thiếu hàng chứ không cắt bớt dòng, nên bấm thêm quá tồn
+   * phải dừng ngay ở nút bấm.
+   */
+  it('bấm chọn thêm không vượt quá tồn khả dụng', () => {
+    let lines = addLine([], combo);
+    for (let index = 0; index < 5; index += 1) lines = addLine(lines, combo);
+    expect(lines[0].quantity).toBe(3);
+  });
+
+  it('gõ tay số lượng vượt tồn thì bị chỉ mặt để chặn trước khi thu tiền', () => {
+    const lines = setQuantity(addLine([], combo), '20', 9);
+    expect(linesOverStock(lines).map((line) => line.sku)).toEqual(['COMBO-GYM']);
   });
 
   it('gửi lên Backend đúng mã biến thể và số lượng', () => {

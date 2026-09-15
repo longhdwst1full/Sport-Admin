@@ -1,10 +1,10 @@
 # POS — Bán tại quầy — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
 > **Last updated:** 2026-09-15
 >
-> **Change summary:** Tạo màn bán tại quầy: chọn hàng, lập giỏ, thu tiền và in biên lai qua generated SDK.
+> **Change summary:** Chuyển sang danh mục bán tại quầy có combo và tồn khả dụng theo chi nhánh.
 
 ## Phạm vi
 
@@ -18,7 +18,10 @@ Ngoài phạm vi: sửa/huỷ đơn đã bán (dùng màn Đơn hàng), trả h�
 
 - `pages/pos-page.tsx` sở hữu giỏ, thông tin khách, khoá chống trùng và gọi `useCreatePosOrder`.
 - `model/pos-cart.ts` là hàm thuần trên giỏ; không gọi API, không giữ state.
-- `components/pos-product-picker.tsx` tìm hàng qua `useSearchActiveAdminProductVariants`.
+- `components/pos-product-picker.tsx` tìm hàng qua `useSearchPosCatalog` — danh mục riêng của
+  quầy, trả cả combo và tồn khả dụng theo kho của chi nhánh đang bán. **Không** dùng lookup
+  biến thể dùng chung của catalog: lookup đó cố tình loại combo ra vì nó phục vụ việc chọn
+  thành phần combo, và nó không biết chi nhánh nào đang bán.
 - `components/pos-receipt-modal.tsx` in từ `OrderDetailDto` Backend trả về, **không** dựng lại
   từ giỏ trên màn hình: thứ khách cầm về phải khớp đơn đã ghi sổ.
 - Mọi request dùng `src/generated/api`; không hard-code URL, không sửa file generated.
@@ -35,15 +38,15 @@ Ngoài phạm vi: sửa/huỷ đơn đã bán (dùng màn Đơn hàng), trả h�
 - Biến thể chưa có giá hiệu lực bị chặn ngay trên UI thay vì để Backend từ chối cả đơn sau
   khi nhân viên đã nhập xong thông tin khách.
 
-## Khoảng trống contract đang chờ Backend
+## Tồn kho và combo
 
-- `ActiveLookupOptionDto` (`searchActiveAdminProductVariants`) chỉ có `id/code/label/priceAmount`,
-  **không có cờ combo và không có tồn khả dụng**. Hệ quả: giỏ chưa hiển thị được thành phần
-  combo và tồn kho trước khi bấm thu tiền; Backend vẫn chặn đúng khi thiếu hàng
-  (`Kho quầy không đủ hàng cho <SKU>: còn N, cần M`) và biên lai vẫn hiện thành phần combo
-  qua `OrderItemDto.components`.
-  Điều kiện gỡ: thêm cờ bundle và tồn khả dụng theo kho vào lookup DTO ở `api/`, sync contract
-  rồi regenerate.
+- Tồn hiển thị là **khả dụng** (`onHand - reserved`) tại kho của chi nhánh đang bán.
+- Combo không có dòng tồn riêng — tồn nằm ở thành phần, và bước đặt chỗ cũng nổ combo ra
+  thành phần trước khi giữ hàng. Nên combo lấy theo **thành phần thiếu nhất**:
+  `min(floor(tồn thành phần / số lượng trong combo))`.
+- Con số này là **ảnh chụp lúc chọn hàng**, không phải chỗ đã giữ. Backend vẫn kiểm lại khi
+  tạo đơn; UI chặn sớm chỉ để nhân viên không nhập xong thông tin khách rồi mới biết hỏng.
+- Đổi chi nhánh là đổi kho nên giỏ bị xoá: giữ lại sẽ cho bán thứ kho mới không có.
 
 ## Checklist khi sửa
 
@@ -52,9 +55,11 @@ Ngoài phạm vi: sửa/huỷ đơn đã bán (dùng màn Đơn hàng), trả h�
 - [ ] Đổi hình thức thanh toán phải sửa `CreatePosOrderDto` ở Backend trước rồi regenerate SDK.
 - [ ] Khoá chống trùng phải reset sau mỗi đơn bán xong.
 - [ ] Nhãn tiếng Việt tách khỏi mã nghiệp vụ trong `constants/pos.constants.ts`.
+- [ ] Đổi cách tính tồn phải sửa `PosOrderService.computeAvailable` ở Backend, không tính lại ở FE.
 
 ## Revision history
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-09-15 | Dùng `searchPosCatalog`: combo và tồn khả dụng theo chi nhánh, chặn bán vượt tồn ngay trên UI. | POS-20260915-CATALOG |
 | 1.0.0 | 2026-09-15 | Tạo màn bán tại quầy từ generated contract `createPosOrder`. | POS-20260915-COUNTER-SALES |

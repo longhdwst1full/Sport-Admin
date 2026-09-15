@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react';
 import { ClearOutlined, ShoppingCartOutlined, ShopOutlined, TagsOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Card, Popconfirm } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
-import type { ActiveLookupOptionDto } from '@/generated/api/catalog/models';
 import { useCreatePosOrder } from '@/generated/api/orders/orders';
 import { getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getListInventoryBalancesQueryKey } from '@/generated/api/inventory/inventory';
 import {
   CreatePosOrderDtoPaymentMethod,
   type OrderDetailDto,
+  type PosCatalogItemDto,
 } from '@/generated/api/orders/models';
 import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
@@ -22,6 +22,7 @@ import {
   addLine,
   cartQuantity,
   cartTotal,
+  linesOverStock,
   linesWithoutPrice,
   removeLine,
   setQuantity,
@@ -55,6 +56,7 @@ export function PosPage() {
   const total = cartTotal(lines);
   const quantity = cartQuantity(lines);
   const unpriced = linesWithoutPrice(lines);
+  const overStock = linesOverStock(lines);
 
   const mutation = useCreatePosOrder({
     request: { headers: { 'Idempotency-Key': idempotencyKey } },
@@ -74,6 +76,11 @@ export function PosPage() {
     if (lines.length === 0) return 'Chưa chọn sản phẩm nào.';
     if (unpriced.length > 0) {
       return `Bỏ sản phẩm chưa có giá ra khỏi đơn: ${unpriced.map((line) => line.sku).join(', ')}.`;
+    }
+    if (overStock.length > 0) {
+      return `Vượt tồn khả dụng: ${overStock
+        .map((line) => `${line.sku} còn ${line.availableQuantity}`)
+        .join(', ')}.`;
     }
     if (!checkout.branchId) return 'Chọn chi nhánh đang đứng quầy.';
     if (!checkout.customerName.trim()) return 'Nhập tên khách hàng.';
@@ -166,9 +173,8 @@ export function PosPage() {
           <Card title="Chọn sản phẩm" className="h-[640px] overflow-hidden" styles={{ body: { height: 'calc(100% - 56px)' } }}>
             <PosProductPicker
               pickedIds={pickedIds}
-              onPick={(option: ActiveLookupOptionDto) =>
-                setLines((current) => addLine(current, option))
-              }
+              branchId={checkout.branchId}
+              onPick={(item: PosCatalogItemDto) => setLines((current) => addLine(current, item))}
             />
           </Card>
 
@@ -190,7 +196,12 @@ export function PosPage() {
               quantity={quantity}
               submitting={mutation.isPending}
               blockedReason={blockedReason}
-              onChange={(patch) => setCheckout((current) => ({ ...current, ...patch }))}
+              onChange={(patch) => {
+                // Đổi chi nhánh là đổi kho: tồn và giá vừa hiển thị không còn đúng nữa,
+                // giữ lại giỏ cũ sẽ cho nhân viên bán thứ kho mới không có.
+                if (patch.branchId && patch.branchId !== checkout.branchId) setLines([]);
+                setCheckout((current) => ({ ...current, ...patch }));
+              }}
               onSubmit={submit}
             />
           </Card>

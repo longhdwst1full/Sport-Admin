@@ -30,12 +30,129 @@ import type {
   ListAdminOrdersParams,
   OrderCancelCommandDto,
   OrderDetailDto,
+  PosCatalogResponseDto,
+  SearchPosCatalogParams,
 } from './models';
 
-import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
+import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Danh mục bán tại quầy: hàng lẻ và combo kèm giá, tồn khả dụng theo chi nhánh
+ */
+export const searchPosCatalog = (params?: SearchPosCatalogParams, signal?: AbortSignal) => {
+  return apiFetcher<PosCatalogResponseDto>({
+    url: `/api/v1/admin/orders/pos/catalog`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getSearchPosCatalogQueryKey = (params?: SearchPosCatalogParams) => {
+  return [`/api/v1/admin/orders/pos/catalog`, ...(params ? [params] : [])] as const;
+};
+
+export const getSearchPosCatalogQueryOptions = <
+  TData = Awaited<ReturnType<typeof searchPosCatalog>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SearchPosCatalogParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof searchPosCatalog>>, TError, TData>>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSearchPosCatalogQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof searchPosCatalog>>> = ({ signal }) =>
+    searchPosCatalog(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof searchPosCatalog>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SearchPosCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof searchPosCatalog>>>;
+export type SearchPosCatalogQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useSearchPosCatalog<
+  TData = Awaited<ReturnType<typeof searchPosCatalog>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | SearchPosCatalogParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof searchPosCatalog>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchPosCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof searchPosCatalog>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSearchPosCatalog<
+  TData = Awaited<ReturnType<typeof searchPosCatalog>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SearchPosCatalogParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof searchPosCatalog>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchPosCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof searchPosCatalog>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSearchPosCatalog<
+  TData = Awaited<ReturnType<typeof searchPosCatalog>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SearchPosCatalogParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof searchPosCatalog>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Danh mục bán tại quầy: hàng lẻ và combo kèm giá, tồn khả dụng theo chi nhánh
+ */
+
+export function useSearchPosCatalog<
+  TData = Awaited<ReturnType<typeof searchPosCatalog>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SearchPosCatalogParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof searchPosCatalog>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSearchPosCatalogQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 /**
  * @summary Tạo đơn bán tại quầy: thu tiền ngay và giao hàng tại chỗ
