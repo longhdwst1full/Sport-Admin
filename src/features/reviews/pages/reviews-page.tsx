@@ -3,6 +3,7 @@ import {
   CheckOutlined,
   ClockCircleOutlined,
   DeleteOutlined,
+  EyeOutlined,
   ReloadOutlined,
   SettingOutlined,
   StarFilled,
@@ -23,6 +24,7 @@ import {
   useModerateAdminReview,
 } from '@/generated/api/reviews/reviews';
 import type { ProductReviewDto } from '@/generated/api/reviews/models';
+import { ReviewDetailDrawer } from '../components/review-detail-drawer';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 const REVIEW_STATUSES = {
@@ -52,6 +54,7 @@ export function ReviewsPage() {
     status: true,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [detail, setDetail] = useState<ProductReviewDto>();
 
   const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
@@ -207,6 +210,17 @@ export function ReviewsPage() {
           },
         ]
       : []),
+    {
+      title: '',
+      key: 'detail',
+      width: 130,
+      align: 'right' as const,
+      render: (_: unknown, row: ProductReviewDto) => (
+        <Button size="small" icon={<EyeOutlined />} onClick={() => setDetail(row)}>
+          Xem chi tiết
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -349,6 +363,8 @@ export function ReviewsPage() {
           }
         />
       </ManagementPage>
+
+      <ReviewDetailDrawer review={detail} onClose={() => setDetail(undefined)} />
     </PageTransition>
   );
 }

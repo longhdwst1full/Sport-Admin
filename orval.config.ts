@@ -77,4 +77,5 @@ export default defineConfig({
   payments: createDomainConfig('payments'),
   fulfillments: createDomainConfig('fulfillments'),
   promotions: createDomainConfig('promotions'),
+  reporting: createDomainConfig('reporting'),
 });
