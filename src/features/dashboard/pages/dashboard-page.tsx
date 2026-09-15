@@ -70,10 +70,18 @@ export function DashboardPage() {
 
   const statCards = [
     {
-      label: 'Doanh thu đã thu (30 ngày)',
-      value: canSeeRevenue ? money.format(Number(revenue.data?.totalRevenue ?? 0)) : '—',
+      label: 'Doanh thu đã hoàn tất (30 ngày)',
+      value: canSeeRevenue ? money.format(Number(revenue.data?.completedRevenue ?? 0)) : '—',
       hint: canSeeRevenue
-        ? `${revenue.data?.paidOrderCount ?? 0} đơn đã nhận được tiền`
+        ? `${revenue.data?.completedOrderCount ?? 0} đơn đã hoàn tất`
+        : 'Cần quyền xem doanh thu',
+      icon: <DollarOutlined />,
+    },
+    {
+      label: 'Dự thu',
+      value: canSeeRevenue ? money.format(Number(revenue.data?.expectedRevenue ?? 0)) : '—',
+      hint: canSeeRevenue
+        ? `${revenue.data?.expectedOrderCount ?? 0} đơn đã giao, chờ hoàn tất`
         : 'Cần quyền xem doanh thu',
       icon: <DollarOutlined />,
     },
@@ -120,7 +128,8 @@ export function DashboardPage() {
           Chào {auth.currentUser?.displayName ?? 'bạn'}
         </Typography.Title>
         <Typography.Text type="secondary" className="text-sm">
-          Số liệu 30 ngày gần nhất, trong phạm vi chi nhánh bạn được phân quyền.
+          Số liệu 30 ngày gần nhất, trong phạm vi chi nhánh bạn được phân quyền. Doanh thu ghi
+          nhận khi đơn hoàn tất; đơn đã giao đang chờ hoàn tất tính vào dự thu.
         </Typography.Text>
       </div>
 
@@ -164,14 +173,14 @@ export function DashboardPage() {
         <Col xs={24} xl={16}>
           <Card
             className="!rounded-2xl !border-slate-100 !shadow-soft"
-            title="Doanh thu đã thu theo ngày"
+            title="Doanh thu theo ngày hoàn tất"
           >
             {!canSeeRevenue ? (
               <Empty description="Tài khoản của bạn không có quyền xem doanh thu" />
             ) : revenue.isPending ? (
               <Skeleton active />
             ) : revenueSeries.length === 0 ? (
-              <Empty description="Chưa có đơn nào nhận được tiền trong 30 ngày qua" />
+              <Empty description="Chưa có đơn nào hoàn tất trong 30 ngày qua" />
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={revenueSeries}>
@@ -217,6 +226,35 @@ export function DashboardPage() {
           </Card>
         </Col>
       </Row>
+
+      {canSeeRevenue && (revenue.data?.byBranch.length ?? 0) > 0 && (
+        <Card className="!rounded-2xl !border-slate-100 !shadow-soft" title="Theo chi nhánh">
+          <Table
+            rowKey="branchName"
+            size="small"
+            pagination={false}
+            dataSource={revenue.data?.byBranch ?? []}
+            columns={[
+              { title: 'Chi nhánh', dataIndex: 'branchName' },
+              {
+                title: 'Đã hoàn tất',
+                dataIndex: 'completedRevenue',
+                align: 'right',
+                render: (value: string) => money.format(Number(value)),
+              },
+              { title: 'Số đơn', dataIndex: 'completedOrderCount', width: 90, align: 'right' },
+              {
+                title: 'Dự thu',
+                dataIndex: 'expectedRevenue',
+                align: 'right',
+                render: (value: string) => (
+                  <span className="text-slate-500">{money.format(Number(value))}</span>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      )}
 
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={12}>

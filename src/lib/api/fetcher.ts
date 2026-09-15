@@ -54,6 +54,25 @@ async function rotateTokens(): Promise<TokenPairDto> {
   return refreshPromise;
 }
 
+/**
+ * Chỉ những endpoint tự nó CẤP hoặc HUỶ token mới được miễn xoay token khi gặp 401 —
+ * xoay ở đó sẽ đệ quy vô hạn.
+ *
+ * `/admin/auth/me` KHÔNG thuộc nhóm này: nó là tài nguyên được bảo vệ và là đúng lời gọi
+ * khôi phục phiên khi tải lại trang. Trước đây bộ lọc bắt cả chuỗi `/admin/auth/` nên `/me`
+ * bị loại nhầm, khiến access token hết hạn là mất phiên thay vì tự gia hạn.
+ */
+const CREDENTIAL_ENDPOINTS = [
+  '/admin/auth/login',
+  '/admin/auth/refresh',
+  '/admin/auth/logout',
+];
+
+export function isCredentialEndpoint(url: string | undefined): boolean {
+  const value = String(url ?? '');
+  return CREDENTIAL_ENDPOINTS.some((path) => value.includes(path));
+}
+
 export async function apiFetcher<T>(
   config: AxiosRequestConfig,
   options: AxiosRequestConfig = {},
@@ -72,7 +91,7 @@ export async function apiFetcher<T>(
     const response = await apiClient.request<T>(requestConfig);
     return response.data;
   } catch (error) {
-    const isAuthEndpoint = String(config.url ?? '').includes('/admin/auth/');
+    const isAuthEndpoint = isCredentialEndpoint(config.url);
     if (
       axios.isAxiosError(error) &&
       error.response?.status === 401 &&

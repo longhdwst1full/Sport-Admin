@@ -6,17 +6,25 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { RevenuePointDto } from './revenuePointDto';
+import type { BranchRevenueDto } from './branchRevenueDto';
 
 export interface RevenueReportDto {
   from: string;
   to: string;
-  /** Tổng tiền đã thực nhận trong khoảng; chỉ tính đơn có thanh toán SUCCESS */
-  totalRevenue: string;
-  /** Số đơn đã thu được tiền */
-  paidOrderCount: number;
-  /** Giá trị trung bình mỗi đơn đã thu tiền */
+  /** Doanh thu thực nhận: đơn đã COMPLETED, tính theo mốc hoàn tất */
+  completedRevenue: string;
+  /** Số đơn đã hoàn tất */
+  completedOrderCount: number;
+  /** Dự thu: đơn đã DELIVERED, đang chờ tự chuyển hoàn tất */
+  expectedRevenue: string;
+  /** Số đơn đã giao, chờ hoàn tất */
+  expectedOrderCount: number;
+  /** Đơn đang xử lý (đã xác nhận tới đang giao); chưa tính vào hai nhóm trên */
+  inProgressRevenue: string;
+  /** Giá trị trung bình mỗi đơn đã hoàn tất */
   averageOrderValue: string;
-  /** Tiền của đơn chưa thu (COD chưa giao, chuyển khoản chờ xác nhận) */
-  pendingRevenue: string;
+  /** Doanh thu thực nhận theo ngày hoàn tất */
   series: RevenuePointDto[];
+  /** Bóc tách theo chi nhánh */
+  byBranch: BranchRevenueDto[];
 }
