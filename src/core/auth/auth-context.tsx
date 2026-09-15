@@ -22,7 +22,7 @@ interface AuthContextValue {
   authenticated: boolean;
   loading: boolean;
   developmentBypass: boolean;
-  establishSession: (tokens: TokenPairDto) => Promise<CurrentUserDto>;
+  establishSession: (tokens: TokenPairDto, remember?: boolean) => Promise<CurrentUserDto>;
   signOut: () => Promise<void>;
 }
 
@@ -63,8 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [hasTokens]);
 
-  const establishSession = async (tokens: TokenPairDto): Promise<CurrentUserDto> => {
-    saveAuthTokens(tokens);
+  const establishSession = async (
+    tokens: TokenPairDto,
+    remember?: boolean,
+  ): Promise<CurrentUserDto> => {
+    saveAuthTokens(tokens, remember);
     const queryKey = getGetAdminCurrentUserQueryKey();
     try {
       return await queryClient.fetchQuery({

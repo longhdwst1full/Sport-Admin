@@ -436,13 +436,13 @@ export const useUpdateAdminBrand = <
 };
 
 /**
- * @summary Logically delete a brand by changing its status to INACTIVE
+ * @summary Xoá hẳn thương hiệu chưa gắn sản phẩm nào
  */
 export const deleteAdminBrand = (
   id: string,
   changeMasterStatusDto: BodyType<ChangeMasterStatusDto>,
 ) => {
-  return apiFetcher<BrandDto>({
+  return apiFetcher<void>({
     url: `/api/v1/admin/catalog/brands/${id}`,
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
@@ -496,7 +496,7 @@ export type DeleteAdminBrandMutationError = ErrorType<
 >;
 
 /**
- * @summary Logically delete a brand by changing its status to INACTIVE
+ * @summary Xoá hẳn thương hiệu chưa gắn sản phẩm nào
  */
 export const useDeleteAdminBrand = <
   TError = ErrorType<

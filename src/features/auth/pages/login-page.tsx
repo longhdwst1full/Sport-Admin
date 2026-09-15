@@ -1,6 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { App, Button, Form, Input } from 'antd';
+import { useState } from 'react';
+import { App, Button, Checkbox, Form, Input, Tooltip } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
@@ -20,6 +21,7 @@ export function LoginPage() {
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [remember, setRemember] = useState(false);
   const form = useForm<LoginDto>({
     resolver: yupResolver(schema),
     defaultValues: { identifier: '', password: '' },
@@ -29,7 +31,7 @@ export function LoginPage() {
     mutation: {
       onSuccess: (tokens) => {
         void auth
-          .establishSession(tokens)
+          .establishSession(tokens, remember)
           .then((currentUser) => {
             if (currentUser.mustChangePassword) {
               navigate('/change-password', { replace: true });
@@ -157,6 +159,26 @@ export function LoginPage() {
                 )}
               />
             </Form.Item>
+
+            <div className="!mb-5 flex items-center justify-between">
+              <Checkbox
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
+                className="!text-sm !text-slate-600"
+              >
+                Ghi nhớ đăng nhập
+              </Checkbox>
+              {/*
+                Chưa có endpoint đặt lại mật khẩu ở backend, nên không dựng link dẫn
+                tới trang trống. Quản trị viên cấp lại mật khẩu bằng chức năng mở khoá
+                tài khoản ở màn Người dùng & quyền.
+              */}
+              <Tooltip title="Liên hệ quản trị viên để được cấp lại mật khẩu tại màn Người dùng & quyền.">
+                <span className="cursor-help text-sm font-medium text-slate-400 underline decoration-dotted">
+                  Quên mật khẩu?
+                </span>
+              </Tooltip>
+            </div>
 
             <Button
               block

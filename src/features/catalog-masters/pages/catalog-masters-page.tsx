@@ -1,13 +1,14 @@
 import {
   AppstoreOutlined,
   CheckCircleOutlined,
+  DeleteOutlined,
   EditOutlined,
   PlusOutlined,
   PoweroffOutlined,
   ReloadOutlined,
   TagsOutlined,
 } from '@ant-design/icons';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Input, Popconfirm, Space, Table, Tabs } from 'antd';
 import { useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
@@ -18,6 +19,7 @@ import { PageTransition } from '@/foundation/layout/page-transition';
 import {
   getListAdminBrandsQueryKey,
   getListAdminCategoriesQueryKey,
+  deleteAdminBrand,
   useActivateAdminBrand,
   useActivateAdminCategory,
   useDeactivateAdminBrand,
@@ -75,6 +77,21 @@ export function CatalogMastersPage() {
   };
   const activateBrand = useActivateAdminBrand(brandLifecycleOptions);
   const deactivateBrand = useDeactivateAdminBrand(brandLifecycleOptions);
+
+  /**
+   * Xoá thật, khác với nút Ngừng. Backend từ chối khi thương hiệu còn gắn sản phẩm,
+   * nên thông báo lỗi trả về đã nói rõ vì sao không xoá được.
+   */
+  const deleteBrand = useMutation({
+    mutationFn: ({ id, expectedVersion }: { id: string; expectedVersion: number }) =>
+      deleteAdminBrand(id, { expectedVersion }),
+    onSuccess: async () => {
+      await refreshBrands();
+      void message.success('Đã xoá thương hiệu.');
+    },
+    onError: (error: unknown) =>
+      void message.error(getApiErrorMessage(error, 'Không thể xoá thương hiệu.')),
+  });
 
   const categoryLifecycleOptions = {
     mutation: {
@@ -264,6 +281,24 @@ export function CatalogMastersPage() {
                               >
                                 {row.status === 'ACTIVE' ? 'Ngừng' : 'Bật'}
                               </Button>
+                            </Popconfirm>
+                            <Popconfirm
+                              title="Xoá hẳn thương hiệu?"
+                              description="Chỉ xoá được khi chưa có sản phẩm nào gắn thương hiệu này. Thao tác không hoàn tác được."
+                              okText="Xoá"
+                              okButtonProps={{ danger: true }}
+                              onConfirm={() =>
+                                deleteBrand.mutate({ id: row.id, expectedVersion: row.version })
+                              }
+                            >
+                              <Button
+                                size="small"
+                                danger
+                                icon={<DeleteOutlined />}
+                                loading={
+                                  deleteBrand.isPending && deleteBrand.variables?.id === row.id
+                                }
+                              />
                             </Popconfirm>
                           </Space>
                         </PermissionGate>

@@ -186,12 +186,8 @@ paths:
             schema:
               $ref: "#/components/schemas/ChangeMasterStatusDto"
       responses:
-        "200":
+        "204":
           description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BrandDto"
         "400":
           description: ""
           content:
@@ -217,14 +213,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
         "409":
-          description: ""
+          description: Thương hiệu đang gắn với sản phẩm, hoặc version đã thay đổi
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
       security:
         - bearer: []
-      summary: Logically delete a brand by changing its status to INACTIVE
+      summary: Xoá hẳn thương hiệu chưa gắn sản phẩm nào
       tags:
         - Admin Catalog
   /api/v1/admin/catalog/brands/{id}/deactivate:

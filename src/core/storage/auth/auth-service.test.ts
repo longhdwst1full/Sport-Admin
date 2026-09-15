@@ -32,6 +32,22 @@ describe('AuthService', () => {
     expect(AuthService.getAccessToken()).toBe('from-cookie');
   });
 
+  /**
+   * Hồi quy: cookie access token hết hạn theo `expiresIn` còn refresh token là
+   * session cookie nên sống lâu hơn. Trước đây `read()` trả undefined ngay khi
+   * thiếu access token, làm mất refresh token còn dùng được và ép đăng nhập lại.
+   */
+  it('vẫn trả refresh token khi access token đã hết hạn', () => {
+    CookieManager.set(CookieKey.REFRESH_TOKEN, 'refresh-con-song');
+
+    expect(AuthService.getAccessToken()).toBeUndefined();
+    expect(AuthService.read()?.refreshToken).toBe('refresh-con-song');
+  });
+
+  it('chỉ coi là chưa đăng nhập khi mất cả hai cookie', () => {
+    expect(AuthService.read()).toBeUndefined();
+  });
+
   it('clears both cookies on logout', () => {
     AuthService.save(tokens);
     AuthService.clear();

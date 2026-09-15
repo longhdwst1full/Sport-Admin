@@ -2,6 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios';
 import {
   clearAuthTokens,
   getAccessToken,
+  hasRefreshCredential,
   readAuthTokens,
   saveAuthTokens,
   usesAuthCookieTransport,
@@ -75,7 +76,9 @@ export async function apiFetcher<T>(
     if (
       axios.isAxiosError(error) &&
       error.response?.status === 401 &&
-      accessToken &&
+      // Điều kiện là CÒN refresh token, không phải còn access token: access hết hạn
+      // trước là đúng luồng, chặn ở đây thì không bao giờ xoay được token.
+      hasRefreshCredential() &&
       !isAuthEndpoint
     ) {
       const tokens = await rotateTokens();

@@ -13,9 +13,9 @@ export function readAuthTokens(): TokenPairDto | undefined {
   return AuthService.read();
 }
 
-export function saveAuthTokens(tokens: TokenPairDto): void {
+export function saveAuthTokens(tokens: TokenPairDto, remember?: boolean): void {
   // COOKIE transport: server đã set HttpOnly cookie, client không giữ bản sao.
-  if (!cookieTransport) AuthService.save(tokens);
+  if (!cookieTransport) AuthService.save(tokens, remember);
   notify();
 }
 
@@ -29,7 +29,12 @@ export function clearAuthTokens(): void {
 }
 
 export function getAccessToken(): string | undefined {
-  return readAuthTokens()?.accessToken;
+  return readAuthTokens()?.accessToken || undefined;
+}
+
+/** Còn refresh token nghĩa là phiên vẫn cứu được, kể cả khi access token đã hết hạn. */
+export function hasRefreshCredential(): boolean {
+  return cookieTransport || Boolean(readAuthTokens()?.refreshToken);
 }
 
 export function subscribeAuthTokens(listener: () => void): () => void {
