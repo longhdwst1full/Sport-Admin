@@ -8,6 +8,7 @@ import {
   useUpdateAdminProductMedia,
 } from '@/generated/api/catalog/catalog';
 import type { ProductDetailDto, ProductMediaDto } from '@/generated/api/catalog/models';
+import { useCan } from '@/core/auth/permissions';
 import { uploadImage } from '@/lib/media/upload-image';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { reorderProductMedia } from '../model/product-media.policy';
@@ -22,6 +23,8 @@ export function ProductMediaPanel({
   const { message, modal } = App.useApp();
   const [targetVariantId, setTargetVariantId] = useState<string>();
   const [uploading, setUploading] = useState(false);
+  // SECURITY: thêm ảnh sản phẩm ghi qua media API, cần media.asset.upload ngoài quyền sửa sản phẩm.
+  const canUpload = useCan('media.asset.upload');
   const [editing, setEditing] = useState<ProductMediaDto>();
   const [altText, setAltText] = useState('');
 
@@ -89,7 +92,7 @@ export function ProductMediaPanel({
         <Upload
           accept="image/jpeg,image/png,image/webp,image/avif"
           showUploadList={false}
-          disabled={pending || uploading || product.status === 'ARCHIVED'}
+          disabled={pending || uploading || !canUpload || product.status === 'ARCHIVED'}
           customRequest={({ file, onError, onSuccess }) => {
             if (!(file instanceof File)) return onError?.(new Error('Tệp không hợp lệ'));
             setUploading(true);

@@ -43,6 +43,10 @@ const organizationStatuses: Record<BranchDtoStatus, { color: string; label: stri
   INACTIVE: { color: 'default', label: 'Ngừng hoạt động' },
 };
 
+// SECURITY: mọi endpoint branch/kho khai báo đồng thời org.branch.manage và org.warehouse.manage,
+// nên UI phải yêu cầu đủ cả hai; thiếu một quyền mà vẫn hiện nút thì thao tác chắc chắn 403.
+const BRANCH_WAREHOUSE_MANAGE = ['org.branch.manage', 'org.warehouse.manage'] as const;
+
 export function OrganizationPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -101,7 +105,7 @@ export function OrganizationPage() {
       description="Cấu trúc vận hành V1: mỗi chi nhánh sở hữu đúng một kho bán hàng."
       dataNotice="Dữ liệu lấy từ generated Admin Organization SDK và PostgreSQL khi DATABASE_ENABLED=true. Mọi thay đổi branch/kho dùng optimistic version."
       actions={
-        <PermissionGate permission="org.branch.manage">
+        <PermissionGate permission={BRANCH_WAREHOUSE_MANAGE}>
           <Button
             type="primary"
             size="large"
@@ -215,7 +219,7 @@ export function OrganizationPage() {
             width: 230,
             align: 'right',
             render: (_, row: BranchWarehouseRow) => (
-              <PermissionGate permission="org.branch.manage">
+              <PermissionGate permission={BRANCH_WAREHOUSE_MANAGE}>
                 <Space>
                   <Button
                     icon={<EditOutlined />}

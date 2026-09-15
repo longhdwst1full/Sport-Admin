@@ -8,6 +8,7 @@ import {
   rejectAdminPayment,
 } from '@/generated/api/payments/payments';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
+import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { moneyFormatter, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
 
@@ -63,11 +64,14 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
   const status = payment ? paymentStatusPresentation[payment.status] ?? { label: payment.status, color: 'default' } : undefined;
   // UX: COD chỉ mở thao tác thu tiền khi đơn đã giao; backend vẫn kiểm tra lại
   // để UI không bao giờ trở thành ranh giới bảo mật/nghiệp vụ duy nhất.
-  const canConfirm = payment && !['SUCCESS', 'CANCELLED'].includes(payment.status)
+  // SECURITY: payment.confirm là quyền riêng với payment.view. Không có nó thì hai thao tác
+  // đối soát phải tắt ngay ở UI thay vì để người dùng bấm rồi nhận 403 từ backend.
+  const canSettle = useCan('payment.confirm');
+  const canConfirm = canSettle && payment && !['SUCCESS', 'CANCELLED'].includes(payment.status)
     && (payment.method === 'COD'
       ? payment.orderStatus === 'DELIVERED'
       : ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status));
-  const canReject = payment && ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status);
+  const canReject = canSettle && payment && ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status);
 
   return (
     <>
@@ -84,6 +88,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
             ]} />
             {payment.failureReason && <Alert type="warning" showIcon message={payment.failureReason} />}
             <section><Typography.Title level={5}>Bằng chứng chuyển khoản</Typography.Title>{payment.evidences.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bằng chứng" /> : <div className="grid gap-4 sm:grid-cols-2">{payment.evidences.map((evidence) => <div key={evidence.id} className="rounded-xl border border-slate-200 p-3"><Image src={evidence.thumbnailUrl} preview={{ src: evidence.fileUrl }} className="max-h-48 rounded-lg object-contain" /><div className="mt-2 flex justify-between"><span>#{evidence.id}</span><Tag>{evidence.status}</Tag></div>{evidence.note && <p className="mt-2 text-sm text-slate-600">{evidence.note}</p>}</div>)}</div>}</section>
+            {!canSettle && <Alert type="info" showIcon message="Bạn chỉ có quyền xem thanh toán; thao tác đối soát cần quyền payment.confirm." />}
             <Space><Button type="primary" disabled={!canConfirm} onClick={() => { setAction('confirm'); form.setFieldsValue({ receivedAmount: payment.expectedAmount }); }}>Xác nhận đủ tiền</Button><Button danger disabled={!canReject} onClick={() => setAction('reject')}>Từ chối bằng chứng</Button></Space>
           </div>
         )}

@@ -71,7 +71,7 @@ export function ContentPage() {
             <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>
               Làm mới
             </Button>
-            <PermissionGate permission="content.post.manage">
+            <PermissionGate permission="cms.content.manage">
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -188,7 +188,7 @@ export function ContentPage() {
               width: 110,
               align: 'right' as const,
               render: (_: unknown, row: ContentPostDto) => (
-                <PermissionGate permission="content.post.manage">
+                <PermissionGate permission="cms.content.manage">
                   <Popconfirm
                     title="Xóa bài viết này?"
                     description="Bài viết sẽ được lưu trữ và không còn hiển thị trên website."

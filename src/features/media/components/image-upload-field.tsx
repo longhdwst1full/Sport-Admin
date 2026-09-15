@@ -1,6 +1,7 @@
 import { UploadOutlined } from '@ant-design/icons';
 import { App, Button, Image, Input, Space, Upload } from 'antd';
 import { useState } from 'react';
+import { useCan } from '@/core/auth/permissions';
 import { uploadImage } from '@/lib/media/upload-image';
 
 interface ImageUploadFieldProps {
@@ -12,6 +13,8 @@ interface ImageUploadFieldProps {
 export function ImageUploadField({ value, onChange, disabled }: ImageUploadFieldProps) {
   const { message } = App.useApp();
   const [uploading, setUploading] = useState(false);
+  // SECURITY: upload đi qua endpoint media yêu cầu media.asset.upload; nhập URL thủ công thì không.
+  const canUpload = useCan('media.asset.upload');
 
   return (
     <Space.Compact block>
@@ -25,7 +28,7 @@ export function ImageUploadField({ value, onChange, disabled }: ImageUploadField
       <Upload
         accept="image/jpeg,image/png,image/webp,image/avif"
         showUploadList={false}
-        disabled={disabled || uploading}
+        disabled={disabled || uploading || !canUpload}
         customRequest={({ file, onError, onSuccess }) => {
           if (!(file instanceof File)) {
             onError?.(new Error('Tệp tải lên không hợp lệ.'));
@@ -46,7 +49,7 @@ export function ImageUploadField({ value, onChange, disabled }: ImageUploadField
             .finally(() => setUploading(false));
         }}
       >
-        <Button icon={<UploadOutlined />} loading={uploading}>
+        <Button icon={<UploadOutlined />} loading={uploading} disabled={disabled || !canUpload}>
           Upload
         </Button>
       </Upload>

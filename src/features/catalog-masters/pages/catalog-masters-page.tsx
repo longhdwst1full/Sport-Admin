@@ -28,6 +28,7 @@ import {
   useListAdminCategories,
 } from '@/generated/api/catalog/catalog';
 import type { BrandDto, CategoryDto } from '@/generated/api/catalog/models';
+import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { BrandFormDrawer, CategoryFormDrawer } from '../components/master-data-form-drawers';
 import { filterCatalogMasters } from '../model/catalog-masters.mapper';
@@ -40,7 +41,7 @@ const MASTER_STATUSES = {
 export function CatalogMastersPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<'brands' | 'categories'>('brands');
+  const [tab, setTab] = useState<'brands' | 'categories'>();
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search.trim(), 250);
   const [brandDrawerOpen, setBrandDrawerOpen] = useState(false);
@@ -48,8 +49,14 @@ export function CatalogMastersPage() {
   const [selectedBrand, setSelectedBrand] = useState<BrandDto>();
   const [selectedCategory, setSelectedCategory] = useState<CategoryDto>();
 
-  const brandsQuery = useListAdminBrands();
-  const categoriesQuery = useListAdminCategories();
+  // SECURITY: brand và category là hai quyền xem tách rời ở backend. Không có quyền thì không
+  // gọi endpoint (tránh 403 rác) và ẩn luôn tab tương ứng.
+  const canViewBrands = useCan('catalog.brand.view');
+  const canViewCategories = useCan('catalog.category.view');
+  // Tab mặc định phải là tab đầu tiên người dùng được xem, nếu không màn hình sẽ trống.
+  const activeTab = tab ?? (canViewBrands ? 'brands' : 'categories');
+  const brandsQuery = useListAdminBrands({ query: { enabled: canViewBrands } });
+  const categoriesQuery = useListAdminCategories({ query: { enabled: canViewCategories } });
 
   const brands = useMemo(
     () => filterCatalogMasters(brandsQuery.data?.items ?? [], debouncedSearch),
@@ -190,10 +197,10 @@ export function CatalogMastersPage() {
         }
       >
         <Tabs
-          activeKey={tab}
+          activeKey={activeTab}
           onChange={(key) => setTab(key as typeof tab)}
           items={[
-            {
+            canViewBrands && {
               key: 'brands',
               label: `Thương hiệu (${brandsQuery.data?.total ?? 0})`,
               children: brandsQuery.isError ? (
@@ -308,7 +315,7 @@ export function CatalogMastersPage() {
                 />
               ),
             },
-            {
+            canViewCategories && {
               key: 'categories',
               label: `Danh mục (${categoriesQuery.data?.total ?? 0})`,
               children: categoriesQuery.isError ? (
@@ -425,7 +432,7 @@ export function CatalogMastersPage() {
                 />
               ),
             },
-          ]}
+          ].filter((item) => item !== false)}
         />
 
         <BrandFormDrawer

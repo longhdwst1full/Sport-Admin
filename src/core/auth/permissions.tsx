@@ -50,6 +50,16 @@ export function useCan(permission: string): boolean {
   return useContext(PermissionContext).has(permission);
 }
 
+/**
+ * SECURITY: `PermissionGuard` phía backend dùng `required.every(...)`, nghĩa là endpoint khai báo
+ * nhiều permission thì phải có ĐỦ. Hook này giữ đúng ngữ nghĩa AND đó để UI không mở thao tác mà
+ * backend chắc chắn từ chối.
+ */
+export function useCanAll(permissions: readonly string[]): boolean {
+  const granted = useContext(PermissionContext);
+  return permissions.every((permission) => granted.has(permission));
+}
+
 export function usePermissions(): ReadonlySet<string> {
   return useContext(PermissionContext);
 }
@@ -58,8 +68,10 @@ export function PermissionGate({
   permission,
   children,
 }: {
-  permission: string;
+  /** Một code, hoặc danh sách code phải có ĐỦ — khớp ngữ nghĩa AND của backend. */
+  permission: string | readonly string[];
   children: ReactNode;
 }) {
-  return useCan(permission) ? children : null;
+  const required = typeof permission === 'string' ? [permission] : permission;
+  return useCanAll(required) ? children : null;
 }

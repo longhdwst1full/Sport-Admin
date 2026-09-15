@@ -229,7 +229,7 @@ export function ReviewsPage() {
         eyebrow="Ý kiến khách hàng"
         title="Đánh giá & Nhận xét"
         description="Kiểm duyệt đánh giá chất lượng sản phẩm từ người mua hàng trước khi xuất bản ra storefront."
-        dataNotice="Chỉ tài khoản có quyền review.moderate mới được duyệt hoặc gỡ bỏ đánh giá khỏi website."
+        dataNotice="Chỉ tài khoản có quyền catalog.review.moderate mới được duyệt hoặc gỡ bỏ đánh giá khỏi website."
         actions={
           <div className="flex gap-2">
             <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>
@@ -285,7 +285,7 @@ export function ReviewsPage() {
           </div>
         )}
 
-        <PermissionGate permission="review.moderate">
+        <PermissionGate permission="catalog.review.moderate">
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <span className="text-sm font-semibold text-slate-700">
               {selectedIds.length === 0

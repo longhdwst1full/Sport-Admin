@@ -232,9 +232,9 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
                   'inventory.stock.adjust',
                   'order.view',
                   'customer.view',
-                  'content.post.view',
-                  'content.post.manage',
-                  'review.moderate',
+                  'cms.content.view',
+                  'cms.content.manage',
+                  'catalog.review.moderate',
                   'system.module.view',
                 ]).map((perm) => (
                   <Tag

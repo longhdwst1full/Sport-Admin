@@ -113,14 +113,14 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: 'Đánh giá',
     group: 'experience',
     icon: <CommentOutlined />,
-    permission: 'review.moderate',
+    permission: 'catalog.review.moderate',
   },
   {
     path: '/content',
     label: 'Bài viết',
     group: 'experience',
     icon: <FileTextOutlined />,
-    permission: 'content.post.view',
+    permission: 'cms.content.view',
   },
   {
     path: '/organization',

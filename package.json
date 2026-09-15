@@ -18,8 +18,9 @@
     "test": "vitest run --pool=threads",
     "contracts:sync": "node scripts/sync-contracts.cjs",
     "generate:api": "node scripts/clean-generated-api.cjs && orval --config orval.config.ts",
-    "verify": "yarn lint && yarn test && yarn generate:api && yarn build && yarn build-storybook",
-    "gitnexus:analyze": "npx --yes gitnexus@1.6.9 analyze"
+    "verify": "yarn lint && yarn test && yarn contracts:check && yarn build && yarn build-storybook",
+    "gitnexus:analyze": "npx --yes gitnexus@1.6.9 analyze",
+    "contracts:check": "yarn contracts:sync && yarn generate:api && git diff --exit-code -- contracts src/generated"
   },
   "dependencies": {
     "@ant-design/icons": "6.0.0",

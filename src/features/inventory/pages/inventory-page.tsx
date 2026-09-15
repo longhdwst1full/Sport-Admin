@@ -9,7 +9,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Tabs } from 'antd';
 import { useState } from 'react';
-import { PermissionGate } from '@/core/auth/permissions';
+import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import {
@@ -33,6 +33,9 @@ export function InventoryPage() {
   const [transferOpen, setTransferOpen] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState<string>();
   const [metrics, setMetrics] = useState({ total: 0, low: 0, out: 0, available: 0 });
+  // SECURITY: xem phiếu chuyển kho là quyền riêng với xem tồn; thiếu quyền thì ẩn hẳn tab thay vì
+  // để panel gọi API rồi hiển thị lỗi 403.
+  const canViewTransfers = useCan('inventory.transfer.view');
 
   const openAdjustment = (balance?: InventoryBalanceDto) => {
     setSelectedBalance(balance);
@@ -113,7 +116,7 @@ export function InventoryPage() {
             },
             { key: 'movements', label: 'Sổ kho (Ledger)', children: <InventoryMovementPanel /> },
             { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel /> },
-            {
+            canViewTransfers && {
               key: 'transfers',
               label: 'Phiếu chuyển kho',
               children: (
@@ -123,7 +126,7 @@ export function InventoryPage() {
                 />
               ),
             },
-          ]}
+          ].filter((item) => item !== false)}
         />
 
         {adjustmentOpen && (

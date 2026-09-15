@@ -13,5 +13,7 @@ export interface CurrentUserDto {
   displayName: string;
   permissions: string[];
   scopes: AuthScopeDto[];
+  /** Changes whenever the user role/permission set changes; clients use it as a cache key for permission-derived UI such as navigation menus */
+  permissionVersion: string;
   mustChangePassword: boolean;
 }

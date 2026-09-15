@@ -145,7 +145,7 @@ export function AppRoutes() {
         <Route
           path="content"
           element={
-            <PermissionRoute permission="content.post.view">
+            <PermissionRoute permission="cms.content.view">
               <ContentPage />
             </PermissionRoute>
           }
@@ -153,7 +153,7 @@ export function AppRoutes() {
         <Route
           path="reviews"
           element={
-            <PermissionRoute permission="review.moderate">
+            <PermissionRoute permission="catalog.review.moderate">
               <ReviewsPage />
             </PermissionRoute>
           }
