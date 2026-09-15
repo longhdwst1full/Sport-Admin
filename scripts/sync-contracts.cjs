@@ -14,6 +14,7 @@ const domains = [
   'media',
   'system',
   'checkout',
+  'customers',
   'orders',
   'payments',
   'fulfillments',
