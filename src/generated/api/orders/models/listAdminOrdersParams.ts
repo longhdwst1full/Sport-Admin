@@ -22,8 +22,23 @@ export type ListAdminOrdersParams = {
    */
   statusGroup?: ListAdminOrdersStatusGroup;
   /**
-   * Tìm theo mã đơn, tên/SĐT/email người nhận
+   * Tìm gộp theo mã đơn, tên/SĐT/email người nhận. Giữ cho tương thích ngược.
    * @maxLength 100
    */
   search?: string;
+  /**
+   * Chỉ lọc theo mã đơn
+   * @maxLength 100
+   */
+  orderNo?: string;
+  /**
+   * Chỉ lọc theo tên người nhận
+   * @maxLength 100
+   */
+  recipientName?: string;
+  /**
+   * Chỉ lọc theo số điện thoại người nhận
+   * @maxLength 100
+   */
+  recipientPhone?: string;
 };

@@ -37,26 +37,16 @@ import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {
   FLASH_SALE_TRANSITIONS,
+  applyPercent,
   flashSaleStatusPresentation,
   moneyFormatter,
+  type PricingMode,
 } from '../constants/flash-sale.constants';
 
 interface CampaignFormValues {
   name: string;
   description?: string;
   window: [Dayjs, Dayjs];
-}
-
-type PricingMode = 'PERCENT_LIST' | 'PER_ITEM';
-
-/**
- * Giảm theo % áp cho cả danh sách: giá từng suất do phần trăm quyết định nên khoá ô giá,
- * tránh việc sửa tay làm lệch khỏi mức đã công bố. Đặt giá từng sản phẩm thì mở ô giá,
- * và điền sẵn giá đang bán để không phải tự tra.
- */
-function applyPercent(basePrice: number, percent: number): number {
-  // Làm tròn xuống để khách không bao giờ trả nhiều hơn mức % đã công bố.
-  return Math.max(1, Math.floor((basePrice * (100 - percent)) / 100));
 }
 
 interface ItemFormValues {

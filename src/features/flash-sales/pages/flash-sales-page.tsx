@@ -1,28 +1,26 @@
 import { useEffect, useState } from 'react';
 import { PlusOutlined, ReloadOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, App, Button, DatePicker, Form, Input, Modal, Select } from 'antd';
+import { Alert, App, Button, Input, Select } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
-import type { Dayjs } from 'dayjs';
 import {
   createAdminFlashSale,
   getListAdminFlashSalesQueryKey,
+  upsertAdminFlashSaleItem,
   useListAdminFlashSales,
 } from '@/generated/api/promotions/promotions';
 import type { ListAdminFlashSalesStatus } from '@/generated/api/promotions/models';
 import { useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
+import {
+  FlashSaleCreateDrawer,
+  type CreateCampaignValues,
+  type StagedItem,
+} from '../components/flash-sale-create-drawer';
 import { FlashSaleDetailDrawer } from '../components/flash-sale-detail-drawer';
 import { FlashSaleTable } from '../components/flash-sale-table';
 import { FLASH_SALE_PAGE_SIZE, flashSaleStatusPresentation } from '../constants/flash-sale.constants';
-
-interface CreateFormValues {
-  code: string;
-  name: string;
-  description?: string;
-  window: [Dayjs, Dayjs];
-}
 
 const statusOptions = Object.entries(flashSaleStatusPresentation).map(([value, { label }]) => ({
   value,
@@ -33,7 +31,6 @@ export function FlashSalesPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('catalog.flash_sale.manage');
-  const [form] = Form.useForm<CreateFormValues>();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<ListAdminFlashSalesStatus>();
@@ -51,21 +48,58 @@ export function FlashSalesPage() {
   });
   const rows = campaigns.data?.items ?? [];
 
+  /**
+   * API không có lệnh tạo chiến dịch kèm suất bán trong một giao dịch, nên tạo
+   * chiến dịch trước rồi thêm từng suất. Chiến dịch sinh ra ở trạng thái nháp và
+   * chưa hiển thị cho khách, nên nếu một suất lỗi thì chỉ cần thêm lại suất đó —
+   * không có rủi ro bán sai giá.
+   */
   const createMutation = useMutation({
-    mutationFn: (values: CreateFormValues) =>
-      createAdminFlashSale({
-        code: values.code.trim().toUpperCase(),
-        name: values.name.trim(),
-        description: values.description?.trim() || undefined,
-        startsAt: values.window[0].toISOString(),
-        endsAt: values.window[1].toISOString(),
-      }),
-    onSuccess: async (created) => {
+    mutationFn: async ({
+      campaign,
+      items,
+    }: {
+      campaign: CreateCampaignValues;
+      items: StagedItem[];
+    }) => {
+      const created = await createAdminFlashSale({
+        code: campaign.code.trim().toUpperCase(),
+        name: campaign.name.trim(),
+        description: campaign.description?.trim() || undefined,
+        startsAt: campaign.window[0].toISOString(),
+        endsAt: campaign.window[1].toISOString(),
+      });
+
+      const failed: string[] = [];
+      for (const item of items) {
+        try {
+          await upsertAdminFlashSaleItem(created.id, {
+            productVariantId: item.productVariantId,
+            salePrice: item.salePrice.toFixed(2),
+            quota: item.quota,
+            ...(item.perCustomerLimit ? { perCustomerLimit: item.perCustomerLimit } : {}),
+          });
+        } catch {
+          failed.push(item.sku);
+        }
+      }
+      return { created, added: items.length - failed.length, failed };
+    },
+    onSuccess: async ({ created, added, failed }) => {
       await queryClient.invalidateQueries({ queryKey: getListAdminFlashSalesQueryKey() });
       setCreateOpen(false);
-      form.resetFields();
       setSelectedId(created.id);
-      void message.success('Đã tạo chiến dịch ở trạng thái nháp');
+      if (failed.length > 0) {
+        void message.warning(
+          `Đã tạo chiến dịch và thêm ${added} suất. Chưa thêm được: ${failed.join(', ')}.`,
+        );
+        return;
+      }
+      void message.success(
+        added > 0
+          ? `Đã tạo chiến dịch nháp kèm ${added} suất bán`
+          : 'Đã tạo chiến dịch ở trạng thái nháp',
+      );
     },
     onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
   });
@@ -142,42 +176,12 @@ export function FlashSalesPage() {
 
       <FlashSaleDetailDrawer campaignId={selectedId} onClose={() => setSelectedId(undefined)} />
 
-      <Modal
+      <FlashSaleCreateDrawer
         open={createOpen}
-        title="Tạo chiến dịch flash sale"
-        okText="Tạo"
-        cancelText="Hủy"
-        confirmLoading={createMutation.isPending}
+        submitting={createMutation.isPending}
         onCancel={() => setCreateOpen(false)}
-        onOk={() => void form.submit()}
-        destroyOnClose
-      >
-        <Form form={form} layout="vertical" onFinish={(values) => createMutation.mutate(values)}>
-          <Form.Item
-            name="code"
-            label="Mã chiến dịch"
-            rules={[
-              { required: true, message: 'Nhập mã chiến dịch' },
-              { pattern: /^[A-Za-z0-9-]+$/, message: 'Chỉ dùng chữ, số và dấu gạch ngang' },
-            ]}
-          >
-            <Input placeholder="FLASH-T9-2026" maxLength={32} />
-          </Form.Item>
-          <Form.Item name="name" label="Tên hiển thị" rules={[{ required: true, message: 'Nhập tên chiến dịch' }]}>
-            <Input maxLength={255} />
-          </Form.Item>
-          <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item
-            name="window"
-            label="Khung giờ chạy"
-            rules={[{ required: true, message: 'Chọn thời gian bắt đầu và kết thúc' }]}
-          >
-            <DatePicker.RangePicker showTime className="w-full" />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onSubmit={(campaign, items) => createMutation.mutate({ campaign, items })}
+      />
     </>
   );
 }

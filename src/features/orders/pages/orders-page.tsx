@@ -33,7 +33,9 @@ const ORDER_COLUMNS: ColumnItem[] = [
 
 export function OrdersPage() {
   const [tab, setTab] = useState<OrderTab>('ALL');
-  const [search, setSearch] = useState('');
+  const [orderNo, setOrderNo] = useState('');
+  const [recipientName, setRecipientName] = useState('');
+  const [recipientPhone, setRecipientPhone] = useState('');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string>();
   const [columnModalOpen, setColumnModalOpen] = useState(false);
@@ -48,14 +50,23 @@ export function OrdersPage() {
     actions: true,
   });
 
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  useEffect(() => setPage(1), [tab, debouncedSearch]);
+  // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend: nhập cả mã đơn lẫn
+  // số điện thoại sẽ thu hẹp kết quả chứ không mở rộng như ô gộp trước đây.
+  const [debouncedOrderNo] = useDebounce(orderNo.trim(), 350);
+  const [debouncedName] = useDebounce(recipientName.trim(), 350);
+  const [debouncedPhone] = useDebounce(recipientPhone.trim(), 350);
+  useEffect(
+    () => setPage(1),
+    [tab, debouncedOrderNo, debouncedName, debouncedPhone],
+  );
 
   const orders = useListAdminOrders({
     page,
     limit: ORDER_PAGE_SIZE,
     statusGroup: tab === 'ALL' ? undefined : tab,
-    search: debouncedSearch || undefined,
+    orderNo: debouncedOrderNo || undefined,
+    recipientName: debouncedName || undefined,
+    recipientPhone: debouncedPhone || undefined,
   });
   const rows = orders.data?.items ?? [];
 
@@ -102,12 +113,26 @@ export function OrdersPage() {
         filters={
           <div className="flex w-full flex-wrap items-center justify-between gap-3">
             <div className="flex flex-1 flex-wrap items-center gap-3">
-              <Input.Search
+              <Input
                 allowClear
-                className="min-w-72 max-w-lg flex-1"
-                value={search}
-                placeholder="Mã đơn, tên, SĐT hoặc email người nhận..."
-                onChange={(event) => setSearch(event.target.value)}
+                className="!w-48"
+                value={orderNo}
+                placeholder="Mã đơn"
+                onChange={(event) => setOrderNo(event.target.value)}
+              />
+              <Input
+                allowClear
+                className="!w-52"
+                value={recipientName}
+                placeholder="Tên người nhận"
+                onChange={(event) => setRecipientName(event.target.value)}
+              />
+              <Input
+                allowClear
+                className="!w-44"
+                value={recipientPhone}
+                placeholder="Số điện thoại"
+                onChange={(event) => setRecipientPhone(event.target.value)}
               />
               <Button icon={<ReloadOutlined />} onClick={() => void orders.refetch()}>
                 Làm mới

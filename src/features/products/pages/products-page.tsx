@@ -29,18 +29,29 @@ export function ProductsPage() {
   const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('catalog.product.manage');
-  const [search, setSearch] = useState('');
+  const [name, setName] = useState('');
+  const [sku, setSku] = useState('');
+  const [productNo, setProductNo] = useState('');
   const [category, setCategory] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState<string>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  useEffect(() => setPage(1), [debouncedSearch, category]);
+  // Mỗi ô là một điều kiện riêng và cộng dồn bằng AND ở backend, nên nhập nhiều ô
+  // sẽ thu hẹp kết quả chứ không mở rộng như ô tìm kiếm gộp trước đây.
+  const [debouncedName] = useDebounce(name.trim(), 350);
+  const [debouncedSku] = useDebounce(sku.trim(), 350);
+  const [debouncedProductNo] = useDebounce(productNo.trim(), 350);
+  useEffect(
+    () => setPage(1),
+    [debouncedName, debouncedSku, debouncedProductNo, category],
+  );
   const query = useListAdminProducts({
     page,
     limit: pageSize,
-    search: debouncedSearch || undefined,
+    name: debouncedName || undefined,
+    sku: debouncedSku || undefined,
+    productNo: debouncedProductNo || undefined,
     category,
   });
 
@@ -138,12 +149,26 @@ export function ProductsPage() {
         ]}
         filters={
           <div className="flex flex-wrap gap-3">
-            <Input.Search
+            <Input
               allowClear
-              value={search}
-              placeholder="Tên, SKU hoặc thương hiệu..."
-              className="max-w-md"
-              onChange={(event) => setSearch(event.target.value)}
+              value={name}
+              placeholder="Tên sản phẩm"
+              className="!w-56"
+              onChange={(event) => setName(event.target.value)}
+            />
+            <Input
+              allowClear
+              value={sku}
+              placeholder="SKU"
+              className="!w-40"
+              onChange={(event) => setSku(event.target.value)}
+            />
+            <Input
+              allowClear
+              value={productNo}
+              placeholder="Mã sản phẩm"
+              className="!w-40"
+              onChange={(event) => setProductNo(event.target.value)}
             />
             <Select
               allowClear

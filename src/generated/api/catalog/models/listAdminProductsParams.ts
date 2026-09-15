@@ -17,7 +17,25 @@ export type ListAdminProductsParams = {
    * @maximum 100
    */
   limit?: number;
+  /**
+   * Tìm gộp theo tên, mã sản phẩm hoặc SKU. Giữ cho tương thích ngược.
+   */
   search?: string;
+  /**
+   * Chỉ lọc theo tên sản phẩm
+   */
+  name?: string;
+  /**
+   * Chỉ lọc theo mã sản phẩm
+   */
+  productNo?: string;
+  /**
+   * Chỉ lọc theo SKU của biến thể
+   */
+  sku?: string;
+  /**
+   * Slug danh mục; gồm cả nhánh con
+   */
   category?: string;
   status?: ListAdminProductsStatus;
 };

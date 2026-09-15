@@ -80,7 +80,6 @@ export function VariantEditDrawer({
       )}
     >
       <Form layout="vertical">
-        <Form.Item label="SKU (không thể đổi)"><Input value={variant?.sku} disabled /></Form.Item>
         <Form.Item label="Tên phiên bản" required validateStatus={errors.name ? 'error' : undefined} help={errors.name?.message}>
           <Controller name="name" control={control} render={({ field }) => <Input {...field} />} />
         </Form.Item>

@@ -26,3 +26,13 @@ export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
   currency: 'VND',
   maximumFractionDigits: 0,
 });
+
+export type PricingMode = 'PERCENT_LIST' | 'PER_ITEM';
+
+/**
+ * Giá flash tính theo phần trăm, làm tròn xuống để khách không bao giờ phải trả
+ * cao hơn mức đã công bố.
+ */
+export function applyPercent(basePrice: number, percent: number): number {
+  return Math.max(1, Math.floor((basePrice * (100 - percent)) / 100));
+}

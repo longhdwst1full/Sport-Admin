@@ -37,7 +37,6 @@ const REVIEW_COLUMNS: ColumnItem[] = [
   { id: 'content', label: 'Nội dung nhận xét' },
   { id: 'comments', label: 'Số phản hồi' },
   { id: 'status', label: 'Trạng thái' },
-  { id: 'actions', label: 'Kiểm duyệt', fixed: true },
 ];
 
 export function ReviewsPage() {
@@ -51,8 +50,8 @@ export function ReviewsPage() {
     content: true,
     comments: true,
     status: true,
-    actions: true,
   });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
@@ -88,6 +87,42 @@ export function ReviewsPage() {
         void message.error(getApiErrorMessage(error, 'Không thể xóa đánh giá.')),
     },
   });
+
+  const selectedRows = items.filter((row) => selectedIds.includes(row.id));
+  const approvable = selectedRows.filter((row) => row.status !== 'APPROVED');
+  const hideable = selectedRows.filter((row) => row.status !== 'REJECTED');
+  const working = moderate.isPending || deleteReview.isPending;
+
+  /**
+   * Duyệt/ẩn chạy tuần tự chứ không song song: mỗi đánh giá là một lệnh ghi riêng
+   * có kiểm tra version, bắn đồng loạt sẽ làm khóa hàng và khó biết dòng nào hỏng.
+   */
+  async function runBulk(action: 'APPROVE' | 'HIDE') {
+    const targets = action === 'APPROVE' ? approvable : hideable;
+    let done = 0;
+    for (const row of targets) {
+      try {
+        if (action === 'APPROVE') {
+          await moderate.mutateAsync({ id: row.id, data: { status: 'APPROVED' } });
+        } else {
+          await deleteReview.mutateAsync({
+            id: row.id,
+            data: { expectedVersion: row.version, reason: 'Không phù hợp chính sách hiển thị' },
+          });
+        }
+        done += 1;
+      } catch {
+        // Thông báo lỗi đã do mutation phát ra; dừng lại để không ghi đè hàng loạt.
+        break;
+      }
+    }
+    if (done > 0) {
+      void message.success(
+        `${action === 'APPROVE' ? 'Đã duyệt' : 'Đã ẩn'} ${done}/${targets.length} đánh giá.`,
+      );
+    }
+    setSelectedIds([]);
+  }
 
   const columns = [
     ...(colVisibility.customer !== false
@@ -172,69 +207,6 @@ export function ReviewsPage() {
           },
         ]
       : []),
-    ...(colVisibility.actions !== false
-      ? [
-          {
-            title: 'Kiểm duyệt',
-            key: 'actions',
-            width: 200,
-            fixed: 'right' as const,
-            align: 'right' as const,
-            render: (_: unknown, row: ProductReviewDto) => (
-              <PermissionGate permission="review.moderate">
-                <Space size="small">
-                  <Popconfirm
-                    title="Duyệt đánh giá này?"
-                    description="Đánh giá sẽ được hiển thị công khai trên trang sản phẩm."
-                    disabled={row.status === 'APPROVED'}
-                    onConfirm={() =>
-                      moderate.mutate({ id: row.id, data: { status: 'APPROVED' } })
-                    }
-                  >
-                    <Button
-                      type="primary"
-                      ghost
-                      size="small"
-                      disabled={row.status === 'APPROVED'}
-                      loading={moderate.isPending && moderate.variables?.id === row.id}
-                      icon={<CheckOutlined />}
-                      className="text-xs"
-                    >
-                      Duyệt
-                    </Button>
-                  </Popconfirm>
-
-                  <Popconfirm
-                    title="Ẩn đánh giá này?"
-                    description="Đánh giá sẽ được lưu trong hệ thống nhưng bị ẩn khỏi website."
-                    disabled={row.status === 'REJECTED'}
-                    onConfirm={() =>
-                      deleteReview.mutate({
-                        id: row.id,
-                        data: {
-                          expectedVersion: row.version,
-                          reason: 'Không phù hợp chính sách hiển thị',
-                        },
-                      })
-                    }
-                  >
-                    <Button
-                      danger
-                      size="small"
-                      disabled={row.status === 'REJECTED'}
-                      loading={deleteReview.isPending && deleteReview.variables?.id === row.id}
-                      icon={<DeleteOutlined />}
-                      className="text-xs"
-                    >
-                      Ẩn
-                    </Button>
-                  </Popconfirm>
-                </Space>
-              </PermissionGate>
-            ),
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -299,6 +271,54 @@ export function ReviewsPage() {
           </div>
         )}
 
+        <PermissionGate permission="review.moderate">
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <span className="text-sm font-semibold text-slate-700">
+              {selectedIds.length === 0
+                ? 'Chọn đánh giá trong bảng để kiểm duyệt'
+                : `Đã chọn ${selectedIds.length} đánh giá`}
+            </span>
+            <Space size="small">
+              <Popconfirm
+                title={`Duyệt ${approvable.length} đánh giá?`}
+                description="Các đánh giá này sẽ hiển thị công khai trên trang sản phẩm."
+                disabled={approvable.length === 0 || working}
+                onConfirm={() => void runBulk('APPROVE')}
+              >
+                <Button
+                  type="primary"
+                  ghost
+                  icon={<CheckOutlined />}
+                  disabled={approvable.length === 0 || working}
+                  loading={moderate.isPending}
+                >
+                  Duyệt{approvable.length > 0 ? ` (${approvable.length})` : ''}
+                </Button>
+              </Popconfirm>
+              <Popconfirm
+                title={`Ẩn ${hideable.length} đánh giá?`}
+                description="Đánh giá vẫn lưu trong hệ thống nhưng bị ẩn khỏi website."
+                disabled={hideable.length === 0 || working}
+                onConfirm={() => void runBulk('HIDE')}
+              >
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled={hideable.length === 0 || working}
+                  loading={deleteReview.isPending}
+                >
+                  Ẩn{hideable.length > 0 ? ` (${hideable.length})` : ''}
+                </Button>
+              </Popconfirm>
+              {selectedIds.length > 0 && (
+                <Button type="text" onClick={() => setSelectedIds([])}>
+                  Bỏ chọn
+                </Button>
+              )}
+            </Space>
+          </div>
+        </PermissionGate>
+
         <Table
           rowKey="id"
           loading={query.isPending}
@@ -306,6 +326,10 @@ export function ReviewsPage() {
           scroll={{ x: 980 }}
           pagination={{ pageSize: 15, showSizeChanger: false }}
           columns={columns}
+          rowSelection={{
+            selectedRowKeys: selectedIds,
+            onChange: (keys) => setSelectedIds(keys.map(String)),
+          }}
         />
 
         <ColumnSettingsModal
@@ -321,7 +345,6 @@ export function ReviewsPage() {
               content: true,
               comments: true,
               status: true,
-              actions: true,
             })
           }
         />
