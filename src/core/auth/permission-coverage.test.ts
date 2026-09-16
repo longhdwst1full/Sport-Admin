@@ -13,9 +13,7 @@ const CONTRACT_DIR = new URL('../../../contracts/admin/', import.meta.url).pathn
 const SOURCE_DIR = new URL('../../', import.meta.url).pathname;
 
 /** Quyền backend chưa có màn hình tương ứng; thêm vào đây phải kèm lý do. */
-const NOT_YET_IN_UI: Record<string, string> = {
-  'report.operation.view': 'Chưa có màn hình báo cáo vận hành trong Admin V1.',
-};
+const NOT_YET_IN_UI: Record<string, string> = {};
 
 function collectRequiredPermissions(): Set<string> {
   const codes = new Set<string>();

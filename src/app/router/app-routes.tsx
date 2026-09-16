@@ -112,8 +112,17 @@ export function AppRoutes() {
       >
         <Route
           index
+          // Bảng điều khiển ghép ba nhóm báo cáo, mỗi nhóm một quyền riêng ở API. Gác bằng
+          // `system.module.view` như trước làm người có quyền xem báo cáo vào được trang
+          // nhưng mọi widget đều nhận 403.
           element={
-            <PermissionRoute permission="system.module.view">
+            <PermissionRoute
+              permission={[
+                'report.operation.view',
+                'report.revenue.view',
+                'report.inventory.view',
+              ]}
+            >
               <DashboardPage />
             </PermissionRoute>
           }

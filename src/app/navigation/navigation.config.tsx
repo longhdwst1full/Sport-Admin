@@ -24,7 +24,8 @@ export interface NavigationItem {
   label: string;
   icon: ReactNode;
   group: 'overview' | 'sales' | 'catalog' | 'operations' | 'experience' | 'organization' | 'system';
-  permission?: string;
+  /** Một hoặc nhiều quyền; có bất kỳ quyền nào là thấy mục này, khớp với `PermissionRoute`. */
+  permission?: string | string[];
 }
 
 export const NAVIGATION_GROUP_LABELS: Record<NavigationItem['group'], string> = {
@@ -43,7 +44,8 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: 'Bảng điều khiển',
     group: 'overview',
     icon: <DashboardOutlined />,
-    permission: 'system.module.view',
+    // Bảng điều khiển ghép ba nhóm báo cáo, mỗi nhóm một quyền riêng ở API.
+    permission: ['report.operation.view', 'report.revenue.view', 'report.inventory.view'],
   },
   {
     path: '/orders',
@@ -158,3 +160,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     permission: 'iam.audit.view',
   },
 ];
+
+/** Mục menu hiện khi người dùng có bất kỳ quyền nào nó khai. */
+export function canSeeNavigationItem(
+  item: NavigationItem,
+  granted: ReadonlySet<string>,
+): boolean {
+  if (!item.permission) return true;
+  const required = Array.isArray(item.permission) ? item.permission : [item.permission];
+  return required.some((code) => granted.has(code));
+}

@@ -57,10 +57,12 @@ const GRADIENTS = [
 export function DashboardPage() {
   const auth = useAuth();
   // Doanh thu là số nhạy cảm: chỉ gọi khi tài khoản thực sự có quyền xem.
+  // Mỗi widget gọi một endpoint có quyền riêng; gọi khi chưa có quyền chỉ tạo ra 403.
+  const canSeeOperation = useCan('report.operation.view');
   const canSeeRevenue = useCan('report.revenue.view');
   const canSeeInventory = useCan('report.inventory.view');
 
-  const overview = useGetAdminReportOverview();
+  const overview = useGetAdminReportOverview({ query: { enabled: canSeeOperation } });
   const revenue = useGetAdminReportRevenue(undefined, { query: { enabled: canSeeRevenue } });
   const inventory = useGetAdminReportInventory({ query: { enabled: canSeeInventory } });
   const topProducts = useGetAdminReportTopProducts(

@@ -15,7 +15,11 @@ import {
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { NAVIGATION_GROUP_LABELS, NAVIGATION_ITEMS } from '@/app/navigation/navigation.config';
+import {
+  canSeeNavigationItem,
+  NAVIGATION_GROUP_LABELS,
+  NAVIGATION_ITEMS,
+} from '@/app/navigation/navigation.config';
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import { setSidebarCollapsed, toggleSidebar } from '@/app/store/layout.slice';
 import { usePermissions } from '@/core/auth/permissions';
@@ -52,7 +56,7 @@ export function AdminLayout() {
   }, [dispatch]);
 
   const visibleItems = NAVIGATION_ITEMS.filter(
-    (item) => !item.permission || permissions.has(item.permission),
+    (item) => canSeeNavigationItem(item, permissions),
   );
   const groupedItems = Object.entries(NAVIGATION_GROUP_LABELS)
     .map(([group, label]) => ({

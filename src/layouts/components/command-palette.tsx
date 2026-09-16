@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchOutlined } from '@ant-design/icons';
 import type { NavigationItem } from '@/app/navigation/navigation.config';
-import { NAVIGATION_ITEMS } from '@/app/navigation/navigation.config';
+import { canSeeNavigationItem, NAVIGATION_ITEMS } from '@/app/navigation/navigation.config';
 import { usePermissions } from '@/core/auth/permissions';
 
 export function CommandPalette() {
@@ -16,7 +16,7 @@ export function CommandPalette() {
   const visibleItems = useMemo(
     () =>
       NAVIGATION_ITEMS.filter(
-        (item) => !item.permission || permissions.has(item.permission),
+        (item) => canSeeNavigationItem(item, permissions),
       ),
     [permissions],
   );
