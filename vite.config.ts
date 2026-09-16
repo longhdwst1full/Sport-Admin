@@ -37,6 +37,9 @@ export default {
   plugins: [react()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: { host: '127.0.0.1', port: 5173 },
+  // Vitest chỉ chạy unit test trong `src`. Spec trong `e2e/` do Playwright chạy,
+  // để mặc định vitest sẽ gom nhầm và fail vì thiếu runtime trình duyệt.
+  test: { include: ['src/**/*.{test,spec}.{ts,tsx}'] },
   build: {
     rollupOptions: { output: { manualChunks: vendorChunk } },
   },

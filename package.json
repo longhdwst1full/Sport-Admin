@@ -20,7 +20,10 @@
     "generate:api": "node scripts/clean-generated-api.cjs && orval --config orval.config.ts",
     "verify": "yarn lint && yarn test && yarn contracts:check && yarn build && yarn build-storybook",
     "gitnexus:analyze": "npx --yes gitnexus@1.6.9 analyze",
-    "contracts:check": "yarn contracts:sync && yarn generate:api && git diff --exit-code -- contracts src/generated"
+    "contracts:check": "yarn contracts:sync && yarn generate:api && git diff --exit-code -- contracts src/generated",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report e2e/.report"
   },
   "dependencies": {
     "@ant-design/icons": "6.0.0",
@@ -45,6 +48,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.35.0",
+    "@playwright/test": "^1.63.0",
     "@rolldown/pluginutils": "1.0.1",
     "@storybook/addon-a11y": "10.1.9",
     "@storybook/addon-docs": "10.1.9",

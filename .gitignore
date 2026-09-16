@@ -11,3 +11,9 @@ storybook-static/
 .gitnexus/lbug/
 .gitnexus/parse-cache/
 .gitnexus/parsedfile-cache/
+
+# Playwright
+e2e/.artifacts/
+e2e/.report/
+playwright-report/
+test-results/
