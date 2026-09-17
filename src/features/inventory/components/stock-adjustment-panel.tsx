@@ -18,7 +18,7 @@ export function StockAdjustmentPanel() {
   const detail = useGetStockAdjustment(selectedId ?? '', { query: { enabled: Boolean(selectedId) } });
 
   return (
-    <Card bordered={false}>
+    <Card variant="borderless">
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       <Table
         rowKey="id"
@@ -26,7 +26,7 @@ export function StockAdjustmentPanel() {
         dataSource={query.data?.items ?? []}
         pagination={false}
         locale={{ emptyText: 'Chưa có phiếu điều chỉnh tồn.' }}
-        scroll={{ x: 900 }}
+        scroll={{ x: 1380 }}
         columns={[
           { title: 'Số phiếu', dataIndex: 'adjustmentNo', width: 250, render: (value) => <Typography.Text code>{value}</Typography.Text> },
           { title: 'Kho', dataIndex: 'warehouseCode', width: 150 },

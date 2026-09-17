@@ -8,7 +8,7 @@ import {
   PoweroffOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Descriptions, Popconfirm, Space, Table, Tag, Typography } from 'antd';
+import { App, Button, Descriptions, Popconfirm, Space, Table, Typography } from 'antd';
 import { useState } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -158,57 +158,46 @@ export function OrganizationPage() {
         loading={branchesQuery.isPending || (canViewWarehouses && warehousesQuery.isPending)}
         dataSource={rows}
         pagination={false}
-        scroll={{ x: 900 }}
+        scroll={{ x: 1340 }}
         expandable={{
+          // Dòng mở rộng chỉ để xem thông tin bị cắt ở cột hẹp; không lặp lại thứ cột đã hiện.
           expandedRowRender: (row) => (
             <Descriptions size="small" column={{ xs: 1, md: 2 }} className="py-2">
-              <Descriptions.Item label="Chi nhánh">
-                {row.branchName} ({row.branchCode})
-              </Descriptions.Item>
-              <Descriptions.Item label="Kho liên kết">
-                {row.warehouseName} ({row.warehouseCode})
-              </Descriptions.Item>
-              <Descriptions.Item label="Địa chỉ">{row.address}</Descriptions.Item>
-              <Descriptions.Item label="Mô hình">Một chi nhánh — một kho</Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ đầy đủ">{row.address}</Descriptions.Item>
+              <Descriptions.Item label="Mã kho">{row.warehouseCode}</Descriptions.Item>
             </Descriptions>
           ),
         }}
         columns={[
           {
-            title: 'Mã chi nhánh',
-            dataIndex: 'branchCode',
-            width: 150,
-            render: (value) => <Typography.Text code>{value}</Typography.Text>,
-          },
-          {
             title: 'Chi nhánh',
             dataIndex: 'branchName',
-            width: 240,
-            render: (value) => <strong>{value}</strong>,
+            width: 260,
+            render: (value, row) => (
+              <div className="min-w-0">
+                <strong className="block truncate" title={String(value)}>
+                  {value}
+                </strong>
+                <Typography.Text code className="text-xs">
+                  {row.branchCode}
+                </Typography.Text>
+              </div>
+            ),
           },
           {
             title: 'Kho duy nhất',
             dataIndex: 'warehouseName',
-            width: 260,
-            render: (value, row) => (
-              <div>
-                <strong>{value}</strong>
-                <div className="text-xs text-slate-500">{row.warehouseCode}</div>
-              </div>
-            ),
+            width: 240,
+            ellipsis: true,
+            render: (value) => <strong>{value}</strong>,
           },
-          { title: 'Khu vực', dataIndex: 'region', width: 180 },
-          { title: 'Địa chỉ', dataIndex: 'address', width: 280 },
-          {
-            title: 'Mô hình',
-            key: 'relation',
-            width: 150,
-            render: () => <Tag color="blue">1 branch : 1 kho</Tag>,
-          },
+          { title: 'Khu vực', dataIndex: 'region', width: 160, ellipsis: true },
+          // Địa chỉ dài hơn mọi cột khác; cắt ở đây và cho xem đầy đủ ở dòng mở rộng.
+          { title: 'Địa chỉ', dataIndex: 'address', width: 320, ellipsis: true },
           {
             title: 'Trạng thái',
             dataIndex: 'status',
-            width: 150,
+            width: 140,
             render: (value: BranchDtoStatus) => (
               <StatusTag status={value} presentations={organizationStatuses} />
             ),
@@ -216,8 +205,10 @@ export function OrganizationPage() {
           {
             title: 'Thao tác',
             key: 'actions',
-            width: 230,
+            width: 220,
             align: 'right',
+            // Ghim phải để không phải cuộn ngang mới bấm được Sửa/Ngừng.
+            fixed: 'right',
             render: (_, row: BranchWarehouseRow) => (
               <PermissionGate permission={BRANCH_WAREHOUSE_MANAGE}>
                 <Space>

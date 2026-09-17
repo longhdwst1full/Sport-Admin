@@ -74,11 +74,14 @@ export function InventoryBalancePanel({
           {
             title: 'Sản phẩm / SKU',
             key: 'sku',
+            // Cột fixed BẮT BUỘC có width: thiếu thì antd không đo được cột dính và
+            // header lệch khỏi body, đúng hiện tượng bảng bị vỡ.
             fixed: 'left' as const,
+            width: 260,
             render: (_: unknown, row: InventoryBalanceDto) => (
-              <div>
-                <div className="font-mono font-bold text-slate-800 text-xs">{row.sku}</div>
-                <div className="text-xs text-slate-500 font-medium truncate max-w-xs">
+              <div className="min-w-0">
+                <div className="font-mono text-xs font-bold text-slate-800">{row.sku}</div>
+                <div className="truncate text-xs font-medium text-slate-500" title={row.productName}>
                   {row.productName}
                 </div>
               </div>
@@ -203,7 +206,7 @@ export function InventoryBalancePanel({
   ];
 
   return (
-    <Card bordered={false} className="shadow-xs rounded-2xl">
+    <Card variant="borderless" className="rounded-2xl shadow-xs">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <Input
@@ -252,7 +255,7 @@ export function InventoryBalancePanel({
         loading={query.isPending}
         dataSource={items}
         locale={{ emptyText: 'Chưa có dòng tồn kho nào phù hợp bộ lọc.' }}
-        scroll={{ x: 960 }}
+        scroll={{ x: 1160 }}
         pagination={{
           current: page,
           pageSize: query.data?.limit ?? 25,

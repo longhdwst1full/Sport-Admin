@@ -3,6 +3,7 @@ import { WalletOutlined } from '@ant-design/icons';
 import { useListAdminBranches } from '@/generated/api/organization/organization';
 import { BranchDtoStatus } from '@/generated/api/organization/models';
 import { CreatePosOrderDtoPaymentMethod } from '@/generated/api/orders/models';
+import { CustomerLookup } from './customer-lookup';
 import {
   moneyFormatter,
   posPaymentMethodHints,
@@ -76,13 +77,22 @@ export function PosCheckoutPanel({
         <Form.Item
           label="Số điện thoại"
           required
-          extra="Dùng để tìm lại khách cũ và tra cứu bảo hành sau này."
+          extra="Gõ từ 3 số để tìm khách đã có trong hệ thống; khách mới thì nhập tay."
         >
-          <Input
-            size="large"
-            value={values.customerPhone}
-            placeholder="09xxxxxxxx"
-            onChange={(event) => onChange({ customerPhone: event.target.value })}
+          <CustomerLookup
+            disabled={submitting}
+            value={{
+              name: values.customerName,
+              phone: values.customerPhone,
+              email: values.customerEmail,
+            }}
+            onChange={(patch) =>
+              onChange({
+                ...(patch.phone !== undefined ? { customerPhone: patch.phone } : {}),
+                ...(patch.name !== undefined ? { customerName: patch.name } : {}),
+                ...(patch.email !== undefined ? { customerEmail: patch.email } : {}),
+              })
+            }
           />
         </Form.Item>
 

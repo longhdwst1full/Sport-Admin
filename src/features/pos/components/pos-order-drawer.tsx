@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ClearOutlined, ShoppingCartOutlined, ShopOutlined, TagsOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Card, Popconfirm } from 'antd';
+import { Alert, App, Button, Card, Drawer, Popconfirm } from 'antd';
+import { ClearOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreatePosOrder } from '@/generated/api/orders/orders';
 import { getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
@@ -10,14 +10,11 @@ import {
   type OrderDetailDto,
   type PosCatalogItemDto,
 } from '@/generated/api/orders/models';
-import { ManagementPage } from '@/foundation/management';
-import { PageTransition } from '@/foundation/layout/page-transition';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { PosCartTable } from '../components/pos-cart-table';
-import { PosCheckoutPanel, type PosCheckoutValues } from '../components/pos-checkout-panel';
-import { PosProductPicker } from '../components/pos-product-picker';
-import { PosReceiptModal } from '../components/pos-receipt-modal';
-import { moneyFormatter } from '../constants/pos.constants';
+import { PosCartTable } from './pos-cart-table';
+import { PosCheckoutPanel, type PosCheckoutValues } from './pos-checkout-panel';
+import { PosProductPicker } from './pos-product-picker';
+import { PosReceiptModal } from './pos-receipt-modal';
 import {
   addLine,
   cartQuantity,
@@ -39,7 +36,13 @@ const EMPTY_CHECKOUT: PosCheckoutValues = {
   note: '',
 };
 
-export function PosPage() {
+/**
+ * Lập đơn bán trực tiếp ngay trong màn Đơn hàng.
+ *
+ * Trước đây đây là một màn riêng trong menu. Gộp vào Đơn hàng vì nhân viên lập đơn và tra đơn là
+ * cùng một người, cùng một lúc — tách hai mục menu bắt họ nhảy qua lại.
+ */
+export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [lines, setLines] = useState<PosCartLine[]>([]);
@@ -49,10 +52,7 @@ export function PosPage() {
   // lại đúng đơn đó, còn đơn kế tiếp phải là một giao dịch mới.
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
-  const pickedIds = useMemo(
-    () => new Set(lines.map((line) => line.variantId)),
-    [lines],
-  );
+  const pickedIds = useMemo(() => new Set(lines.map((line) => line.variantId)), [lines]);
   const total = cartTotal(lines);
   const quantity = cartQuantity(lines);
   const unpriced = linesWithoutPrice(lines);
@@ -111,54 +111,43 @@ export function PosPage() {
     });
   };
 
+  const closeDrawer = () => {
+    if (mutation.isPending) return;
+    resetCounter();
+    onClose();
+  };
+
   return (
-    <PageTransition>
-      <ManagementPage
-        eyebrow="Vận hành bán hàng"
-        title="Bán tại quầy"
-        description="Lập đơn cho khách mua trực tiếp tại cửa hàng: chọn hàng, thu tiền và giao ngay tại chỗ."
-        dataNotice="Đơn tạo ở đây được ghi nhận đã thanh toán và đã giao; tồn kho trừ ngay khi bán."
-        metrics={[
-          {
-            key: 'lines',
-            label: 'Mặt hàng trong đơn',
-            value: lines.length,
-            icon: <TagsOutlined />,
-            tone: 'blue',
-          },
-          {
-            key: 'quantity',
-            label: 'Tổng số lượng',
-            value: quantity,
-            icon: <ShoppingCartOutlined />,
-            tone: 'orange',
-          },
-          {
-            key: 'total',
-            label: 'Tổng tiền tạm tính',
-            value: moneyFormatter.format(total),
-            icon: <ShopOutlined />,
-            tone: 'green',
-            hint: 'Giá đã bao gồm VAT',
-          },
-        ]}
-        actions={
+    <>
+      <Drawer
+        open={open}
+        onClose={closeDrawer}
+        width="min(1400px, 96vw)"
+        destroyOnHidden
+        title="Tạo đơn bán tại quầy"
+        extra={
           <Popconfirm
             title="Xoá toàn bộ đơn đang lập?"
             okText="Xoá"
             cancelText="Giữ lại"
-            disabled={lines.length === 0 && checkout.customerName === ''}
+            disabled={lines.length === 0}
             onConfirm={resetCounter}
           >
             <Button icon={<ClearOutlined />} disabled={lines.length === 0}>
-              Huỷ đơn đang lập
+              Làm lại
             </Button>
           </Popconfirm>
         }
       >
+        <Alert
+          className="mb-4"
+          type="info"
+          showIcon
+          message="Đơn tại quầy được ghi nhận đã thanh toán và đã giao; tồn kho trừ ngay khi bán."
+        />
         {mutation.isError && (
           <Alert
-            className="mb-5"
+            className="mb-4"
             type="error"
             showIcon
             message="Không tạo được đơn tại quầy"
@@ -170,7 +159,11 @@ export function PosPage() {
         )}
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(320px,0.9fr)]">
-          <Card title="Chọn sản phẩm" className="h-[640px] overflow-hidden" styles={{ body: { height: 'calc(100% - 56px)' } }}>
+          <Card
+            title="Chọn sản phẩm"
+            className="h-[620px] overflow-hidden"
+            styles={{ body: { height: 'calc(100% - 56px)' } }}
+          >
             <PosProductPicker
               pickedIds={pickedIds}
               branchId={checkout.branchId}
@@ -178,7 +171,7 @@ export function PosPage() {
             />
           </Card>
 
-          <Card title="Đơn đang lập" className="h-[640px] overflow-auto">
+          <Card title="Đơn đang lập" className="h-[620px] overflow-auto">
             <PosCartTable
               lines={lines}
               disabled={mutation.isPending}
@@ -189,7 +182,7 @@ export function PosPage() {
             />
           </Card>
 
-          <Card title="Thu tiền" className="h-[640px] overflow-auto">
+          <Card title="Khách hàng & thu tiền" className="h-[620px] overflow-auto">
             <PosCheckoutPanel
               values={checkout}
               total={total}
@@ -206,7 +199,7 @@ export function PosPage() {
             />
           </Card>
         </div>
-      </ManagementPage>
+      </Drawer>
 
       <PosReceiptModal
         order={receipt}
@@ -216,6 +209,6 @@ export function PosPage() {
           resetCounter();
         }}
       />
-    </PageTransition>
+    </>
   );
 }

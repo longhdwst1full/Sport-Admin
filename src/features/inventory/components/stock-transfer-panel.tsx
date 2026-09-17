@@ -47,7 +47,7 @@ export function StockTransferPanel({
   });
 
   return (
-    <Card bordered={false}>
+    <Card variant="borderless">
       <div className="mb-4 flex flex-wrap gap-3">
         <Input
           className="max-w-sm"
@@ -84,7 +84,7 @@ export function StockTransferPanel({
         loading={query.isPending}
         dataSource={query.data?.items ?? []}
         locale={{ emptyText: 'Chưa có phiếu chuyển kho phù hợp bộ lọc.' }}
-        scroll={{ x: 1050 }}
+        scroll={{ x: 1180 }}
         pagination={{
           current: page,
           pageSize: 25,

@@ -83,12 +83,15 @@ export function InventoryPage() {
             icon: <InboxOutlined />,
             tone: 'blue',
           },
+          // Ba chỉ số dưới đếm trên trang đang xem vì API tồn kho chưa có bộ lọc/tổng hợp theo
+          // trạng thái. Ghi rõ phạm vi còn hơn để người đọc tưởng đó là số toàn hệ thống.
           {
             key: 'available',
             label: 'Có thể bán ngay',
             value: metrics.available,
             icon: <SwapOutlined />,
             tone: 'green',
+            hint: 'Cộng trên trang đang xem',
           },
           {
             key: 'low',
@@ -96,6 +99,7 @@ export function InventoryPage() {
             value: metrics.low,
             icon: <WarningOutlined />,
             tone: 'orange',
+            hint: 'Đếm trên trang đang xem',
           },
           {
             key: 'out',
@@ -103,6 +107,7 @@ export function InventoryPage() {
             value: metrics.out,
             icon: <AuditOutlined />,
             tone: 'red',
+            hint: 'Đếm trên trang đang xem',
           },
         ]}
       >

@@ -7,6 +7,7 @@ import {
 import type { Dayjs } from 'dayjs';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import { useDebounce } from 'use-debounce';
+import { MoneyInput } from '@/foundation/inputs/money-input';
 import {
   applyPercent,
   moneyFormatter,
@@ -216,7 +217,7 @@ export function FlashSaleCreateDrawer({
                 : `${option.code} — ${option.label}`,
             }))}
           />
-          <InputNumber
+          <MoneyInput
             min={1}
             step={1000}
             placeholder="Giá flash"

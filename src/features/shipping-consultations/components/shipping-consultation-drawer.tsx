@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MoneyInput } from '@/foundation/inputs/money-input';
 import { Alert, Button, Descriptions, Drawer, Input, InputNumber, Select, Space, Typography } from 'antd';
 import { useUpdateAdminManualShippingQuote } from '@/generated/api/checkout/checkout';
 import {
@@ -101,7 +102,7 @@ export function ShippingConsultationDrawer({
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm font-medium">
                   Phí giao <span className="text-red-500">*</span>
-                  <InputNumber className="mt-1 !w-full" min={0} value={shippingFee} onChange={(value) => setShippingFee(value ?? 0)} addonAfter="VND" />
+                  <MoneyInput className="mt-1 !w-full" min={0} value={shippingFee} onChange={(value) => setShippingFee(value ?? 0)} addonAfter="VND" />
                 </label>
                 <label className="text-sm font-medium">
                   Hình thức <span className="text-red-500">*</span>

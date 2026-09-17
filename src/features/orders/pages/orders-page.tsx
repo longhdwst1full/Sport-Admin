@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { PermissionGate } from '@/core/auth/permissions';
+import { PosOrderDrawer } from '@/features/pos/components/pos-order-drawer';
 import {
   DollarOutlined,
   InboxOutlined,
+  PlusOutlined,
   ReloadOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
@@ -33,6 +36,7 @@ const ORDER_COLUMNS: ColumnItem[] = [
 
 export function OrdersPage() {
   const [tab, setTab] = useState<OrderTab>('ALL');
+  const [createOpen, setCreateOpen] = useState(false);
   const [orderNo, setOrderNo] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
@@ -137,6 +141,15 @@ export function OrdersPage() {
               <Button icon={<ReloadOutlined />} onClick={() => void orders.refetch()}>
                 Làm mới
               </Button>
+              <PermissionGate permission="order.manage">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setCreateOpen(true)}
+                >
+                  Tạo đơn
+                </Button>
+              </PermissionGate>
             </div>
             <Button
               icon={<SettingOutlined />}
@@ -201,6 +214,7 @@ export function OrdersPage() {
       />
 
       <OrderDetailDrawer orderId={selectedId} onClose={() => setSelectedId(undefined)} />
+      <PosOrderDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
     </PageTransition>
   );
 }

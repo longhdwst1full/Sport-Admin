@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { MoneyInput } from '@/foundation/inputs/money-input';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   Alert,
@@ -381,7 +382,7 @@ export function FlashSaleDetailDrawer({
                   ) : undefined
                 }
               >
-                <InputNumber
+                <MoneyInput
                   min={1}
                   step={1000}
                   placeholder="Giá flash"

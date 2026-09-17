@@ -77,6 +77,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, [queryClient]);
 
+  /**
+   * Khi refresh token hỏng (phiên bị thu hồi, hết hạn), fetcher xoá token nhưng react-query VẪN
+   * giữ `data` của lần `/me` thành công gần nhất. Không dọn thì `authenticated` còn true, người
+   * dùng kẹt lại ở màn hình mà mọi lời gọi API đều 401 và không bị đưa về trang đăng nhập.
+   */
+  useEffect(() => {
+    if (hasTokens || usesAuthCookieTransport()) return;
+    queryClient.removeQueries({ queryKey: getGetAdminCurrentUserQueryKey() });
+  }, [hasTokens, queryClient]);
+
   useEffect(() => {
     if (!usesAuthCookieTransport() || hasTokens) {
       setRestoringCookieSession(false);
@@ -133,7 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         currentUser: currentUserQuery.data,
-        authenticated: Boolean(currentUserQuery.data),
+        // Phải còn chứng chỉ phiên: chỉ dựa vào `data` là tin vào bản ghi cũ mà react-query
+        // giữ lại sau khi phiên đã mất.
+        authenticated:
+          (hasTokens || usesAuthCookieTransport()) && Boolean(currentUserQuery.data),
         loading:
           restoringCookieSession || (hasTokens && currentUserQuery.isPending),
         developmentBypass,

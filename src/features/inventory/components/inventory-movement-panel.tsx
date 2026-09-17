@@ -35,7 +35,7 @@ export function InventoryMovementPanel() {
   }, [debouncedSku, movementType, warehouseCode]);
 
   return (
-    <Card bordered={false}>
+    <Card variant="borderless">
       <div className="mb-4 flex flex-wrap gap-3">
         <Input allowClear prefix={<SearchOutlined />} placeholder="Lọc theo SKU" value={sku} className="max-w-xs" onChange={(event) => setSku(event.target.value)} />
         <Select allowClear showSearch optionFilterProp="label" placeholder="Tất cả kho" className="min-w-60" loading={warehouses.isPending} options={(warehouses.data?.items ?? []).map((item) => ({ value: item.code, label: `${item.code} — ${item.label}` }))} onChange={setWarehouseCode} />
@@ -49,7 +49,7 @@ export function InventoryMovementPanel() {
         dataSource={query.data?.items ?? []}
         pagination={false}
         locale={{ emptyText: 'Chưa có biến động kho phù hợp.' }}
-        scroll={{ x: 1050 }}
+        scroll={{ x: 1290 }}
         columns={[
           { title: 'Thời điểm', dataIndex: 'occurredAt', width: 180, render: (value) => new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) },
           { title: 'SKU', dataIndex: 'sku', width: 180, render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },

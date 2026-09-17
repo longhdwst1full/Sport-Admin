@@ -1,1 +1,1 @@
-export { PosPage } from './pages/pos-page';
+export { PosOrderDrawer } from './components/pos-order-drawer';
