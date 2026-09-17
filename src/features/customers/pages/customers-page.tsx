@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
-import { ReloadOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
-import { Alert, Button, Input, Select } from 'antd';
+import { PlusOutlined, ReloadOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
+import { Alert, App, Button, Input, Select } from 'antd';
 import { useDebounce } from 'use-debounce';
-import { useListAdminCustomers } from '@/generated/api/customers/customers';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  activateAdminCustomer,
+  deactivateAdminCustomer,
+  deleteAdminCustomer,
+  getListAdminCustomersQueryKey,
+  useListAdminCustomers,
+} from '@/generated/api/customers/customers';
+import { PermissionGate } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { CustomerDetailDrawer } from '../components/customer-detail-drawer';
+import { CustomerFormDrawer } from '../components/customer-form-drawer';
 import { CustomerTable } from '../components/customer-table';
 import {
   CUSTOMER_PAGE_SIZE,
@@ -15,7 +24,7 @@ import {
   customerStatusOptions,
   moneyFormatter,
 } from '../constants/customer.constants';
-import { toCustomerRowView } from '../model/customer.mapper';
+import { toCustomerRowView, type CustomerRowView } from '../model/customer.mapper';
 
 const CUSTOMER_COLUMNS: ColumnItem[] = [
   { id: 'customer', label: 'Khách hàng', fixed: true },
@@ -25,6 +34,7 @@ const CUSTOMER_COLUMNS: ColumnItem[] = [
   { id: 'lifetimeValue', label: 'Đã chi tiêu' },
   { id: 'lastOrder', label: 'Mua gần nhất' },
   { id: 'status', label: 'Trạng thái' },
+  { id: 'actions', label: 'Thao tác', fixed: true },
 ];
 
 export function CustomersPage() {
@@ -35,6 +45,9 @@ export function CustomersPage() {
   const [status, setStatus] = useState<string>();
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string>();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<CustomerRowView>();
+  const [busyId, setBusyId] = useState<string>();
   const [columnModalOpen, setColumnModalOpen] = useState(false);
   const [colVisibility, setColVisibility] = useState<Record<string, boolean>>(
     Object.fromEntries(CUSTOMER_COLUMNS.map((column) => [column.id, true])),
@@ -59,6 +72,43 @@ export function CustomersPage() {
     status: status as never,
   });
   const rows = (customers.data?.items ?? []).map(toCustomerRowView);
+
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
+  const refreshList = () =>
+    queryClient.invalidateQueries({ queryKey: getListAdminCustomersQueryKey() });
+
+  const statusMutation = useMutation({
+    mutationFn: (row: CustomerRowView) => {
+      const command = { expectedVersion: row.version };
+      return row.status === 'ACTIVE'
+        ? deactivateAdminCustomer(row.id, command)
+        : activateAdminCustomer(row.id, command);
+    },
+    onSuccess: async (_result, row) => {
+      await refreshList();
+      void message.success(
+        row.status === 'ACTIVE' ? 'Đã ngừng hoạt động khách hàng.' : 'Đã mở lại khách hàng.',
+      );
+    },
+    onError: (error) =>
+      void message.error(getApiErrorMessage(error, 'Không đổi được trạng thái khách hàng.')),
+    onSettled: () => setBusyId(undefined),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (row: CustomerRowView) =>
+      deleteAdminCustomer(row.id, { expectedVersion: row.version }),
+    onSuccess: async () => {
+      await refreshList();
+      void message.success('Đã xoá hồ sơ khách hàng.');
+    },
+    onError: (error) =>
+      void message.error(
+        getApiErrorMessage(error, 'Không xoá được khách hàng. Khách đã có đơn thì chỉ ngừng được.'),
+      ),
+    onSettled: () => setBusyId(undefined),
+  });
   const pageSpend = (customers.data?.items ?? []).reduce(
     (sum, item) => sum + Number(item.lifetimeValue),
     0,
@@ -137,6 +187,18 @@ export function CustomersPage() {
               <Button icon={<ReloadOutlined />} onClick={() => void customers.refetch()}>
                 Làm mới
               </Button>
+              <PermissionGate permission="customer.manage">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setEditing(undefined);
+                    setFormOpen(true);
+                  }}
+                >
+                  Thêm khách hàng
+                </Button>
+              </PermissionGate>
             </div>
             <Button
               icon={<SettingOutlined />}
@@ -170,6 +232,28 @@ export function CustomersPage() {
           colVisibility={colVisibility}
           onPageChange={setPage}
           onOpen={setSelectedId}
+          busyId={statusMutation.isPending || deleteMutation.isPending ? busyId : undefined}
+          onEdit={(row) => {
+            setEditing(row);
+            setFormOpen(true);
+          }}
+          onToggleStatus={(row) => {
+            setBusyId(row.id);
+            statusMutation.mutate(row);
+          }}
+          onDelete={(row) => {
+            setBusyId(row.id);
+            deleteMutation.mutate(row);
+          }}
+        />
+
+        <CustomerFormDrawer
+          open={formOpen}
+          editing={editing}
+          onClose={() => {
+            setFormOpen(false);
+            setEditing(undefined);
+          }}
         />
       </ManagementPage>
 

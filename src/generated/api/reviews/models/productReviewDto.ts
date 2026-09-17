@@ -20,6 +20,7 @@ export interface ProductReviewDto {
   title: string;
   content: string;
   verifiedPurchase: boolean;
+  /** Đánh giá hiển thị ngay khi gửi; REJECTED là đã bị Admin gỡ khỏi website */
   status: ProductReviewDtoStatus;
   /** @minimum 0 */
   version: number;

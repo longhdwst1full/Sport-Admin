@@ -1093,7 +1093,7 @@ export const useUpdateAdminCategory = <
 };
 
 /**
- * @summary Logically delete a leaf category by changing its status to INACTIVE
+ * @summary Gỡ danh mục: chuyển trạng thái INACTIVE và nâng các danh mục con lên làm con của cha nó
  */
 export const deleteAdminCategory = (
   id: string,
@@ -1163,7 +1163,7 @@ export type DeleteAdminCategoryMutationError = ErrorType<
 >;
 
 /**
- * @summary Logically delete a leaf category by changing its status to INACTIVE
+ * @summary Gỡ danh mục: chuyển trạng thái INACTIVE và nâng các danh mục con lên làm con của cha nó
  */
 export const useDeleteAdminCategory = <
   TError = ErrorType<
@@ -1197,7 +1197,7 @@ export const useDeleteAdminCategory = <
 };
 
 /**
- * @summary Deactivate a leaf category
+ * @summary Ngừng danh mục và nâng danh mục con lên làm con của cha nó
  */
 export const deactivateAdminCategory = (
   id: string,
@@ -1259,7 +1259,7 @@ export type DeactivateAdminCategoryMutationError = ErrorType<
 >;
 
 /**
- * @summary Deactivate a leaf category
+ * @summary Ngừng danh mục và nâng danh mục con lên làm con của cha nó
  */
 export const useDeactivateAdminCategory = <
   TError = ErrorType<

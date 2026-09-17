@@ -14,6 +14,7 @@ export * from './fulfillmentDetailDto';
 export * from './fulfillmentDetailDtoStatus';
 export * from './fulfillmentHistoryDto';
 export * from './fulfillmentHistoryDtoToStatus';
+export * from './fulfillmentLabelDto';
 export * from './fulfillmentSummaryDto';
 export * from './fulfillmentSummaryDtoStatus';
 export * from './fulfillmentTransitionDto';

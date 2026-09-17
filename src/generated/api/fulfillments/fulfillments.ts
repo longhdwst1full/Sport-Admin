@@ -26,6 +26,7 @@ import type {
   ErrorResponseDto,
   FailDeliveryDto,
   FulfillmentDetailDto,
+  FulfillmentLabelDto,
   FulfillmentTransitionDto,
   ListAdminFulfillmentsParams,
   ReceiveReturnDto,
@@ -680,6 +681,87 @@ export const useShipAdminFulfillment = <
   TContext
 > => {
   const mutationOptions = getShipAdminFulfillmentMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Lấy URL in phiếu giao từ hãng vận chuyển
+ */
+export const createAdminFulfillmentLabel = (id: string, signal?: AbortSignal) => {
+  return apiFetcher<FulfillmentLabelDto>({
+    url: `/api/v1/admin/fulfillments/${id}/label`,
+    method: 'POST',
+    signal,
+  });
+};
+
+export const getCreateAdminFulfillmentLabelMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAdminFulfillmentLabel>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAdminFulfillmentLabel>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ['createAdminFulfillmentLabel'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAdminFulfillmentLabel>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return createAdminFulfillmentLabel(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAdminFulfillmentLabelMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAdminFulfillmentLabel>>
+>;
+
+export type CreateAdminFulfillmentLabelMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Lấy URL in phiếu giao từ hãng vận chuyển
+ */
+export const useCreateAdminFulfillmentLabel = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAdminFulfillmentLabel>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAdminFulfillmentLabel>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getCreateAdminFulfillmentLabelMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

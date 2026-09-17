@@ -1,14 +1,14 @@
 # Reviews — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 2.0.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-09-17
 >
-> **Change summary:** Tạo note; cảnh báo backend review lưu in-memory.
+> **Change summary:** Bỏ bước chờ duyệt; đánh giá hiển thị ngay và kiểm duyệt chuyển thành hậu kiểm.
 
 ## Phạm vi
 
-Hàng đợi kiểm duyệt đánh giá: liệt kê, duyệt/từ chối, xoá.
+Hậu kiểm đánh giá: liệt kê, ẩn/hiện lại, xoá. Đánh giá hiển thị ngay khi khách gửi, không qua hàng đợi duyệt.
 
 ## Generated operation
 
@@ -16,21 +16,20 @@ Hàng đợi kiểm duyệt đánh giá: liệt kê, duyệt/từ chối, xoá.
 
 ## Ảnh hưởng ra Storefront
 
-Chỉ đánh giá đã duyệt mới hiển thị trên trang sản phẩm (`05-commerce-content-media.md`). Từ chối hoặc xoá làm đánh giá biến mất ngoài cửa hàng.
+Trang sản phẩm hiện mọi đánh giá trừ đánh giá đã bị gỡ (`REJECTED`). Ẩn hoặc xoá làm đánh giá biến mất ngoài cửa hàng; hiện lại đưa nó trở về.
 
-## ⚠ Cảnh báo: dữ liệu chưa bền
+## ⚠ Còn thiếu
 
-`api/src/modules/review/review.service.ts` giữ dữ liệu trong **mảng in-memory**, chưa có model Prisma. Thao tác duyệt mất khi backend restart.
-
-Ngoài ra Storefront **chưa gửi được đánh giá** — `review.controller.ts` mới chỉ có `@Get()` cho tag `Storefront Reviews`.
+Storefront **chưa gửi được đánh giá** — `review.controller.ts` mới chỉ có `@Get()` cho tag `Storefront Reviews`. Khi làm endpoint gửi, đánh giá vào thẳng `APPROVED` theo mặc định của cột.
 
 ## Checklist khi sửa
 
-- [ ] Duyệt/từ chối phải có lý do và ghi audit.
-- [ ] Không hiển thị nội dung chưa duyệt ở bất kỳ đâu ngoài hàng đợi.
+- [ ] Ẩn đánh giá phải có lý do và ghi lại thời điểm kiểm duyệt.
+- [ ] Không thêm lại bước chờ duyệt: đánh giá mới phải hiển thị ngay.
 
 ## Revision history
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.0.0 | 2026-09-17 | Đánh giá hiển thị ngay khi gửi; Admin chỉ ẩn/hiện lại. Gỡ cảnh báo in-memory vì review đã persist qua Prisma. |
 | 1.0.0 | 2026-09-13 | Tạo note, cảnh báo review in-memory và thiếu POST phía Storefront. |

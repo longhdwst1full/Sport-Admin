@@ -2,9 +2,9 @@ import { Descriptions, Drawer, Empty, Rate, Tag, Typography } from 'antd';
 import type { ProductReviewDto } from '@/generated/api/reviews/models';
 
 const STATUS_PRESENTATION: Record<string, { color: string; label: string }> = {
-  APPROVED: { color: 'green', label: 'Đã duyệt' },
-  PENDING: { color: 'gold', label: 'Chờ duyệt' },
-  REJECTED: { color: 'red', label: 'Đã ẩn/từ chối' },
+  // Không còn bước chờ duyệt: đánh giá hiển thị ngay, Admin chỉ gỡ khi cần.
+  APPROVED: { color: 'green', label: 'Đang hiển thị' },
+  REJECTED: { color: 'red', label: 'Đã ẩn' },
 };
 
 const AUTHOR_TYPE_LABELS: Record<string, string> = {

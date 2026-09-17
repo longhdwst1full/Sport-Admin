@@ -28,9 +28,9 @@ import { ReviewDetailDrawer } from '../components/review-detail-drawer';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 const REVIEW_STATUSES = {
-  APPROVED: { color: 'green', label: 'Đã duyệt' },
-  PENDING: { color: 'gold', label: 'Chờ duyệt' },
-  REJECTED: { color: 'red', label: 'Đã ẩn/từ chối' },
+  // Không còn bước chờ duyệt: đánh giá hiển thị ngay, Admin chỉ gỡ khi cần.
+  APPROVED: { color: 'green', label: 'Đang hiển thị' },
+  REJECTED: { color: 'red', label: 'Đã ẩn' },
 };
 
 const REVIEW_COLUMNS: ColumnItem[] = [
@@ -61,19 +61,20 @@ export function ReviewsPage() {
   const metrics = useMemo(() => {
     const total = items.length;
     const approved = items.filter((i) => i.status === 'APPROVED').length;
-    const pending = items.filter((i) => i.status !== 'APPROVED' && i.status !== 'REJECTED').length;
+    // Không còn hàng chờ duyệt; số cần theo dõi là số đánh giá đã bị gỡ khỏi website.
+    const hidden = items.filter((i) => i.status === 'REJECTED').length;
     const avg =
       total > 0
         ? (items.reduce((sum, i) => sum + (i.rating || 0), 0) / total).toFixed(1)
         : '5.0';
-    return { total, approved, pending, avg };
+    return { total, approved, hidden, avg };
   }, [items]);
 
   const moderate = useModerateAdminReview({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: getListAdminReviewsQueryKey() });
-        void message.success('Đã cập nhật trạng thái duyệt đánh giá.');
+        void message.success('Đã cập nhật hiển thị của đánh giá.');
       },
       onError: (error) =>
         void message.error(getApiErrorMessage(error, 'Không thể kiểm duyệt đánh giá.')),
@@ -121,7 +122,7 @@ export function ReviewsPage() {
     }
     if (done > 0) {
       void message.success(
-        `${action === 'APPROVE' ? 'Đã duyệt' : 'Đã ẩn'} ${done}/${targets.length} đánh giá.`,
+        `${action === 'APPROVE' ? 'Đã hiện lại' : 'Đã ẩn'} ${done}/${targets.length} đánh giá.`,
       );
     }
     setSelectedIds([]);
@@ -247,15 +248,15 @@ export function ReviewsPage() {
           },
           {
             key: 'approved',
-            label: 'Đã duyệt công khai',
+            label: 'Đang hiển thị',
             value: metrics.approved,
             icon: <CheckCircleOutlined />,
             tone: 'green',
           },
           {
-            key: 'pending',
-            label: 'Chờ kiểm duyệt',
-            value: metrics.pending,
+            key: 'hidden',
+            label: 'Đã ẩn',
+            value: metrics.hidden,
             icon: <ClockCircleOutlined />,
             tone: 'orange',
           },
@@ -306,7 +307,7 @@ export function ReviewsPage() {
                   disabled={approvable.length === 0 || working}
                   loading={moderate.isPending}
                 >
-                  Duyệt{approvable.length > 0 ? ` (${approvable.length})` : ''}
+                  Hiện lại{approvable.length > 0 ? ` (${approvable.length})` : ''}
                 </Button>
               </Popconfirm>
               <Popconfirm

@@ -17,3 +17,4 @@ export * from './errorDetailDto';
 export * from './errorResponseDto';
 export * from './listAdminPostsParams';
 export * from './listAdminPostsPostType';
+export * from './updateContentPostDto';

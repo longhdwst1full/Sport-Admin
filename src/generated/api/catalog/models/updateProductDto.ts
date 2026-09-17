@@ -26,4 +26,6 @@ export interface UpdateProductDto {
   description?: string | null;
   /** @minimum 0 */
   expectedVersion: number;
+  /** Bật/tắt hiển thị trên website. Không đổi status của sản phẩm. */
+  isPublished?: boolean;
 }

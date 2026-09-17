@@ -1,10 +1,12 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Drawer, Form, Input, Select } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  createAdminPost,
   getListAdminPostsQueryKey,
-  useCreateAdminPost,
+  updateAdminPost,
 } from '@/generated/api/content/content';
+import type { ContentPostDto } from '@/generated/api/content/models';
 import {
   CreateContentPostDtoPostType,
   type CreateContentPostDtoPostType as PostType,
@@ -13,7 +15,16 @@ import { ImageUploadField } from '@/features/media';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage } from '@/lib/api/error';
 
-export function ContentEditorDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ContentEditorDrawer({
+  open,
+  editing,
+  onClose,
+}: {
+  open: boolean;
+  /** Bỏ trống là soạn bài mới; có giá trị là sửa bài đã đăng. */
+  editing?: ContentPostDto;
+  onClose: () => void;
+}) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
@@ -23,24 +34,40 @@ export function ContentEditorDrawer({ open, onClose }: { open: boolean; onClose:
   const [coverUrl, setCoverUrl] = useState('');
   const [relatedProducts, setRelatedProducts] = useState('');
   const [body, setBody] = useState('');
-  const createPost = useCreateAdminPost({
-    mutation: {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() });
-        void message.success('Đã tạo và xuất bản bài viết');
-        setTitle('');
-        setSlug('');
-        setExcerpt('');
-        setCoverUrl('');
-        setRelatedProducts('');
-        setBody('');
-        onClose();
-      },
-      onError: (error) =>
-        void message.error(
-          getApiErrorMessage(error, 'Không thể tạo bài viết. Vui lòng kiểm tra lại.'),
-        ),
+  // Đổ lại form mỗi lần mở: mở sửa bài khác mà giữ state cũ sẽ ghi đè nhầm nội dung.
+  useEffect(() => {
+    if (!open) return;
+    setTitle(editing?.title ?? '');
+    setSlug(editing?.slug ?? '');
+    setPostType((editing?.postType as PostType) ?? CreateContentPostDtoPostType.NEWS);
+    setExcerpt(editing?.excerpt ?? '');
+    setCoverUrl(editing?.coverUrl ?? '');
+    setRelatedProducts((editing?.relatedProductSlugs ?? []).join(', '));
+    setBody(editing?.body ?? '');
+  }, [open, editing]);
+
+  const savePost = useMutation({
+    mutationFn: (payload: {
+      title: string;
+      slug: string;
+      postType: PostType;
+      excerpt: string;
+      coverUrl: string;
+      body: string;
+      relatedProductSlugs: string[];
+    }) =>
+      editing
+        ? updateAdminPost(editing.id, { ...payload, expectedVersion: editing.version })
+        : createAdminPost(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() });
+      void message.success(editing ? 'Đã cập nhật bài viết' : 'Đã tạo và xuất bản bài viết');
+      onClose();
     },
+    onError: (error) =>
+      void message.error(
+        getApiErrorMessage(error, 'Không lưu được bài viết. Vui lòng kiểm tra lại.'),
+      ),
   });
 
   const submit = () => {
@@ -48,25 +75,23 @@ export function ContentEditorDrawer({ open, onClose }: { open: boolean; onClose:
       void message.warning('Điền đủ tiêu đề, slug, mô tả, ảnh và nội dung.');
       return;
     }
-    createPost.mutate({
-      data: {
-        title: title.trim(),
-        slug: slug.trim(),
-        postType,
-        excerpt: excerpt.trim(),
-        coverUrl: coverUrl.trim(),
-        body,
-        relatedProductSlugs: relatedProducts
-          .split(',')
-          .map((value) => value.trim())
-          .filter(Boolean),
-      },
+    savePost.mutate({
+      title: title.trim(),
+      slug: slug.trim(),
+      postType,
+      excerpt: excerpt.trim(),
+      coverUrl: coverUrl.trim(),
+      body,
+      relatedProductSlugs: relatedProducts
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
     });
   };
 
   return (
     <Drawer
-      title="Soạn bài viết"
+      title={editing ? `Sửa bài viết ${editing.slug}` : 'Soạn bài viết'}
       width={820}
       open={open}
       onClose={onClose}
@@ -74,7 +99,7 @@ export function ContentEditorDrawer({ open, onClose }: { open: boolean; onClose:
       extra={
         <Button
           type="primary"
-          loading={createPost.isPending}
+          loading={savePost.isPending}
           onClick={submit}
         >
           Tạo và xuất bản

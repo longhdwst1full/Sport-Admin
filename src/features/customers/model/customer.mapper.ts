@@ -24,6 +24,8 @@ export interface CustomerRowView {
   lifetimeValueLabel: string;
   lastOrderLabel: string;
   createdLabel: string;
+  /** Gửi lại làm expectedVersion khi sửa, ngừng hoạt động hoặc xoá. */
+  version: number;
 }
 
 function dateLabel(value: string | null | undefined, fallback: string): string {
@@ -35,6 +37,7 @@ export function toCustomerRowView(dto: AdminCustomerSummaryDto): CustomerRowView
     id: dto.id,
     customerNo: dto.customerNo,
     name: dto.name,
+    version: dto.version,
     phone: dto.phone ?? '—',
     email: dto.email ?? '—',
     kind: dto.kind,

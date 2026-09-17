@@ -2,19 +2,21 @@ import {
   BookOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
+  EditOutlined,
   FileTextOutlined,
   InboxOutlined,
   PlusOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { App, Avatar, Button, Popconfirm, Skeleton, Table } from 'antd';
-import { useQueryClient } from '@tanstack/react-query';
+import { App, Avatar, Button, Popconfirm, Skeleton, Switch, Table, Tooltip } from 'antd';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { ManagementPage, StatusTag } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import {
   getListAdminPostsQueryKey,
+  updateAdminPost,
   useDeleteAdminPost,
   useListAdminPosts,
 } from '@/generated/api/content/content';
@@ -35,6 +37,18 @@ export function ContentPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<ContentPostDto>();
+
+  // Cờ hiển thị tách khỏi trạng thái: ẩn tạm một bài viết không phải lưu trữ nó.
+  const visibilityMutation = useMutation({
+    mutationFn: ({ row, next }: { row: ContentPostDto; next: boolean }) =>
+      updateAdminPost(row.id, { expectedVersion: row.version, isPublished: next }),
+    onSuccess: async (_result, { next }) => {
+      await queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() });
+      void message.success(next ? 'Đã hiện bài viết trên website' : 'Đã ẩn bài viết khỏi website');
+    },
+    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+  });
   const query = useListAdminPosts();
   const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
@@ -75,7 +89,10 @@ export function ContentPage() {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => setEditorOpen(true)}
+                onClick={() => {
+                  setEditingPost(undefined);
+                  setEditorOpen(true);
+                }}
               >
                 Soạn bài viết
               </Button>
@@ -153,7 +170,7 @@ export function ContentPage() {
             {
               title: 'SP liên kết',
               dataIndex: 'relatedProductSlugs',
-              width: 110,
+              width: 170,
               align: 'center' as const,
               render: (value: string[]) => (
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
@@ -183,12 +200,54 @@ export function ContentPage() {
               ),
             },
             {
+              title: 'Hiện trên web',
+              key: 'isPublished',
+              align: 'center' as const,
+              width: 120,
+              render: (_: unknown, row: ContentPostDto) => (
+                <Tooltip
+                  title={
+                    row.status === 'PUBLISHED'
+                      ? 'Bật/tắt hiển thị trên website'
+                      : 'Bài đã lưu trữ không hiện trên website'
+                  }
+                >
+                  <span>
+                    <Switch
+                      size="small"
+                      checked={row.isPublished}
+                      disabled={row.status !== 'PUBLISHED'}
+                      loading={
+                        visibilityMutation.isPending &&
+                        visibilityMutation.variables?.row.id === row.id
+                      }
+                      onChange={(next) => visibilityMutation.mutate({ row, next })}
+                    />
+                  </span>
+                </Tooltip>
+              ),
+            },
+            {
               title: 'Thao tác',
               key: 'actions',
               width: 110,
               align: 'right' as const,
               render: (_: unknown, row: ContentPostDto) => (
                 <PermissionGate permission="cms.content.manage">
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EditOutlined />}
+                    // Bài đã lưu trữ không còn hiển thị trên website; Backend cũng từ chối sửa.
+                    disabled={row.status === 'ARCHIVED'}
+                    className="text-xs"
+                    onClick={() => {
+                      setEditingPost(row);
+                      setEditorOpen(true);
+                    }}
+                  >
+                    Sửa
+                  </Button>
                   <Popconfirm
                     title="Xóa bài viết này?"
                     description="Bài viết sẽ được lưu trữ và không còn hiển thị trên website."
@@ -223,7 +282,14 @@ export function ContentPage() {
 
         {editorOpen && (
           <Suspense fallback={<Skeleton active />}>
-            <ContentEditorDrawer open={editorOpen} onClose={() => setEditorOpen(false)} />
+            <ContentEditorDrawer
+              open={editorOpen}
+              editing={editingPost}
+              onClose={() => {
+                setEditorOpen(false);
+                setEditingPost(undefined);
+              }}
+            />
           </Suspense>
         )}
       </ManagementPage>

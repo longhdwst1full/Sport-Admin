@@ -17,4 +17,5 @@ export const CreateSystemParameterDtoGroupCode = {
   PAYMENT: 'PAYMENT',
   CART: 'CART',
   PROMOTION: 'PROMOTION',
+  INTEGRATION: 'INTEGRATION',
 } as const;

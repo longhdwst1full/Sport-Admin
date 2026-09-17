@@ -1,4 +1,5 @@
-import { Alert, Button, Divider, Form, Input, Radio, Select, Statistic } from 'antd';
+import { Alert, Button, Divider, Form, Input, Radio, Select, Statistic, Switch } from 'antd';
+import { DeliveryAddressFields } from './delivery-address-fields';
 import { WalletOutlined } from '@ant-design/icons';
 import { useListAdminBranches } from '@/generated/api/organization/organization';
 import { BranchDtoStatus } from '@/generated/api/organization/models';
@@ -10,6 +11,18 @@ import {
   posPaymentMethodLabels,
 } from '../constants/pos.constants';
 
+export interface PosDeliveryValues {
+  recipient: string;
+  phone: string;
+  addressLine: string;
+  province: string;
+  provinceCode: string;
+  district: string;
+  districtCode: string;
+  ward: string;
+  wardCode: string;
+}
+
 export interface PosCheckoutValues {
   branchId?: string;
   customerName: string;
@@ -17,6 +30,11 @@ export interface PosCheckoutValues {
   customerEmail: string;
   paymentMethod: CreatePosOrderDtoPaymentMethod;
   note: string;
+  /** Khách nhận tại quầy hay đơn đi giao hàng. */
+  deliveryMode: 'PICKUP' | 'DELIVERY';
+  delivery: PosDeliveryValues;
+  /** Khách lấy hàng ngay dù đơn có địa chỉ giao. */
+  handOverImmediately: boolean;
 }
 
 export function PosCheckoutPanel({
@@ -106,6 +124,38 @@ export function PosCheckoutPanel({
         </Form.Item>
 
         <Divider className="!my-3" orientation="left" plain>
+          Giao hàng
+        </Divider>
+
+        <Form.Item label="Hình thức nhận">
+          <Radio.Group
+            value={values.deliveryMode}
+            buttonStyle="solid"
+            onChange={(event) => {
+              const mode = event.target.value as PosCheckoutValues['deliveryMode'];
+              onChange({
+                deliveryMode: mode,
+                // COD chỉ có nghĩa với đơn giao hàng; quay về quầy thì phải thu tiền ngay.
+                ...(mode === 'PICKUP' &&
+                values.paymentMethod === CreatePosOrderDtoPaymentMethod.COD
+                  ? { paymentMethod: CreatePosOrderDtoPaymentMethod.CASH }
+                  : {}),
+              });
+            }}
+          >
+            <Radio.Button value="PICKUP">Nhận tại quầy</Radio.Button>
+            <Radio.Button value="DELIVERY">Giao tận nơi</Radio.Button>
+          </Radio.Group>
+        </Form.Item>
+
+        {values.deliveryMode === 'DELIVERY' && (
+          <DeliveryAddressFields
+            value={values.delivery}
+            onChange={(patch) => onChange({ delivery: { ...values.delivery, ...patch } })}
+          />
+        )}
+
+        <Divider className="!my-3" orientation="left" plain>
           Thanh toán
         </Divider>
 
@@ -121,12 +171,32 @@ export function PosCheckoutPanel({
             }
           >
             {Object.values(CreatePosOrderDtoPaymentMethod).map((method) => (
-              <Radio.Button key={method} value={method}>
+              <Radio.Button
+                key={method}
+                value={method}
+                // Thu hộ khi giao không áp dụng cho khách cầm hàng về ngay tại quầy.
+                disabled={
+                  method === CreatePosOrderDtoPaymentMethod.COD &&
+                  values.deliveryMode === 'PICKUP'
+                }
+              >
                 {posPaymentMethodLabels[method]}
               </Radio.Button>
             ))}
           </Radio.Group>
         </Form.Item>
+
+        {values.deliveryMode === 'DELIVERY' && (
+          <Form.Item
+            label="Khách lấy hàng ngay"
+            extra="Bật khi khách tới cửa hàng lấy luôn; đơn sẽ được đánh dấu đã giao ngay sau khi tạo."
+          >
+            <Switch
+              checked={values.handOverImmediately}
+              onChange={(next) => onChange({ handOverImmediately: next })}
+            />
+          </Form.Item>
+        )}
 
         <Form.Item label="Ghi chú tại quầy">
           <Input.TextArea

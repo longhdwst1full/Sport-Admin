@@ -23,8 +23,8 @@ import { StaffLifecycleModal, type StaffLifecycleAction } from '../components/st
 
 const userStatuses: Record<UserDtoStatus, { color: string; label: string }> = {
   ACTIVE: { color: 'green', label: 'Hoạt động' },
-  INVITED: { color: 'blue', label: 'Đã mời' },
   LOCKED: { color: 'red', label: 'Đã khóa' },
+  INACTIVE: { color: 'default', label: 'Ngừng hoạt động' },
 };
 
 export function AccessPage() {

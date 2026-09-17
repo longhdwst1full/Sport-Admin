@@ -6,12 +6,14 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * Đánh giá hiển thị ngay khi gửi; REJECTED là đã bị Admin gỡ khỏi website
+ */
 export type ProductReviewDtoStatus =
   (typeof ProductReviewDtoStatus)[keyof typeof ProductReviewDtoStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ProductReviewDtoStatus = {
-  PENDING: 'PENDING',
   APPROVED: 'APPROVED',
   REJECTED: 'REJECTED',
 } as const;

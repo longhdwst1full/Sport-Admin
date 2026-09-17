@@ -30,6 +30,8 @@ export interface ProductSummaryDto {
   primaryCategory?: string;
   productType: ProductSummaryDtoProductType;
   status: ProductSummaryDtoStatus;
+  /** Có hiển thị trên website hay không. Tách khỏi status để ẩn tạm một sản phẩm đang bán mà không phải đẩy về DRAFT. */
+  isPublished: boolean;
   version: number;
   /** @nullable */
   minPrice?: string | null;

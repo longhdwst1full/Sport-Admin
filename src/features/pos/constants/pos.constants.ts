@@ -17,10 +17,13 @@ export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
 export const posPaymentMethodLabels: Record<CreatePosOrderDtoPaymentMethod, string> = {
   [CreatePosOrderDtoPaymentMethod.CASH]: 'Tiền mặt',
   [CreatePosOrderDtoPaymentMethod.BANK_TRANSFER]: 'Chuyển khoản',
+  [CreatePosOrderDtoPaymentMethod.COD]: 'Thu hộ khi giao (COD)',
 };
 
 export const posPaymentMethodHints: Record<CreatePosOrderDtoPaymentMethod, string> = {
   [CreatePosOrderDtoPaymentMethod.CASH]: 'Thu tiền mặt tại quầy, ghi nhận đã thanh toán ngay.',
   [CreatePosOrderDtoPaymentMethod.BANK_TRANSFER]:
     'Khách chuyển khoản tại quầy; chỉ bấm thu tiền sau khi đã thấy báo có.',
+  [CreatePosOrderDtoPaymentMethod.COD]:
+    'Thu tiền khi giao. Đơn tạo ở trạng thái chờ thanh toán và chỉ dùng cho đơn có giao hàng.',
 };

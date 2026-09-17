@@ -32,4 +32,6 @@ export interface AdminCustomerSummaryDto {
    */
   lastOrderAt: string | null;
   createdAt: string;
+  /** Gửi lại làm expectedVersion khi sửa, ngừng hoạt động hoặc xoá */
+  version: number;
 }

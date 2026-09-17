@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { App, Avatar, Button, Input, Select, Table, Tag } from 'antd';
+import { App, Avatar, Button, Input, Select, Switch, Table, Tag, Tooltip } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
@@ -7,6 +7,7 @@ import { PermissionGate, useCan } from '@/core/auth/permissions';
 import {
   deleteAdminProduct,
   getListAdminProductsQueryKey,
+  updateAdminProduct,
   useListAdminCategories,
   useListAdminProducts,
 } from '@/generated/api/catalog/catalog';
@@ -67,6 +68,17 @@ export function ProductsPage() {
         })),
     [categories.data],
   );
+
+  // Cờ hiển thị tách khỏi trạng thái vòng đời: ẩn tạm một sản phẩm đang bán không cần đẩy về nháp.
+  const visibilityMutation = useMutation({
+    mutationFn: ({ row, next }: { row: ProductSummaryDto; next: boolean }) =>
+      updateAdminProduct(row.id, { expectedVersion: row.version, isPublished: next }),
+    onSuccess: async (_result, { next }) => {
+      await queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() });
+      void message.success(next ? 'Đã hiện sản phẩm trên website' : 'Đã ẩn sản phẩm khỏi website');
+    },
+    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+  });
 
   const deleteMutation = useMutation({
     mutationFn: (row: ProductSummaryDto) =>
@@ -276,6 +288,35 @@ export function ProductsPage() {
                   </Tag>
                 );
               },
+            },
+            {
+              title: 'Hiện trên web',
+              key: 'isPublished',
+              align: 'center',
+              width: 120,
+              render: (_value: unknown, row: ProductSummaryDto) => (
+                <Tooltip
+                  title={
+                    row.status === 'PUBLISHED'
+                      ? 'Bật/tắt hiển thị trên website'
+                      : 'Chỉ sản phẩm đã xuất bản mới hiện trên website'
+                  }
+                >
+                  <span>
+                    <Switch
+                      size="small"
+                      checked={row.isPublished}
+                      // Sản phẩm chưa xuất bản thì cờ này không có tác dụng gì.
+                      disabled={row.status !== 'PUBLISHED' || !canManage}
+                      loading={
+                        visibilityMutation.isPending &&
+                        visibilityMutation.variables?.row.id === row.id
+                      }
+                      onChange={(next) => visibilityMutation.mutate({ row, next })}
+                    />
+                  </span>
+                </Tooltip>
+              ),
             },
             {
               title: 'Ver',

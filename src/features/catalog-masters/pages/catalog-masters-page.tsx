@@ -24,6 +24,7 @@ import {
   useActivateAdminCategory,
   useDeactivateAdminBrand,
   useDeactivateAdminCategory,
+  useDeleteAdminCategory,
   useListAdminBrands,
   useListAdminCategories,
 } from '@/generated/api/catalog/catalog';
@@ -112,6 +113,7 @@ export function CatalogMastersPage() {
   };
   const activateCategory = useActivateAdminCategory(categoryLifecycleOptions);
   const deactivateCategory = useDeactivateAdminCategory(categoryLifecycleOptions);
+  const deleteCategory = useDeleteAdminCategory(categoryLifecycleOptions);
 
   const openCreate = () => {
     if (tab === 'brands') {
@@ -403,7 +405,7 @@ export function CatalogMastersPage() {
                                   ? 'Ngừng danh mục?'
                                   : 'Kích hoạt danh mục?'
                               }
-                              description="Cần tắt các danh mục con trước khi ngừng danh mục cha."
+                              description="Danh mục con sẽ được nâng lên làm con của danh mục cha."
                               onConfirm={() =>
                                 row.status === 'ACTIVE'
                                   ? deactivateCategory.mutate({
@@ -422,6 +424,29 @@ export function CatalogMastersPage() {
                                 icon={<PoweroffOutlined />}
                               >
                                 {row.status === 'ACTIVE' ? 'Ngừng' : 'Bật'}
+                              </Button>
+                            </Popconfirm>
+                            <Popconfirm
+                              title="Xoá danh mục này?"
+                              description="Danh mục con được nâng lên cha; danh mục gốc bị xoá thì con của nó thành gốc."
+                              okButtonProps={{ danger: true }}
+                              onConfirm={() =>
+                                deleteCategory.mutate({
+                                  id: row.id,
+                                  data: { expectedVersion: row.version },
+                                })
+                              }
+                            >
+                              <Button
+                                danger
+                                size="small"
+                                icon={<DeleteOutlined />}
+                                loading={
+                                  deleteCategory.isPending &&
+                                  deleteCategory.variables?.id === row.id
+                                }
+                              >
+                                Xoá
                               </Button>
                             </Popconfirm>
                           </Space>

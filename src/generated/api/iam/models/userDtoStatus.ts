@@ -11,6 +11,6 @@ export type UserDtoStatus = (typeof UserDtoStatus)[keyof typeof UserDtoStatus];
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserDtoStatus = {
   ACTIVE: 'ACTIVE',
-  INVITED: 'INVITED',
   LOCKED: 'LOCKED',
+  INACTIVE: 'INACTIVE',
 } as const;

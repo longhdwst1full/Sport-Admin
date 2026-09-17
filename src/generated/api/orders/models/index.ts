@@ -34,5 +34,6 @@ export * from './posCatalogComponentDto';
 export * from './posCatalogItemDto';
 export * from './posCatalogResponseDto';
 export * from './posCustomerDto';
+export * from './posDeliveryAddressDto';
 export * from './posOrderItemDto';
 export * from './searchPosCatalogParams';

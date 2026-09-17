@@ -33,6 +33,8 @@ export interface SystemParameterDto {
   isPublic: boolean;
   /** Tham số hệ thống: code đang đọc theo mã, chỉ sửa được giá trị */
   isSystem: boolean;
+  /** Bí mật nhà cung cấp: giá trị không đọc lại được qua API, chỉ ghi đè. Trường value trả về dấu che nếu đã cấu hình và chuỗi rỗng nếu chưa. */
+  isSecret: boolean;
   /**
    * Ghi chú của lần sửa gần nhất
    * @nullable

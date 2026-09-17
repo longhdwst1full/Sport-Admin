@@ -12,6 +12,8 @@ export interface ContentPostDto {
   id: string;
   slug: string;
   postType: ContentPostDtoPostType;
+  /** Có hiển thị trên website hay không; tách khỏi status để ẩn tạm bài viết */
+  isPublished: boolean;
   title: string;
   excerpt: string;
   body: string;

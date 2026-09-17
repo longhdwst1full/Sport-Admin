@@ -27,6 +27,18 @@ import {
   type PosCartLine,
 } from '../model/pos-cart';
 
+const EMPTY_DELIVERY = {
+  recipient: '',
+  phone: '',
+  addressLine: '',
+  province: '',
+  provinceCode: '',
+  district: '',
+  districtCode: '',
+  ward: '',
+  wardCode: '',
+};
+
 const EMPTY_CHECKOUT: PosCheckoutValues = {
   branchId: undefined,
   customerName: '',
@@ -34,6 +46,9 @@ const EMPTY_CHECKOUT: PosCheckoutValues = {
   customerEmail: '',
   paymentMethod: CreatePosOrderDtoPaymentMethod.CASH,
   note: '',
+  deliveryMode: 'PICKUP',
+  delivery: EMPTY_DELIVERY,
+  handOverImmediately: false,
 };
 
 /**
@@ -85,6 +100,16 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
     if (!checkout.branchId) return 'Chọn chi nhánh đang đứng quầy.';
     if (!checkout.customerName.trim()) return 'Nhập tên khách hàng.';
     if (!checkout.customerPhone.trim()) return 'Nhập số điện thoại khách hàng.';
+    if (checkout.deliveryMode === 'DELIVERY') {
+      const { recipient, phone, addressLine, provinceCode, districtCode, wardCode } =
+        checkout.delivery;
+      if (!recipient.trim() || !phone.trim()) return 'Nhập người nhận và số điện thoại giao hàng.';
+      // Mã địa giới là thứ hãng vận chuyển dùng để định tuyến; thiếu thì không tạo được vận đơn.
+      if (!provinceCode || !districtCode || !wardCode) {
+        return 'Chọn đủ tỉnh/thành, quận/huyện và phường/xã.';
+      }
+      if (!addressLine.trim()) return 'Nhập địa chỉ chi tiết.';
+    }
     return undefined;
   })();
 
@@ -107,6 +132,22 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         paymentMethod: checkout.paymentMethod,
         note: checkout.note.trim() || undefined,
         branchId: checkout.branchId,
+        ...(checkout.deliveryMode === 'DELIVERY'
+          ? {
+              delivery: {
+                recipient: checkout.delivery.recipient.trim(),
+                phone: checkout.delivery.phone.trim(),
+                addressLine: checkout.delivery.addressLine.trim(),
+                province: checkout.delivery.province,
+                provinceCode: checkout.delivery.provinceCode,
+                district: checkout.delivery.district,
+                districtCode: checkout.delivery.districtCode,
+                ward: checkout.delivery.ward,
+                wardCode: checkout.delivery.wardCode,
+              },
+              handOverImmediately: checkout.handOverImmediately,
+            }
+          : {}),
       },
     });
   };
@@ -124,7 +165,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         onClose={closeDrawer}
         width="min(1400px, 96vw)"
         destroyOnHidden
-        title="Tạo đơn bán tại quầy"
+        title="Tạo đơn"
         extra={
           <Popconfirm
             title="Xoá toàn bộ đơn đang lập?"
@@ -143,7 +184,11 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
           className="mb-4"
           type="info"
           showIcon
-          message="Đơn tại quầy được ghi nhận đã thanh toán và đã giao; tồn kho trừ ngay khi bán."
+          message={
+            checkout.deliveryMode === 'PICKUP'
+              ? 'Đơn tại quầy được ghi nhận đã thanh toán và đã giao; tồn kho trừ ngay khi bán.'
+              : 'Đơn giao hàng giữ chỗ tồn kho như đơn của khách; kho xử lý theo luồng thường.'
+          }
         />
         {mutation.isError && (
           <Alert

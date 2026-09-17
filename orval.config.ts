@@ -80,4 +80,5 @@ export default defineConfig({
   promotions: createDomainConfig('promotions'),
   reporting: createDomainConfig('reporting'),
   customers: createDomainConfig('customers'),
+  shipping: createDomainConfig('shipping'),
 });

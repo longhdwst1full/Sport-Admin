@@ -13,4 +13,5 @@ export type CreatePosOrderDtoPaymentMethod =
 export const CreatePosOrderDtoPaymentMethod = {
   CASH: 'CASH',
   BANK_TRANSFER: 'BANK_TRANSFER',
+  COD: 'COD',
 } as const;

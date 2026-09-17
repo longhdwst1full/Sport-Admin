@@ -5,15 +5,18 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
@@ -21,12 +24,15 @@ import type {
 import type {
   AdminCustomerDetailDto,
   AdminCustomerListDto,
+  CreateAdminCustomerDto,
+  CustomerStatusCommandDto,
   ErrorResponseDto,
   ListAdminCustomersParams,
+  UpdateAdminCustomerDto,
 } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
-import type { ErrorType } from '../../../lib/api/fetcher';
+import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
 /**
  * @summary Danh sách khách hàng kèm số đơn, giá trị vòng đời và lần mua gần nhất
  */
@@ -145,6 +151,92 @@ export function useListAdminCustomers<
 }
 
 /**
+ * @summary Nhân viên tạo hồ sơ khách mua tại quầy hoặc qua điện thoại
+ */
+export const createAdminCustomer = (
+  createAdminCustomerDto: BodyType<CreateAdminCustomerDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<AdminCustomerDetailDto>({
+    url: `/api/v1/admin/customers`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: createAdminCustomerDto,
+    signal,
+  });
+};
+
+export const getCreateAdminCustomerMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAdminCustomer>>,
+    TError,
+    { data: BodyType<CreateAdminCustomerDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAdminCustomer>>,
+  TError,
+  { data: BodyType<CreateAdminCustomerDto> },
+  TContext
+> => {
+  const mutationKey = ['createAdminCustomer'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAdminCustomer>>,
+    { data: BodyType<CreateAdminCustomerDto> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAdminCustomer(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAdminCustomerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAdminCustomer>>
+>;
+export type CreateAdminCustomerMutationBody = BodyType<CreateAdminCustomerDto>;
+export type CreateAdminCustomerMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Nhân viên tạo hồ sơ khách mua tại quầy hoặc qua điện thoại
+ */
+export const useCreateAdminCustomer = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAdminCustomer>>,
+      TError,
+      { data: BodyType<CreateAdminCustomerDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAdminCustomer>>,
+  TError,
+  { data: BodyType<CreateAdminCustomerDto> },
+  TContext
+> => {
+  const mutationOptions = getCreateAdminCustomerMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
  * @summary Chi tiết khách hàng kèm địa chỉ và đơn gần đây
  */
 export const getAdminCustomer = (id: string, signal?: AbortSignal) => {
@@ -257,3 +349,347 @@ export function useGetAdminCustomer<
 
   return query;
 }
+
+/**
+ * @summary Sửa thông tin liên hệ của khách theo expected version
+ */
+export const updateAdminCustomer = (
+  id: string,
+  updateAdminCustomerDto: BodyType<UpdateAdminCustomerDto>,
+) => {
+  return apiFetcher<AdminCustomerDetailDto>({
+    url: `/api/v1/admin/customers/${id}`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateAdminCustomerDto,
+  });
+};
+
+export const getUpdateAdminCustomerMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminCustomer>>,
+    TError,
+    { id: string; data: BodyType<UpdateAdminCustomerDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<UpdateAdminCustomerDto> },
+  TContext
+> => {
+  const mutationKey = ['updateAdminCustomer'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAdminCustomer>>,
+    { id: string; data: BodyType<UpdateAdminCustomerDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateAdminCustomer(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAdminCustomerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAdminCustomer>>
+>;
+export type UpdateAdminCustomerMutationBody = BodyType<UpdateAdminCustomerDto>;
+export type UpdateAdminCustomerMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Sửa thông tin liên hệ của khách theo expected version
+ */
+export const useUpdateAdminCustomer = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAdminCustomer>>,
+      TError,
+      { id: string; data: BodyType<UpdateAdminCustomerDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<UpdateAdminCustomerDto> },
+  TContext
+> => {
+  const mutationOptions = getUpdateAdminCustomerMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Xoá hồ sơ khách chưa phát sinh đơn và chưa có tài khoản đăng nhập
+ */
+export const deleteAdminCustomer = (
+  id: string,
+  customerStatusCommandDto: BodyType<CustomerStatusCommandDto>,
+) => {
+  return apiFetcher<void>({
+    url: `/api/v1/admin/customers/${id}`,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    data: customerStatusCommandDto,
+  });
+};
+
+export const getDeleteAdminCustomerMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAdminCustomer>>,
+    TError,
+    { id: string; data: BodyType<CustomerStatusCommandDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<CustomerStatusCommandDto> },
+  TContext
+> => {
+  const mutationKey = ['deleteAdminCustomer'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAdminCustomer>>,
+    { id: string; data: BodyType<CustomerStatusCommandDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return deleteAdminCustomer(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAdminCustomerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAdminCustomer>>
+>;
+export type DeleteAdminCustomerMutationBody = BodyType<CustomerStatusCommandDto>;
+export type DeleteAdminCustomerMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Xoá hồ sơ khách chưa phát sinh đơn và chưa có tài khoản đăng nhập
+ */
+export const useDeleteAdminCustomer = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAdminCustomer>>,
+      TError,
+      { id: string; data: BodyType<CustomerStatusCommandDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<CustomerStatusCommandDto> },
+  TContext
+> => {
+  const mutationOptions = getDeleteAdminCustomerMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Ngừng hoạt động hồ sơ khách, giữ nguyên lịch sử mua hàng
+ */
+export const deactivateAdminCustomer = (
+  id: string,
+  customerStatusCommandDto: BodyType<CustomerStatusCommandDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<AdminCustomerDetailDto>({
+    url: `/api/v1/admin/customers/${id}/deactivate`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: customerStatusCommandDto,
+    signal,
+  });
+};
+
+export const getDeactivateAdminCustomerMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deactivateAdminCustomer>>,
+    TError,
+    { id: string; data: BodyType<CustomerStatusCommandDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deactivateAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<CustomerStatusCommandDto> },
+  TContext
+> => {
+  const mutationKey = ['deactivateAdminCustomer'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deactivateAdminCustomer>>,
+    { id: string; data: BodyType<CustomerStatusCommandDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return deactivateAdminCustomer(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeactivateAdminCustomerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deactivateAdminCustomer>>
+>;
+export type DeactivateAdminCustomerMutationBody = BodyType<CustomerStatusCommandDto>;
+export type DeactivateAdminCustomerMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Ngừng hoạt động hồ sơ khách, giữ nguyên lịch sử mua hàng
+ */
+export const useDeactivateAdminCustomer = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deactivateAdminCustomer>>,
+      TError,
+      { id: string; data: BodyType<CustomerStatusCommandDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deactivateAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<CustomerStatusCommandDto> },
+  TContext
+> => {
+  const mutationOptions = getDeactivateAdminCustomerMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Mở lại hồ sơ khách đã ngừng
+ */
+export const activateAdminCustomer = (
+  id: string,
+  customerStatusCommandDto: BodyType<CustomerStatusCommandDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<AdminCustomerDetailDto>({
+    url: `/api/v1/admin/customers/${id}/activate`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: customerStatusCommandDto,
+    signal,
+  });
+};
+
+export const getActivateAdminCustomerMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof activateAdminCustomer>>,
+    TError,
+    { id: string; data: BodyType<CustomerStatusCommandDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof activateAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<CustomerStatusCommandDto> },
+  TContext
+> => {
+  const mutationKey = ['activateAdminCustomer'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof activateAdminCustomer>>,
+    { id: string; data: BodyType<CustomerStatusCommandDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return activateAdminCustomer(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ActivateAdminCustomerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof activateAdminCustomer>>
+>;
+export type ActivateAdminCustomerMutationBody = BodyType<CustomerStatusCommandDto>;
+export type ActivateAdminCustomerMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Mở lại hồ sơ khách đã ngừng
+ */
+export const useActivateAdminCustomer = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof activateAdminCustomer>>,
+      TError,
+      { id: string; data: BodyType<CustomerStatusCommandDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof activateAdminCustomer>>,
+  TError,
+  { id: string; data: BodyType<CustomerStatusCommandDto> },
+  TContext
+> => {
+  const mutationOptions = getActivateAdminCustomerMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};

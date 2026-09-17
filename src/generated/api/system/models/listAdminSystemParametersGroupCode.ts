@@ -17,4 +17,5 @@ export const ListAdminSystemParametersGroupCode = {
   PAYMENT: 'PAYMENT',
   CART: 'CART',
   PROMOTION: 'PROMOTION',
+  INTEGRATION: 'INTEGRATION',
 } as const;

@@ -9,6 +9,7 @@ const product = (overrides: Partial<ProductDetailDto> = {}): ProductDetailDto =>
   slug: 'product',
   productType: 'STANDARD',
   status: 'DRAFT',
+  isPublished: false,
   version: 0,
   currency: 'VND',
   categoryIds: [],

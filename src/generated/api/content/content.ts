@@ -28,6 +28,7 @@ import type {
   CreateContentPostDto,
   ErrorResponseDto,
   ListAdminPostsParams,
+  UpdateContentPostDto,
 } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
@@ -225,6 +226,91 @@ export const useCreateAdminPost = <
   TContext
 > => {
   const mutationOptions = getCreateAdminPostMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Sửa nội dung bài viết đã đăng theo expected version
+ */
+export const updateAdminPost = (
+  id: string,
+  updateContentPostDto: BodyType<UpdateContentPostDto>,
+) => {
+  return apiFetcher<ContentPostDto>({
+    url: `/api/v1/admin/content/posts/${id}`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateContentPostDto,
+  });
+};
+
+export const getUpdateAdminPostMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminPost>>,
+    TError,
+    { id: string; data: BodyType<UpdateContentPostDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAdminPost>>,
+  TError,
+  { id: string; data: BodyType<UpdateContentPostDto> },
+  TContext
+> => {
+  const mutationKey = ['updateAdminPost'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAdminPost>>,
+    { id: string; data: BodyType<UpdateContentPostDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateAdminPost(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAdminPostMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAdminPost>>
+>;
+export type UpdateAdminPostMutationBody = BodyType<UpdateContentPostDto>;
+export type UpdateAdminPostMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Sửa nội dung bài viết đã đăng theo expected version
+ */
+export const useUpdateAdminPost = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAdminPost>>,
+      TError,
+      { id: string; data: BodyType<UpdateContentPostDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAdminPost>>,
+  TError,
+  { id: string; data: BodyType<UpdateContentPostDto> },
+  TContext
+> => {
+  const mutationOptions = getUpdateAdminPostMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

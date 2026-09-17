@@ -27,6 +27,7 @@ import {
   useGetAdminReportTopProducts,
 } from '@/generated/api/reporting/reporting';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { PendingOrdersCard } from '../components/pending-orders-card';
 
 const CHART_COLORS = ['#059669', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899'];
 
@@ -170,6 +171,8 @@ export function DashboardPage() {
           </Col>
         ))}
       </Row>
+
+      <PendingOrdersCard />
 
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={16}>
