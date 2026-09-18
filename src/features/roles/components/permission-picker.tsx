@@ -97,15 +97,6 @@ export function PermissionPicker({
     [visibleGroups, grantableCodes, disabled],
   );
 
-  const expandedKeys = useMemo(
-    () =>
-      visibleGroups.flatMap((group) => [
-        `${GROUP_PREFIX}${group.key}`,
-        ...group.screens.map((screen) => `${SCREEN_PREFIX}${screen.key}`),
-      ]),
-    [visibleGroups],
-  );
-
   /**
    * Tree trả về cả key của node nhóm đang tick. Chỉ giữ mã quyền thật, và giữ nguyên những quyền
    * đang bị ẩn bởi ô tìm kiếm — nếu không, gõ tìm kiếm sẽ âm thầm bỏ chọn phần còn lại.
@@ -148,7 +139,10 @@ export function PermissionPicker({
             checkStrictly={false}
             treeData={treeData}
             checkedKeys={[...selected]}
-            expandedKeys={expandedKeys}
+            // Không điều khiển expandedKeys bằng một mảng cố định: như vậy người dùng
+            // không thể thu gọn nhóm/màn hình. Khi lọc thì mở hết để thấy kết quả.
+            defaultExpandAll
+            key={keyword.trim() ? `filter:${keyword.trim()}` : 'all'}
             onCheck={(checked) =>
               handleCheck(Array.isArray(checked) ? checked : checked.checked)
             }

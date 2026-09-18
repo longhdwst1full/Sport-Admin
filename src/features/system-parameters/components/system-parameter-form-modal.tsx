@@ -23,7 +23,7 @@ export interface ParameterFormValues {
 /**
  * Một modal cho cả tạo mới và sửa.
  *
- * Khi sửa tham số hệ thống: chỉ mở ô giá trị và lý do. Mã, kiểu và khoảng hợp lệ
+ * Khi sửa tham số hệ thống: chỉ mở ô giá trị và lý do tuỳ chọn. Mã, kiểu và khoảng hợp lệ
  * do catalog trong code định nghĩa — cho sửa ở đây thì service sẽ không còn tìm
  * thấy tham số nó đang đọc.
  */
@@ -160,7 +160,7 @@ export function SystemParameterFormModal({
           <Form.Item
             name="reason"
             label="Lý do thay đổi"
-            rules={[{ required: true, min: 5, message: 'Nhập lý do tối thiểu 5 ký tự' }]}
+            rules={[{ min: 5, message: 'Nếu nhập lý do' }]}
           >
             <Input.TextArea rows={2} placeholder="Ví dụ: điều chỉnh biểu phí theo giá xăng quý 4" />
           </Form.Item>

@@ -60,7 +60,7 @@ export function SystemParametersPage() {
         return updateAdminSystemParameter(editing.code, {
           expectedVersion: editing.version,
           value: values.value!,
-          reason: values.reason!,
+          ...(values.reason?.trim() ? { reason: values.reason.trim() } : {}),
         });
       }
       return createAdminSystemParameter({
@@ -86,8 +86,11 @@ export function SystemParametersPage() {
   });
 
   const deactivateMutation = useMutation({
-    mutationFn: ({ row, reason }: { row: SystemParameterDto; reason: string }) =>
-      deleteAdminSystemParameter(row.code, { expectedVersion: row.version, reason }),
+    mutationFn: ({ row, reason }: { row: SystemParameterDto; reason?: string }) =>
+      deleteAdminSystemParameter(row.code, {
+        expectedVersion: row.version,
+        ...(reason?.trim() ? { reason: reason.trim() } : {}),
+      }),
     onSuccess: async () => {
       await refresh();
       void message.success('Đã ngừng dùng tham số');
@@ -106,7 +109,7 @@ export function SystemParametersPage() {
           </p>
           <Input.TextArea
             rows={2}
-            placeholder="Lý do (tối thiểu 5 ký tự)"
+            placeholder="Lý do (không bắt buộc)"
             onChange={(event) => {
               reason = event.target.value;
             }}
@@ -117,9 +120,9 @@ export function SystemParametersPage() {
       okButtonProps: { danger: true },
       cancelText: 'Hủy',
       onOk: () => {
-        if (reason.trim().length < 5) {
-          void message.error('Vui lòng nhập lý do tối thiểu 5 ký tự');
-          return Promise.reject(new Error('reason-required'));
+        if (reason.trim().length > 0) {
+          void message.error('Nếu nhập lý do');
+          return Promise.reject(new Error('reason-too-short'));
         }
         return deactivateMutation.mutateAsync({ row, reason: reason.trim() });
       },

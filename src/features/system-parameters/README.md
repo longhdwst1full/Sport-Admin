@@ -1,10 +1,10 @@
 # System parameters — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.0.1
 >
-> **Last updated:** 2026-09-14
+> **Last updated:** 2026-09-18
 >
-> **Change summary:** Màn hình quản lý tham số nghiệp vụ; kế thừa pattern `msttparameter` của `fund-ops-service`.
+> **Change summary:** Bỏ bắt buộc lý do khi sửa/ngừng dùng; vẫn gửi expectedVersion và ghi audit.
 
 ## Phạm vi
 
@@ -18,7 +18,7 @@
 | | `isSystem = true` | `isSystem = false` |
 | --- | --- | --- |
 | Biểu tượng | 🔒 ổ khoá cạnh mã | không |
-| Sửa được | chỉ ô **Giá trị** và **Lý do** | toàn bộ |
+| Sửa được | **Giá trị**, có thể thêm **Lý do** | toàn bộ |
 | Nút ngừng dùng | disabled | bật |
 
 Lý do: code đọc tham số hệ thống theo mã. Cho sửa mã hoặc xoá thì service âm thầm rơi về mặc định — lỗi khó phát hiện nhất. Backend cũng chặn bằng 409, giao diện chỉ làm rõ trước.
@@ -32,7 +32,7 @@ Danh sách chạy server-side: phân trang, tìm theo mã/tên, lọc nhóm và 
 ## Quy tắc khi thao tác
 
 - **Mọi lần ghi đều gửi `expectedVersion`.** Hai người cùng sửa thì người sau nhận 409 chứ không ghi đè.
-- **Sửa và ngừng dùng đều bắt buộc nhập lý do** (≥ 5 ký tự), lưu vào `remarks` và audit log.
+- **Lý do không bắt buộc**; nếu nhập thì tối thiểu 5 ký tự. Backend vẫn audit actor/thời điểm/thay đổi.
 - **Ngừng dùng là xoá mềm** — bản ghi chuyển `INACTIVE`, không mất khỏi database.
 - Backend kiểm tra kiểu và khoảng min/max; giao diện hiển thị khoảng hợp lệ và giá trị mặc định ngay dưới ô nhập.
 
@@ -51,3 +51,4 @@ Sửa xong là có hiệu lực ngay ở lần đọc kế tiếp (backend xoá 
 | Version | Date | Change summary |
 | --- | --- | --- |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý tham số. |
+| 1.0.1 | 2026-09-18 | Lý do là tuỳ chọn khi sửa/ngừng dùng; giữ audit. |

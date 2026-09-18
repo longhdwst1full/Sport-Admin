@@ -1,10 +1,10 @@
 # Roles — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.0.1
 >
-> **Last updated:** 2026-09-14
+> **Last updated:** 2026-09-18
 >
-> **Change summary:** Màn hình quản lý vai trò và tích chọn quyền; mở khoá bởi nhóm operation `*AdminRole` mới thêm ở `api/src/modules/iam`.
+> **Change summary:** Cây quyền theo nhóm menu/màn hình/hành động giờ có thể thu gọn và mở rộng; vẫn giữ lọc và chọn quyền.
 
 ## Phạm vi
 
@@ -21,6 +21,8 @@ Tạo / sửa / xoá vai trò và gán tập quyền cho vai trò. **Không** g�
 | `deleteAdminRole` | nút xoá, kèm lý do |
 
 `listAdminRoles` (chỉ `ACTIVE`) và `searchActiveAdminRoles` thuộc màn `access`, không dùng ở đây.
+
+Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhóm/màn hình có thể thu gọn; lọc theo chữ mở lại các kết quả khớp. Chỉ mã quyền ở lá được gửi lên API.
 
 ## Bất biến nghiệp vụ
 
@@ -43,3 +45,4 @@ Tạo / sửa / xoá vai trò và gán tập quyền cho vai trò. **Không** g�
 | Version | Date | Change summary |
 | --- | --- | --- |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý vai trò. |
+| 1.0.1 | 2026-09-18 | Cho phép thu gọn cây quyền và ghi rõ cách nhóm theo màn hình. |

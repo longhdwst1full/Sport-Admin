@@ -12,9 +12,9 @@ export interface UpdateSystemParameterDto {
   /** Giá trị mới ở dạng chuỗi; server kiểm tra kiểu và khoảng hợp lệ */
   value: string;
   /**
-   * Lý do thay đổi, bắt buộc để truy vết
+   * Lý do thay đổi (không bắt buộc); actor/time/value vẫn được audit
    * @minLength 5
    * @maxLength 500
    */
-  reason: string;
+  reason?: string;
 }

@@ -10,8 +10,9 @@ export interface DeleteSystemParameterDto {
   /** @pattern ^\d+$ */
   expectedVersion: string;
   /**
+   * Lý do nếu người thao tác muốn ghi thêm vào audit
    * @minLength 5
    * @maxLength 500
    */
-  reason: string;
+  reason?: string;
 }
