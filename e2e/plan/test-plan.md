@@ -1,7 +1,7 @@
 # Kế hoạch E2E — DCTD Admin
 
-> **Version:** 1.0.0 · **Last updated:** 2026-09-16
-> **Change summary:** Bản kế hoạch đầu tiên: phạm vi, thứ tự ưu tiên, backlog testcase theo feature.
+> **Version:** 1.1.0 · **Last updated:** 2026-09-18
+> **Change summary:** Bổ sung kịch bản Khách hàng và ưu tiên luồng mutation/ràng buộc quyền theo kết quả chạy Playwright.
 
 Quy trình và quy ước: xem `e2e/README.md`.
 
@@ -36,6 +36,7 @@ Quy trình và quy ước: xem `e2e/README.md`.
 | P0 | AUTH — đăng nhập, ép đổi mật khẩu, chặn route khi chưa đăng nhập | ✅ 5 case |
 | P0 | RBAC — menu/route/affordance theo quyền | ✅ 3 case |
 | P0 | CATALOG — danh sách sản phẩm (data/empty/error/filter/paging) | ✅ 5 case |
+| P0 | CUSTOMERS — tìm kiếm, validation, tạo và quyền quản lý | ✅ 4 case |
 | P1 | ORDERS — danh sách + chi tiết + chuyển trạng thái có xác nhận | ⬜ backlog §4 |
 | P1 | INVENTORY — điều chỉnh tồn (idempotency key, xác nhận) | ⬜ |
 | P1 | PRODUCTS — tạo/sửa/xoá mềm, lỗi validate theo field, concurrency 409 | ⬜ |
@@ -74,6 +75,15 @@ Tiêu chí ưu tiên: rủi ro nghiệp vụ (tiền, tồn kho, quyền) > tầ
 | PRD-03 | API trả 500 | Hiện alert lỗi kèm message API, trang vẫn render |
 | PRD-04 | Nhập ô "Tên sản phẩm" | Sau debounce gọi API với `name=...` và `page=1` |
 | PRD-05 | Bấm trang 2 | Gọi lại API với `page=2` |
+
+### CUSTOMERS — `e2e/specs/customers-crud.spec.ts`
+
+| ID | Điều kiện | Kết quả mong đợi |
+| --- | --- | --- |
+| CUS-01 | Nhập tên khách | API nhận `name`, `page=1`; bảng giữ dữ liệu |
+| CUS-02 | Tạo khách không có email và SĐT | Báo lỗi tại form, không POST |
+| CUS-03 | Tạo khách hợp lệ | POST đúng DTO, đóng drawer sau thành công, list refetch |
+| CUS-04 | Chỉ có `customer.view` | Vẫn xem list, không thấy nút tạo |
 
 ## 4. Backlog testcase (chưa hiện thực)
 
@@ -121,9 +131,25 @@ Tiêu chí ưu tiên: rủi ro nghiệp vụ (tiền, tồn kho, quyền) > tầ
 | UX-05 | Mutation đang chạy | Disable nút submit, không khoá cả trang |
 | UX-06 | API trả 403 | Hiện thông báo thiếu quyền, không đăng xuất người dùng |
 
+### CUSTOMERS tiếp theo
+
+| ID | Điều kiện | Kết quả mong đợi |
+| --- | --- | --- |
+| CUS-05 | Sửa khách từ row | Điền dữ liệu hiện tại; PATCH có `expectedVersion`, không ghi đè âm thầm |
+| CUS-06 | API trả 409 khi sửa | Drawer vẫn mở, dữ liệu người dùng giữ nguyên, báo xung đột |
+| CUS-07 | Khách đã có đơn | Nút xoá bị vô hiệu; ngừng hoạt động vẫn cần xác nhận |
+| CUS-08 | Scope chỉ chi nhánh | Không thấy tạo hồ sơ độc lập dù có `customer.manage` |
+
 ## 5. Definition of done cho một spec
 
 - Có ID và tiêu đề theo quy ước; mock khớp DTO generated.
 - Assert cả trạng thái đúng lẫn trạng thái **không được phép xuất hiện**.
 - Không `waitForTimeout`, không phụ thuộc thứ tự test.
 - Chạy xanh 3 lần liên tiếp cục bộ trước khi đưa vào CI.
+
+## Revision history
+
+| Version | Date | Change summary |
+| --- | --- | --- |
+| 1.1.0 | 2026-09-18 | Thêm 4 ca Customers và backlog concurrency/scope. |
+| 1.0.0 | 2026-09-16 | Kế hoạch ban đầu cho Auth, RBAC, Catalog và backlog. |

@@ -1,7 +1,7 @@
 # E2E — Playwright (Admin)
 
-> **Version:** 1.0.0 · **Last updated:** 2026-09-16
-> **Change summary:** Khởi tạo hạ tầng Playwright, quy trình và bộ testcase nền.
+> **Version:** 1.1.0 · **Last updated:** 2026-09-18
+> **Change summary:** Gắn Playwright Chromium vào quality gate của Admin và lưu báo cáo khi CI thất bại.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -89,15 +89,30 @@ Smoke test với backend thật (tuỳ chọn, chạy tay trước release): tr�
 
 ## 7. CI
 
-Chạy sau unit test, trước deploy:
+`.github/workflows/quality.yml` chạy Playwright sau `yarn verify`; CI cài Chromium
+và giữ HTML report, trace, screenshot khi job thất bại. Bộ spec dùng API mock nên
+không cần truy cập Supabase hoặc seed dữ liệu trong CI.
+
+Các bước tương ứng:
 
 ```yaml
 - run: yarn install --frozen-lockfile
-- run: npx playwright install --with-deps chromium
+- run: yarn playwright install --with-deps chromium
 - run: yarn test:e2e
 - uses: actions/upload-artifact@v4
   if: failure()
-  with: { name: playwright-report, path: e2e/.report }
+  with:
+    name: admin-playwright-report
+    path: |
+      e2e/.report
+      e2e/.artifacts
 ```
 
 `retries: 2` chỉ ở CI. Test đỏ ngẫu nhiên (flaky) phải được sửa hoặc gỡ, không để retry che.
+
+## Revision history
+
+| Version | Date | Change summary |
+| --- | --- | --- |
+| 1.1.0 | 2026-09-18 | Gắn Playwright vào CI và lưu artifact lỗi. |
+| 1.0.0 | 2026-09-16 | Khởi tạo hạ tầng, quy trình và testcase nền. |

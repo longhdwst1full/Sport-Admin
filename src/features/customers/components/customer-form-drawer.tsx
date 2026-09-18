@@ -92,6 +92,7 @@ export function CustomerFormDrawer({
   return (
     <Drawer
       open={open}
+      aria-label={editing ? `Sửa khách ${editing.customerNo}` : 'Thêm khách hàng'}
       onClose={() => (mutation.isPending ? undefined : onClose())}
       width={480}
       destroyOnHidden

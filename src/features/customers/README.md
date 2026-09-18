@@ -1,10 +1,10 @@
 # Customers — maintenance note
 
-> **Document version:** 2.1.0
+> **Document version:** 2.1.1
 >
 > **Last updated:** 2026-09-18
 >
-> **Change summary:** Hoàn thiện CRUD, permission/scope và cache invalidation của màn Khách hàng.
+> **Change summary:** Đặt accessible name cho Drawer tạo/sửa khách và bổ sung Playwright cho tìm kiếm, validation, tạo hồ sơ, quyền.
 
 ## Phạm vi
 
@@ -65,11 +65,13 @@ NEEDS_VERIFICATION hay BLOCKED như fixture từng hiển thị.
 - [ ] Không hiển thị PII của khách ở nơi không cần.
 - [ ] Mutation phải refresh list/detail đúng key và map validation server về field.
 - [ ] Không cho branch-scoped user tạo hồ sơ khách độc lập.
+- [ ] Drawer tạo/sửa có accessible name để bàn phím, screen reader và E2E xác định đúng.
 
 ## Revision history
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.1.1 | 2026-09-18 | Accessible name cho Drawer và Playwright luồng khách hàng. |
 | 2.1.0 | 2026-09-18 | Hoàn thiện CRUD, GLOBAL-only standalone create, contact invariant và cache invalidation. |
 | 2.0.0 | 2026-09-15 | Gỡ fixture, nối `listAdminCustomers`/`getAdminCustomer`; bỏ hai trường không có nguồn. |
 | 1.0.0 | 2026-09-13 | Tạo note, gắn nhãn fixture. |
