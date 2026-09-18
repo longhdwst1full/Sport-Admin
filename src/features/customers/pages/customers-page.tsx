@@ -7,10 +7,12 @@ import {
   activateAdminCustomer,
   deactivateAdminCustomer,
   deleteAdminCustomer,
+  getGetAdminCustomerQueryKey,
   getListAdminCustomersQueryKey,
   useListAdminCustomers,
 } from '@/generated/api/customers/customers';
 import { PermissionGate } from '@/core/auth/permissions';
+import { useAuth } from '@/core/auth/auth-context';
 import { ManagementPage } from '@/foundation/management';
 import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
 import { PageTransition } from '@/foundation/layout/page-transition';
@@ -38,6 +40,11 @@ const CUSTOMER_COLUMNS: ColumnItem[] = [
 ];
 
 export function CustomersPage() {
+  const auth = useAuth();
+  // PERMISSION: Customer chưa có đơn chưa mang branch scope; API chỉ cho GLOBAL tạo độc lập.
+  const canCreateStandaloneCustomer = auth.currentUser?.scopes.some(
+    ({ type }) => type === 'GLOBAL',
+  );
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -75,8 +82,12 @@ export function CustomersPage() {
 
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const refreshList = () =>
-    queryClient.invalidateQueries({ queryKey: getListAdminCustomersQueryKey() });
+  const refreshCustomerQueries = async (customerId?: string) => {
+    await queryClient.invalidateQueries({ queryKey: getListAdminCustomersQueryKey() });
+    if (customerId) {
+      await queryClient.invalidateQueries({ queryKey: getGetAdminCustomerQueryKey(customerId) });
+    }
+  };
 
   const statusMutation = useMutation({
     mutationFn: (row: CustomerRowView) => {
@@ -86,7 +97,8 @@ export function CustomersPage() {
         : activateAdminCustomer(row.id, command);
     },
     onSuccess: async (_result, row) => {
-      await refreshList();
+      // CACHE: lifecycle đổi cả list theo status lẫn drawer chi tiết của đúng khách.
+      await refreshCustomerQueries(row.id);
       void message.success(
         row.status === 'ACTIVE' ? 'Đã ngừng hoạt động khách hàng.' : 'Đã mở lại khách hàng.',
       );
@@ -99,8 +111,9 @@ export function CustomersPage() {
   const deleteMutation = useMutation({
     mutationFn: (row: CustomerRowView) =>
       deleteAdminCustomer(row.id, { expectedVersion: row.version }),
-    onSuccess: async () => {
-      await refreshList();
+    onSuccess: async (_result, row) => {
+      await queryClient.invalidateQueries({ queryKey: getListAdminCustomersQueryKey() });
+      queryClient.removeQueries({ queryKey: getGetAdminCustomerQueryKey(row.id) });
       void message.success('Đã xoá hồ sơ khách hàng.');
     },
     onError: (error) =>
@@ -187,18 +200,20 @@ export function CustomersPage() {
               <Button icon={<ReloadOutlined />} onClick={() => void customers.refetch()}>
                 Làm mới
               </Button>
-              <PermissionGate permission="customer.manage">
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setEditing(undefined);
-                    setFormOpen(true);
-                  }}
-                >
-                  Thêm khách hàng
-                </Button>
-              </PermissionGate>
+              {canCreateStandaloneCustomer && (
+                <PermissionGate permission="customer.manage">
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                      setEditing(undefined);
+                      setFormOpen(true);
+                    }}
+                  >
+                    Thêm khách hàng
+                  </Button>
+                </PermissionGate>
+              )}
             </div>
             <Button
               icon={<SettingOutlined />}

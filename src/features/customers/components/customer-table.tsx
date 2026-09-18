@@ -3,6 +3,7 @@ import { DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-d
 import { PermissionGate } from '@/core/auth/permissions';
 import { CUSTOMER_PAGE_SIZE, customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
 import type { CustomerRowView } from '../model/customer.mapper';
+import { getCustomerDeleteBlockReason } from '../model/customer.policy';
 
 export function CustomerTable({
   rows,
@@ -97,8 +98,10 @@ export function CustomerTable({
       width: 150,
       fixed: 'right' as const,
       align: 'right' as const,
-      render: (_value: unknown, row: CustomerRowView) => (
-        <PermissionGate permission="customer.manage">
+      render: (_value: unknown, row: CustomerRowView) => {
+        const deleteBlockReason = getCustomerDeleteBlockReason(row);
+        return (
+          <PermissionGate permission="customer.manage">
           {/* Chặn onRow mở drawer chi tiết khi người dùng bấm vào nút trong ô. */}
           <Space size={0} onClick={(event) => event.stopPropagation()}>
             <Tooltip title="Sửa">
@@ -126,18 +129,12 @@ export function CustomerTable({
                 />
               </Popconfirm>
             </Tooltip>
-            <Tooltip
-              title={
-                row.orderCount > 0
-                  ? 'Khách đã có đơn nên chỉ ngừng được, không xoá'
-                  : 'Xoá hồ sơ'
-              }
-            >
+            <Tooltip title={deleteBlockReason ?? 'Xoá hồ sơ'}>
               <Popconfirm
                 title="Xoá hồ sơ khách này?"
                 description="Không khôi phục lại được."
                 okButtonProps={{ danger: true }}
-                disabled={row.orderCount > 0}
+                disabled={Boolean(deleteBlockReason)}
                 onConfirm={() => onDelete(row)}
               >
                 <Button
@@ -145,13 +142,14 @@ export function CustomerTable({
                   type="text"
                   icon={<DeleteOutlined />}
                   // Khách đã mua hàng là một phần của lịch sử đơn; Backend cũng từ chối xoá.
-                  disabled={row.orderCount > 0 || busyId === row.id}
+                  disabled={Boolean(deleteBlockReason) || busyId === row.id}
                 />
               </Popconfirm>
             </Tooltip>
           </Space>
-        </PermissionGate>
-      ),
+          </PermissionGate>
+        );
+      },
     },
   ].filter((column) => colVisibility[column.key] !== false);
 

@@ -4,17 +4,22 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
 import {
   createAdminCustomer,
+  getGetAdminCustomerQueryKey,
   getListAdminCustomersQueryKey,
   updateAdminCustomer,
 } from '@/generated/api/customers/customers';
 import type { CustomerRowView } from '../model/customer.mapper';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 
 interface CustomerFormValues {
   name: string;
   phone?: string;
   email?: string;
   marketingConsent: boolean;
+}
+
+function isCustomerFormField(value: string): value is keyof CustomerFormValues {
+  return ['name', 'phone', 'email', 'marketingConsent'].includes(value);
 }
 
 /**
@@ -66,10 +71,20 @@ export function CustomerFormDrawer({
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: getListAdminCustomersQueryKey() });
+      if (editing) {
+        // CACHE: detail có địa chỉ/đơn riêng nhưng phần header dùng cùng profile vừa sửa.
+        await queryClient.invalidateQueries({
+          queryKey: getGetAdminCustomerQueryKey(editing.id),
+        });
+      }
       void message.success(editing ? 'Đã cập nhật khách hàng.' : 'Đã thêm khách hàng.');
       onClose();
     },
     onError: (error) => {
+      const fields = getApiFieldErrors(error);
+      Object.entries(fields).forEach(([name, fieldMessage]) => {
+        if (isCustomerFormField(name)) form.setFields([{ name, errors: [fieldMessage] }]);
+      });
       void message.error(getApiErrorMessage(error, 'Không lưu được hồ sơ khách hàng.'));
     },
   });
@@ -108,12 +123,34 @@ export function CustomerFormDrawer({
         <Form.Item
           name="phone"
           label="Số điện thoại"
+          dependencies={['email']}
+          rules={[
+            ({ getFieldValue }) => ({
+              validator: (_rule, value: string | undefined) =>
+                value?.trim() || String(getFieldValue('email') ?? '').trim()
+                  ? Promise.resolve()
+                  : Promise.reject(new Error('Nhập số điện thoại hoặc email')),
+            }),
+          ]}
           // Backend yêu cầu ít nhất một cách liên hệ để nhận lại khách ở lần mua sau.
           extra="Cần số điện thoại hoặc email; để trống cả hai sẽ không lưu được."
         >
           <Input maxLength={32} placeholder="0912345678" />
         </Form.Item>
-        <Form.Item name="email" label="Email">
+        <Form.Item
+          name="email"
+          label="Email"
+          dependencies={['phone']}
+          rules={[
+            { type: 'email', message: 'Email không hợp lệ' },
+            ({ getFieldValue }) => ({
+              validator: (_rule, value: string | undefined) =>
+                value?.trim() || String(getFieldValue('phone') ?? '').trim()
+                  ? Promise.resolve()
+                  : Promise.reject(new Error('Nhập email hoặc số điện thoại')),
+            }),
+          ]}
+        >
           <Input maxLength={255} placeholder="minh.anh@example.com" />
         </Form.Item>
         <Form.Item name="marketingConsent" label="Đồng ý nhận tin khuyến mãi" valuePropName="checked">

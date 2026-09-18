@@ -151,7 +151,8 @@ export function useListAdminCustomers<
 }
 
 /**
- * @summary Nhân viên tạo hồ sơ khách mua tại quầy hoặc qua điện thoại
+ * Chỉ principal có phạm vi GLOBAL được tạo hồ sơ độc lập. Nhân viên theo chi nhánh tạo khách qua luồng POS/đơn hàng để hệ thống thiết lập phạm vi dữ liệu đúng chi nhánh.
+ * @summary Quản trị toàn hệ thống tạo hồ sơ khách độc lập
  */
 export const createAdminCustomer = (
   createAdminCustomerDto: BodyType<CreateAdminCustomerDto>,
@@ -210,7 +211,7 @@ export type CreateAdminCustomerMutationError = ErrorType<
 >;
 
 /**
- * @summary Nhân viên tạo hồ sơ khách mua tại quầy hoặc qua điện thoại
+ * @summary Quản trị toàn hệ thống tạo hồ sơ khách độc lập
  */
 export const useCreateAdminCustomer = <
   TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
