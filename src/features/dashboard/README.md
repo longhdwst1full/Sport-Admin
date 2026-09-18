@@ -1,10 +1,10 @@
 # Dashboard — maintenance note
 
-> **Document version:** 2.0.0
+> **Document version:** 2.1.0
 >
-> **Last updated:** 2026-09-15
+> **Last updated:** 2026-09-18
 >
-> **Change summary:** Thay số liệu tiến độ lập trình bằng số liệu kinh doanh thật từ module `Admin Reporting`.
+> **Change summary:** Chuẩn hoá Dashboard theo design system DC, tách KPI presentation và sửa loading theo từng nguồn dữ liệu.
 
 ## Phạm vi
 
@@ -14,12 +14,12 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 
 ## Operation sử dụng
 
-| Operation | Quyền | Dùng cho |
-| --- | --- | --- |
-| `getAdminReportOverview` | `report.operation.view` | Thẻ đơn hàng, biểu đồ đơn theo trạng thái |
-| `getAdminReportRevenue` | `report.revenue.view` | Thẻ doanh thu, biểu đồ theo ngày |
-| `getAdminReportInventory` | `report.inventory.view` | Thẻ tồn dưới ngưỡng, bảng cần nhập thêm |
-| `getAdminReportTopProducts` | `report.revenue.view` | Bảng bán chạy |
+| Operation                   | Quyền                   | Dùng cho                                  |
+| --------------------------- | ----------------------- | ----------------------------------------- |
+| `getAdminReportOverview`    | `report.operation.view` | Thẻ đơn hàng, biểu đồ đơn theo trạng thái |
+| `getAdminReportRevenue`     | `report.revenue.view`   | Thẻ doanh thu, biểu đồ theo ngày          |
+| `getAdminReportInventory`   | `report.inventory.view` | Thẻ tồn dưới ngưỡng, bảng cần nhập thêm   |
+| `getAdminReportTopProducts` | `report.revenue.view`   | Bảng bán chạy                             |
 
 ## Bất biến
 
@@ -31,8 +31,15 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 - **Không gọi API doanh thu khi thiếu quyền.** `report.revenue.view` và `report.inventory.view`
   được kiểm ở client bằng `useCan` để không phát request chắc chắn bị từ chối; backend vẫn là
   nơi quyết định.
+- Khối đơn chờ chỉ mount khi có `order.view`; quyền `order.manage` tiếp tục quyết định nút Duyệt.
+  Route Dashboard không được phép tạo request 403 chỉ vì tài khoản có quyền báo cáo nhưng không
+  có quyền xem đơn hàng.
 - Mọi ô trống đều có empty state nói rõ lý do (chưa có dữ liệu / thiếu quyền), không hiện số 0
   gây hiểu nhầm là doanh thu bằng không.
+- KPI dùng `DashboardStatCard`; loading của mỗi KPI đi theo đúng endpoint sở hữu dữ liệu. Không
+  dùng trạng thái loading của Overview để che Revenue/Inventory hoặc ngược lại.
+- Màu sắc, font, radius và shadow kế thừa Admin design tokens/Tailwind (`admin`, `slate`,
+  `shadow-card`); không sao chép token riêng từ project tham chiếu.
 
 ## Checklist khi sửa
 
@@ -42,7 +49,8 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 
 ## Revision history
 
-| Version | Date | Change summary |
-| --- | --- | --- |
-| 2.0.0 | 2026-09-15 | Chuyển sang số liệu kinh doanh thật; gỡ `system-module-list`. |
-| 1.0.0 | 2026-09-04 | Bản đầu, hiển thị tiến độ rà soát model. |
+| Version | Date       | Change summary                                                         |
+| ------- | ---------- | ---------------------------------------------------------------------- |
+| 2.1.0   | 2026-09-18 | Làm mới hierarchy, KPI, biểu đồ và thẻ đơn chờ; loading theo từng API. |
+| 2.0.0   | 2026-09-15 | Chuyển sang số liệu kinh doanh thật; gỡ `system-module-list`.          |
+| 1.0.0   | 2026-09-04 | Bản đầu, hiển thị tiến độ rà soát model.                               |

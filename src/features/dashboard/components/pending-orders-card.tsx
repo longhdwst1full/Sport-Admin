@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { App, Button, Card, Empty, Popconfirm, Skeleton, Table, Tag, Typography } from 'antd';
-import { CheckOutlined } from '@ant-design/icons';
+import { CheckOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -65,11 +65,25 @@ export function PendingOrdersCard() {
 
   return (
     <Card
-      className="!rounded-2xl !border-slate-100 !shadow-soft"
-      title="Đơn chờ xác nhận"
+      className="!rounded-2xl !border-amber-200/70 !bg-gradient-to-br !from-white !to-amber-50/30 !shadow-card"
+      title={
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200">
+            <ClockCircleOutlined />
+          </span>
+          <div>
+            <div className="font-bold text-slate-900">Đơn chờ xác nhận</div>
+            <div className="text-xs font-normal text-slate-500">
+              Duyệt đơn để kho có thể bắt đầu lấy hàng
+            </div>
+          </div>
+        </div>
+      }
       extra={
         rows.length > 0 ? (
-          <Tag color="orange">{query.data?.total ?? rows.length} đơn</Tag>
+          <Tag className="!m-0 !rounded-full !border-amber-200 !bg-amber-100 !px-3 !py-1 !font-semibold !text-amber-800">
+            {query.data?.total ?? rows.length} đơn cần xử lý
+          </Tag>
         ) : undefined
       }
     >
