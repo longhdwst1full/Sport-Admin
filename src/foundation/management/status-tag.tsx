@@ -1,11 +1,16 @@
+import React from 'react';
+import { Tooltip } from 'antd';
+
 export interface StatusPresentation {
   label: string;
   color: string;
+  icon?: React.ReactNode;
 }
 
 interface StatusTagProps<TStatus extends string> {
   status: TStatus;
   presentations: Record<TStatus, StatusPresentation>;
+  iconOnly?: boolean;
 }
 
 const dotColorMap: Record<string, { badge: string; dot: string }> = {
@@ -44,23 +49,36 @@ const dotColorMap: Record<string, { badge: string; dot: string }> = {
 };
 
 /**
- * Premium status indicator with colored dot — Linear/GitHub style.
+ * Premium status indicator with colored dot/icon — Linear/GitHub style.
  * Fully responsive, prevents line breaks (whitespace-nowrap), with balanced padding.
  */
 export function StatusTag<TStatus extends string>({
   status,
   presentations,
+  iconOnly,
 }: StatusTagProps<TStatus>) {
   const presentation = presentations[status];
   if (!presentation) return null;
 
   const styleConfig = dotColorMap[presentation.color] ?? dotColorMap.default;
 
+  if (iconOnly) {
+    return (
+      <Tooltip title={presentation.label}>
+        <span
+          className={`inline-flex items-center justify-center size-6 rounded-full text-xs shrink-0 select-none cursor-default shadow-2xs ${styleConfig.badge}`}
+        >
+          {presentation.icon ?? <span className={`size-2 rounded-full ${styleConfig.dot}`} />}
+        </span>
+      </Tooltip>
+    );
+  }
+
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 select-none shadow-2xs ${styleConfig.badge}`}
     >
-      <span className={`size-1.5 rounded-full shrink-0 ${styleConfig.dot}`} />
+      {presentation.icon ?? <span className={`size-1.5 rounded-full shrink-0 ${styleConfig.dot}`} />}
       <span className="leading-tight">{presentation.label}</span>
     </span>
   );

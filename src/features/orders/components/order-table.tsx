@@ -232,7 +232,8 @@ export function OrderTable({
         current: page,
         pageSize: ORDER_PAGE_SIZE,
         total,
-        showSizeChanger: false,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '50', '100'],
         showTotal: (value) => `Tổng ${value} đơn hàng`,
         onChange: onPageChange,
       }}

@@ -8,7 +8,10 @@ import {
   CloseCircleOutlined,
   CloseOutlined,
   EllipsisOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 import type { NavigationItem } from '@/app/navigation/navigation.config';
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import {
@@ -155,8 +158,52 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
     ],
   };
 
+  const handlePrevTab = () => {
+    const currentIndex = visibleTabs.findIndex((tab) => tab.path === location.pathname);
+    if (currentIndex > 0) {
+      navigate(visibleTabs[currentIndex - 1].path);
+    } else if (visibleTabs.length > 0) {
+      navigate(visibleTabs[visibleTabs.length - 1].path);
+    }
+  };
+
+  const handleNextTab = () => {
+    const currentIndex = visibleTabs.findIndex((tab) => tab.path === location.pathname);
+    if (currentIndex >= 0 && currentIndex < visibleTabs.length - 1) {
+      navigate(visibleTabs[currentIndex + 1].path);
+    } else if (visibleTabs.length > 0) {
+      navigate(visibleTabs[0].path);
+    }
+  };
+
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      {/* Navigation Arrows < > */}
+      {visibleTabs.length > 1 && (
+        <div className="flex items-center gap-0.5 shrink-0">
+          <Tooltip title="Tab trước (<)">
+            <button
+              type="button"
+              aria-label="Tab trước"
+              onClick={handlePrevTab}
+              className="flex size-7 items-center justify-center rounded-lg border border-slate-200/70 bg-white text-slate-500 shadow-2xs transition-all hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 active:scale-95"
+            >
+              <LeftOutlined className="text-xs" />
+            </button>
+          </Tooltip>
+          <Tooltip title="Tab sau (>)">
+            <button
+              type="button"
+              aria-label="Tab sau"
+              onClick={handleNextTab}
+              className="flex size-7 items-center justify-center rounded-lg border border-slate-200/70 bg-white text-slate-500 shadow-2xs transition-all hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 active:scale-95"
+            >
+              <RightOutlined className="text-xs" />
+            </button>
+          </Tooltip>
+        </div>
+      )}
+
       {/* Scrollable Tabs Bar */}
       <div
         ref={scrollContainerRef}

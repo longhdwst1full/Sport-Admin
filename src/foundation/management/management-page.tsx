@@ -83,22 +83,6 @@ export function ManagementPage({
         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
       </div>
 
-      {/* ── Data notice ──────────────────────────────────── */}
-      {dataNotice && (
-        <Alert
-          showIcon
-          type="info"
-          className="!rounded-xl !border-blue-100 !bg-blue-50/60"
-          message={
-            <span className="font-medium text-blue-800">
-              Thông tin dữ liệu
-            </span>
-          }
-          description={
-            <span className="text-blue-700">{dataNotice}</span>
-          }
-        />
-      )}
 
       {/* ── Metric cards ─────────────────────────────────── */}
       {metrics.length > 0 && (
@@ -148,7 +132,7 @@ export function ManagementPage({
             {filters}
           </div>
         )}
-        <div className="p-5 lg:p-6">{children}</div>
+        <div className="p-5 lg:p-6 w-full overflow-x-auto min-w-0">{children}</div>
       </Card>
     </div>
   );

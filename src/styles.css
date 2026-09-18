@@ -96,43 +96,57 @@ a,
 }
 
 /* ─── Sidebar menu ────────────────────────────────────────────── */
+.dctd-side-menu .ant-menu-item,
+.dctd-side-menu .ant-menu-submenu-title {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  font-size: 13.5px;
+  border: 1px solid transparent;
+  transition: all 200ms ease;
+}
+
 .dctd-side-menu .ant-menu-item-selected {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 12px rgb(5 150 105 / 0.2);
+  background: #ecfdf5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+  box-shadow: 0 1px 3px rgb(16 185 129 / 0.12) !important;
   font-weight: 600;
 }
 
 .dctd-side-menu .ant-menu-item-selected .anticon {
-  color: #ffffff !important;
-}
-
-.dctd-side-menu .ant-menu-item,
-.dctd-side-menu .ant-menu-submenu-title {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  border-radius: 10px;
-  transition:
-    background-color 200ms ease,
-    color 200ms ease,
-    transform 200ms ease,
-    box-shadow 200ms ease;
+  color: #059669 !important;
 }
 
 .dctd-side-menu .ant-menu-item:not(.ant-menu-item-selected):hover {
-  background: #f1f5f9 !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
   transform: translateX(2px);
 }
 
+.dctd-side-menu .ant-menu-item:not(.ant-menu-item-selected):hover .anticon {
+  color: #059669 !important;
+}
+
 .dctd-side-menu .ant-menu-item-group-title {
-  padding-top: 20px;
-  padding-bottom: 4px;
+  padding-top: 18px;
+  padding-bottom: 6px;
   color: #94a3b8;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 8px;
+}
+
+.dctd-side-menu .ant-menu-item-group:first-child .ant-menu-item-group-title {
+  border-top: none;
+  margin-top: 0;
 }
 
 /* ─── CKEditor read-only state ────────────────────────────────── */
@@ -376,32 +390,109 @@ a,
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   color: #64748b;
   cursor: pointer;
-  transition:
-    background-color 200ms ease,
-    color 200ms ease,
-    box-shadow 200ms ease;
+  transition: all 180ms ease;
   user-select: none;
   white-space: nowrap;
-  border: none;
-  background: transparent;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .dctd-nav-tab:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .dctd-nav-tab[data-active='true'] {
   background: #ecfdf5;
-  color: #059669;
+  color: #065f46;
   font-weight: 600;
-  box-shadow: 0 0 0 1px rgb(5 150 105 / 0.1);
+  border-color: #a7f3d0;
+  box-shadow: 0 1px 3px rgb(16 185 129 / 0.12);
+}
+
+/* ─── Custom Pagination Styling ───────────────────────────────── */
+.ant-pagination {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin-top: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+.ant-pagination .ant-pagination-item {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  font-weight: 500 !important;
+  transition: all 180ms ease !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  line-height: 30px !important;
+  text-align: center !important;
+}
+
+.ant-pagination .ant-pagination-item a {
+  color: #64748b !important;
+}
+
+.ant-pagination .ant-pagination-item:hover {
+  border-color: #a7f3d0 !important;
+  background: #f0fdf4 !important;
+}
+
+.ant-pagination .ant-pagination-item:hover a {
+  color: #059669 !important;
+}
+
+.ant-pagination .ant-pagination-item-active {
+  background: #ecfdf5 !important;
+  border-color: #059669 !important;
+  box-shadow: 0 1px 3px rgb(5 150 105 / 0.15) !important;
+}
+
+.ant-pagination .ant-pagination-item-active a {
+  color: #065f46 !important;
+  font-weight: 600 !important;
+}
+
+.ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+  transition: all 180ms ease !important;
+}
+
+.ant-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
+.ant-pagination .ant-pagination-next:hover .ant-pagination-item-link {
+  border-color: #a7f3d0 !important;
+  background: #f0fdf4 !important;
+  color: #059669 !important;
+}
+
+.ant-pagination .ant-pagination-options {
+  margin-left: 12px !important;
+}
+
+.ant-pagination .ant-pagination-options .ant-select-selector {
+  border-radius: 8px !important;
+  border-color: #e2e8f0 !important;
+  font-size: 12px !important;
+}
+
+.ant-pagination-total-text {
+  font-size: 13px !important;
+  color: #64748b !important;
+  margin-right: 12px !important;
 }
 
 .dctd-nav-tab .dctd-tab-close {

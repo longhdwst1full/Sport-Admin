@@ -205,18 +205,10 @@ export function DashboardPage() {
       )}
 
       <section aria-labelledby="dashboard-summary-title">
-        <div className="mb-3 flex items-end justify-between gap-4">
-          <div>
-            <h2 id="dashboard-summary-title" className="m-0 text-lg font-bold text-slate-950">
-              Tổng quan hôm nay
-            </h2>
-            <p className="mb-0 mt-1 text-sm text-slate-500">
-              Các chỉ số cần chú ý để bắt đầu ca làm việc.
-            </p>
-          </div>
-          <Tag className="!m-0 !rounded-full !border-admin-100 !bg-admin-50 !px-3 !py-1 !text-admin-700">
-            Dữ liệu trực tiếp
-          </Tag>
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <h2 id="dashboard-summary-title" className="m-0 text-lg font-bold text-slate-950">
+            Tổng quan hôm nay
+          </h2>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {statCards.map((card) => (

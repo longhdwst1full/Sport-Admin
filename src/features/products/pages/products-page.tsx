@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
 import { App, Avatar, Button, Input, Select, Switch, Table, Tag, Tooltip } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,7 +12,7 @@ import {
   useListAdminProducts,
 } from '@/generated/api/catalog/catalog';
 import type { ProductSummaryDto } from '@/generated/api/catalog/models';
-import { ManagementPage } from '@/foundation/management';
+import { ManagementPage, StatusTag } from '@/foundation/management';
 import { ProductFormDrawer } from '../components/product-form-drawer';
 import { ProductWorkflowDrawer } from '../components/product-workflow-drawer';
 import { getApiErrorMessage } from '@/lib/api/error';
@@ -20,8 +20,8 @@ import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 
 const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
-const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  PUBLISHED: { color: 'green', label: 'Đang bán' },
+const STATUS_CONFIG: Record<string, { color: string; label: string; icon?: React.ReactNode }> = {
+  PUBLISHED: { color: 'green', label: 'Đang bán', icon: <CheckCircleOutlined className="text-emerald-600" /> },
   DRAFT: { color: 'blue', label: 'Nháp' },
   ARCHIVED: { color: 'default', label: 'Lưu trữ' },
 };
@@ -219,6 +219,7 @@ export function ProductsPage() {
             pageSize: query.data?.meta.limit ?? pageSize,
             total: query.data?.meta.total ?? 0,
             showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50', '100'],
             showTotal: (total) => (
               <span className="text-xs text-slate-500">{total} sản phẩm</span>
             ),
@@ -280,12 +281,12 @@ export function ProductsPage() {
               render: (value: string) => {
                 const config = STATUS_CONFIG[value] ?? { color: 'default', label: value };
                 return (
-                  <Tag
-                    className="!rounded-full !border-0 !px-3 !text-xs !font-medium"
-                    color={config.color}
-                  >
-                    {config.label}
-                  </Tag>
+                  <StatusTag
+                    status={value}
+                    presentations={{
+                      [value]: config,
+                    }}
+                  />
                 );
               },
             },
@@ -331,32 +332,45 @@ export function ProductsPage() {
               title: '',
               key: 'actions',
               align: 'right',
-              width: 150,
+              width: 100,
               render: (_, row) => (
                 <div className="flex items-center justify-end gap-1">
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    className="!rounded-lg !text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
-                    onClick={() => setSelectedSlug(row.slug)}
-                  >
-                    Chi tiết
-                  </Button>
-                  {canManage && row.status !== 'ARCHIVED' && (
+                  <Tooltip title="Chi tiết">
                     <Button
                       type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      className="!rounded-lg"
-                      loading={deleteMutation.isPending}
-                      onClick={() => confirmDelete(row)}
+                      icon={<EditOutlined />}
+                      className="!rounded-lg !text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
+                      onClick={() => setSelectedSlug(row.slug)}
                     />
+                  </Tooltip>
+                  {canManage && row.status !== 'ARCHIVED' && (
+                    <Tooltip title="Xoá / Lưu trữ">
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        className="!rounded-lg"
+                        loading={deleteMutation.isPending}
+                        onClick={() => confirmDelete(row)}
+                      />
+                    </Tooltip>
                   )}
                 </div>
               ),
             },
           ]}
         />
+        <div className="mt-2 flex items-center justify-between">
+          <Button
+            type="text"
+            size="small"
+            icon={<ReloadOutlined />}
+            className="!text-slate-500 hover:!text-emerald-600"
+            onClick={() => void query.refetch()}
+          >
+            Làm mới danh sách
+          </Button>
+        </div>
       </ManagementPage>
       <ProductFormDrawer
         open={createOpen}

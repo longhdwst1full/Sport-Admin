@@ -1,6 +1,7 @@
 import { Button, Popconfirm, Space, Table, Tag, Tooltip } from 'antd';
-import { DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import { PermissionGate } from '@/core/auth/permissions';
+import { StatusTag } from '@/foundation/management';
 import { CUSTOMER_PAGE_SIZE, customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
 import type { CustomerRowView } from '../model/customer.mapper';
 import { getCustomerDeleteBlockReason } from '../model/customer.policy';
@@ -88,14 +89,29 @@ export function CustomerTable({
       title: 'Trạng thái',
       width: 140,
       render: (_value: unknown, row: CustomerRowView) => {
-        const view = customerStatusPresentation[row.status];
-        return <Tag color={view?.color}>{view?.label ?? row.status}</Tag>;
+        return (
+          <StatusTag
+            status={row.status}
+            presentations={{
+              ACTIVE: {
+                label: 'Hoạt động',
+                color: 'green',
+                icon: <CheckCircleOutlined className="text-emerald-600" />,
+              },
+              INACTIVE: {
+                label: 'Ngừng hoạt động',
+                color: 'default',
+                icon: <StopOutlined className="text-slate-500" />,
+              },
+            }}
+          />
+        );
       },
     },
     {
       key: 'actions',
-      title: 'Thao tác',
-      width: 150,
+      title: '',
+      width: 130,
       fixed: 'right' as const,
       align: 'right' as const,
       render: (_value: unknown, row: CustomerRowView) => {
@@ -103,7 +119,7 @@ export function CustomerTable({
         return (
           <PermissionGate permission="customer.manage">
           {/* Chặn onRow mở drawer chi tiết khi người dùng bấm vào nút trong ô. */}
-          <Space size={0} onClick={(event) => event.stopPropagation()}>
+          <Space size={2} onClick={(event) => event.stopPropagation()}>
             <Tooltip title="Sửa">
               <Button
                 type="text"
@@ -165,7 +181,8 @@ export function CustomerTable({
         current: page,
         pageSize: CUSTOMER_PAGE_SIZE,
         total,
-        showSizeChanger: false,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '50', '100'],
         onChange: onPageChange,
         showTotal: (value) => `${value} khách hàng`,
       }}
