@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { ColumnsType } from 'antd/es/table';
-import { withFixedColumnWidths } from './table-config';
+import {
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+  ADMIN_TABLE_PAGE_SIZE_OPTIONS,
+  withFixedColumnWidths,
+} from './table-config';
 
 interface DemoRow {
   id: string;
@@ -20,5 +24,11 @@ describe('withFixedColumnWidths', () => {
     expect(result?.[0]?.width).toBe(90);
     expect(result?.[1]?.width).toBe(180);
     expect(result?.[2] && 'children' in result[2] ? result[2].children?.[0]?.width : null).toBe(180);
+  });
+
+  it('keeps the shared pagination default and selectable page sizes aligned', () => {
+    expect(ADMIN_TABLE_DEFAULT_PAGE_SIZE).toBe(30);
+    expect(ADMIN_TABLE_PAGE_SIZE_OPTIONS).toContain(String(ADMIN_TABLE_DEFAULT_PAGE_SIZE));
+    expect(ADMIN_TABLE_PAGE_SIZE_OPTIONS).toEqual(['10', '20', '30', '50', '100']);
   });
 });

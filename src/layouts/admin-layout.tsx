@@ -70,7 +70,7 @@ export function AdminLayout() {
     .filter((group) => group.children.length > 0) satisfies MenuProps['items'];
 
   return (
-    <Layout className="h-screen overflow-hidden bg-slate-50">
+    <Layout className="h-[100dvh] min-h-[100vh] overflow-hidden bg-slate-50">
       {/* ── Command Palette (Cmd+K) ──────────────────────────── */}
       <CommandPalette />
 
@@ -142,7 +142,7 @@ export function AdminLayout() {
       </Header>
 
       {/* ── Body ─────────────────────────────────────────────── */}
-      <Layout className="min-h-0 relative">
+      <Layout className="relative h-[calc(100dvh-72px)] min-h-0 overflow-hidden">
         {/* Mobile backdrop overlay */}
         {isMobile && !collapsed && (
           <div
@@ -204,8 +204,8 @@ export function AdminLayout() {
         </Sider>
 
         {/* ── Content ────────────────────────────────────────── */}
-        <Layout className="min-w-0">
-          <Content className="overflow-auto bg-gradient-to-b from-slate-50 via-slate-50/80 to-slate-100/50 p-3.5 sm:p-5 lg:p-8">
+        <Layout className="h-full min-h-0 min-w-0">
+          <Content className="h-full min-h-0 overflow-auto bg-gradient-to-b from-slate-50 via-slate-50/80 to-slate-100/50 p-3.5 sm:p-5 lg:p-8">
             <PageContainer>
               <div className="dctd-page-enter" key={location.pathname}>
                 <Outlet />

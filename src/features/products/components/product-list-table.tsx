@@ -62,7 +62,11 @@ export function ProductListTable({
         loading={loading}
         dataSource={rows}
         tableLayout="fixed"
-        scroll={{ x: 1120 }}
+        scroll={{
+          x: 1120,
+          // Giữ header/pagination trong viewport; phần dữ liệu tự cuộn khi đủ 30 dòng.
+          y: 'clamp(280px, calc(100vh - 500px), 640px)',
+        }}
         locale={{ emptyText: 'Không có sản phẩm phù hợp bộ lọc.' }}
         pagination={{
           current: page,

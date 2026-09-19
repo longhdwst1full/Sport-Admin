@@ -1,10 +1,10 @@
 # Products — maintenance note
 
-> **Document version:** 1.2.0
+> **Document version:** 1.3.0
 >
 > **Last updated:** 2026-09-19
 >
-> **Change summary:** Tách list sản phẩm theo feature anatomy: page điều phối, hook query/action, toolbar, table, constants và DTO mapper độc lập.
+> **Change summary:** Danh sách mặc định 30 sản phẩm, cho chọn 10/20/30/50/100 và cuộn thân bảng theo viewport.
 
 ## Phạm vi
 
@@ -60,6 +60,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.3.0 | 2026-09-19 | Mặc định 30 sản phẩm/trang, thêm page-size selector và giữ table trong viewport. |
 | 1.2.0 | 2026-09-19 | Tách ProductsPage thành page/hook/action/toolbar/table/constants/mapper và bổ sung Storybook cho bảng. |
 | 1.1.0 | 2026-09-19 | Chuẩn hóa pagination và toolbar dưới bảng theo layout quản trị responsive. |
 | 1.0.0 | 2026-09-13 | Tạo note sau khi chuẩn hoá anatomy. |

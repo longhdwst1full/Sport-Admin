@@ -4,6 +4,7 @@ export {
 } from './admin-table';
 export {
   ADMIN_TABLE_DEFAULT_COLUMN_WIDTH,
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
   ADMIN_TABLE_PAGE_SIZE_OPTIONS,
   withFixedColumnWidths,
 } from './table-config';

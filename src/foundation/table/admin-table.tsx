@@ -4,6 +4,7 @@ import type { TableProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   ADMIN_TABLE_DEFAULT_COLUMN_WIDTH,
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
   ADMIN_TABLE_PAGE_SIZE_OPTIONS,
   withFixedColumnWidths,
 } from './table-config';
@@ -16,7 +17,7 @@ export interface AdminTableProps<RecordType extends object>
 
 /**
  * Table shell dùng chung cho Admin: width cố định, luôn có horizontal scroll và
- * pagination 20/50/100. Feature chỉ còn sở hữu column content và server query.
+ * pagination mặc định 30 dòng. Feature chỉ còn sở hữu column content và server query.
  */
 export function AdminTable<RecordType extends object>({
   columns,
@@ -31,7 +32,7 @@ export function AdminTable<RecordType extends object>({
     pagination === false
       ? false
       : {
-          defaultPageSize: 20,
+          defaultPageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
           showSizeChanger: true,
           pageSizeOptions: ADMIN_TABLE_PAGE_SIZE_OPTIONS,
           responsive: true,

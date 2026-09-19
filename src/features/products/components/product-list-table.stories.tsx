@@ -39,7 +39,7 @@ const meta = {
     loading: false,
     fetching: false,
     page: 1,
-    pageSize: 20,
+    pageSize: 30,
     total: demoRows.length,
     canManage: true,
     onPageChange: () => undefined,
