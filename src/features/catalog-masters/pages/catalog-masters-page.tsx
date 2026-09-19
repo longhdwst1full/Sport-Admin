@@ -9,12 +9,13 @@ import {
   TagsOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Input, Popconfirm, Space, Table, Tabs } from 'antd';
+import { App, Button, Input, Popconfirm, Space, Tabs } from 'antd';
 import { useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage, StatusTag } from '@/foundation/management';
+import { AdminTable } from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import {
   getListAdminBrandsQueryKey,
@@ -207,7 +208,7 @@ export function CatalogMastersPage() {
               children: brandsQuery.isError ? (
                 <QueryErrorAlert error={brandsQuery.error} retry={() => void brandsQuery.refetch()} />
               ) : (
-                <Table
+                <AdminTable
                   rowKey="id"
                   loading={brandsQuery.isPending}
                   dataSource={brands}
@@ -325,7 +326,7 @@ export function CatalogMastersPage() {
                   retry={() => void categoriesQuery.refetch()}
                 />
               ) : (
-                <Table
+                <AdminTable
                   rowKey="id"
                   loading={categoriesQuery.isPending}
                   dataSource={categories}

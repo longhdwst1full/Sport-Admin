@@ -1,8 +1,9 @@
 import { EyeOutlined, SearchOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Select, Table, Tag, Typography } from 'antd';
+import { Button, Card, Input, Select, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import { useListStockTransfers } from '@/generated/api/inventory/inventory';
 import { ListStockTransfersStatus } from '@/generated/api/inventory/models';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
@@ -79,7 +80,7 @@ export function StockTransferPanel({
         />
       </div>
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
-      <Table
+      <AdminTable
         rowKey="id"
         loading={query.isPending}
         dataSource={query.data?.items ?? []}
@@ -101,7 +102,7 @@ export function StockTransferPanel({
           { title: 'Lý do', dataIndex: 'reason', ellipsis: true },
           { title: 'Người tạo', dataIndex: 'createdByDisplayName', width: 160 },
           { title: 'Cập nhật nghiệp vụ', width: 170, render: (_, row) => formatTime(row.receivedAt ?? row.shippedAt ?? row.submittedAt ?? row.createdAt) },
-          { title: 'Thao tác', width: 100, fixed: 'right', render: (_, row) => <Button type="link" icon={<EyeOutlined />} onClick={() => onSelectedIdChange(row.id)}>Xem</Button> },
+          { title: '', width: 72, fixed: 'right', render: (_, row) => <TableActionButton label={`Xem phiếu ${row.transferNo}`} icon={<EyeOutlined />} onClick={() => onSelectedIdChange(row.id)} /> },
         ]}
       />
       <StockTransferDetailDrawer id={selectedId} onClose={() => onSelectedIdChange(undefined)} />

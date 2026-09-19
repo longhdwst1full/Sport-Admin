@@ -8,11 +8,12 @@ import {
   PoweroffOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Descriptions, Popconfirm, Space, Table, Typography } from 'antd';
+import { App, Button, Descriptions, Popconfirm, Space, Typography } from 'antd';
 import { useState } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage, StatusTag } from '@/foundation/management';
+import { AdminTable } from '@/foundation/table';
 import {
   getListAdminBranchesQueryKey,
   getListAdminWarehousesQueryKey,
@@ -152,7 +153,7 @@ export function OrganizationPage() {
           />
         </div>
       )}
-      <Table
+      <AdminTable
         rowKey="branchId"
         loading={branchesQuery.isPending || (canViewWarehouses && warehousesQuery.isPending)}
         dataSource={rows}

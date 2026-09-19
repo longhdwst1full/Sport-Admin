@@ -1,5 +1,6 @@
 import { DeleteOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
-import { Button, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { Button, Space, Tag, Tooltip, Typography } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import type { SystemParameterDto } from '@/generated/api/system/models';
 import {
   SYSTEM_PARAMETER_PAGE_SIZE,
@@ -28,7 +29,7 @@ export function SystemParameterTable({
   onDeactivate: (row: SystemParameterDto) => void;
 }) {
   return (
-    <Table
+    <AdminTable
       rowKey="id"
       dataSource={rows}
       loading={loading}
@@ -51,7 +52,7 @@ export function SystemParameterTable({
           width: 280,
           render: (value: string, row) => (
             <Space size={6}>
-              <Typography.Text strong copyable>{value}</Typography.Text>
+              <Typography.Text strong>{value}</Typography.Text>
               {row.isSystem && (
                 <Tooltip title="Tham số hệ thống: code đang đọc theo mã này, chỉ sửa được giá trị">
                   <LockOutlined className="text-slate-400" />

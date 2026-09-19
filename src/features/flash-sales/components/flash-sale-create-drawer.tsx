@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import {
-  Alert, Button, DatePicker, Drawer, Form, Input, InputNumber, Radio, Select, Space, Table,
+  Alert, Button, DatePicker, Drawer, Form, Input, InputNumber, Radio, Select, Space,
   Typography,
 } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import type { Dayjs } from 'dayjs';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import { useDebounce } from 'use-debounce';
@@ -241,7 +242,7 @@ export function FlashSaleCreateDrawer({
         )}
       </div>
 
-      <Table<StagedItem>
+      <AdminTable<StagedItem>
         className="mt-4"
         rowKey="productVariantId"
         size="small"

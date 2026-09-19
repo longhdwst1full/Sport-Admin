@@ -4,8 +4,9 @@ import {
   InboxOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Select, Space, Table, Tag } from 'antd';
+import { Button, Input, Select, Space, Tag } from 'antd';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { AdminTable } from '@/foundation/table';
 import { ManagementPage } from './management-page';
 
 const rows = [
@@ -43,7 +44,7 @@ export const ProductManagement: Story = {
       </Space>
     ),
     children: (
-      <Table
+      <AdminTable
         rowKey="id"
         dataSource={rows}
         pagination={false}

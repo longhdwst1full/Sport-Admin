@@ -1,7 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Form, Input, Modal, Select, Space, Tag, Typography } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
@@ -154,16 +155,16 @@ export function ProductPricePanel({
           <div>
             <Typography.Title level={5}>Giá hiện tại</Typography.Title>
             {timeline.data?.current
-              ? <Table<ProductPriceWindowDto> size="small" rowKey="id" pagination={false} dataSource={[timeline.data.current]} columns={priceColumns} />
+              ? <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={false} dataSource={[timeline.data.current]} columns={priceColumns} />
               : <Typography.Text type="secondary">Chưa có giá đang hiệu lực.</Typography.Text>}
           </div>
           <div>
             <Typography.Title level={5}>Sắp áp dụng</Typography.Title>
-            <Table<ProductPriceWindowDto> size="small" rowKey="id" loading={timeline.isPending} pagination={false} dataSource={timeline.data?.upcoming ?? []} columns={priceColumns} locale={{ emptyText: 'Chưa có giá tương lai' }} />
+            <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" loading={timeline.isPending} pagination={false} dataSource={timeline.data?.upcoming ?? []} columns={priceColumns} locale={{ emptyText: 'Chưa có giá tương lai' }} />
           </div>
           <div>
             <Typography.Title level={5}>Lịch sử bất biến</Typography.Title>
-            <Table<ProductPriceWindowDto> size="small" rowKey="id" pagination={{ pageSize: 5, hideOnSinglePage: true }} dataSource={timeline.data?.history ?? []} columns={priceColumns} locale={{ emptyText: 'Chưa có lịch sử giá' }} />
+            <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={{ pageSize: 5, hideOnSinglePage: true }} dataSource={timeline.data?.history ?? []} columns={priceColumns} locale={{ emptyText: 'Chưa có lịch sử giá' }} />
           </div>
         </div>
       </div>

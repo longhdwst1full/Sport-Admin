@@ -1,5 +1,6 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Button, Card, Drawer, Table, Tag, Typography } from 'antd';
+import { Button, Card, Drawer, Tag, Typography } from 'antd';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import { useState } from 'react';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { useGetStockAdjustment, useListStockAdjustments } from '@/generated/api/inventory/inventory';
@@ -20,7 +21,7 @@ export function StockAdjustmentPanel() {
   return (
     <Card variant="borderless">
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
-      <Table
+      <AdminTable
         rowKey="id"
         loading={query.isPending}
         dataSource={query.data?.items ?? []}
@@ -37,7 +38,7 @@ export function StockAdjustmentPanel() {
           { title: 'Lý do', dataIndex: 'reason' },
           { title: 'Người tạo', dataIndex: 'createdByDisplayName', width: 170 },
           { title: 'Thời điểm', dataIndex: 'postedAt', width: 180, render: (value) => new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) },
-          { title: 'Thao tác', key: 'actions', width: 100, render: (_, row) => <Button type="link" icon={<EyeOutlined />} onClick={() => setSelectedId(row.id)}>Xem</Button> },
+          { title: '', key: 'actions', width: 72, fixed: 'right', render: (_, row) => <TableActionButton label={`Xem phiếu ${row.adjustmentNo}`} icon={<EyeOutlined />} onClick={() => setSelectedId(row.id)} /> },
         ]}
       />
       <div className="mt-4 flex justify-end gap-2">
@@ -63,7 +64,7 @@ export function StockAdjustmentPanel() {
               )}
               <div className="mt-2 text-xs text-slate-500">Tạo bởi {detail.data.createdByDisplayName}</div>
             </div>
-            <Table rowKey="id" size="small" pagination={false} dataSource={detail.data.items} columns={[
+            <AdminTable rowKey="id" size="small" pagination={false} dataSource={detail.data.items} columns={[
               { title: 'SKU', dataIndex: 'sku', render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },
               { title: 'Trước', dataIndex: 'expectedOnHand', align: 'right' },
               { title: 'Thay đổi', dataIndex: 'quantityDelta', align: 'right', render: (value: number) => value > 0 ? `+${value}` : value },

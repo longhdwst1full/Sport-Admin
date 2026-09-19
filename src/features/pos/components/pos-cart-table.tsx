@@ -1,5 +1,6 @@
 import { DeleteOutlined } from '@ant-design/icons';
-import { Button, Empty, InputNumber, Popconfirm, Table, Tag, Tooltip } from 'antd';
+import { Button, Empty, InputNumber, Popconfirm, Tag, Tooltip } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { moneyFormatter } from '../constants/pos.constants';
 import { lineTotal, type PosCartLine } from '../model/pos-cart';
 
@@ -24,7 +25,7 @@ export function PosCartTable({
   }
 
   return (
-    <Table<PosCartLine>
+    <AdminTable<PosCartLine>
       size="small"
       rowKey="variantId"
       dataSource={lines}

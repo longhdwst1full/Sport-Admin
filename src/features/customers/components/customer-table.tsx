@@ -1,4 +1,5 @@
-import { Button, Popconfirm, Space, Table, Tag, Tooltip } from 'antd';
+import { Button, Popconfirm, Space, Tag, Tooltip } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { CheckCircleOutlined, DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import { PermissionGate } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
@@ -172,7 +173,7 @@ export function CustomerTable({
   ].filter((column) => colVisibility[column.key] !== false);
 
   return (
-    <Table<CustomerRowView>
+    <AdminTable<CustomerRowView>
       rowKey="id"
       dataSource={rows}
       loading={loading}

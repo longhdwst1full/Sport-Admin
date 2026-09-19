@@ -6,7 +6,7 @@ import {
   ShoppingCartOutlined,
   TruckOutlined,
 } from '@ant-design/icons';
-import { Alert, Card, Col, Empty, Row, Skeleton, Table, Tag, Typography } from 'antd';
+import { Alert, Card, Col, Empty, Row, Skeleton, Typography } from 'antd';
 import {
   Area,
   AreaChart,
@@ -29,6 +29,7 @@ import {
   useGetAdminReportTopProducts,
 } from '@/generated/api/reporting/reporting';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { AdminTable } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { DashboardStatCard } from '../components/dashboard-stat-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
@@ -326,7 +327,7 @@ export function DashboardPage() {
             />
           }
         >
-          <Table
+          <AdminTable
             rowKey="branchName"
             size="small"
             pagination={false}
@@ -354,7 +355,7 @@ export function DashboardPage() {
       )}
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} xl={12}>
+        <Col xs={24}>
           <Card
             className="h-full !rounded-2xl !border-slate-200/80 !shadow-card"
             title={
@@ -366,7 +367,7 @@ export function DashboardPage() {
             ) : topProducts.isError ? (
               <QueryErrorAlert error={topProducts.error} retry={() => void topProducts.refetch()} />
             ) : (
-              <Table
+              <AdminTable
                 rowKey="sku"
                 size="small"
                 pagination={false}
@@ -392,43 +393,6 @@ export function DashboardPage() {
           </Card>
         </Col>
 
-        <Col xs={24} xl={12}>
-          <Card
-            className="h-full !rounded-2xl !border-slate-200/80 !shadow-card"
-            title={
-              <SectionTitle title="Cảnh báo tồn kho" description="SKU đã chạm ngưỡng đặt lại" />
-            }
-          >
-            {!canSeeInventory ? (
-              <Empty description="Cần quyền xem tồn kho" />
-            ) : inventory.isError ? (
-              <QueryErrorAlert error={inventory.error} retry={() => void inventory.refetch()} />
-            ) : (
-              <Table
-                rowKey={(row) => `${row.sku}-${row.warehouseName}`}
-                size="small"
-                pagination={false}
-                loading={inventory.isPending}
-                dataSource={inventory.data?.items ?? []}
-                locale={{ emptyText: 'Không có SKU nào chạm ngưỡng đặt lại' }}
-                columns={[
-                  { title: 'SKU', dataIndex: 'sku', width: 130 },
-                  { title: 'Kho', dataIndex: 'warehouseName', ellipsis: true },
-                  {
-                    title: 'Còn bán',
-                    dataIndex: 'available',
-                    width: 90,
-                    align: 'right',
-                    render: (value: number) => (
-                      <Tag color={value <= 0 ? 'red' : 'orange'}>{value}</Tag>
-                    ),
-                  },
-                  { title: 'Ngưỡng', dataIndex: 'reorderPoint', width: 80, align: 'right' },
-                ]}
-              />
-            )}
-          </Card>
-        </Col>
       </Row>
     </div>
   );

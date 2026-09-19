@@ -1,13 +1,14 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { EditOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, Modal, Select, Skeleton, Space, Table, Tag, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, Modal, Select, Skeleton, Space, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import { PermissionGate } from '@/core/auth/permissions';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import {
   getGetAdminProductQueryKey,
   getListAdminProductsQueryKey,
@@ -293,7 +294,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
 
           <div>
             <Typography.Title level={5}>SKU và giá hiện tại</Typography.Title>
-            <Table
+            <AdminTable
               size="small"
               rowKey="id"
               pagination={false}
@@ -313,27 +314,28 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
                     : '—',
                 },
                 {
-                  title: 'Thao tác',
+                  title: '',
                   key: 'actions',
                   align: 'right',
+                  width: 100,
+                  fixed: 'right',
                   render: (_, variant) => (
                     <PermissionGate permission="catalog.product.manage">
-                      <Button
-                        type="link"
+                      <TableActions>
+                      <TableActionButton
+                        label={`Sửa SKU ${variant.sku}`}
                         icon={<EditOutlined />}
                         disabled={product.status === 'ARCHIVED'}
                         onClick={() => setEditingVariant(variant)}
-                      >
-                        Sửa
-                      </Button>
-                      <Button
-                        type="link"
+                      />
+                      <TableActionButton
+                        label={variant.status === 'ACTIVE' ? 'Lưu trữ SKU' : 'Kích hoạt SKU'}
+                        icon={variant.status === 'ACTIVE' ? <StopOutlined /> : <CheckCircleOutlined />}
                         danger={variant.status === 'ACTIVE'}
                         loading={archiveVariant.isPending || reactivateVariant.isPending}
                         onClick={() => confirmVariantLifecycle(variant)}
-                      >
-                        {variant.status === 'ACTIVE' ? 'Archive' : 'Kích hoạt'}
-                      </Button>
+                      />
+                      </TableActions>
                     </PermissionGate>
                   ),
                 },

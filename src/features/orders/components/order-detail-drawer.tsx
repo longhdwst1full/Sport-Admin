@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AdminTable } from '@/foundation/table';
 import {
   CloseCircleOutlined,
   CopyOutlined,
@@ -343,7 +344,7 @@ export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) 
               }
               className="rounded-xl border-slate-200 shadow-xs"
             >
-              <Table
+              <AdminTable
                 rowKey="id"
                 size="small"
                 pagination={false}

@@ -6,7 +6,8 @@ import {
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Alert, Avatar, Button, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Avatar, Button, Space, Tabs, Tag, Typography } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage, StatusTag } from '@/foundation/management';
@@ -116,7 +117,7 @@ export function AccessPage() {
             key: 'users',
             label: 'Người dùng',
             children: (
-              <Table
+              <AdminTable
                 rowKey="id"
                 loading={loading}
                 dataSource={users}
@@ -251,7 +252,7 @@ export function AccessPage() {
                   key: 'roles',
                   label: 'Vai trò & quyền',
                   children: (
-                    <Table
+                    <AdminTable
                       rowKey="id"
                       loading={loading}
                       dataSource={roles}

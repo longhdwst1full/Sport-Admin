@@ -1,10 +1,10 @@
 # Products — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
 > **Last updated:** 2026-09-19
 >
-> **Change summary:** Chuẩn hóa list sản phẩm: mặc định 20 dòng, chọn 20/50/100, pagination responsive và refresh icon dưới bảng.
+> **Change summary:** Tách list sản phẩm theo feature anatomy: page điều phối, hook query/action, toolbar, table, constants và DTO mapper độc lập.
 
 ## Phạm vi
 
@@ -17,9 +17,11 @@
 
 | Tầng | File |
 | --- | --- |
-| `pages/` | `products-page.tsx` — list, filter, chọn bản ghi |
-| `components/` | `product-form-drawer`, `product-workflow-drawer`, `product-media-panel`, `product-price-panel`, `variant-edit-drawer` |
-| `model/` | `product-workflow.policy.ts` (điều kiện publish), `product-media.policy.ts` (reorder), `variant-edit.mapper.ts` — đều có `.test.ts` |
+| `pages/` | `products-page.tsx` — chỉ compose trang, toolbar, table và drawer |
+| `hooks/` | `use-product-list.ts` sở hữu query/filter/pagination; `use-product-list-actions.tsx` sở hữu permission, mutation, confirm và cache invalidation |
+| `components/` | `product-list-toolbar`, `product-list-table` và các drawer/panel nghiệp vụ |
+| `constants/` | Hằng số page size của danh sách, không đặt trong page/hook/component |
+| `model/` | `product-list.mapper.ts` tạo view model bất biến; policy/mapper nghiệp vụ khác đều có `.test.ts` |
 
 Import từ ngoài chỉ qua `index.ts`.
 
@@ -32,6 +34,8 @@ Import từ ngoài chỉ qua `index.ts`.
 - Publish có điều kiện: `isProductPublishReady` kiểm tra đủ variant/giá/media trước khi mở nút. Backend vẫn kiểm tra lại.
 - Media reorder tính ở `product-media.policy.ts` để việc kéo thả không phụ thuộc thứ tự trả về của API.
 - Giá dùng Decimal dạng chuỗi; không parse sang `number` để tính toán (`09-data-transformation.md`).
+- Không mang Redux/Saga và provider tree từ module tham khảo sang feature này. TanStack Query tiếp tục là nguồn server state duy nhất; local state chỉ giữ filter/pagination/UI selection.
+- JSX bảng không đọc trực tiếp generated DTO; `toProductListRow` là biên chống contract lan vào presentation.
 
 ## Checklist khi sửa
 
@@ -56,5 +60,6 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.2.0 | 2026-09-19 | Tách ProductsPage thành page/hook/action/toolbar/table/constants/mapper và bổ sung Storybook cho bảng. |
 | 1.1.0 | 2026-09-19 | Chuẩn hóa pagination và toolbar dưới bảng theo layout quản trị responsive. |
 | 1.0.0 | 2026-09-13 | Tạo note sau khi chuẩn hoá anatomy. |

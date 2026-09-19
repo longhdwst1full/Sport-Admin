@@ -1,10 +1,11 @@
 import { EditOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Progress, Select, Table } from 'antd';
+import { Button, Card, Input, Progress, Select } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { StatusTag } from '@/foundation/management';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
 import { useListInventoryBalances } from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/models';
@@ -183,21 +184,18 @@ export function InventoryBalancePanel({
     ...(colVisibility.actions !== false
       ? [
           {
-            title: 'Thao tác',
+            title: '',
             key: 'actions',
             fixed: 'right' as const,
             width: 120,
             render: (_: unknown, row: InventoryBalanceDto) => (
               <PermissionGate permission="inventory.stock.adjust">
-                <Button
-                  type="link"
-                  size="small"
+                <TableActionButton
+                  label={`Điều chỉnh tồn SKU ${row.sku}`}
                   icon={<EditOutlined />}
                   onClick={() => onAdjust(row)}
                   className="text-emerald-600 font-medium"
-                >
-                  Điều chỉnh
-                </Button>
+                />
               </PermissionGate>
             ),
           },
@@ -249,7 +247,7 @@ export function InventoryBalancePanel({
 
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
 
-      <Table
+      <AdminTable
         className="mt-3"
         rowKey="id"
         loading={query.isPending}

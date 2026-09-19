@@ -1,5 +1,5 @@
 import { DeleteOutlined, DownOutlined, EditOutlined, StarOutlined, UpOutlined, UploadOutlined } from '@ant-design/icons';
-import { App, Button, Form, Image, Input, Modal, Select, Space, Table, Tag, Upload } from 'antd';
+import { App, Button, Form, Image, Input, Modal, Select, Space, Tag, Upload } from 'antd';
 import { useEffect, useState } from 'react';
 import {
   useArchiveAdminProductMedia,
@@ -9,6 +9,7 @@ import {
 } from '@/generated/api/catalog/catalog';
 import type { ProductDetailDto, ProductMediaDto } from '@/generated/api/catalog/models';
 import { useCan } from '@/core/auth/permissions';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { uploadImage } from '@/lib/media/upload-image';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { reorderProductMedia } from '../model/product-media.policy';
@@ -120,7 +121,7 @@ export function ProductMediaPanel({
         </Upload>
       </div>
 
-      <Table
+      <AdminTable
         rowKey="id"
         size="small"
         pagination={false}
@@ -148,15 +149,16 @@ export function ProductMediaPanel({
             ),
           },
           {
-            title: 'Thao tác',
-            width: 210,
+            title: '',
+            width: 130,
+            fixed: 'right',
             align: 'right',
             render: (_, row) => (
-              <Space size={0}>
-                <Button type="link" icon={<EditOutlined />} disabled={pending} onClick={() => setEditing(row)}>Sửa</Button>
+              <TableActions>
+                <TableActionButton label="Sửa thông tin ảnh" icon={<EditOutlined />} disabled={pending} onClick={() => setEditing(row)} />
                 {!row.isPrimary && (
-                  <Button
-                    type="link"
+                  <TableActionButton
+                    label="Đặt làm ảnh chính"
                     icon={<StarOutlined />}
                     disabled={pending}
                     onClick={() => update.mutate({
@@ -164,10 +166,10 @@ export function ProductMediaPanel({
                       mediaId: row.id,
                       data: { isPrimary: true, expectedProductVersion: product.version },
                     })}
-                  >Ảnh chính</Button>
+                  />
                 )}
-                <Button
-                  type="link"
+                <TableActionButton
+                  label="Gỡ ảnh"
                   danger
                   icon={<DeleteOutlined />}
                   disabled={pending}
@@ -183,8 +185,8 @@ export function ProductMediaPanel({
                       data: { expectedProductVersion: product.version },
                     }),
                   })}
-                >Gỡ</Button>
-              </Space>
+                />
+              </TableActions>
             ),
           },
         ]}

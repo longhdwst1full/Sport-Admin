@@ -8,11 +8,12 @@ import {
   PlusOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { App, Avatar, Button, Popconfirm, Skeleton, Switch, Table, Tooltip } from 'antd';
+import { App, Avatar, Button, Popconfirm, Skeleton, Switch, Tooltip } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { ManagementPage, StatusTag } from '@/foundation/management';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import {
   getListAdminPostsQueryKey,
@@ -129,7 +130,7 @@ export function ContentPage() {
           },
         ]}
       >
-        <Table
+        <AdminTable
           rowKey="id"
           loading={query.isPending}
           dataSource={items}
@@ -227,26 +228,23 @@ export function ContentPage() {
               ),
             },
             {
-              title: 'Thao tác',
+              title: '',
               key: 'actions',
               width: 110,
               align: 'right' as const,
               render: (_: unknown, row: ContentPostDto) => (
                 <PermissionGate permission="cms.content.manage">
-                  <Button
-                    type="link"
-                    size="small"
+                  <TableActions>
+                  <TableActionButton
+                    label={`Sửa bài ${row.title}`}
                     icon={<EditOutlined />}
                     // Bài đã lưu trữ không còn hiển thị trên website; Backend cũng từ chối sửa.
                     disabled={row.status === 'ARCHIVED'}
-                    className="text-xs"
                     onClick={() => {
                       setEditingPost(row);
                       setEditorOpen(true);
                     }}
-                  >
-                    Sửa
-                  </Button>
+                  />
                   <Popconfirm
                     title="Xóa bài viết này?"
                     description="Bài viết sẽ được lưu trữ và không còn hiển thị trên website."
@@ -261,18 +259,15 @@ export function ContentPage() {
                       })
                     }
                   >
-                    <Button
+                    <TableActionButton
+                      label={`Lưu trữ bài ${row.title}`}
                       danger
-                      type="link"
-                      size="small"
                       icon={<DeleteOutlined />}
                       disabled={row.status === 'ARCHIVED'}
                       loading={deletePost.isPending && deletePost.variables?.id === row.id}
-                      className="text-xs"
-                    >
-                      Lưu trữ
-                    </Button>
+                    />
                   </Popconfirm>
+                  </TableActions>
                 </PermissionGate>
               ),
             },

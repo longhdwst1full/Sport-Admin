@@ -1,7 +1,8 @@
-import { CopyOutlined, EyeOutlined } from '@ant-design/icons';
-import { App, Button, Table, Tag, Tooltip, Typography } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
+import { Tag, Typography } from 'antd';
 import type { AdminOrderSummaryDto } from '@/generated/api/orders/models';
 import { StatusTag } from '@/foundation/management';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import {
   orderStatusPresentation,
@@ -45,13 +46,6 @@ export function OrderTable({
   onPageChange,
   onOpen,
 }: OrderTableProps) {
-  const { message } = App.useApp();
-
-  const copyOrderNo = (orderNo: string) => {
-    navigator.clipboard.writeText(orderNo);
-    message.success(`Đã sao chép mã đơn: ${orderNo}`);
-  };
-
   const allColumns = [
     ...(colVisibility.order !== false
       ? [
@@ -62,21 +56,7 @@ export function OrderTable({
             width: 200,
             render: (_: unknown, row: AdminOrderSummaryDto) => (
               <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono font-bold text-slate-800 text-sm">
-                    {row.orderNo}
-                  </span>
-                  <Tooltip title="Sao chép mã">
-                    <button
-                      type="button"
-                      aria-label="Sao chép mã"
-                      onClick={() => copyOrderNo(row.orderNo)}
-                      className="text-slate-400 hover:text-emerald-600 cursor-pointer"
-                    >
-                      <CopyOutlined className="text-[11px]" />
-                    </button>
-                  </Tooltip>
-                </div>
+                <span className="font-mono font-bold text-slate-800 text-sm">{row.orderNo}</span>
                 <div className="mt-0.5 text-xs text-slate-400">
                   {new Date(row.placedAt).toLocaleString('vi-VN')}
                 </div>
@@ -208,14 +188,11 @@ export function OrderTable({
             fixed: 'right' as const,
             width: 60,
             render: (_: unknown, row: AdminOrderSummaryDto) => (
-              <Tooltip title="Xem chi tiết đơn hàng">
-                <Button
-                  type="text"
-                  aria-label={`Xem đơn ${row.orderNo}`}
-                  icon={<EyeOutlined className="text-slate-500 hover:text-emerald-600" />}
-                  onClick={() => onOpen(row.id)}
-                />
-              </Tooltip>
+              <TableActionButton
+                label={`Xem đơn ${row.orderNo}`}
+                icon={<EyeOutlined className="text-slate-500 hover:text-emerald-600" />}
+                onClick={() => onOpen(row.id)}
+              />
             ),
           },
         ]
@@ -223,7 +200,7 @@ export function OrderTable({
   ];
 
   return (
-    <Table
+    <AdminTable
       rowKey="id"
       dataSource={rows}
       loading={loading}

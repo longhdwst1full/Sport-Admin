@@ -1,6 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, InputNumber, Modal, Skeleton, Table, Tag, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, InputNumber, Modal, Skeleton, Tag, Typography } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { useEffect } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -170,7 +171,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
             <Descriptions.Item label="Đã xuất">{transfer.shippedAt ? new Date(transfer.shippedAt).toLocaleString('vi-VN') : '—'}</Descriptions.Item>
             <Descriptions.Item label="Đã nhận">{transfer.receivedAt ? new Date(transfer.receivedAt).toLocaleString('vi-VN') : '—'}</Descriptions.Item>
           </Descriptions>
-          <Table rowKey="id" size="small" pagination={false} dataSource={transfer.items} scroll={{ x: 700 }} columns={[
+          <AdminTable rowKey="id" size="small" pagination={false} dataSource={transfer.items} scroll={{ x: 700 }} columns={[
             { title: 'SKU / Sản phẩm', dataIndex: 'sku', render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },
             { title: 'Yêu cầu', dataIndex: 'requestedQuantity', align: 'right' },
             { title: 'Đã xuất', dataIndex: 'shippedQuantity', align: 'right' },

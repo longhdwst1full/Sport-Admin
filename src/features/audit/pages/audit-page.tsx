@@ -19,11 +19,11 @@ import {
   Input,
   Select,
   Space,
-  Table,
   Tag,
   Tooltip,
   Typography,
 } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { ManagementPage } from '@/foundation/management';
@@ -190,7 +190,7 @@ export function AuditPage() {
           />
         )}
 
-        <Table
+        <AdminTable
           rowKey="id"
           loading={query.isPending}
           dataSource={items}

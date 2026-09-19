@@ -1,5 +1,6 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Button, Table, Tag, Typography } from 'antd';
+import { Tag, Typography } from 'antd';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { FulfillmentSummaryDto } from '@/generated/api/fulfillments/models';
 import { FULFILLMENT_PAGE_SIZE, fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
 
@@ -19,7 +20,7 @@ export function FulfillmentTable({
   onOpenOrder: (orderId: string) => void;
 }) {
   return (
-    <Table
+    <AdminTable
       rowKey="id"
       dataSource={rows}
       loading={loading}
@@ -40,13 +41,13 @@ export function FulfillmentTable({
           dataIndex: 'fulfillmentNo',
           fixed: 'left',
           width: 190,
-          render: (value: string) => <Typography.Text strong copyable>{value}</Typography.Text>,
+          render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
         },
         {
           title: 'Đơn hàng',
           dataIndex: 'orderNo',
           width: 180,
-          render: (value: string) => <Typography.Text copyable>{value}</Typography.Text>,
+          render: (value: string) => <Typography.Text>{value}</Typography.Text>,
         },
         {
           title: 'Kho xuất',
@@ -74,7 +75,7 @@ export function FulfillmentTable({
               <div>
                 <div>{row.carrierCode ?? '—'}</div>
                 {row.trackingNo ? (
-                  <Typography.Text className="text-xs" copyable>{row.trackingNo}</Typography.Text>
+                  <Typography.Text className="text-xs">{row.trackingNo}</Typography.Text>
                 ) : null}
               </div>
             ) : (
@@ -100,11 +101,9 @@ export function FulfillmentTable({
           title: '',
           key: 'action',
           fixed: 'right',
-          width: 110,
+          width: 72,
           render: (_, row) => (
-            <Button size="small" icon={<EyeOutlined />} onClick={() => onOpenOrder(row.orderId)}>
-              Xử lý
-            </Button>
+            <TableActionButton label={`Xử lý đơn ${row.orderNo}`} icon={<EyeOutlined />} onClick={() => onOpenOrder(row.orderId)} />
           ),
         },
       ]}

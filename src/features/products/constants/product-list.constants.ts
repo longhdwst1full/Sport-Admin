@@ -1,0 +1,2 @@
+export const PRODUCT_LIST_DEFAULT_PAGE_SIZE = 20;
+export const PRODUCT_LIST_PAGE_SIZE_OPTIONS = ['20', '50', '100'];

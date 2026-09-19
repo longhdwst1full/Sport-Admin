@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { App, Button, Card, Empty, Popconfirm, Skeleton, Table, Tag, Typography } from 'antd';
+import { App, Button, Card, Empty, Popconfirm, Skeleton, Tag, Typography } from 'antd';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import { CheckOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/core/auth/permissions';
@@ -94,7 +95,7 @@ export function PendingOrdersCard() {
       ) : rows.length === 0 ? (
         <Empty description="Không còn đơn nào chờ xác nhận" />
       ) : (
-        <Table<AdminOrderSummaryDto>
+        <AdminTable<AdminOrderSummaryDto>
           rowKey="id"
           size="small"
           pagination={false}
@@ -137,7 +138,7 @@ export function PendingOrdersCard() {
                 }).format(new Date(value)),
             },
             {
-              title: 'Duyệt',
+              title: '',
               key: 'actions',
               width: 120,
               align: 'right',
@@ -153,14 +154,11 @@ export function PendingOrdersCard() {
                       confirmOrder.mutate({ id: row.id, expectedVersion: row.version })
                     }
                   >
-                    <Button
-                      type="primary"
-                      size="small"
+                    <TableActionButton
+                      label={`Duyệt đơn ${row.orderNo}`}
                       icon={<CheckOutlined />}
                       loading={confirmOrder.isPending && confirmOrder.variables?.id === row.id}
-                    >
-                      Duyệt
-                    </Button>
+                    />
                   </Popconfirm>
                 </PermissionGate>
               ),

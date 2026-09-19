@@ -1,5 +1,6 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Button, Table, Tag, Typography } from 'antd';
+import { Tag, Typography } from 'antd';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { AdminShippingConsultationDto } from '@/generated/api/checkout/models';
 import {
   moneyFormatter,
@@ -25,7 +26,7 @@ export function ShippingConsultationTable({
   onOpen,
 }: ShippingConsultationTableProps) {
   return (
-    <Table
+    <AdminTable
       rowKey="checkoutToken"
       dataSource={rows}
       loading={loading}
@@ -99,9 +100,8 @@ export function ShippingConsultationTable({
           fixed: 'right',
           width: 72,
           render: (_, row) => (
-            <Button
-              type="text"
-              aria-label={`Xem yêu cầu của ${row.recipient.recipient}`}
+            <TableActionButton
+              label={`Xem yêu cầu của ${row.recipient.recipient}`}
               icon={<EyeOutlined />}
               onClick={() => onOpen(row)}
             />

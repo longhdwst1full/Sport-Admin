@@ -1,8 +1,9 @@
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Select, Space, Table, Tag, Typography } from 'antd';
+import { Button, Card, Input, Select, Space, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { AdminTable } from '@/foundation/table';
 import { useListInventoryMovements } from '@/generated/api/inventory/inventory';
 import { ListInventoryMovementsMovementType } from '@/generated/api/inventory/models';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
@@ -42,7 +43,7 @@ export function InventoryMovementPanel() {
         <Select allowClear placeholder="Loại biến động" className="min-w-44" options={Object.entries(ListInventoryMovementsMovementType).map(([label, value]) => ({ value, label: movementLabels[label]?.label ?? label }))} onChange={setMovementType} />
       </div>
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
-      <Table
+      <AdminTable
         className="mt-4"
         rowKey="id"
         loading={query.isPending}

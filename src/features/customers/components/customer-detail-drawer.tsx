@@ -1,4 +1,5 @@
-import { Alert, Descriptions, Drawer, Empty, Skeleton, Table, Tag } from 'antd';
+import { Alert, Descriptions, Drawer, Empty, Skeleton, Tag } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { useGetAdminCustomer } from '@/generated/api/customers/customers';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
@@ -85,7 +86,7 @@ export function CustomerDetailDrawer({
           {customer.recentOrders.length === 0 ? (
             <Empty description="Khách chưa có đơn nào" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           ) : (
-            <Table<CustomerOrderView>
+            <AdminTable<CustomerOrderView>
               size="small"
               rowKey="id"
               pagination={false}

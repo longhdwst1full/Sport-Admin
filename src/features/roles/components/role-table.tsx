@@ -1,4 +1,5 @@
-import { Button, Space, Table, Tag, Tooltip, Tree, Typography } from 'antd';
+import { Tag, Tree, Typography } from 'antd';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { DeleteOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import type { PermissionDto, RoleDto } from '@/generated/api/iam/models';
@@ -46,7 +47,7 @@ export function RoleTable({
   onDelete: (row: RoleDto) => void;
 }) {
   return (
-    <Table<RoleDto>
+    <AdminTable<RoleDto>
       rowKey="id"
       loading={loading}
       dataSource={rows}
@@ -107,18 +108,16 @@ export function RoleTable({
         {
           title: '',
           key: 'actions',
-          width: 160,
+          width: 100,
           fixed: 'right',
           align: 'right',
           render: (_value, row) => {
             const removalMode = getRoleRemovalMode(row);
             return (
-              <Space>
-              <Button size="small" icon={<EditOutlined />} disabled={!canManage} onClick={() => onEdit(row)}>
-                Sửa
-              </Button>
-              <Tooltip
-                title={
+              <TableActions>
+              <TableActionButton label={`Sửa vai trò ${row.name}`} icon={<EditOutlined />} disabled={!canManage} onClick={() => onEdit(row)} />
+              <TableActionButton
+                label={
                   row.code === ROOT_ROLE_CODE
                     ? 'OWNER phải luôn hoạt động để tránh khóa toàn hệ thống'
                     : row.system
@@ -127,9 +126,6 @@ export function RoleTable({
                         : 'Ngừng sử dụng vai trò hệ thống'
                       : 'Xóa vai trò tự tạo chưa được gán'
                 }
-              >
-                <Button
-                  size="small"
                   danger
                   icon={row.system ? <StopOutlined /> : <DeleteOutlined />}
                   disabled={
@@ -138,8 +134,7 @@ export function RoleTable({
                   }
                   onClick={() => onDelete(row)}
                 />
-              </Tooltip>
-              </Space>
+              </TableActions>
             );
           },
         },

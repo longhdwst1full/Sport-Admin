@@ -10,12 +10,14 @@ import {
   StarOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Popconfirm, Rate, Space, Table } from 'antd';
+import { App, Button, Popconfirm, Rate, Space } from 'antd';
 import { useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage, StatusTag } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
+import { TableActionButton } from '@/foundation/table';
+import { AdminTable } from '@/foundation/table';
 import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
 import {
   getListAdminReviewsQueryKey,
@@ -214,12 +216,10 @@ export function ReviewsPage() {
     {
       title: '',
       key: 'detail',
-      width: 130,
+      width: 72,
       align: 'right' as const,
       render: (_: unknown, row: ProductReviewDto) => (
-        <Button size="small" icon={<EyeOutlined />} onClick={() => setDetail(row)}>
-          Xem chi tiết
-        </Button>
+        <TableActionButton label="Xem chi tiết đánh giá" icon={<EyeOutlined />} onClick={() => setDetail(row)} />
       ),
     },
   ];
@@ -333,7 +333,7 @@ export function ReviewsPage() {
           </div>
         </PermissionGate>
 
-        <Table
+        <AdminTable
           rowKey="id"
           loading={query.isPending}
           dataSource={items}

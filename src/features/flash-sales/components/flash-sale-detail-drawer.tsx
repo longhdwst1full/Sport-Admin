@@ -16,10 +16,10 @@ import {
   Radio,
   Select,
   Space,
-  Table,
   Tag,
   Typography,
 } from 'antd';
+import { AdminTable } from '@/foundation/table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -237,7 +237,7 @@ export function FlashSaleDetailDrawer({
           <Typography.Title level={5} className="!mt-6">
             Suất bán
           </Typography.Title>
-          <Table
+          <AdminTable
             rowKey="id"
             size="small"
             dataSource={campaign.items}

@@ -1,5 +1,6 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Button, Table, Tag, Typography } from 'antd';
+import { Tag, Typography } from 'antd';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { FlashSaleCampaignSummaryDto } from '@/generated/api/promotions/models';
 import { FLASH_SALE_PAGE_SIZE, flashSaleStatusPresentation } from '../constants/flash-sale.constants';
 
@@ -19,7 +20,7 @@ export function FlashSaleTable({
   onOpen: (id: string) => void;
 }) {
   return (
-    <Table
+    <AdminTable
       rowKey="id"
       dataSource={rows}
       loading={loading}
@@ -40,7 +41,7 @@ export function FlashSaleTable({
           dataIndex: 'code',
           fixed: 'left',
           width: 170,
-          render: (value: string) => <Typography.Text strong copyable>{value}</Typography.Text>,
+          render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
         },
         { title: 'Tên chiến dịch', dataIndex: 'name', width: 260 },
         {
@@ -69,11 +70,9 @@ export function FlashSaleTable({
           title: '',
           key: 'action',
           fixed: 'right',
-          width: 110,
+          width: 72,
           render: (_, row) => (
-            <Button size="small" icon={<EyeOutlined />} onClick={() => onOpen(row.id)}>
-              Chi tiết
-            </Button>
+            <TableActionButton label={`Xem ${row.name}`} icon={<EyeOutlined />} onClick={() => onOpen(row.id)} />
           ),
         },
       ]}

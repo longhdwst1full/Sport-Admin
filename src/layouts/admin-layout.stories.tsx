@@ -1,9 +1,10 @@
 import { AppstoreOutlined, CheckCircleOutlined, InboxOutlined } from '@ant-design/icons';
-import { Button, Table, Tag } from 'antd';
+import { Button, Tag } from 'antd';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Providers } from '@/app/providers';
 import { ManagementPage } from '@/foundation/management';
+import { AdminTable } from '@/foundation/table';
 import { AdminLayout } from './admin-layout';
 
 const meta = {
@@ -35,7 +36,7 @@ function InventoryReviewPage() {
         { key: 'low', label: 'Sắp hết', value: 14, tone: 'orange', icon: <InboxOutlined /> },
       ]}
     >
-      <Table
+      <AdminTable
         rowKey="sku"
         pagination={false}
         dataSource={[

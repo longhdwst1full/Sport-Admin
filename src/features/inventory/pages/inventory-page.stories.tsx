@@ -1,7 +1,8 @@
 import { AuditOutlined, InboxOutlined, PlusOutlined, SwapOutlined, WarningOutlined } from '@ant-design/icons';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Alert, Button, Empty, Input, Progress, Select, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Button, Empty, Input, Progress, Select, Tabs, Tag, Typography } from 'antd';
 import { ManagementPage } from '@/foundation/management';
+import { AdminTable } from '@/foundation/table';
 
 const balances = [
   { id: '1', sku: 'TA-CAO-SU-5KG', productName: 'Tạ tay cao su 5kg', warehouseCode: 'KHO-HCM-01', onHand: 12, reserved: 2, available: 10, reorderPoint: 3, status: 'IN_STOCK' },
@@ -48,7 +49,7 @@ function InventoryReview({ state }: { state: 'loaded' | 'empty' | 'error' }) {
                 <Alert type="error" showIcon message="Không thể tải dữ liệu" description="Kết nối hoặc dịch vụ đang có lỗi. Vui lòng thử lại." action={<Button>Thử lại</Button>} />
               )}
               {state === 'empty' ? <Empty description="Chưa có tồn kho phù hợp bộ lọc." /> : (
-                <Table
+                <AdminTable
                   rowKey="id"
                   dataSource={state === 'loaded' ? balances : []}
                   pagination={false}
@@ -69,7 +70,7 @@ function InventoryReview({ state }: { state: 'loaded' | 'empty' | 'error' }) {
         }, { key: 'movements', label: 'Sổ kho', children: 'Ledger dùng cursor và bộ lọc kho/SKU/loại.' }, { key: 'adjustments', label: 'Phiếu điều chỉnh', children: 'Danh sách và chi tiết chứng từ điều chỉnh.' }, {
           key: 'transfers',
           label: 'Chuyển kho',
-          children: <Table rowKey="id" dataSource={state === 'loaded' ? transfers : []} pagination={false} columns={[
+          children: <AdminTable rowKey="id" dataSource={state === 'loaded' ? transfers : []} pagination={false} columns={[
             { title: 'Số phiếu', dataIndex: 'transferNo', render: (value) => <Typography.Text code>{value}</Typography.Text> },
             { title: 'Kho xuất', dataIndex: 'from' },
             { title: 'Kho nhận', dataIndex: 'to' },
