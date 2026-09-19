@@ -1,3 +1,6 @@
+/** OWNER là tài khoản gốc duy nhất và không được ngừng hoạt động qua UI/API. */
+export const ROOT_ROLE_CODE = 'OWNER';
+
 /** Nhãn tiếng Việt cho module quyền. Mã quyền do API quyết định, nhãn chỉ để hiển thị. */
 export const permissionModuleLabels: Record<string, string> = {
   System: 'Hệ thống',

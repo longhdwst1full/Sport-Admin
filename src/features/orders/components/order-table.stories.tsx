@@ -43,6 +43,7 @@ const meta = {
     rows: demoRows,
     loading: false,
     page: 1,
+    pageSize: 20,
     total: 1,
     onPageChange: () => undefined,
     onOpen: () => undefined,
@@ -55,4 +56,3 @@ type Story = StoryObj<typeof meta>;
 export const Populated: Story = {};
 export const Loading: Story = { args: { rows: [], loading: true } };
 export const Empty: Story = { args: { rows: [], total: 0 } };
-

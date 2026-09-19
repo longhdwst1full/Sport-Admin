@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Alert, Drawer, Form, Input, Select, Space, Button } from 'antd';
 import type { PermissionDto, RoleDto } from '@/generated/api/iam/models';
+import { ROOT_ROLE_CODE } from '../constants/role.constants';
 import { PermissionPicker } from './permission-picker';
 
 export interface RoleFormValues {
@@ -31,6 +32,7 @@ export function RoleFormDrawer({
   const [form] = Form.useForm<RoleFormValues>();
   const isEdit = Boolean(editing);
   const isSystem = editing?.system ?? false;
+  const isRootRole = editing?.code === ROOT_ROLE_CODE;
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +72,11 @@ export function RoleFormDrawer({
           type="info"
           showIcon
           message="Vai trò hệ thống"
-          description="Mã vai trò và trạng thái bị khoá vì mã nguồn tham chiếu tới chúng. Bạn vẫn tinh chỉnh được tên và danh sách quyền."
+          description={
+            isRootRole
+              ? 'OWNER là vai trò quản trị gốc nên không thể ngừng hoạt động. Bạn vẫn tinh chỉnh được tên và danh sách quyền.'
+              : 'Mã vai trò được hệ thống tham chiếu nên không thể đổi. Có thể ngừng hoặc kích hoạt lại vai trò bằng trường Trạng thái.'
+          }
         />
       )}
       <Alert
@@ -112,7 +118,7 @@ export function RoleFormDrawer({
         {isEdit && (
           <Form.Item name="status" label="Trạng thái">
             <Select
-              disabled={isSystem}
+              disabled={isRootRole}
               options={[
                 { value: 'ACTIVE', label: 'Đang dùng' },
                 { value: 'INACTIVE', label: 'Ngừng dùng' },

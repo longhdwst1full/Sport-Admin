@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Alert, Card, Col, Row, Typography } from 'antd';
+import { Card, Col, Row, Typography } from 'antd';
 
 export interface ManagementMetric {
   key: string;
@@ -17,7 +17,6 @@ interface ManagementPageProps {
   actions?: ReactNode;
   metrics?: ManagementMetric[];
   filters?: ReactNode;
-  dataNotice?: string;
   children: ReactNode;
 }
 
@@ -60,7 +59,6 @@ export function ManagementPage({
   actions,
   metrics = [],
   filters,
-  dataNotice,
   children,
 }: ManagementPageProps) {
   return (
@@ -90,11 +88,18 @@ export function ManagementPage({
           {metrics.map((metric) => {
             const config = toneConfig[metric.tone ?? 'blue'] ?? defaultToneConfig;
             return (
-              <Col key={metric.key} xs={24} sm={12} xl={6}>
+              <Col
+                key={metric.key}
+                xs={24}
+                sm={metrics.length === 1 ? 24 : 12}
+                md={metrics.length === 3 ? 8 : metrics.length === 2 ? 12 : 12}
+                xl={metrics.length <= 4 ? 24 / metrics.length : 6}
+                className="flex"
+              >
                 <Card
-                  className="dctd-metric-card !rounded-2xl !border-slate-100"
+                  className="dctd-metric-card h-full w-full !rounded-2xl !border-slate-100"
                   style={{ '--metric-accent': config.accent } as React.CSSProperties}
-                  styles={{ body: { padding: 20 } }}
+                  styles={{ body: { height: '100%', padding: 20 } }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -132,7 +137,7 @@ export function ManagementPage({
             {filters}
           </div>
         )}
-        <div className="p-5 lg:p-6 w-full overflow-x-auto min-w-0">{children}</div>
+        <div className="min-w-0 w-full overflow-x-auto p-4 sm:p-5 lg:p-6">{children}</div>
       </Card>
     </div>
   );

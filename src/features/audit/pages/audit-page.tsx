@@ -100,7 +100,6 @@ export function AuditPage() {
         eyebrow="Bảo mật & Truy vết hệ thống"
         title="Nhật ký Audit Log"
         description="Toàn bộ hành vi ghi và thay đổi trạng thái dữ liệu trên hệ thống PostgreSQL đều được ghi nhận bất biến."
-        dataNotice="Dữ liệu chỉ đọc, đã che thông tin nhạy cảm và chỉ mở cho Chủ tài khoản cấp cao có phạm vi toàn hệ thống."
         actions={
           <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>
             Làm mới

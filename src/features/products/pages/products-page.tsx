@@ -1,4 +1,4 @@
-import { CheckCircleOutlined, DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { App, Avatar, Button, Input, Select, Switch, Table, Tag, Tooltip } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -160,46 +160,39 @@ export function ProductsPage() {
           },
         ]}
         filters={
-          <div className="flex flex-wrap gap-3">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Input
               allowClear
               value={name}
               placeholder="Tên sản phẩm"
-              className="!w-56"
+              className="!w-full"
               onChange={(event) => setName(event.target.value)}
             />
             <Input
               allowClear
               value={sku}
               placeholder="SKU"
-              className="!w-40"
+              className="!w-full"
               onChange={(event) => setSku(event.target.value)}
             />
             <Input
               allowClear
               value={productNo}
               placeholder="Mã sản phẩm"
-              className="!w-40"
+              className="!w-full"
               onChange={(event) => setProductNo(event.target.value)}
             />
             <Select
               allowClear
               showSearch
               optionFilterProp="label"
-              className="min-w-56"
+              className="!w-full"
               placeholder="Lọc theo danh mục"
               value={category}
               onChange={setCategory}
               loading={categories.isPending}
               options={categoryOptions}
             />
-            <Button
-              icon={<ReloadOutlined />}
-              className="!rounded-xl"
-              onClick={() => void query.refetch()}
-            >
-              Làm mới
-            </Button>
           </div>
         }
       >
@@ -214,12 +207,15 @@ export function ProductsPage() {
           rowKey="id"
           loading={query.isPending}
           dataSource={query.data?.items ?? []}
+          tableLayout="fixed"
+          scroll={{ x: 1120 }}
           pagination={{
             current: query.data?.meta.page ?? page,
             pageSize: query.data?.meta.limit ?? pageSize,
             total: query.data?.meta.total ?? 0,
             showSizeChanger: true,
-            pageSizeOptions: ['10', '20', '50', '100'],
+            pageSizeOptions: ['20', '50', '100'],
+            responsive: true,
             showTotal: (total) => (
               <span className="text-xs text-slate-500">{total} sản phẩm</span>
             ),
@@ -232,6 +228,8 @@ export function ProductsPage() {
             {
               title: 'Sản phẩm',
               dataIndex: 'name',
+              width: 380,
+              fixed: 'left',
               render: (_, row) => (
                 <div className="flex items-center gap-3">
                   <Avatar
@@ -255,6 +253,7 @@ export function ProductsPage() {
               title: 'Giá đã VAT',
               dataIndex: 'minPrice',
               align: 'right',
+              width: 170,
               render: (value: string | null | undefined) => (
                 <span className="font-semibold text-slate-800">
                   {value ? money.format(Number(value)) : <span className="text-slate-400">—</span>}
@@ -265,6 +264,7 @@ export function ProductsPage() {
               title: 'Loại',
               dataIndex: 'productType',
               align: 'center',
+              width: 120,
               render: (value: string) => (
                 <Tag
                   className="!rounded-full !border-0 !px-3 !text-xs !font-medium"
@@ -278,6 +278,7 @@ export function ProductsPage() {
               title: 'Trạng thái',
               dataIndex: 'status',
               align: 'center',
+              width: 150,
               render: (value: string) => {
                 const config = STATUS_CONFIG[value] ?? { color: 'default', label: value };
                 return (
@@ -333,6 +334,7 @@ export function ProductsPage() {
               key: 'actions',
               align: 'right',
               width: 100,
+              fixed: 'right',
               render: (_, row) => (
                 <div className="flex items-center justify-end gap-1">
                   <Tooltip title="Chi tiết">
@@ -360,16 +362,17 @@ export function ProductsPage() {
             },
           ]}
         />
-        <div className="mt-2 flex items-center justify-between">
-          <Button
-            type="text"
-            size="small"
-            icon={<ReloadOutlined />}
-            className="!text-slate-500 hover:!text-emerald-600"
-            onClick={() => void query.refetch()}
-          >
-            Làm mới danh sách
-          </Button>
+        <div className="mt-3 flex justify-end border-t border-slate-100 pt-3">
+          <Tooltip title="Làm mới danh sách">
+            <Button
+              type="text"
+              aria-label="Làm mới danh sách sản phẩm"
+              icon={<ReloadOutlined />}
+              loading={query.isFetching}
+              className="!text-slate-500 hover:!text-emerald-600"
+              onClick={() => void query.refetch()}
+            />
+          </Tooltip>
         </div>
       </ManagementPage>
       <ProductFormDrawer

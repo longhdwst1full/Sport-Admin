@@ -23,6 +23,7 @@ export function PaymentTable({
       rowKey="id"
       dataSource={rows}
       loading={loading}
+      tableLayout="fixed"
       scroll={{ x: 980 }}
       locale={{ emptyText: 'Không có thanh toán phù hợp bộ lọc.' }}
       pagination={{
@@ -46,4 +47,3 @@ export function PaymentTable({
     />
   );
 }
-

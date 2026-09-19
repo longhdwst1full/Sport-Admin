@@ -110,7 +110,6 @@ export function FlashSalesPage() {
         eyebrow="Marketing operations"
         title="Flash Sale"
         description="Chiến dịch giảm giá theo khung giờ với quota giới hạn cho từng SKU."
-        dataNotice="Quota flash không thay thế tồn kho vật lý; checkout phải giành được cả hai trong cùng transaction."
         metrics={[
           {
             key: 'total',

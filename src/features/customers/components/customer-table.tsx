@@ -2,7 +2,7 @@ import { Button, Popconfirm, Space, Table, Tag, Tooltip } from 'antd';
 import { CheckCircleOutlined, DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import { PermissionGate } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
-import { CUSTOMER_PAGE_SIZE, customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
+import { CUSTOMER_PAGE_SIZE, customerKindPresentation } from '../constants/customer.constants';
 import type { CustomerRowView } from '../model/customer.mapper';
 import { getCustomerDeleteBlockReason } from '../model/customer.policy';
 
@@ -36,6 +36,7 @@ export function CustomerTable({
     {
       key: 'customer',
       title: 'Khách hàng',
+      width: 260,
       render: (_value: unknown, row: CustomerRowView) => (
         <div>
           <div className="font-semibold text-slate-800">{row.name}</div>
@@ -46,6 +47,7 @@ export function CustomerTable({
     {
       key: 'contact',
       title: 'Liên hệ',
+      width: 250,
       render: (_value: unknown, row: CustomerRowView) => (
         <div className="text-xs">
           <div className="text-slate-700">{row.phone}</div>
@@ -175,7 +177,8 @@ export function CustomerTable({
       dataSource={rows}
       loading={loading}
       columns={columns}
-      scroll={{ x: 1100 }}
+      tableLayout="fixed"
+      scroll={{ x: 1220 }}
       onRow={(row) => ({ onClick: () => onOpen(row.id), style: { cursor: 'pointer' } })}
       pagination={{
         current: page,

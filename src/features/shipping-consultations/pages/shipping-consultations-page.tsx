@@ -53,7 +53,6 @@ export function ShippingConsultationsPage() {
         eyebrow="Sales operations"
         title="Tư vấn giao hàng"
         description="Tiếp nhận checkout cồng kềnh hoặc giao xe khách, gọi khách và chốt phí trước khi khách xác nhận giữ hàng."
-        dataNotice="Dữ liệu lấy trực tiếp từ API checkout theo phạm vi chi nhánh. Order, Payment và Fulfillment đầy đủ thuộc Sprint 4."
         metrics={[
           {
             key: 'total',

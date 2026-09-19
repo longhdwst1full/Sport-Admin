@@ -422,20 +422,23 @@ a,
   display: flex !important;
   align-items: center !important;
   flex-wrap: wrap !important;
-  gap: 6px !important;
-  margin-top: 16px !important;
-  margin-bottom: 8px !important;
+  justify-content: flex-end !important;
+  row-gap: 10px !important;
+  column-gap: 4px !important;
+  margin: 18px 0 0 !important;
+  padding-top: 14px !important;
+  border-top: 1px solid #f1f5f9;
 }
 
 .ant-pagination .ant-pagination-item {
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   border: 1px solid #e2e8f0 !important;
   background: #ffffff !important;
   font-weight: 500 !important;
   transition: all 180ms ease !important;
-  min-width: 32px !important;
-  height: 32px !important;
-  line-height: 30px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  line-height: 32px !important;
   text-align: center !important;
 }
 
@@ -455,7 +458,7 @@ a,
 .ant-pagination .ant-pagination-item-active {
   background: #ecfdf5 !important;
   border-color: #059669 !important;
-  box-shadow: 0 1px 3px rgb(5 150 105 / 0.15) !important;
+  box-shadow: 0 2px 8px rgb(5 150 105 / 0.16) !important;
 }
 
 .ant-pagination .ant-pagination-item-active a {
@@ -465,7 +468,11 @@ a,
 
 .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
 .ant-pagination .ant-pagination-next .ant-pagination-item-link {
-  border-radius: 8px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
   border: 1px solid #e2e8f0 !important;
   background: #ffffff !important;
   color: #64748b !important;
@@ -480,19 +487,40 @@ a,
 }
 
 .ant-pagination .ant-pagination-options {
-  margin-left: 12px !important;
+  margin-left: 8px !important;
 }
 
 .ant-pagination .ant-pagination-options .ant-select-selector {
-  border-radius: 8px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
   border-color: #e2e8f0 !important;
   font-size: 12px !important;
+}
+
+.ant-pagination .ant-pagination-options .ant-select-selection-item {
+  line-height: 32px !important;
 }
 
 .ant-pagination-total-text {
   font-size: 13px !important;
   color: #64748b !important;
-  margin-right: 12px !important;
+  margin-right: auto !important;
+}
+
+@media (max-width: 640px) {
+  .ant-pagination {
+    justify-content: center !important;
+  }
+
+  .ant-pagination-total-text {
+    width: 100%;
+    margin-right: 0 !important;
+    text-align: center;
+  }
+
+  .ant-pagination .ant-pagination-options {
+    margin-left: 0 !important;
+  }
 }
 
 .dctd-nav-tab .dctd-tab-close {

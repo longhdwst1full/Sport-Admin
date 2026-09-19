@@ -135,7 +135,6 @@ export function SystemParametersPage() {
         eyebrow="System configuration"
         title="Tham số hệ thống"
         description="Ngưỡng nghiệp vụ sửa được tại đây và có hiệu lực ngay, không cần deploy lại."
-        dataNotice="Bí mật và cấu hình hạ tầng (chuỗi kết nối, khoá API, JWT) vẫn nằm ở biến môi trường và không xuất hiện ở màn hình này."
         metrics={[
           {
             key: 'total',

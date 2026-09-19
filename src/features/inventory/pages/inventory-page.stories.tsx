@@ -26,7 +26,6 @@ function InventoryReview({ state }: { state: 'loaded' | 'empty' | 'error' }) {
       eyebrow="Inventory control"
       title="Tồn kho & sổ kho"
       description="Theo dõi tồn khả dụng theo kho, phiếu điều chỉnh và ledger bất biến."
-      dataNotice="Story dùng dữ liệu mô phỏng để review trạng thái giao diện, không gọi API."
       actions={<Button type="primary" icon={<PlusOutlined />}>Tạo phiếu điều chỉnh</Button>}
       metrics={[
         { key: 'sku', label: 'Dòng tồn', value: state === 'loaded' ? 3 : 0, icon: <InboxOutlined /> },

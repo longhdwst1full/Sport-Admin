@@ -23,6 +23,7 @@ export function FulfillmentTable({
       rowKey="id"
       dataSource={rows}
       loading={loading}
+      tableLayout="fixed"
       scroll={{ x: 1180 }}
       locale={{ emptyText: 'Không có phiếu giao vận phù hợp bộ lọc.' }}
       pagination={{

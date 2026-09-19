@@ -29,7 +29,6 @@ export const ProductManagement: Story = {
     eyebrow: 'Catalog',
     title: 'Quản lý sản phẩm',
     description: 'Quản lý SPU, SKU, combo, giá và nội dung hiển thị trên Storefront.',
-    dataNotice: 'Dữ liệu minh họa dùng để review component và layout, không gọi API.',
     actions: <Button type="primary">Thêm sản phẩm</Button>,
     metrics: [
       { key: 'all', label: 'Tổng sản phẩm', value: 128, icon: <AppstoreOutlined /> },

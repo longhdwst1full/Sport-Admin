@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.3.0
+> **Document version:** 1.4.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-09-19
 >
-> **Change summary:** Ghép Admin confirm và toàn bộ Fulfillment workflow qua generated SDK.
+> **Change summary:** Chuẩn hóa responsive, phân trang server-side 20/50/100 dòng và chuyển làm mới xuống dưới bảng.
 
 ## Phạm vi
 
@@ -12,7 +12,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 ## Ranh giới và contract
 
-- `pages/orders-page.tsx` sở hữu tab/search/page và gọi `useListAdminOrders`.
+- `pages/orders-page.tsx` sở hữu tab/search/page/pageSize và gọi `useListAdminOrders`.
 - `components/order-table.tsx` chỉ trình bày danh sách và phát action chọn order.
 - `components/order-detail-drawer.tsx` tự tải detail qua `useGetAdminOrder`; không dùng summary để đoán dữ liệu chi tiết.
 - `components/fulfillment-workflow-panel.tsx` tải Fulfillment theo Order và chỉ mở action hợp lệ với status/permission hiện tại.
@@ -37,6 +37,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.4.0 | 2026-09-19 | Pagination mặc định 20, chọn 20/50/100; refresh chuyển xuống dưới bảng và metric responsive đều cột. | Admin list UI review |
 | 1.3.0 | 2026-09-13 | Thêm confirm Order và Fulfillment workflow/cache invalidation qua generated SDK. | DBAPI-20260913-FULFILLMENT-S43 |
 | 1.2.0 | 2026-09-12 | Đổi copy và rule UI sang manual complete không giới hạn ngày sau DELIVERED/SUCCESS. | API-20260912-ORDER-GUEST-HARDENING |
 | 1.1.1 | 2026-09-11 | Reset mutation/reason/idempotency khi đóng và thêm action confirmation stories. | ADMIN-20260911-ORDER-S41-HARDENING |

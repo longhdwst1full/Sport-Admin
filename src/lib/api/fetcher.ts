@@ -8,6 +8,7 @@ import {
   usesAuthCookieTransport,
 } from '@/core/auth/auth-token.store';
 import type { TokenPairDto } from '@/generated/api/auth/models';
+import { expireAdminSession } from '@/core/auth/auth-session-expiry';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
@@ -46,6 +47,7 @@ async function rotateTokens(): Promise<TokenPairDto> {
     })
     .catch((error: unknown) => {
       clearAuthTokens();
+      expireAdminSession();
       throw error;
     })
     .finally(() => {
@@ -97,15 +99,27 @@ export async function apiFetcher<T>(
       error.response?.status === 401 &&
       // Điều kiện là CÒN refresh token, không phải còn access token: access hết hạn
       // trước là đúng luồng, chặn ở đây thì không bao giờ xoay được token.
-      hasRefreshCredential() &&
       !isAuthEndpoint
     ) {
-      const tokens = await rotateTokens();
-      const response = await apiClient.request<T>({
-        ...requestConfig,
-        headers: { ...requestConfig.headers, Authorization: `Bearer ${tokens.accessToken}` },
-      });
-      return response.data;
+      if (!hasRefreshCredential()) {
+        clearAuthTokens();
+        expireAdminSession();
+      } else {
+        const tokens = await rotateTokens();
+        try {
+          const response = await apiClient.request<T>({
+            ...requestConfig,
+            headers: { ...requestConfig.headers, Authorization: `Bearer ${tokens.accessToken}` },
+          });
+          return response.data;
+        } catch (retryError) {
+          if (axios.isAxiosError(retryError) && retryError.response?.status === 401) {
+            clearAuthTokens();
+            expireAdminSession();
+          }
+          throw retryError;
+        }
+      }
     }
     if (axios.isAxiosError(error)) {
       throw new ApiError(error.response?.status ?? 0, error.response?.data);

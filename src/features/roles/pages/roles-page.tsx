@@ -16,6 +16,7 @@ import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { RoleFormDrawer, type RoleFormValues } from '../components/role-form-drawer';
 import { RoleTable } from '../components/role-table';
+import { getRoleRemovalMode } from '../model/role-lifecycle.policy';
 
 export function RolesPage() {
   const { message, modal } = App.useApp();
@@ -77,21 +78,26 @@ export function RolesPage() {
   const deleteMutation = useMutation({
     mutationFn: ({ row, reason }: { row: RoleDto; reason: string }) =>
       deleteAdminRole(row.id, { expectedVersion: row.version, reason }),
-    onSuccess: async () => {
+    onSuccess: async (_data, { row }) => {
       await refresh();
-      void message.success('Đã xoá vai trò');
+      void message.success(row.system ? 'Đã ngừng sử dụng vai trò' : 'Đã xoá vai trò');
     },
     onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
   });
 
   function confirmDelete(row: RoleDto) {
     let reason = '';
+    const deactivateSystemRole = getRoleRemovalMode(row) === 'DEACTIVATE';
     modal.confirm({
-      title: `Xoá vai trò ${row.code}?`,
+      title: deactivateSystemRole
+        ? `Ngừng sử dụng vai trò ${row.code}?`
+        : `Xoá vai trò ${row.code}?`,
       content: (
         <div className="space-y-2">
           <p className="text-sm text-slate-500">
-            Chỉ xoá được khi vai trò chưa gán cho người dùng nào. Thao tác không hoàn tác được.
+            {deactivateSystemRole
+              ? 'Nhân viên đang giữ vai trò này sẽ mất quyền ngay. Vai trò và lịch sử phân quyền vẫn được giữ lại, và có thể kích hoạt lại ở màn Sửa.'
+              : 'Chỉ xoá được khi vai trò chưa gán cho người dùng nào. Thao tác không hoàn tác được.'}
           </p>
           <Input.TextArea
             rows={2}
@@ -102,7 +108,7 @@ export function RolesPage() {
           />
         </div>
       ),
-      okText: 'Xoá',
+      okText: deactivateSystemRole ? 'Ngừng sử dụng' : 'Xoá',
       okButtonProps: { danger: true },
       cancelText: 'Hủy',
       onOk: () => {
@@ -121,7 +127,6 @@ export function RolesPage() {
         eyebrow="Access control"
         title="Vai trò & phân quyền"
         description="Tạo vai trò riêng cho cửa hàng và tích chọn đúng những gì vai trò đó được làm."
-        dataNotice="Vai trò hệ thống (OWNER, BRANCH_MANAGER, STAFF) sửa được quyền nhưng không xoá được vì mã nguồn tham chiếu tới mã của chúng."
         metrics={[
           {
             key: 'roles',
@@ -169,6 +174,7 @@ export function RolesPage() {
         )}
         <RoleTable
           rows={rows}
+          permissions={permissionItems}
           loading={roles.isLoading || roles.isFetching}
           canManage={canManage}
           onEdit={(row) => {

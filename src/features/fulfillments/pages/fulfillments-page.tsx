@@ -47,7 +47,6 @@ export function FulfillmentsPage() {
         eyebrow="Warehouse operations"
         title="Giao vận"
         description="Hàng đợi xử lý tại kho: lấy hàng, đóng gói, bàn giao và nhận hàng hoàn."
-        dataNotice="Thao tác trạng thái nằm trong chi tiết đơn; mọi chuyển trạng thái dùng expected version và idempotency key."
         metrics={[
           {
             key: 'total',

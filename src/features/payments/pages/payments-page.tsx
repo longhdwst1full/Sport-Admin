@@ -23,7 +23,7 @@ export function PaymentsPage() {
 
   return (
     <>
-      <ManagementPage eyebrow="Finance operations" title="Thanh toán" description="Đối soát chuyển khoản và ghi nhận COD theo đúng phạm vi chi nhánh." dataNotice="Bằng chứng không tự xác nhận tiền; mọi thao tác dùng version, idempotency và lưu audit."
+      <ManagementPage eyebrow="Finance operations" title="Thanh toán" description="Đối soát chuyển khoản và ghi nhận COD theo đúng phạm vi chi nhánh."
         metrics={[
           { key: 'total', label: 'Thanh toán phù hợp', value: payments.data?.total ?? 0, icon: <BankOutlined />, tone: 'blue' },
           { key: 'awaiting', label: 'Chờ đối soát trên trang', value: rows.filter((item) => item.status === 'AWAITING_CONFIRMATION').length, icon: <SafetyCertificateOutlined />, tone: 'orange' },
@@ -37,4 +37,3 @@ export function PaymentsPage() {
     </>
   );
 }
-

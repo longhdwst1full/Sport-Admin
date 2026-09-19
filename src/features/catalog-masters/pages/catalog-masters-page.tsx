@@ -138,7 +138,6 @@ export function CatalogMastersPage() {
         eyebrow="Dữ liệu danh mục gốc"
         title="Thương hiệu & Danh mục"
         description="Quản trị cấu trúc cây ngành hàng thể thao và thương hiệu ủy quyền chính hãng trên hệ thống."
-        dataNotice="Mã định danh không thể thay đổi sau khi tạo. Dữ liệu được bảo toàn bất biến phục vụ báo cáo doanh thu."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button

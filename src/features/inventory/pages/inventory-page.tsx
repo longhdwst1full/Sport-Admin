@@ -57,7 +57,6 @@ export function InventoryPage() {
         eyebrow="Quản trị kho vận"
         title="Tồn kho & Sổ kho"
         description="Theo dõi tồn khả dụng theo từng kho, đối soát phiếu điều chỉnh và audit sổ kho bất biến từ cơ sở dữ liệu."
-        dataNotice="Không sửa trực tiếp số lượng tồn sản phẩm. Mọi biến động tồn đều phải tạo chứng từ và phát sinh movement truy vết."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button icon={<ReloadOutlined />} onClick={() => void refresh()}>

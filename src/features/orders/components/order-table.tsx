@@ -4,7 +4,6 @@ import type { AdminOrderSummaryDto } from '@/generated/api/orders/models';
 import { StatusTag } from '@/foundation/management';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import {
-  ORDER_PAGE_SIZE,
   orderStatusPresentation,
   paymentStatusPresentation,
 } from '../constants/order.constants';
@@ -13,9 +12,10 @@ interface OrderTableProps {
   rows: AdminOrderSummaryDto[];
   loading: boolean;
   page: number;
+  pageSize: number;
   total: number;
   colVisibility?: Record<string, boolean>;
-  onPageChange: (page: number) => void;
+  onPageChange: (page: number, pageSize: number) => void;
   onOpen: (id: string) => void;
 }
 
@@ -39,6 +39,7 @@ export function OrderTable({
   rows,
   loading,
   page,
+  pageSize,
   total,
   colVisibility = {},
   onPageChange,
@@ -226,14 +227,16 @@ export function OrderTable({
       rowKey="id"
       dataSource={rows}
       loading={loading}
+      tableLayout="fixed"
       scroll={{ x: 1180 }}
       locale={{ emptyText: 'Không có đơn hàng phù hợp bộ lọc.' }}
       pagination={{
         current: page,
-        pageSize: ORDER_PAGE_SIZE,
+        pageSize,
         total,
         showSizeChanger: true,
-        pageSizeOptions: ['10', '20', '50', '100'],
+        pageSizeOptions: ['20', '50', '100'],
+        responsive: true,
         showTotal: (value) => `Tổng ${value} đơn hàng`,
         onChange: onPageChange,
       }}

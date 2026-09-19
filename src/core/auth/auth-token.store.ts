@@ -3,19 +3,26 @@ import { AuthService } from '@/core/storage';
 
 const cookieTransport = import.meta.env.VITE_AUTH_TOKEN_TRANSPORT === 'COOKIE';
 const listeners = new Set<() => void>();
+/** COOKIE mode chỉ giữ access token trong memory; refresh token thuộc HttpOnly cookie của API. */
+let cookieTransportTokens: TokenPairDto | undefined;
 
 function notify(): void {
   listeners.forEach((listener) => listener());
 }
 
 export function readAuthTokens(): TokenPairDto | undefined {
-  if (cookieTransport) return undefined;
+  if (cookieTransport) return cookieTransportTokens;
   return AuthService.read();
 }
 
 export function saveAuthTokens(tokens: TokenPairDto, remember?: boolean): void {
-  // COOKIE transport: server đã set HttpOnly cookie, client không giữ bản sao.
-  if (!cookieTransport) AuthService.save(tokens, remember);
+  if (cookieTransport) {
+    // Access token phải có trong memory để gắn Bearer header. Không persist nó và
+    // tuyệt đối không sao chép refresh token HttpOnly sang JavaScript.
+    cookieTransportTokens = { ...tokens, refreshToken: undefined };
+  } else {
+    AuthService.save(tokens, remember);
+  }
   notify();
 }
 
@@ -24,6 +31,7 @@ export function usesAuthCookieTransport(): boolean {
 }
 
 export function clearAuthTokens(): void {
+  cookieTransportTokens = undefined;
   AuthService.clear();
   notify();
 }

@@ -79,7 +79,6 @@ export function ContentPage() {
         eyebrow="Quản trị nội dung CMS"
         title="Bài viết & Tin tức"
         description="Soạn thảo, quản lý bài viết hướng dẫn thể thao, câu chuyện thương hiệu và tin tức trên storefront."
-        dataNotice="Bài viết đã xuất bản sẽ hiển thị công khai trên Storefront cho khách hàng tham khảo."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>

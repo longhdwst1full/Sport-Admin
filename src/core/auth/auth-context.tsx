@@ -16,6 +16,7 @@ import {
   saveAuthTokens,
   usesAuthCookieTransport,
 } from './auth-token.store';
+import { AUTH_SESSION_EXPIRED_EVENT, expireAdminSession } from './auth-session-expiry';
 
 interface AuthContextValue {
   currentUser?: CurrentUserDto;
@@ -49,7 +50,9 @@ export const PERMISSION_CHANGING_OPERATIONS = new Set([
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [restoringCookieSession, setRestoringCookieSession] = useState(usesAuthCookieTransport());
+  const [restoringCookieSession, setRestoringCookieSession] = useState(
+    () => usesAuthCookieTransport() && window.location.pathname !== '/login',
+  );
   const hasTokens = useSyncExternalStore(subscribeAuthTokens, hasStoredTokens, () => false);
   const developmentBypass =
     import.meta.env.DEV && (import.meta.env.VITE_DEV_BYPASS_PERMISSIONS ?? 'true') === 'true';
@@ -83,12 +86,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * dùng kẹt lại ở màn hình mà mọi lời gọi API đều 401 và không bị đưa về trang đăng nhập.
    */
   useEffect(() => {
-    if (hasTokens || usesAuthCookieTransport()) return;
+    if (hasTokens) return;
     queryClient.removeQueries({ queryKey: getGetAdminCurrentUserQueryKey() });
   }, [hasTokens, queryClient]);
 
   useEffect(() => {
-    if (!usesAuthCookieTransport() || hasTokens) {
+    const clearPrivateCache = () => queryClient.clear();
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, clearPrivateCache);
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, clearPrivateCache);
+  }, [queryClient]);
+
+  useEffect(() => {
+    if (!usesAuthCookieTransport() || window.location.pathname === '/login') {
       setRestoringCookieSession(false);
       return;
     }
@@ -98,7 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) saveAuthTokens(tokens);
       })
       .catch(() => {
-        if (active) clearAuthTokens();
+        if (active) {
+          clearAuthTokens();
+          expireAdminSession();
+        }
       })
       .finally(() => {
         if (active) setRestoringCookieSession(false);
@@ -106,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [hasTokens]);
+  }, [queryClient]);
 
   const establishSession = async (
     tokens: TokenPairDto,

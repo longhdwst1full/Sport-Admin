@@ -103,7 +103,6 @@ export function OrganizationPage() {
       eyebrow="Organization"
       title="Chi nhánh & kho"
       description="Cấu trúc vận hành V1: mỗi chi nhánh sở hữu đúng một kho bán hàng."
-      dataNotice="Dữ liệu lấy từ generated Admin Organization SDK và PostgreSQL khi DATABASE_ENABLED=true. Mọi thay đổi branch/kho dùng optimistic version."
       actions={
         <PermissionGate permission={BRANCH_WAREHOUSE_MANAGE}>
           <Button

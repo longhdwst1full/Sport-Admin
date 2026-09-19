@@ -1,10 +1,10 @@
 # Products — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-09-19
 >
-> **Change summary:** Tạo note sau khi tách 11 file phẳng thành `pages/components/model`.
+> **Change summary:** Chuẩn hóa list sản phẩm: mặc định 20 dòng, chọn 20/50/100, pagination responsive và refresh icon dưới bảng.
 
 ## Phạm vi
 
@@ -56,4 +56,5 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.1.0 | 2026-09-19 | Chuẩn hóa pagination và toolbar dưới bảng theo layout quản trị responsive. |
 | 1.0.0 | 2026-09-13 | Tạo note sau khi chuẩn hoá anatomy. |

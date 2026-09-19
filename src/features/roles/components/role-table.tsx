@@ -1,15 +1,45 @@
-import { Button, Space, Table, Tag, Tooltip, Typography } from 'antd';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import type { RoleDto } from '@/generated/api/iam/models';
+import { Button, Space, Table, Tag, Tooltip, Tree, Typography } from 'antd';
+import { DeleteOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
+import type { DataNode } from 'antd/es/tree';
+import type { PermissionDto, RoleDto } from '@/generated/api/iam/models';
+import { permissionActionLabels, ROOT_ROLE_CODE } from '../constants/role.constants';
+import { buildPermissionTree } from '../model/permission-tree';
+import { getRoleRemovalMode } from '../model/role-lifecycle.policy';
+
+function rolePermissionTree(row: RoleDto, permissions: PermissionDto[]): DataNode[] {
+  const selected = new Set(row.permissionCodes);
+  return buildPermissionTree(permissions.filter(({ code }) => selected.has(code))).map((group) => ({
+    key: `group:${group.key}`,
+    title: <span className="font-semibold text-slate-700">{group.label}</span>,
+    children: group.screens.map((screen) => ({
+      key: `screen:${group.key}:${screen.key}`,
+      title: <span className="font-medium text-slate-700">{screen.label}</span>,
+      children: screen.permissions.map((permission) => ({
+        key: permission.code,
+        title: (
+          <span className="text-sm text-slate-600">
+            {permissionActionLabels[permission.action] ?? permission.action}
+            <Typography.Text type="secondary" className="ml-2 !text-xs">
+              {permission.code}
+            </Typography.Text>
+          </span>
+        ),
+        isLeaf: true,
+      })),
+    })),
+  }));
+}
 
 export function RoleTable({
   rows,
+  permissions,
   loading,
   canManage,
   onEdit,
   onDelete,
 }: {
   rows: RoleDto[];
+  permissions: PermissionDto[];
   loading: boolean;
   canManage: boolean;
   onEdit: (row: RoleDto) => void;
@@ -21,10 +51,24 @@ export function RoleTable({
       loading={loading}
       dataSource={rows}
       pagination={false}
+      tableLayout="fixed"
+      scroll={{ x: 960 }}
+      expandable={{
+        expandedRowRender: (row) => (
+          <div className="rounded-lg border border-slate-100 bg-slate-50/70 px-4 py-3">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Quyền theo màn hình
+            </div>
+            <Tree selectable={false} defaultExpandAll treeData={rolePermissionTree(row, permissions)} />
+          </div>
+        ),
+        rowExpandable: (row) => row.permissionCodes.length > 0,
+      }}
       columns={[
         {
           title: 'Vai trò',
           dataIndex: 'name',
+          width: 280,
           render: (_value, row) => (
             <div>
               <div className="font-medium">
@@ -49,6 +93,8 @@ export function RoleTable({
         {
           title: 'Mô tả',
           dataIndex: 'description',
+          width: 360,
+          ellipsis: true,
           render: (value: string | undefined) => value ?? '—',
         },
         {
@@ -62,23 +108,40 @@ export function RoleTable({
           title: '',
           key: 'actions',
           width: 160,
+          fixed: 'right',
           align: 'right',
-          render: (_value, row) => (
-            <Space>
+          render: (_value, row) => {
+            const removalMode = getRoleRemovalMode(row);
+            return (
+              <Space>
               <Button size="small" icon={<EditOutlined />} disabled={!canManage} onClick={() => onEdit(row)}>
                 Sửa
               </Button>
-              <Tooltip title={row.system ? 'Vai trò hệ thống không xoá được' : undefined}>
+              <Tooltip
+                title={
+                  row.code === ROOT_ROLE_CODE
+                    ? 'OWNER phải luôn hoạt động để tránh khóa toàn hệ thống'
+                    : row.system
+                      ? removalMode === 'BLOCKED'
+                        ? 'Vai trò đã ngừng; dùng Sửa để kích hoạt lại'
+                        : 'Ngừng sử dụng vai trò hệ thống'
+                      : 'Xóa vai trò tự tạo chưa được gán'
+                }
+              >
                 <Button
                   size="small"
                   danger
-                  icon={<DeleteOutlined />}
-                  disabled={!canManage || row.system}
+                  icon={row.system ? <StopOutlined /> : <DeleteOutlined />}
+                  disabled={
+                    !canManage
+                    || removalMode === 'BLOCKED'
+                  }
                   onClick={() => onDelete(row)}
                 />
               </Tooltip>
-            </Space>
-          ),
+              </Space>
+            );
+          },
         },
       ]}
     />

@@ -1,9 +1,19 @@
+// @vitest-environment jsdom
 import type { AxiosAdapter, InternalAxiosRequestConfig } from 'axios';
-import { describe, expect, it } from 'vitest';
+import axios, { AxiosError, AxiosHeaders } from 'axios';
+import { afterEach, describe, expect, it } from 'vitest';
 import { apiFetcher, isCredentialEndpoint } from './fetcher';
 import { clearAuthTokens, saveAuthTokens } from '@/core/auth/auth-token.store';
+import {
+  AUTH_SESSION_EXPIRED_EVENT,
+  consumeExpiredSessionFlash,
+} from '@/core/auth/auth-session-expiry';
 
 describe('apiFetcher', () => {
+  afterEach(() => {
+    clearAuthTokens();
+    consumeExpiredSessionFlash();
+  });
   it('serializes request bodies for generated mutations', async () => {
     saveAuthTokens({
       accessToken: 'verified-access-token',
@@ -61,6 +71,37 @@ describe('apiFetcher', () => {
   it('tài nguyên thường vẫn được xoay token', () => {
     expect(isCredentialEndpoint('/api/v1/admin/products')).toBe(false);
     expect(isCredentialEndpoint('/api/v1/admin/reports/revenue')).toBe(false);
+  });
+
+  it('phát tín hiệu hết phiên khi API trả 401 mà không còn refresh credential', async () => {
+    clearAuthTokens();
+    window.history.replaceState({}, '', '/login');
+    let expiredEvents = 0;
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, () => {
+      expiredEvents += 1;
+    }, { once: true });
+    const adapter: AxiosAdapter = async (config) => {
+      throw new AxiosError(
+        'Unauthorized',
+        AxiosError.ERR_BAD_REQUEST,
+        { ...config, headers: AxiosHeaders.from(config.headers) },
+        undefined,
+        {
+          config: { ...config, headers: AxiosHeaders.from(config.headers) },
+          data: { statusCode: 401, code: 'UNAUTHORIZED', message: 'Phiên hết hạn' },
+          headers: {},
+          status: 401,
+          statusText: 'Unauthorized',
+        },
+      );
+    };
+
+    await expect(
+      apiFetcher({ url: '/api/v1/admin/reports/top-products', method: 'GET' }, { adapter }),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(axios.isAxiosError(new AxiosError())).toBe(true);
+    expect(expiredEvents).toBe(1);
+    expect(consumeExpiredSessionFlash()).toBe(true);
   });
 
 });

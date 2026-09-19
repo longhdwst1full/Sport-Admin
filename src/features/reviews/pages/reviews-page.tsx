@@ -230,7 +230,6 @@ export function ReviewsPage() {
         eyebrow="Ý kiến khách hàng"
         title="Đánh giá & Nhận xét"
         description="Kiểm duyệt đánh giá chất lượng sản phẩm từ người mua hàng trước khi xuất bản ra storefront."
-        dataNotice="Chỉ tài khoản có quyền catalog.review.moderate mới được duyệt hoặc gỡ bỏ đánh giá khỏi website."
         actions={
           <div className="flex gap-2">
             <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>

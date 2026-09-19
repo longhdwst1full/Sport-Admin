@@ -32,6 +32,7 @@ export function SystemParameterTable({
       rowKey="id"
       dataSource={rows}
       loading={loading}
+      tableLayout="fixed"
       scroll={{ x: 1240 }}
       locale={{ emptyText: 'Không có tham số phù hợp bộ lọc.' }}
       pagination={{

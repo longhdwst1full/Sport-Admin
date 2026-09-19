@@ -9,7 +9,7 @@ import {
   SettingOutlined,
   ShoppingCartOutlined,
 } from '@ant-design/icons';
-import { Alert, Button, Input, Tabs } from 'antd';
+import { Alert, Button, Input, Tabs, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
 import { useListAdminOrders } from '@/generated/api/orders/orders';
 import type { ListAdminOrdersStatusGroup } from '@/generated/api/orders/models';
@@ -41,6 +41,7 @@ export function OrdersPage() {
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(ORDER_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
   const [columnModalOpen, setColumnModalOpen] = useState(false);
   const [colVisibility, setColVisibility] = useState<Record<string, boolean>>({
@@ -66,7 +67,7 @@ export function OrdersPage() {
 
   const orders = useListAdminOrders({
     page,
-    limit: ORDER_PAGE_SIZE,
+    limit: pageSize,
     statusGroup: tab === 'ALL' ? undefined : tab,
     orderNo: debouncedOrderNo || undefined,
     recipientName: debouncedName || undefined,
@@ -82,7 +83,6 @@ export function OrdersPage() {
         eyebrow="Vận hành bán hàng"
         title="Quản lý đơn hàng"
         description="Theo dõi toàn bộ đơn hàng từ lúc đặt, xác nhận, đóng gói, xuất kho đến giao hàng thành công."
-        dataNotice="Danh sách và tìm kiếm chạy server-side trên dữ liệu Order thật; trạng thái thanh toán và giao hàng là snapshot từ Backend."
         metrics={[
           {
             key: 'total',
@@ -115,32 +115,31 @@ export function OrdersPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-1 flex-wrap items-center gap-3">
+          <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="grid w-full flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <Input
                 allowClear
-                className="!w-48"
+                className="!w-full"
                 value={orderNo}
                 placeholder="Mã đơn"
                 onChange={(event) => setOrderNo(event.target.value)}
               />
               <Input
                 allowClear
-                className="!w-52"
+                className="!w-full"
                 value={recipientName}
                 placeholder="Tên người nhận"
                 onChange={(event) => setRecipientName(event.target.value)}
               />
               <Input
                 allowClear
-                className="!w-44"
+                className="!w-full"
                 value={recipientPhone}
                 placeholder="Số điện thoại"
                 onChange={(event) => setRecipientPhone(event.target.value)}
               />
-              <Button icon={<ReloadOutlined />} onClick={() => void orders.refetch()}>
-                Làm mới
-              </Button>
+            </div>
+            <div className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end">
               <PermissionGate permission="order.manage">
                 <Button
                   type="primary"
@@ -150,14 +149,14 @@ export function OrdersPage() {
                   Tạo đơn
                 </Button>
               </PermissionGate>
+              <Button
+                icon={<SettingOutlined />}
+                onClick={() => setColumnModalOpen(true)}
+                className="text-slate-600"
+              >
+                Tùy chỉnh cột
+              </Button>
             </div>
-            <Button
-              icon={<SettingOutlined />}
-              onClick={() => setColumnModalOpen(true)}
-              className="text-slate-600"
-            >
-              Tùy chỉnh cột
-            </Button>
           </div>
         }
       >
@@ -186,11 +185,26 @@ export function OrdersPage() {
           rows={rows}
           loading={orders.isLoading || orders.isFetching}
           page={page}
+          pageSize={pageSize}
           total={orders.data?.total ?? 0}
           colVisibility={colVisibility}
-          onPageChange={setPage}
+          onPageChange={(nextPage, nextPageSize) => {
+            setPage(nextPageSize === pageSize ? nextPage : 1);
+            setPageSize(nextPageSize);
+          }}
           onOpen={setSelectedId}
         />
+        <div className="mt-3 flex justify-end border-t border-slate-100 pt-3">
+          <Tooltip title="Làm mới danh sách">
+            <Button
+              type="text"
+              aria-label="Làm mới danh sách đơn hàng"
+              icon={<ReloadOutlined />}
+              loading={orders.isFetching}
+              onClick={() => void orders.refetch()}
+            />
+          </Tooltip>
+        </div>
       </ManagementPage>
 
       <ColumnSettingsModal

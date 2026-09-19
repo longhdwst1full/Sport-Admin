@@ -1225,7 +1225,7 @@ export const useUpdateAdminRole = <
 };
 
 /**
- * @summary Delete a custom role that is not assigned to any user
+ * @summary Deactivate a system role or delete an unassigned custom role
  */
 export const deleteAdminRole = (roleId: string, deleteRoleDto: BodyType<DeleteRoleDto>) => {
   return apiFetcher<void>({
@@ -1282,7 +1282,7 @@ export type DeleteAdminRoleMutationError = ErrorType<
 >;
 
 /**
- * @summary Delete a custom role that is not assigned to any user
+ * @summary Deactivate a system role or delete an unassigned custom role
  */
 export const useDeleteAdminRole = <
   TError = ErrorType<

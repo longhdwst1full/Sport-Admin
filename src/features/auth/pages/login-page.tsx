@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { App, Button, Checkbox, Form, Input, Tooltip } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ import type { LoginDto } from '@/generated/api/auth/models';
 import { useAuth } from '@/core/auth/auth-context';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { consumeExpiredSessionFlash } from '@/core/auth/auth-session-expiry';
 
 const schema: yup.ObjectSchema<LoginDto> = yup.object({
   identifier: yup.string().trim().required('Vui lòng nhập email hoặc số điện thoại').max(255),
@@ -26,6 +27,12 @@ export function LoginPage() {
     resolver: yupResolver(schema),
     defaultValues: { identifier: '', password: '' },
   });
+
+  useEffect(() => {
+    if (consumeExpiredSessionFlash()) {
+      void message.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+    }
+  }, [message]);
 
   const login = useLoginAdmin({
     mutation: {

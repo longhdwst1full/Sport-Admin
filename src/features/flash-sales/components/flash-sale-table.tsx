@@ -23,6 +23,7 @@ export function FlashSaleTable({
       rowKey="id"
       dataSource={rows}
       loading={loading}
+      tableLayout="fixed"
       scroll={{ x: 1060 }}
       locale={{ emptyText: 'Không có chiến dịch phù hợp bộ lọc.' }}
       pagination={{
