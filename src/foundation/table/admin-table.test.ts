@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ColumnsType } from 'antd/es/table';
-import { withFixedColumnWidths } from './admin-table';
+import { withFixedColumnWidths } from './table-config';
 
 interface DemoRow {
   id: string;

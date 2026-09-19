@@ -8,12 +8,12 @@ import {
   PoweroffOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Descriptions, Popconfirm, Space, Typography } from 'antd';
+import { App, Button, Descriptions, Popconfirm, Typography } from 'antd';
 import { useState } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage, StatusTag } from '@/foundation/management';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import {
   getListAdminBranchesQueryKey,
   getListAdminWarehousesQueryKey,
@@ -203,25 +203,24 @@ export function OrganizationPage() {
             ),
           },
           {
-            title: 'Thao tác',
+            title: '',
             key: 'actions',
-            width: 220,
+            width: 100,
             align: 'right',
             // Ghim phải để không phải cuộn ngang mới bấm được Sửa/Ngừng.
             fixed: 'right',
             render: (_, row: BranchWarehouseRow) => (
               <PermissionGate permission={BRANCH_WAREHOUSE_MANAGE}>
-                <Space>
-                  <Button
+                <TableActions>
+                  <TableActionButton
+                    label={`Sửa chi nhánh ${row.branchName}`}
                     icon={<EditOutlined />}
                     disabled={!row.warehouse}
                     onClick={() => {
                       setSelectedBranch(row.branch);
                       setDrawerOpen(true);
                     }}
-                  >
-                    Sửa
-                  </Button>
+                  />
                   <Popconfirm
                     title={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho?' : 'Kích hoạt lại chi nhánh và kho?'}
                     description="Hai bản ghi sẽ đổi trạng thái trong cùng transaction."
@@ -239,11 +238,14 @@ export function OrganizationPage() {
                       else activate.mutate(variables);
                     }}
                   >
-                    <Button danger={row.status === 'ACTIVE'} disabled={!row.warehouse} icon={<PoweroffOutlined />}>
-                      {row.status === 'ACTIVE' ? 'Ngừng' : 'Bật'}
-                    </Button>
+                    <TableActionButton
+                      label={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho' : 'Kích hoạt chi nhánh và kho'}
+                      danger={row.status === 'ACTIVE'}
+                      disabled={!row.warehouse}
+                      icon={<PoweroffOutlined />}
+                    />
                   </Popconfirm>
-                </Space>
+                </TableActions>
               </PermissionGate>
             ),
           },

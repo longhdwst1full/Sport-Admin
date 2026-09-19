@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
-import { Button, Space, Tag, Tooltip, Typography } from 'antd';
-import { AdminTable } from '@/foundation/table';
+import { Space, Tag, Tooltip, Typography } from 'antd';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import type { SystemParameterDto } from '@/generated/api/system/models';
 import {
   SYSTEM_PARAMETER_PAGE_SIZE,
@@ -128,27 +128,20 @@ export function SystemParameterTable({
           width: 110,
           render: (_, row) =>
             canManage ? (
-              <Space size={4}>
-                <Tooltip title="Sửa giá trị">
-                  <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(row)} />
-                </Tooltip>
-                <Tooltip
-                  title={
+              <TableActions>
+                <TableActionButton label={`Sửa tham số ${row.code}`} icon={<EditOutlined />} onClick={() => onEdit(row)} />
+                <TableActionButton
+                  label={
                     row.isSystem
                       ? 'Tham số hệ thống không ngừng dùng được'
                       : 'Ngừng dùng tham số này'
                   }
-                >
-                  <Button
-                    size="small"
                     danger
-                    type="text"
                     icon={<DeleteOutlined />}
                     disabled={row.isSystem || row.status !== 'ACTIVE'}
                     onClick={() => onDeactivate(row)}
                   />
-                </Tooltip>
-              </Space>
+              </TableActions>
             ) : null,
         },
       ]}

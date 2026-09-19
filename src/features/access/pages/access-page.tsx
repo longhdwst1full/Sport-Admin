@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import {
+  DeleteOutlined,
   LockOutlined,
   PlusOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
+  UnlockOutlined,
   UserOutlined,
+  UserSwitchOutlined,
 } from '@ant-design/icons';
 import { Alert, Avatar, Button, Space, Tabs, Tag, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage, StatusTag } from '@/foundation/management';
+import { TableActionButton, TableActions } from '@/foundation/table';
 import {
   useListAdminPermissions,
   useListAdminRoles,
@@ -204,39 +208,35 @@ export function AccessPage() {
                   ...(canAssignRoles || canManageUsers
                     ? [
                         {
-                          title: 'Thao tác',
+                          title: '',
                           key: 'actions',
-                          width: 220,
+                          width: 130,
                           fixed: 'right' as const,
                           render: (_: unknown, user: UserDto) => {
                             const isOwner = user.assignments.some(
                               ({ roleCode }) => roleCode === 'OWNER',
                             );
                             return (
-                              <Space size={0}>
+                              <TableActions>
                                 {canAssignRoles && !isOwner && (
-                                  <Button type="link" onClick={() => setAssignmentUser(user)}>
-                                    Gán vai trò
-                                  </Button>
+                                  <TableActionButton label={`Gán vai trò cho ${user.displayName}`} icon={<UserSwitchOutlined />} onClick={() => setAssignmentUser(user)} />
                                 )}
                                 {canManageUsers && !isOwner && user.status === 'ACTIVE' && (
-                                  <Button
-                                    type="link"
+                                  <TableActionButton
+                                    label={`Xóa tài khoản ${user.displayName}`}
                                     danger
+                                    icon={<DeleteOutlined />}
                                     onClick={() => setLifecycle({ action: 'DELETE', user })}
-                                  >
-                                    Xóa
-                                  </Button>
+                                  />
                                 )}
                                 {canManageUsers && !isOwner && user.status === 'LOCKED' && (
-                                  <Button
-                                    type="link"
+                                  <TableActionButton
+                                    label={`Mở khóa ${user.displayName}`}
+                                    icon={<UnlockOutlined />}
                                     onClick={() => setLifecycle({ action: 'UNLOCK', user })}
-                                  >
-                                    Mở khóa
-                                  </Button>
+                                  />
                                 )}
-                              </Space>
+                              </TableActions>
                             );
                           },
                         },

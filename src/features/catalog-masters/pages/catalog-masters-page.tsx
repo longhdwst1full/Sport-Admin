@@ -9,13 +9,13 @@ import {
   TagsOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Input, Popconfirm, Space, Tabs } from 'antd';
+import { App, Button, Input, Popconfirm, Tabs } from 'antd';
 import { useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage, StatusTag } from '@/foundation/management';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import {
   getListAdminBrandsQueryKey,
@@ -247,23 +247,21 @@ export function CatalogMastersPage() {
                       ),
                     },
                     {
-                      title: 'Thao tác',
+                      title: '',
                       key: 'actions',
-                      width: 200,
+                      width: 130,
                       align: 'right' as const,
                       render: (_, row: BrandDto) => (
                         <PermissionGate permission="catalog.brand.manage">
-                          <Space size="small">
-                            <Button
-                              size="small"
+                          <TableActions>
+                            <TableActionButton
+                              label={`Sửa thương hiệu ${row.name}`}
                               icon={<EditOutlined />}
                               onClick={() => {
                                 setSelectedBrand(row);
                                 setBrandDrawerOpen(true);
                               }}
-                            >
-                              Sửa
-                            </Button>
+                            />
                             <Popconfirm
                               title={
                                 row.status === 'ACTIVE'
@@ -283,13 +281,11 @@ export function CatalogMastersPage() {
                                     })
                               }
                             >
-                              <Button
-                                size="small"
+                              <TableActionButton
+                                label={row.status === 'ACTIVE' ? 'Ngừng thương hiệu' : 'Kích hoạt thương hiệu'}
                                 danger={row.status === 'ACTIVE'}
                                 icon={<PoweroffOutlined />}
-                              >
-                                {row.status === 'ACTIVE' ? 'Ngừng' : 'Bật'}
-                              </Button>
+                              />
                             </Popconfirm>
                             <Popconfirm
                               title="Xoá hẳn thương hiệu?"
@@ -300,8 +296,8 @@ export function CatalogMastersPage() {
                                 deleteBrand.mutate({ id: row.id, expectedVersion: row.version })
                               }
                             >
-                              <Button
-                                size="small"
+                              <TableActionButton
+                                label={`Xóa thương hiệu ${row.name}`}
                                 danger
                                 icon={<DeleteOutlined />}
                                 loading={
@@ -309,7 +305,7 @@ export function CatalogMastersPage() {
                                 }
                               />
                             </Popconfirm>
-                          </Space>
+                          </TableActions>
                         </PermissionGate>
                       ),
                     },
@@ -382,23 +378,21 @@ export function CatalogMastersPage() {
                       ),
                     },
                     {
-                      title: 'Thao tác',
+                      title: '',
                       key: 'actions',
-                      width: 200,
+                      width: 130,
                       align: 'right' as const,
                       render: (_, row: CategoryDto) => (
                         <PermissionGate permission="catalog.category.manage">
-                          <Space size="small">
-                            <Button
-                              size="small"
+                          <TableActions>
+                            <TableActionButton
+                              label={`Sửa danh mục ${row.name}`}
                               icon={<EditOutlined />}
                               onClick={() => {
                                 setSelectedCategory(row);
                                 setCategoryDrawerOpen(true);
                               }}
-                            >
-                              Sửa
-                            </Button>
+                            />
                             <Popconfirm
                               title={
                                 row.status === 'ACTIVE'
@@ -418,13 +412,11 @@ export function CatalogMastersPage() {
                                     })
                               }
                             >
-                              <Button
-                                size="small"
+                              <TableActionButton
+                                label={row.status === 'ACTIVE' ? 'Ngừng danh mục' : 'Kích hoạt danh mục'}
                                 danger={row.status === 'ACTIVE'}
                                 icon={<PoweroffOutlined />}
-                              >
-                                {row.status === 'ACTIVE' ? 'Ngừng' : 'Bật'}
-                              </Button>
+                              />
                             </Popconfirm>
                             <Popconfirm
                               title="Xoá danh mục này?"
@@ -437,19 +429,17 @@ export function CatalogMastersPage() {
                                 })
                               }
                             >
-                              <Button
+                              <TableActionButton
+                                label={`Xóa danh mục ${row.name}`}
                                 danger
-                                size="small"
                                 icon={<DeleteOutlined />}
                                 loading={
                                   deleteCategory.isPending &&
                                   deleteCategory.variables?.id === row.id
                                 }
-                              >
-                                Xoá
-                              </Button>
+                              />
                             </Popconfirm>
-                          </Space>
+                          </TableActions>
                         </PermissionGate>
                       ),
                     },

@@ -1,8 +1,8 @@
-import { AuditOutlined, InboxOutlined, PlusOutlined, SwapOutlined, WarningOutlined } from '@ant-design/icons';
+import { AuditOutlined, EditOutlined, EyeOutlined, InboxOutlined, PlusOutlined, SwapOutlined, WarningOutlined } from '@ant-design/icons';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Alert, Button, Empty, Input, Progress, Select, Tabs, Tag, Typography } from 'antd';
 import { ManagementPage } from '@/foundation/management';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 
 const balances = [
   { id: '1', sku: 'TA-CAO-SU-5KG', productName: 'Tạ tay cao su 5kg', warehouseCode: 'KHO-HCM-01', onHand: 12, reserved: 2, available: 10, reorderPoint: 3, status: 'IN_STOCK' },
@@ -61,7 +61,7 @@ function InventoryReview({ state }: { state: 'loaded' | 'empty' | 'error' }) {
                     { title: 'Đang giữ', dataIndex: 'reserved', align: 'right' },
                     { title: 'Có thể bán', dataIndex: 'available', align: 'right', render: (value, row) => <div><strong>{value}</strong><Progress percent={row.onHand ? Math.round((value / row.onHand) * 100) : 0} showInfo={false} size="small" /></div> },
                     { title: 'Trạng thái', dataIndex: 'status', render: (value: keyof typeof status) => <Tag color={status[value].color}>{status[value].label}</Tag> },
-                    { title: 'Thao tác', render: () => <Button type="link">Điều chỉnh</Button> },
+                    { title: '', width: 72, fixed: 'right', render: () => <TableActionButton label="Điều chỉnh tồn" icon={<EditOutlined />} /> },
                   ]}
                 />
               )}
@@ -76,7 +76,7 @@ function InventoryReview({ state }: { state: 'loaded' | 'empty' | 'error' }) {
             { title: 'Kho nhận', dataIndex: 'to' },
             { title: 'Số SKU', dataIndex: 'itemCount', align: 'right' },
             { title: 'Trạng thái', dataIndex: 'status', render: (value) => <Tag color={value === 'SHIPPED' ? 'orange' : 'default'}>{value === 'SHIPPED' ? 'Đang vận chuyển' : 'Nháp'}</Tag> },
-            { title: 'Thao tác', render: () => <Button type="link">Xem & xử lý</Button> },
+            { title: '', width: 72, fixed: 'right', render: () => <TableActionButton label="Xem và xử lý" icon={<EyeOutlined />} /> },
           ]} />,
         }]}
       />

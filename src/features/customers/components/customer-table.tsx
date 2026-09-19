@@ -1,5 +1,5 @@
-import { Button, Popconfirm, Space, Tag, Tooltip } from 'antd';
-import { AdminTable } from '@/foundation/table';
+import { Popconfirm, Tag, Tooltip } from 'antd';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { CheckCircleOutlined, DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import { PermissionGate } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
@@ -122,15 +122,14 @@ export function CustomerTable({
         return (
           <PermissionGate permission="customer.manage">
           {/* Chặn onRow mở drawer chi tiết khi người dùng bấm vào nút trong ô. */}
-          <Space size={2} onClick={(event) => event.stopPropagation()}>
-            <Tooltip title="Sửa">
-              <Button
-                type="text"
+          <div onClick={(event) => event.stopPropagation()}>
+          <TableActions>
+              <TableActionButton
+                label={`Sửa khách hàng ${row.name}`}
                 icon={<EditOutlined />}
                 disabled={busyId === row.id}
                 onClick={() => onEdit(row)}
               />
-            </Tooltip>
             <Tooltip title={row.status === 'ACTIVE' ? 'Ngừng hoạt động' : 'Mở lại'}>
               <Popconfirm
                 title={
@@ -141,8 +140,8 @@ export function CustomerTable({
                 description="Lịch sử mua hàng vẫn được giữ nguyên."
                 onConfirm={() => onToggleStatus(row)}
               >
-                <Button
-                  type="text"
+                <TableActionButton
+                  label={row.status === 'ACTIVE' ? 'Ngừng hoạt động' : 'Mở lại'}
                   disabled={busyId === row.id}
                   icon={row.status === 'ACTIVE' ? <StopOutlined /> : <UndoOutlined />}
                 />
@@ -156,16 +155,17 @@ export function CustomerTable({
                 disabled={Boolean(deleteBlockReason)}
                 onConfirm={() => onDelete(row)}
               >
-                <Button
+                <TableActionButton
+                  label={deleteBlockReason ?? `Xóa khách hàng ${row.name}`}
                   danger
-                  type="text"
                   icon={<DeleteOutlined />}
                   // Khách đã mua hàng là một phần của lịch sử đơn; Backend cũng từ chối xoá.
                   disabled={Boolean(deleteBlockReason) || busyId === row.id}
                 />
               </Popconfirm>
             </Tooltip>
-          </Space>
+          </TableActions>
+          </div>
           </PermissionGate>
         );
       },

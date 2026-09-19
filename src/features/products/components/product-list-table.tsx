@@ -5,7 +5,7 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import { Avatar, Button, Switch, Tag, Tooltip } from 'antd';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import type { ReactNode } from 'react';
 import { StatusTag } from '@/foundation/management';
 import { PRODUCT_LIST_PAGE_SIZE_OPTIONS } from '../constants/product-list.constants';
@@ -170,30 +170,23 @@ export function ProductListTable({
             width: 100,
             fixed: 'right',
             render: (_value, row) => (
-              <div className="flex items-center justify-end gap-1">
-                <Tooltip title="Chi tiết">
-                  <Button
-                    type="text"
-                    aria-label={`Xem sản phẩm ${row.name}`}
-                    icon={<EditOutlined />}
-                    className="!rounded-lg !text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
-                    onClick={() => onOpen(row.slug)}
-                  />
-                </Tooltip>
+              <TableActions>
+                <TableActionButton
+                  label={`Xem sản phẩm ${row.name}`}
+                  icon={<EditOutlined />}
+                  className="!text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
+                  onClick={() => onOpen(row.slug)}
+                />
                 {canManage && row.status !== 'ARCHIVED' && (
-                  <Tooltip title="Xoá / Lưu trữ">
-                    <Button
-                      type="text"
-                      danger
-                      aria-label={`Lưu trữ sản phẩm ${row.name}`}
-                      icon={<DeleteOutlined />}
-                      className="!rounded-lg"
-                      loading={archiveBusyId === row.id}
-                      onClick={() => onArchive(row)}
-                    />
-                  </Tooltip>
+                  <TableActionButton
+                    label={`Lưu trữ sản phẩm ${row.name}`}
+                    danger
+                    icon={<DeleteOutlined />}
+                    loading={archiveBusyId === row.id}
+                    onClick={() => onArchive(row)}
+                  />
                 )}
-              </div>
+              </TableActions>
             ),
           },
         ]}

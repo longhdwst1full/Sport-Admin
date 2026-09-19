@@ -21,7 +21,6 @@ import {
   Space,
   Spin,
   Steps,
-  Table,
   Tag,
   Timeline,
   Tooltip,

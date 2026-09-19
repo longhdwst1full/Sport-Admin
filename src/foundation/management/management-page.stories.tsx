@@ -1,12 +1,13 @@
 import {
   AppstoreOutlined,
   CheckCircleOutlined,
+  EyeOutlined,
   InboxOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
 import { Button, Input, Select, Space, Tag } from 'antd';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import { ManagementPage } from './management-page';
 
 const rows = [
@@ -53,7 +54,7 @@ export const ProductManagement: Story = {
           { title: 'Sản phẩm', dataIndex: 'name' },
           { title: 'Tồn có thể bán', dataIndex: 'stock', align: 'right' },
           { title: 'Trạng thái', dataIndex: 'status', render: (value) => <Tag color={value === 'ACTIVE' ? 'green' : 'gold'}>{value === 'ACTIVE' ? 'Đang bán' : 'Bản nháp'}</Tag> },
-          { title: 'Thao tác', render: () => <Button type="link">Chi tiết</Button> },
+          { title: '', width: 72, fixed: 'right', render: () => <TableActionButton label="Xem chi tiết" icon={<EyeOutlined />} /> },
         ]}
       />
     ),
