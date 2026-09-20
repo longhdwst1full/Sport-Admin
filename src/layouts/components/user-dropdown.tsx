@@ -18,9 +18,6 @@ export function UserDropdown() {
   const user = auth.currentUser;
   const displayName = user?.displayName ?? 'Admin';
   const initials = getInitials(displayName);
-  const scopeLabels = Array.isArray(user?.scopes)
-    ? user.scopes.map((scope) => scope.type).join(', ')
-    : '';
 
   const items: MenuProps['items'] = [
     {
@@ -61,29 +58,21 @@ export function UserDropdown() {
     >
       <button
         type="button"
-        className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-500/40"
+        className="flex items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-500/40"
       >
         <Avatar
-          size={36}
+          size={30}
           alt={displayName}
-          className="!flex !items-center !justify-center !text-xs !font-bold shrink-0 border border-emerald-500/20"
+          className="!flex !items-center !justify-center !text-[10px] !font-bold shrink-0"
           style={{
-            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-            boxShadow: '0 2px 8px rgb(5 150 105 / 0.25)',
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            boxShadow: '0 1px 4px rgba(245, 158, 11, 0.25)',
           }}
         >
           {initials}
         </Avatar>
-        <div className="hidden text-left xl:block">
-          <div className="text-sm font-medium leading-tight text-slate-800">
-            {displayName}
-          </div>
-          <div className="text-[11px] leading-tight text-slate-400">
-            {scopeLabels || 'Admin'}
-          </div>
-        </div>
         <svg
-          className="hidden size-4 text-slate-400 xl:block"
+          className="size-3.5 text-slate-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

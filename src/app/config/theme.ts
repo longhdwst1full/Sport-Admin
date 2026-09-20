@@ -1,59 +1,59 @@
 import type { ThemeConfig } from 'antd';
 
 /**
- * Premium Admin Design System — Ant Design theme tokens.
+ * Enterprise Admin / ERP Design System — Ant Design theme tokens.
  *
- * Palette: Emerald-centric with slate neutrals.
- * Philosophy: Clean surfaces, generous radius, subtle shadows, vibrant accents.
+ * Palette: Dark Navy Sidebar (#151d2f) + Amber/Gold Accent (#f59e0b) + Corporate Blue (#2563eb).
+ * Philosophy: Desktop-first, compact sizing, high information density, clean borders, crisp typography.
  */
 export const ADMIN_THEME: ThemeConfig = {
   token: {
     // ── Brand & semantic colors ─────────────────────────────
-    colorPrimary: '#059669',
-    colorInfo: '#0ea5e9',
-    colorSuccess: '#22c55e',
+    colorPrimary: '#f59e0b',
+    colorInfo: '#2563eb',
+    colorSuccess: '#16a34a',
     colorWarning: '#f59e0b',
     colorError: '#ef4444',
-    colorLink: '#059669',
+    colorLink: '#2563eb',
 
     // ── Typography ──────────────────────────────────────────
     colorText: '#0f172a',
-    colorTextSecondary: '#64748b',
-    colorTextTertiary: '#94a3b8',
+    colorTextSecondary: '#475569',
+    colorTextTertiary: '#64748b',
     colorTextQuaternary: '#cbd5e1',
 
     // ── Borders & backgrounds ───────────────────────────────
-    colorBorder: '#e2e8f0',
-    colorBorderSecondary: '#f1f5f9',
+    colorBorder: '#cbd5e1',
+    colorBorderSecondary: '#e2e8f0',
     colorBgLayout: '#f8fafc',
     colorBgContainer: '#ffffff',
     colorBgElevated: '#ffffff',
-    colorBgSpotlight: '#0f172a',
+    colorBgSpotlight: '#151d2f',
 
-    // ── Shape ───────────────────────────────────────────────
-    borderRadius: 12,
-    borderRadiusLG: 16,
-    borderRadiusSM: 8,
-    borderRadiusXS: 6,
+    // ── Shape (Compact ERP aesthetic) ───────────────────────
+    borderRadius: 6,
+    borderRadiusLG: 8,
+    borderRadiusSM: 4,
+    borderRadiusXS: 3,
 
-    // ── Sizing ──────────────────────────────────────────────
-    controlHeight: 40,
-    controlHeightLG: 48,
-    controlHeightSM: 32,
-    fontSize: 14,
-    fontSizeHeading1: 32,
-    fontSizeHeading2: 24,
-    fontSizeHeading3: 20,
-    fontSizeHeading4: 16,
-    fontSizeHeading5: 14,
-    fontSizeLG: 16,
+    // ── Sizing (High density) ────────────────────────────────
+    controlHeight: 34,
+    controlHeightLG: 40,
+    controlHeightSM: 28,
+    fontSize: 13,
+    fontSizeHeading1: 28,
+    fontSizeHeading2: 22,
+    fontSizeHeading3: 18,
+    fontSizeHeading4: 15,
+    fontSizeHeading5: 13,
+    fontSizeLG: 15,
     fontSizeSM: 12,
 
     // ── Shadows ─────────────────────────────────────────────
     boxShadow:
-      '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
+      '0 1px 2px 0 rgb(0 0 0 / 0.05)',
     boxShadowSecondary:
-      '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
+      '0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
 
     // ── Typography ──────────────────────────────────────────
     fontFamily:
@@ -64,95 +64,106 @@ export const ADMIN_THEME: ThemeConfig = {
     // ── Layout shell ────────────────────────────────────────
     Layout: {
       headerBg: '#ffffff',
-      siderBg: '#ffffff',
+      siderBg: '#151d2f',
       bodyBg: '#f8fafc',
-      headerPadding: '0 24px',
-      headerHeight: 72,
+      headerPadding: '0 12px',
+      headerHeight: 44,
     },
 
     // ── Cards ───────────────────────────────────────────────
     Card: {
-      borderRadiusLG: 16,
-      paddingLG: 24,
+      borderRadiusLG: 8,
+      paddingLG: 16,
     },
 
-    // ── Tables ──────────────────────────────────────────────
+    // ── Tables (Compact ERP padding) ────────────────────────
     Table: {
       headerBg: '#f8fafc',
       headerColor: '#475569',
-      headerSplitColor: '#f1f5f9',
-      rowHoverBg: '#f0fdf4',
+      headerSplitColor: '#e2e8f0',
+      rowHoverBg: '#f8fafc',
       borderColor: '#f1f5f9',
-      cellPaddingBlock: 14,
-      cellPaddingInline: 16,
+      cellPaddingBlock: 8,
+      cellPaddingInline: 10,
+      fontSize: 12.5,
     },
 
     // ── Buttons ─────────────────────────────────────────────
     Button: {
-      primaryShadow: '0 4px 14px 0 rgb(5 150 105 / 0.30)',
-      defaultBorderColor: '#e2e8f0',
-      borderRadiusSM: 8,
+      primaryShadow: '0 1px 2px rgba(245, 158, 11, 0.25)',
+      defaultBorderColor: '#cbd5e1',
+      borderRadiusSM: 4,
+      controlHeight: 34,
+      controlHeightSM: 28,
     },
 
     // ── Menu ────────────────────────────────────────────────
     Menu: {
-      itemBorderRadius: 10,
+      itemBorderRadius: 6,
       itemMarginInline: 6,
       itemMarginBlock: 2,
       subMenuItemBg: 'transparent',
-      itemSelectedBg: '#ecfdf5',
-      itemSelectedColor: '#059669',
-      itemHoverBg: '#f1f5f9',
-      itemActiveBg: '#d1fae5',
-      groupTitleColor: '#94a3b8',
-      groupTitleFontSize: 11,
+      itemSelectedBg: 'rgba(245, 158, 11, 0.12)',
+      itemSelectedColor: '#f5b400',
+      itemHoverBg: 'rgba(255, 255, 255, 0.06)',
+      itemActiveBg: 'rgba(245, 158, 11, 0.18)',
+      groupTitleColor: '#64748b',
+      groupTitleFontSize: 10.5,
     },
 
     // ── Inputs ──────────────────────────────────────────────
     Input: {
-      activeBorderColor: '#059669',
-      hoverBorderColor: '#34d399',
-      activeShadow: '0 0 0 3px rgba(5, 150, 105, 0.08)',
+      activeBorderColor: '#f59e0b',
+      hoverBorderColor: '#fbbf24',
+      activeShadow: '0 0 0 2px rgba(245, 158, 11, 0.15)',
+      controlHeight: 34,
+    },
+
+    // ── Select ──────────────────────────────────────────────
+    Select: {
+      controlHeight: 34,
+      borderRadius: 6,
     },
 
     // ── Tabs ────────────────────────────────────────────────
     Tabs: {
-      inkBarColor: '#059669',
-      itemActiveColor: '#059669',
-      itemHoverColor: '#10b981',
-      itemSelectedColor: '#059669',
+      inkBarColor: '#2563eb',
+      itemActiveColor: '#2563eb',
+      itemHoverColor: '#3b82f6',
+      itemSelectedColor: '#2563eb',
     },
 
     // ── Drawer ──────────────────────────────────────────────
     Drawer: {
-      footerPaddingBlock: 16,
-      footerPaddingInline: 24,
+      footerPaddingBlock: 12,
+      footerPaddingInline: 16,
     },
 
     // ── Tag ─────────────────────────────────────────────────
     Tag: {
-      borderRadiusSM: 6,
+      borderRadiusSM: 4,
     },
 
     // ── Badge ───────────────────────────────────────────────
     Badge: {
-      dotSize: 8,
+      dotSize: 7,
     },
 
     // ── Statistic ───────────────────────────────────────────
     Statistic: {
-      titleFontSize: 13,
-      contentFontSize: 28,
+      titleFontSize: 12,
+      contentFontSize: 24,
     },
 
     // ── Modal ───────────────────────────────────────────────
     Modal: {
-      borderRadiusLG: 16,
+      borderRadiusLG: 10,
     },
 
     // ── Alert ───────────────────────────────────────────────
     Alert: {
-      borderRadiusLG: 12,
+      borderRadiusLG: 8,
     },
   },
 };
+

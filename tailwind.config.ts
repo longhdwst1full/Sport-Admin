@@ -44,8 +44,18 @@ export default {
         surface: {
           DEFAULT: '#ffffff',
           raised: '#ffffff',
-          sunken: '#f1f5f9',
+          sunken: '#f8fafc',
           overlay: 'rgba(15, 23, 42, 0.6)',
+        },
+        sidebar: {
+          DEFAULT: '#0f172a',
+          lighter: '#1e293b',
+          hover: '#1e293b',
+          active: '#059669',
+          'active-bg': 'rgba(5, 150, 105, 0.15)',
+          text: '#94a3b8',
+          'text-active': '#ffffff',
+          border: '#1e293b',
         },
       },
       boxShadow: {

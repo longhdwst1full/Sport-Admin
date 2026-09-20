@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Avatar,
   Badge,
   Button,
   Layout,
@@ -9,10 +10,20 @@ import {
   type MenuProps,
 } from 'antd';
 import {
+  AppstoreOutlined,
+  BankOutlined,
   BellOutlined,
-  MenuFoldOutlined,
+  CommentOutlined,
+  ControlOutlined,
+  DashboardOutlined,
+  DoubleLeftOutlined,
+  DoubleRightOutlined,
+  InboxOutlined,
+  LogoutOutlined,
   MenuOutlined,
-  MenuUnfoldOutlined,
+  SearchOutlined,
+  SettingOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -23,11 +34,13 @@ import {
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import { setSidebarCollapsed, toggleSidebar } from '@/app/store/layout.slice';
 import { usePermissions } from '@/core/auth/permissions';
+import { useAuth } from '@/core/auth/auth-context';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { PageContainer } from '@/foundation/layout/page-container';
 import { NavigationTabs } from '@/layouts/components/navigation-tabs';
-import { UserDropdown } from '@/layouts/components/user-dropdown';
 import { CommandPalette } from '@/layouts/components/command-palette';
+import { SettingsModal } from '@/layouts/components/settings-modal';
+import { getInitials } from '@/shared/utils';
 
 const { Content, Header, Sider } = Layout;
 
@@ -37,6 +50,8 @@ export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const permissions = usePermissions();
+  const auth = useAuth();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== 'undefined' && window.innerWidth < 768,
@@ -58,162 +73,306 @@ export function AdminLayout() {
   const visibleItems = NAVIGATION_ITEMS.filter(
     (item) => canSeeNavigationItem(item, permissions),
   );
-  const groupedItems = Object.entries(NAVIGATION_GROUP_LABELS)
-    .map(([group, label]) => ({
-      type: 'group' as const,
-      key: group,
-      label,
-      children: visibleItems
+
+  const activeGroup = visibleItems.find((item) => item.path === location.pathname)?.group;
+  const [openKeys, setOpenKeys] = useState<string[]>(() =>
+    activeGroup && activeGroup !== 'overview' ? [`sub-${activeGroup}`] : ['sub-sales', 'sub-catalog'],
+  );
+
+  useEffect(() => {
+    if (activeGroup && activeGroup !== 'overview') {
+      setOpenKeys((prev) => (prev.includes(`sub-${activeGroup}`) ? prev : [...prev, `sub-${activeGroup}`]));
+    }
+  }, [activeGroup]);
+
+  const GROUP_ICONS: Record<string, React.ReactNode> = {
+    overview: <DashboardOutlined />,
+    sales: <ShoppingCartOutlined />,
+    catalog: <AppstoreOutlined />,
+    operations: <InboxOutlined />,
+    experience: <CommentOutlined />,
+    organization: <BankOutlined />,
+    system: <ControlOutlined />,
+  };
+
+  const menuItems: MenuProps['items'] = Object.entries(NAVIGATION_GROUP_LABELS)
+    .map(([group, label]) => {
+      const children = visibleItems
         .filter((item) => item.group === group)
-        .map((item) => ({ key: item.path, icon: item.icon, label: item.label })),
-    }))
-    .filter((group) => group.children.length > 0) satisfies MenuProps['items'];
+        .map((item) => ({
+          key: item.path,
+          icon: item.icon,
+          label: item.label,
+        }));
+
+      if (children.length === 0) return null;
+
+      if (group === 'overview' && children.length === 1) {
+        return children[0];
+      }
+
+      return {
+        key: `sub-${group}`,
+        icon: GROUP_ICONS[group] ?? <ControlOutlined />,
+        label,
+        children,
+      };
+    })
+    .filter(Boolean) as MenuProps['items'];
+
+  const user = auth.currentUser;
+  const displayName = user?.displayName ?? 'Hoàng Đình Long';
+  const employeeCode = user?.userId ? `NV${String(user.userId).padStart(6, '0')}` : 'NV004183';
+  const initials = getInitials(displayName);
 
   return (
-    <Layout className="h-[100dvh] min-h-[100vh] overflow-hidden bg-slate-50">
+    <Layout className="h-[100dvh] min-h-[100vh] overflow-hidden bg-white">
       {/* ── Command Palette (Cmd+K) ──────────────────────────── */}
       <CommandPalette />
 
-      {/* ── Header ───────────────────────────────────────────── */}
-      <Header className="dctd-glass-strong !flex !h-[72px] !items-center !border-b !border-slate-200/60 !px-0">
-        {/* Logo area */}
-        <div
-          className={`flex h-full shrink-0 items-center border-r border-slate-200/60 px-3 md:px-4 transition-[width] duration-300 ease-smooth-out ${
-            isMobile
-              ? 'w-auto'
-              : collapsed
-                ? 'w-[80px] justify-center'
-                : 'w-[260px]'
-          }`}
-        >
-          {isMobile && (
-            <Button
-              type="text"
-              size="small"
-              icon={<MenuOutlined className="text-slate-600" />}
-              onClick={() => dispatch(toggleSidebar())}
-              className="mr-2 !text-slate-600"
-              aria-label="Toggle menu"
-            />
-          )}
-          <button
-            type="button"
-            aria-label="Về trang tổng quan"
-            className="rounded-xl p-1 transition-all duration-200 hover:bg-slate-50 hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-500/40"
-            onClick={() => navigate('/')}
-          >
-            <BrandLogo compact={isMobile || collapsed} />
-          </button>
-        </div>
-
-        {/* Navigation tabs + right actions */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 px-2 sm:px-5">
-          <NavigationTabs navigationItems={visibleItems} />
-
-          <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            {import.meta.env.DEV && (
-              <Tag
-                className="!mr-0 !rounded-lg !border-amber-200 !bg-amber-50 !px-2.5 !text-[11px] !font-semibold !text-amber-700"
-              >
-                DEV
-              </Tag>
-            )}
-
-            {/* Notifications */}
-            <Tooltip title="Thông báo">
-              <Badge dot offset={[-4, 4]}>
-                <Button
-                  type="text"
-                  shape="circle"
-                  aria-label="Thông báo"
-                  icon={<BellOutlined />}
-                  className="!text-slate-500 hover:!bg-slate-100 hover:!text-slate-800"
-                />
-              </Badge>
-            </Tooltip>
-
-            {/* Divider */}
-            <div className="mx-1.5 h-7 w-px bg-slate-200" />
-
-            {/* User dropdown */}
-            <UserDropdown />
-          </div>
-        </div>
-      </Header>
-
-      {/* ── Body ─────────────────────────────────────────────── */}
-      <Layout className="relative h-[calc(100dvh-72px)] min-h-0 overflow-hidden">
+      {/* ── Body (Sidebar + Main) ─────────────────────────────── */}
+      <Layout className="relative h-full min-h-0 overflow-hidden">
         {/* Mobile backdrop overlay */}
         {isMobile && !collapsed && (
           <div
-            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs transition-opacity"
             onClick={() => dispatch(setSidebarCollapsed(true))}
           />
         )}
 
-        {/* ── Sidebar ──────────────────────────────────────── */}
+        {/* ── Sidebar (JARVIS Style) ──────────────────────────── */}
         <Sider
-          width={260}
-          collapsedWidth={isMobile ? 0 : 80}
+          width={240}
+          collapsedWidth={isMobile ? 0 : 64}
           collapsed={collapsed}
-          theme="light"
+          theme="dark"
           breakpoint="lg"
           onCollapse={(nextCollapsed) => {
             if (nextCollapsed !== collapsed) dispatch(setSidebarCollapsed(nextCollapsed));
           }}
-          className={`!flex !h-full !flex-col !border-r !border-slate-200/60 !bg-white transition-all duration-300 ${
+          className={`dctd-dark-sidebar !flex !h-full !flex-col !border-r !border-slate-800/80 transition-all duration-300 ${
             isMobile && !collapsed ? '!fixed !inset-y-0 !left-0 !z-50 !shadow-2xl' : ''
           }`}
-          style={{ boxShadow: '1px 0 12px rgb(15 23 42 / 0.02)' }}
         >
-          <div className="flex h-full min-h-0 flex-col py-3">
-            {/* Menu */}
+          <div className="flex h-full min-h-0 flex-col">
+            {/* ── Logo area (h-11 = 44px) ────────────────────── */}
+            <div
+              className={`flex shrink-0 items-center border-b border-slate-800/80 px-3 h-[44px] ${
+                collapsed ? 'justify-center' : 'justify-between'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                {isMobile && (
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<MenuOutlined className="!text-slate-400" />}
+                    onClick={() => dispatch(toggleSidebar())}
+                    className="!text-slate-400 hover:!text-white shrink-0"
+                    aria-label="Toggle menu"
+                  />
+                )}
+                <button
+                  type="button"
+                  aria-label="Về trang tổng quan"
+                  className="rounded-lg p-0.5 transition-all duration-200 hover:opacity-80 focus-visible:outline-none"
+                  onClick={() => navigate('/')}
+                >
+                  <BrandLogo compact={isMobile || collapsed} dark />
+                </button>
+              </div>
+
+              {/* Collapse button `<<` or `>>` (JARVIS Style) */}
+              {!isMobile && !collapsed && (
+                <button
+                  type="button"
+                  onClick={() => dispatch(toggleSidebar())}
+                  className="flex size-6 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                  title="Thu gọn menu"
+                  aria-label="Thu gọn menu"
+                >
+                  <DoubleLeftOutlined className="text-xs" />
+                </button>
+              )}
+            </div>
+
+            {/* ── Menu ──────────────────────────────────────── */}
             <Menu
               mode="inline"
               inlineCollapsed={collapsed}
-              className="dctd-side-menu dctd-sidebar-scroll min-h-0 flex-1 overflow-y-auto !border-e-0 !bg-white px-2"
+              className="dctd-side-menu dctd-dark-menu dctd-sidebar-scroll min-h-0 flex-1 overflow-y-auto !border-e-0 px-2 py-2"
               selectedKeys={[location.pathname]}
+              openKeys={collapsed ? undefined : openKeys}
+              onOpenChange={(keys) => setOpenKeys(keys)}
               onClick={({ key }) => {
                 navigate(key);
                 if (isMobile) dispatch(setSidebarCollapsed(true));
               }}
-              items={groupedItems}
+              items={menuItems}
             />
 
-            {/* DEV notice */}
+            {/* ── DEV notice ────────────────────────────────── */}
             {!collapsed && import.meta.env.DEV && (
-              <div className="mx-3 mb-3 rounded-xl border border-amber-200/60 bg-gradient-to-r from-amber-50 to-orange-50 p-3 text-xs text-amber-700">
-                <span className="mr-1 inline-block size-1.5 rounded-full bg-amber-400" />
-                Frontend đang bypass permission
+              <div className="mx-3 mb-2 rounded border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-400">
+                <span className="mr-1.5 inline-block size-1.5 rounded-full bg-amber-400" />
+                Bypass permission
               </div>
             )}
 
-            {/* Collapse toggle */}
-            <Tooltip title={collapsed ? 'Mở rộng menu' : undefined} placement="right">
-              <Button
-                type="text"
-                className="!mx-3 !flex !items-center !justify-center !rounded-xl !text-slate-400 hover:!bg-slate-100 hover:!text-slate-600"
-                aria-label={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => dispatch(toggleSidebar())}
-              >
-                {!collapsed && <span className="text-sm">Thu gọn</span>}
-              </Button>
-            </Tooltip>
+            {/* ── Sidebar footer: user + logout (JARVIS Style) ── */}
+            <div className="shrink-0 border-t border-slate-800/80 p-2">
+              <div className="dctd-sidebar-user">
+                <Avatar
+                  size={collapsed ? 30 : 32}
+                  className="!flex !items-center !justify-center !text-xs !font-bold shrink-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)',
+                  }}
+                >
+                  {initials}
+                </Avatar>
+                {!collapsed && (
+                  <>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-xs font-semibold text-slate-200">
+                        {displayName}
+                      </div>
+                      <div className="truncate text-[10.5px] text-slate-400 font-mono">
+                        {employeeCode}
+                      </div>
+                    </div>
+                    {/* Direct Logout Button `[->` */}
+                    <Tooltip title="Đăng xuất" placement="top">
+                      <button
+                        type="button"
+                        onClick={() => void auth.signOut()}
+                        className="flex size-7 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-800 hover:text-red-400 shrink-0"
+                        aria-label="Đăng xuất"
+                      >
+                        <LogoutOutlined className="text-sm" />
+                      </button>
+                    </Tooltip>
+                  </>
+                )}
+              </div>
+
+              {/* Unfold button when collapsed */}
+              {!isMobile && collapsed && (
+                <button
+                  type="button"
+                  onClick={() => dispatch(toggleSidebar())}
+                  className="mt-1 flex w-full items-center justify-center rounded py-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                  title="Mở rộng menu"
+                  aria-label="Mở rộng menu"
+                >
+                  <DoubleRightOutlined className="text-xs" />
+                </button>
+              )}
+            </div>
           </div>
         </Sider>
 
-        {/* ── Content ────────────────────────────────────────── */}
+        {/* ── Main Content Column ───────────────────────────────── */}
         <Layout className="h-full min-h-0 min-w-0">
-          <Content className="h-full min-h-0 overflow-auto bg-gradient-to-b from-slate-50 via-slate-50/80 to-slate-100/50 p-3.5 sm:p-5 lg:p-8">
+          {/* ── Header (44px slim bar like JARVIS) ──────────────── */}
+          <Header className="!flex !h-[44px] !items-center !border-b !border-slate-200 !bg-white !px-0 shadow-2xs">
+            {/* Mobile menu toggle (when sidebar hidden) */}
+            {isMobile && (
+              <Button
+                type="text"
+                size="small"
+                icon={<MenuOutlined className="text-slate-600" />}
+                onClick={() => dispatch(toggleSidebar())}
+                className="ml-2 !text-slate-600"
+                aria-label="Toggle menu"
+              />
+            )}
+
+            {/* Navigation tabs + right actions */}
+            <div className="flex min-w-0 flex-1 items-center gap-2 px-3">
+              <NavigationTabs navigationItems={visibleItems} />
+
+              <div className="ml-auto flex shrink-0 items-center gap-1">
+                {import.meta.env.DEV && (
+                  <Tag
+                    className="!mr-1 !rounded !border-amber-200 !bg-amber-50 !px-1.5 !py-0 !text-[10px] !font-semibold !text-amber-700"
+                  >
+                    DEV
+                  </Tag>
+                )}
+
+                {/* Search icon button */}
+                <Tooltip title="Tìm kiếm nhanh (Ctrl+K)">
+                  <Button
+                    type="text"
+                    shape="circle"
+                    size="small"
+                    aria-label="Tìm kiếm nhanh"
+                    icon={<SearchOutlined />}
+                    onClick={() =>
+                      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))
+                    }
+                    className="!text-slate-500 hover:!bg-slate-100 hover:!text-slate-800"
+                  />
+                </Tooltip>
+
+                {/* Notifications with badge count 4 (JARVIS Style) */}
+                <Tooltip title="Thông báo">
+                  <Badge count={4} size="small" offset={[-2, 2]}>
+                    <Button
+                      type="text"
+                      shape="circle"
+                      size="small"
+                      aria-label="Thông báo"
+                      icon={<BellOutlined />}
+                      className="!text-slate-500 hover:!bg-slate-100 hover:!text-slate-800"
+                    />
+                  </Badge>
+                </Tooltip>
+
+                {/* Settings gear icon */}
+                <Tooltip title="Cài đặt hệ thống">
+                  <Button
+                    type="text"
+                    shape="circle"
+                    size="small"
+                    aria-label="Cài đặt hệ thống"
+                    icon={<SettingOutlined />}
+                    onClick={() => setSettingsOpen(true)}
+                    className="!text-slate-500 hover:!bg-slate-100 hover:!text-slate-800"
+                  />
+                </Tooltip>
+              </div>
+            </div>
+          </Header>
+
+          {/* ── Content Area ───────────────────────────────────── */}
+          <Content className="relative h-full min-h-0 overflow-auto bg-[#f8fafc] p-3.5 sm:p-5 lg:p-6">
             <PageContainer>
               <div className="dctd-page-enter" key={location.pathname}>
                 <Outlet />
               </div>
             </PageContainer>
+
+            {/* ── Floating JARVIS Watermark Badge (Bottom Right) ── */}
+            <div className="fixed bottom-3 right-3.5 z-30 pointer-events-auto select-none">
+              <div
+                className="flex size-9 items-center justify-center rounded-lg bg-white border border-slate-200/90 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group hover:scale-105"
+                title="JARVIS Enterprise Portal"
+              >
+                <span className="text-base font-black text-blue-600 group-hover:text-blue-700 font-sans tracking-tighter">
+                  J
+                </span>
+              </div>
+            </div>
           </Content>
         </Layout>
       </Layout>
+
+
+      {/* ── Settings Modal ─────────────────────────────────────── */}
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Layout>
   );
 }

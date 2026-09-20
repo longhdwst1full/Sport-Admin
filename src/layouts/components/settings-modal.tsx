@@ -18,11 +18,9 @@ import {
   DatabaseOutlined,
   DesktopOutlined,
   InfoCircleOutlined,
-  MoonOutlined,
   ReloadOutlined,
   SettingOutlined,
   SoundOutlined,
-  SunOutlined,
 } from '@ant-design/icons';
 import { createBrowserStore, LocalStorageKey } from '@/core/storage';
 
@@ -56,8 +54,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
     return preferencesStore.read() ?? DEFAULT_PREFERENCES;
   });
-
-  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'auto'>('light');
 
   const updatePreference = <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
     const updated = { ...preferences, [key]: value };
@@ -115,48 +111,19 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               ),
               children: (
                 <div className="space-y-4">
-                  {/* Theme mode card */}
-                  <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">
-                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                      Chủ đề giao diện
-                    </div>
-                    <div className="grid grid-cols-3 gap-2.5">
-                      <div
-                        onClick={() => setThemeMode('light')}
-                        className={`flex flex-col items-center gap-2 rounded-xl border p-3 cursor-pointer transition-all ${
-                          themeMode === 'light'
-                            ? 'border-emerald-500 bg-emerald-50/50 text-emerald-800 shadow-xs'
-                            : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                        }`}
-                      >
-                        <SunOutlined className="text-xl text-amber-500" />
-                        <span className="text-xs font-semibold">Giao diện sáng</span>
-                        <Tag color="success" className="!mr-0 !text-[10px]">Đang dùng</Tag>
-                      </div>
-
-                      <div
-                        onClick={() => {
-                          void message.info('Chế độ giao diện tối (Dark mode) đang được hoàn thiện.');
-                        }}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 p-3 opacity-60 cursor-not-allowed text-slate-400"
-                      >
-                        <MoonOutlined className="text-xl" />
-                        <span className="text-xs font-semibold">Giao diện tối</span>
-                        <Tag className="!mr-0 !text-[10px]">Sắp ra mắt</Tag>
-                      </div>
-
-                      <div
-                        onClick={() => {
-                          void message.info('Chế độ tự động theo hệ thống đang được phát triển.');
-                        }}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 p-3 opacity-60 cursor-not-allowed text-slate-400"
-                      >
-                        <AppstoreOutlined className="text-xl" />
-                        <span className="text-xs font-semibold">Theo thiết bị</span>
-                        <Tag className="!mr-0 !text-[10px]">Tự động</Tag>
-                      </div>
-                    </div>
-                  </Card>
+                      {/* Display density & options */}
+                      <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                          Hiển thị giao diện
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-semibold text-slate-800">Chế độ chuẩn JARVIS</div>
+                            <div className="text-xs text-slate-500">Sidebar tối kết hợp khu vực làm việc sáng sắc nét</div>
+                          </div>
+                          <Tag color="gold" className="!mr-0 font-medium">Tiêu chuẩn</Tag>
+                        </div>
+                      </Card>
 
                   {/* Table display density */}
                   <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">
@@ -304,7 +271,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                       <Descriptions.Item label={<span className="text-slate-500 text-xs">Backend API</span>}>
                         <div className="flex items-center gap-2">
                           <Badge status="success" />
-                          <span className="font-mono text-xs text-slate-700">http://localhost:4000/api/v1</span>
+                          <span className="font-mono text-xs text-slate-700">https://sport-api-doc.vercel.app/api/v1</span>
                         </div>
                       </Descriptions.Item>
                       <Descriptions.Item label={<span className="text-slate-500 text-xs">Cơ sở dữ liệu</span>}>

@@ -2,22 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── CSS Custom Properties (Dark-mode ready) ─────────────────── */
+/* ─── CSS Custom Properties ───────────────────────────────────── */
 :root {
   --color-primary: #059669;
   --color-primary-light: #10b981;
   --color-primary-dark: #047857;
   --color-surface: #ffffff;
-  --color-surface-sunken: #f1f5f9;
+  --color-surface-sunken: #f8fafc;
   --color-surface-raised: #ffffff;
   --color-ink: #0f172a;
   --color-ink-secondary: #64748b;
   --color-ink-tertiary: #94a3b8;
   --color-border: #e2e8f0;
   --color-border-subtle: #f1f5f9;
-  --sidebar-width: 260px;
-  --sidebar-collapsed-width: 80px;
-  --header-height: 72px;
+
+  /* Sidebar dark theme (JARVIS Style) */
+  --sidebar-bg: #151d2f;
+  --sidebar-bg-lighter: #1e293f;
+  --sidebar-text: #8e9eb5;
+  --sidebar-text-hover: #f1f5f9;
+  --sidebar-text-active: #ffffff;
+  --sidebar-active-bg: rgba(245, 158, 11, 0.12);
+  --sidebar-active-border: rgba(245, 158, 11, 0.5);
+  --sidebar-active-accent: #f59e0b;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 72px;
+  --header-height: 44px;
 }
 
 /* ─── Base resets ─────────────────────────────────────────────── */
@@ -63,13 +74,22 @@ a,
   background: #94a3b8;
 }
 
-/* Sidebar scrollbar — slimmer */
+/* Sidebar scrollbar — dark theme, ultra-slim */
 .dctd-sidebar-scroll::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
+}
+
+.dctd-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .dctd-sidebar-scroll::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+}
+
+.dctd-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.35);
 }
 
 /* Header nav tabs scrollbar — horizontal & subtle */
@@ -79,7 +99,7 @@ a,
 }
 
 .dctd-nav-tabs-scroll::-webkit-scrollbar {
-  height: 4px;
+  height: 3px;
 }
 
 .dctd-nav-tabs-scroll::-webkit-scrollbar-track {
@@ -95,58 +115,267 @@ a,
   background: #cbd5e1;
 }
 
-/* ─── Sidebar menu ────────────────────────────────────────────── */
-.dctd-side-menu .ant-menu-item,
-.dctd-side-menu .ant-menu-submenu-title {
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  border-radius: 10px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  font-size: 13.5px;
-  border: 1px solid transparent;
-  transition: all 200ms ease;
+/* ─── Dark Sidebar (JARVIS Theme) ────────────────────────────── */
+.dctd-dark-sidebar {
+  background: #151d2f !important;
 }
 
-.dctd-side-menu .ant-menu-item-selected {
-  background: #ecfdf5 !important;
-  color: #065f46 !important;
-  border: 1px solid #a7f3d0 !important;
-  box-shadow: 0 1px 3px rgb(16 185 129 / 0.12) !important;
+/* ─── Sidebar menu — DARK THEME ──────────────────────────────── */
+.dctd-side-menu.dctd-dark-menu {
+  background: transparent !important;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-item,
+.dctd-side-menu.dctd-dark-menu .ant-menu-submenu-title {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  padding-inline: 12px !important;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sidebar-text) !important;
+  border: 1px solid transparent;
+  transition: all 180ms ease;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-item .anticon {
+  color: var(--sidebar-text) !important;
+  font-size: 14px;
+  margin-right: 8px;
+  transition: color 180ms ease;
+}
+
+/* Active Menu Item (Amber / Gold Accent like JARVIS) */
+.dctd-side-menu.dctd-dark-menu .ant-menu-item-selected {
+  background: var(--sidebar-active-bg) !important;
+  color: #fbbf24 !important;
+  border: 1px solid var(--sidebar-active-border) !important;
   font-weight: 600;
 }
 
-.dctd-side-menu .ant-menu-item-selected .anticon {
-  color: #059669 !important;
+.dctd-side-menu.dctd-dark-menu .ant-menu-item-selected .anticon {
+  color: var(--sidebar-active-accent) !important;
 }
 
-.dctd-side-menu .ant-menu-item:not(.ant-menu-item-selected):hover {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  transform: translateX(2px);
+.dctd-side-menu.dctd-dark-menu .ant-menu-item:not(.ant-menu-item-selected):hover {
+  background: var(--sidebar-bg-lighter) !important;
+  color: var(--sidebar-text-hover) !important;
+  border-color: transparent !important;
 }
 
-.dctd-side-menu .ant-menu-item:not(.ant-menu-item-selected):hover .anticon {
-  color: #059669 !important;
+.dctd-side-menu.dctd-dark-menu .ant-menu-item:not(.ant-menu-item-selected):hover .anticon {
+  color: #e2e8f0 !important;
 }
 
-.dctd-side-menu .ant-menu-item-group-title {
-  padding-top: 18px;
-  padding-bottom: 6px;
-  color: #94a3b8;
+.dctd-side-menu.dctd-dark-menu .ant-menu-item-group-title {
+  padding-top: 14px;
+  padding-bottom: 4px;
+  padding-left: 12px;
+  color: rgba(148, 163, 184, 0.45);
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  border-top: 1px solid #f1f5f9;
-  margin-top: 8px;
+  border-top: 1px solid var(--sidebar-border);
+  margin-top: 6px;
 }
 
-.dctd-side-menu .ant-menu-item-group:first-child .ant-menu-item-group-title {
+.dctd-side-menu.dctd-dark-menu .ant-menu-item-group:first-child .ant-menu-item-group-title {
   border-top: none;
   margin-top: 0;
+  padding-top: 4px;
+}
+
+/* SubMenu hierarchy in dark sidebar */
+.dctd-side-menu.dctd-dark-menu .ant-menu-submenu-title {
+  color: var(--sidebar-text) !important;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-submenu-title:hover {
+  background: var(--sidebar-bg-lighter) !important;
+  color: var(--sidebar-text-hover) !important;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-submenu-open > .ant-menu-submenu-title {
+  color: #f1f5f9 !important;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-submenu-arrow {
+  color: #64748b !important;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-sub.ant-menu-inline {
+  background: rgba(10, 15, 26, 0.45) !important;
+  border-radius: 6px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+  padding: 3px 0 3px 4px !important;
+  position: relative;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-sub.ant-menu-inline::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-sub.ant-menu-inline .ant-menu-item {
+  min-height: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 12.5px !important;
+  padding-left: 28px !important;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  color: #94a3b8 !important;
+  border: 1px solid transparent;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-sub.ant-menu-inline .ant-menu-item:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-sub.ant-menu-inline .ant-menu-item-selected {
+  background: var(--sidebar-active-bg) !important;
+  color: #fbbf24 !important;
+  border: 1px solid var(--sidebar-active-border) !important;
+  font-weight: 600 !important;
+}
+
+.dctd-side-menu.dctd-dark-menu .ant-menu-sub.ant-menu-inline .ant-menu-item-selected .anticon {
+  color: var(--sidebar-active-accent) !important;
+}
+
+
+/* ─── Sidebar User Footer Card ───────────────────────────────── */
+.dctd-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 180ms ease;
+  user-select: none;
+}
+
+.dctd-sidebar-user:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Browser-like Navigation Tabs (JARVIS Style) ────────────── */
+.dctd-nav-tabs-scroll {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 38px;
+  padding-top: 4px;
+  padding-bottom: 0;
+  overflow-x: auto;
+}
+
+.dctd-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.dctd-nav-tab:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Active tab: Pure crisp white, prominent, active icon tone */
+.dctd-nav-tab[data-active="true"] {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600;
+  border-color: #cbd5e1 !important;
+  border-bottom: 1px solid #ffffff !important;
+  margin-bottom: -1px;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.04);
+  z-index: 2;
+}
+
+.dctd-nav-tab[data-active="true"] .anticon,
+.dctd-nav-tab[data-active="true"] .dctd-tab-icon {
+  color: #f59e0b;
+}
+
+.dctd-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 9999px;
+  font-size: 11px;
+  line-height: 1;
+  color: #94a3b8;
+  transition: all 150ms ease;
+  margin-left: 2px;
+}
+
+.dctd-tab-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #ef4444;
+}
+
+/* ─── JARVIS Table & Card Styling ────────────────────────────── */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 10px 12px !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  padding: 10px 12px !important;
+  font-size: 13px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: #f8fafc !important;
+}
+
+/* Primary buttons with warm JARVIS gold/amber accent */
+.btn-jarvis-primary,
+.ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost) {
+  background: #f59e0b !important;
+  border-color: #f59e0b !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.2) !important;
+}
+
+.btn-jarvis-primary:hover,
+.ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):hover {
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #ffffff !important;
 }
 
 /* ─── CKEditor read-only state ────────────────────────────────── */
@@ -156,13 +385,13 @@ a,
 
 /* ─── Page enter animation ────────────────────────────────────── */
 .dctd-page-enter {
-  animation: dctdPageEnter 0.4s ease-out both;
+  animation: dctdPageEnter 0.35s ease-out both;
 }
 
 @keyframes dctdPageEnter {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -225,9 +454,9 @@ a,
 }
 
 .dctd-glass-strong {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
 }
 
 /* ─── Shimmer skeleton ────────────────────────────────────────── */
@@ -301,7 +530,7 @@ a,
 
 /* ─── Header shadow on scroll ─────────────────────────────────── */
 .dctd-header-scrolled {
-  box-shadow: 0 1px 12px rgb(15 23 42 / 0.06);
+  box-shadow: 0 1px 8px rgb(15 23 42 / 0.06);
 }
 
 /* ─── Scroll shadow indicator (sidebar) ───────────────────────── */
@@ -363,15 +592,15 @@ a,
 
 /* ─── Ant Design overrides for premium feel ───────────────────── */
 .ant-card {
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.02);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
   transition:
     box-shadow 250ms ease,
     border-color 250ms ease;
 }
 
 .ant-card:hover {
-  border-color: #e2e8f0;
+  border-color: #d1d5db;
 }
 
 .ant-btn-primary {
@@ -383,62 +612,33 @@ a,
   font-size: 12px !important;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  color: #64748b !important;
+  background: #f8fafc !important;
 }
 
-/* ─── Tab pill variation ──────────────────────────────────────── */
-.dctd-nav-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 180ms ease;
-  user-select: none;
-  white-space: nowrap;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-}
-
-.dctd-nav-tab:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
-}
-
-.dctd-nav-tab[data-active='true'] {
-  background: #ecfdf5;
-  color: #065f46;
-  font-weight: 600;
-  border-color: #a7f3d0;
-  box-shadow: 0 1px 3px rgb(16 185 129 / 0.12);
-}
-
-/* ─── Custom Pagination Styling ───────────────────────────────── */
+/* ─── Enterprise Pagination Styling ───────────────────────────── */
 .ant-pagination {
   display: flex !important;
   align-items: center !important;
   flex-wrap: wrap !important;
   justify-content: flex-end !important;
-  row-gap: 10px !important;
+  row-gap: 8px !important;
   column-gap: 4px !important;
-  margin: 18px 0 0 !important;
-  padding-top: 14px !important;
+  margin: 14px 0 0 !important;
+  padding-top: 10px !important;
   border-top: 1px solid #f1f5f9;
 }
 
 .ant-pagination .ant-pagination-item {
-  border-radius: 10px !important;
+  border-radius: 6px !important;
   border: 1px solid #e2e8f0 !important;
   background: #ffffff !important;
   font-weight: 500 !important;
-  transition: all 180ms ease !important;
-  min-width: 34px !important;
-  height: 34px !important;
-  line-height: 32px !important;
+  font-size: 12px !important;
+  transition: all 150ms ease !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  line-height: 26px !important;
   text-align: center !important;
 }
 
@@ -447,22 +647,22 @@ a,
 }
 
 .ant-pagination .ant-pagination-item:hover {
-  border-color: #a7f3d0 !important;
-  background: #f0fdf4 !important;
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
 }
 
 .ant-pagination .ant-pagination-item:hover a {
-  color: #059669 !important;
+  color: #0f172a !important;
 }
 
 .ant-pagination .ant-pagination-item-active {
-  background: #ecfdf5 !important;
-  border-color: #059669 !important;
-  box-shadow: 0 2px 8px rgb(5 150 105 / 0.16) !important;
+  background: #fffbeb !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.15) !important;
 }
 
 .ant-pagination .ant-pagination-item-active a {
-  color: #065f46 !important;
+  color: #d97706 !important;
   font-weight: 600 !important;
 }
 
@@ -470,20 +670,20 @@ a,
 .ant-pagination .ant-pagination-next .ant-pagination-item-link {
   display: grid !important;
   place-items: center !important;
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 10px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
   border: 1px solid #e2e8f0 !important;
   background: #ffffff !important;
   color: #64748b !important;
-  transition: all 180ms ease !important;
+  transition: all 150ms ease !important;
 }
 
 .ant-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
 .ant-pagination .ant-pagination-next:hover .ant-pagination-item-link {
-  border-color: #a7f3d0 !important;
-  background: #f0fdf4 !important;
-  color: #059669 !important;
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
 }
 
 .ant-pagination .ant-pagination-options {
@@ -491,18 +691,18 @@ a,
 }
 
 .ant-pagination .ant-pagination-options .ant-select-selector {
-  height: 34px !important;
-  border-radius: 10px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
   border-color: #e2e8f0 !important;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
 }
 
 .ant-pagination .ant-pagination-options .ant-select-selection-item {
-  line-height: 32px !important;
+  line-height: 26px !important;
 }
 
 .ant-pagination-total-text {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #64748b !important;
   margin-right: auto !important;
 }
@@ -523,35 +723,14 @@ a,
   }
 }
 
-.dctd-nav-tab .dctd-tab-close {
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  font-size: 14px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 150ms ease, background 150ms ease;
-}
-
-.dctd-nav-tab:hover .dctd-tab-close,
-.dctd-nav-tab[data-active='true'] .dctd-tab-close {
-  opacity: 1;
-}
-
-.dctd-nav-tab .dctd-tab-close:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-/* ─── Focus visible ───────────────────────────────────────────── */
+/* ─── Focus visible & Selection ───────────────────────────────── */
 :focus-visible {
-  outline: 2px solid #059669;
-  outline-offset: 2px;
+  outline: 2px solid #f59e0b;
+  outline-offset: 1px;
 }
 
-/* ─── Selection color ─────────────────────────────────────────── */
 ::selection {
-  background: #a7f3d0;
-  color: #064e3b;
+  background: #fde68a;
+  color: #78350f;
 }
+

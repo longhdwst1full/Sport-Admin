@@ -1,4 +1,5 @@
 import { Table } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
 import type { MouseEvent } from 'react';
 import type { TableProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -26,6 +27,7 @@ export function AdminTable<RecordType extends object>({
   scroll,
   tableLayout = 'fixed',
   locale,
+  size = 'small',
   ...props
 }: AdminTableProps<RecordType>) {
   const normalizedPagination =
@@ -50,12 +52,26 @@ export function AdminTable<RecordType extends object>({
   return (
     <div onDoubleClick={copyCellOnDoubleClick}>
       <Table<RecordType>
+        size={size}
         {...props}
         columns={withFixedColumnWidths(columns, defaultColumnWidth)}
         tableLayout={tableLayout}
         scroll={{ ...scroll, x: scroll?.x ?? 'max-content' }}
         pagination={normalizedPagination}
-        locale={{ emptyText: 'Không có dữ liệu.', ...locale }}
+        locale={{
+          emptyText: (
+            <div className="py-8 text-center select-none">
+              <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-2">
+                <InboxOutlined className="text-xl" />
+              </div>
+              <div className="text-xs font-semibold text-slate-600">Không có dữ liệu</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">
+                Chưa có bản ghi nào hoặc không khớp với bộ lọc hiện tại.
+              </div>
+            </div>
+          ),
+          ...locale,
+        }}
       />
     </div>
   );

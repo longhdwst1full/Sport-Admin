@@ -6,7 +6,7 @@ import { AdminShellPage } from '../pages/admin-shell.page';
 
 test.beforeEach(async ({ page }) => {
   await seedSession(page);
-  await mockJson(page, '**/api/v1/admin/promotions/flash-sales?**', flashSaleListResponse());
+  await mockJson(page, '**/api/v1/admin/promotions/flash-sales*', flashSaleListResponse());
 });
 
 test.describe('FLASH SALES — Quản lý Flash Sale', () => {

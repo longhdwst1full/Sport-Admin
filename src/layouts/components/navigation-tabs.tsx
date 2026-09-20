@@ -116,13 +116,13 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
         return {
           key: tab.path,
           icon: isActive ? (
-            <CheckOutlined className="text-emerald-600 font-bold" />
+            <CheckOutlined className="text-amber-600 font-bold" />
           ) : (
             <span className="inline-block w-3.5" />
           ),
           label: (
             <div className="flex items-center justify-between gap-4 min-w-[160px]">
-              <span className={`text-xs ${isActive ? 'font-semibold text-emerald-700' : 'text-slate-700'}`}>
+              <span className={`text-xs ${isActive ? 'font-semibold text-amber-700' : 'text-slate-700'}`}>
                 {tab.label}
               </span>
               <span
@@ -186,7 +186,7 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
               type="button"
               aria-label="Tab trước"
               onClick={handlePrevTab}
-              className="flex size-7 items-center justify-center rounded-lg border border-slate-200/70 bg-white text-slate-500 shadow-2xs transition-all hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 active:scale-95"
+              className="flex size-7 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-slate-500 shadow-2xs transition-all hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 active:scale-95"
             >
               <LeftOutlined className="text-xs" />
             </button>
@@ -196,7 +196,7 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
               type="button"
               aria-label="Tab sau"
               onClick={handleNextTab}
-              className="flex size-7 items-center justify-center rounded-lg border border-slate-200/70 bg-white text-slate-500 shadow-2xs transition-all hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 active:scale-95"
+              className="flex size-7 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-slate-500 shadow-2xs transition-all hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 active:scale-95"
             >
               <RightOutlined className="text-xs" />
             </button>
@@ -247,6 +247,8 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
             ],
           };
 
+          const navItem = navigationItems.find((item) => item.path === tab.path);
+
           return (
             <Dropdown key={tab.path} menu={contextMenu} trigger={['contextMenu']}>
               <div
@@ -256,6 +258,11 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
                 className="dctd-nav-tab group select-none shrink-0"
                 onClick={() => navigate(tab.path)}
               >
+                {navItem?.icon && (
+                  <span className={`dctd-tab-icon text-xs shrink-0 flex items-center ${active ? 'text-amber-500' : 'text-slate-400'}`}>
+                    {navItem.icon}
+                  </span>
+                )}
                 <span className="max-w-40 truncate">{tab.label}</span>
                 <span
                   role="button"

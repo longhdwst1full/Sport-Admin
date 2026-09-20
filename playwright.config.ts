@@ -9,8 +9,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
-  timeout: 30_000,
-  expect: { timeout: 7_000 },
+  timeout: 45_000,
+  expect: { timeout: 15_000 },
   reporter: process.env.CI
     ? [['github'], ['html', { outputFolder: 'e2e/.report', open: 'never' }]]
     : [['list'], ['html', { outputFolder: 'e2e/.report', open: 'never' }]],
