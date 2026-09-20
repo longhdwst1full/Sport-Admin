@@ -32,8 +32,17 @@
 }
 
 /* ─── Base resets ─────────────────────────────────────────────── */
-body {
+html,
+body,
+#root {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   margin: 0;
+  padding: 0;
+}
+
+body {
   min-width: 360px;
   background: var(--color-surface-sunken);
   color: var(--color-ink);
@@ -41,6 +50,16 @@ body {
     'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Global Input Placeholder Styling ───────────────────────── */
+.ant-input::placeholder,
+.ant-input-affix-wrapper input::placeholder,
+textarea::placeholder,
+input::placeholder {
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
 }
 
 *,
@@ -92,27 +111,18 @@ a,
   background: rgba(148, 163, 184, 0.35);
 }
 
-/* Header nav tabs scrollbar — horizontal & subtle */
+/* Header nav tabs scrollbar — completely hidden across all browsers (ERP style) */
 .dctd-nav-tabs-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
 }
 
 .dctd-nav-tabs-scroll::-webkit-scrollbar {
-  height: 3px;
-}
-
-.dctd-nav-tabs-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.dctd-nav-tabs-scroll::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-  border-radius: 9999px;
-}
-
-.dctd-nav-tabs-scroll::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* ─── Dark Sidebar (JARVIS Theme) ────────────────────────────── */
@@ -275,51 +285,76 @@ a,
 .dctd-nav-tabs-scroll {
   display: flex;
   align-items: flex-end;
-  gap: 3px;
-  height: 38px;
-  padding-top: 4px;
-  padding-bottom: 0;
-  overflow-x: auto;
+  height: 100%;
+  padding-left: 2px;
+  padding-right: 4px;
 }
 
 .dctd-nav-tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 10px;
+  height: 30px;
+  padding: 0 10px 0 12px;
   font-size: 12px;
   font-weight: 500;
   color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-bottom: none;
-  border-radius: 6px 6px 0 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 1px solid #cbd5e1;
+  border-radius: 5px 5px 0 0;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all 120ms ease;
   white-space: nowrap;
+  user-select: none;
+}
+
+/* Vertical divider between inactive tabs */
+.dctd-nav-tab:not([data-active="true"])::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 13px;
+  width: 1px;
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* Hide divider before active tab */
+.dctd-nav-tab:has(+ [data-active="true"])::after {
+  display: none !important;
 }
 
 .dctd-nav-tab:hover {
-  background: #e2e8f0;
+  background: rgba(255, 255, 255, 0.6);
   color: #1e293b;
 }
 
-/* Active tab: Pure crisp white, prominent, active icon tone */
+/* Active tab: Pure crisp white card, perfectly flush with workspace line */
 .dctd-nav-tab[data-active="true"] {
+  height: 34px !important;
   background: #ffffff !important;
   color: #0f172a !important;
   font-weight: 600;
-  border-color: #cbd5e1 !important;
+  border-top: 2px solid #f59e0b !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
   border-bottom: 1px solid #ffffff !important;
   margin-bottom: -1px;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.04);
-  z-index: 2;
+  border-radius: 5px 5px 0 0 !important;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+}
+
+.dctd-nav-tab[data-active="true"]::after {
+  display: none !important;
 }
 
 .dctd-nav-tab[data-active="true"] .anticon,
 .dctd-nav-tab[data-active="true"] .dctd-tab-icon {
-  color: #f59e0b;
+  color: #f59e0b !important;
 }
 
 .dctd-tab-close {
@@ -329,16 +364,23 @@ a,
   width: 15px;
   height: 15px;
   border-radius: 9999px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   color: #94a3b8;
-  transition: all 150ms ease;
-  margin-left: 2px;
+  transition: all 120ms ease;
+  margin-left: 3px;
+  opacity: 0;
+}
+
+/* Show close icon on active tab, and on hover of inactive tabs */
+.dctd-nav-tab[data-active="true"] .dctd-tab-close,
+.dctd-nav-tab:hover .dctd-tab-close {
+  opacity: 1;
 }
 
 .dctd-tab-close:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444 !important;
 }
 
 /* ─── JARVIS Table & Card Styling ────────────────────────────── */

@@ -273,8 +273,7 @@ export function ProductFormDrawer({
           <Controller name="shortDescription" control={form.control} render={({ field }) => <Input {...field} />} />
         </Form.Item>
         <Form.Item
-          label="Mô tả chi tiết (CKEditor 4)"
-          extra="Có thể định dạng nội dung và chèn ảnh bằng công cụ Image tích hợp sẵn của CKEditor 4."
+          label="Mô tả chi tiết"
         >
           <Controller
             name="description"

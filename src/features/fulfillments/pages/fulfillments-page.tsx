@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CarOutlined, InboxOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons';
-import { Alert, Button, Input, Select } from 'antd';
+import { Alert, Button, Input, Select, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
 import { useListAdminFulfillments } from '@/generated/api/fulfillments/fulfillments';
 import type { ListAdminFulfillmentsStatus } from '@/generated/api/fulfillments/models';
@@ -87,9 +87,14 @@ export function FulfillmentsPage() {
               placeholder="Trạng thái"
               options={statusOptions}
             />
-            <Button icon={<ReloadOutlined />} onClick={() => void fulfillments.refetch()}>
-              Làm mới
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void fulfillments.refetch()}
+                loading={fulfillments.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
           </div>
         }
       >

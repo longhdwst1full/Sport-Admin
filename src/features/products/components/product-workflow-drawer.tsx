@@ -365,7 +365,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
                   <Form.Item label="Tên phiên bản" required validateStatus={variantForm.formState.errors.name ? 'error' : undefined} help={variantForm.formState.errors.name?.message}>
                     <Controller name="name" control={variantForm.control} render={({ field }) => <Input {...field} />} />
                   </Form.Item>
-                  <Form.Item label="Barcode (không bắt buộc)" validateStatus={variantForm.formState.errors.barcode ? 'error' : undefined} help={variantForm.formState.errors.barcode?.message}>
+                  <Form.Item label="Barcode" validateStatus={variantForm.formState.errors.barcode ? 'error' : undefined} help={variantForm.formState.errors.barcode?.message}>
                     <Controller name="barcode" control={variantForm.control} render={({ field }) => <Input {...field} />} />
                   </Form.Item>
                   <Button htmlType="submit" loading={createVariant.isPending}>Thêm SKU</Button>

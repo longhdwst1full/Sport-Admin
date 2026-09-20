@@ -9,7 +9,7 @@ import {
   TagsOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Input, Popconfirm, Tabs } from 'antd';
+import { App, Button, Input, Popconfirm, Tabs, Tooltip } from 'antd';
 import { useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { PermissionGate } from '@/core/auth/permissions';
@@ -141,12 +141,14 @@ export function CatalogMastersPage() {
         description="Quản trị cấu trúc cây ngành hàng thể thao và thương hiệu ủy quyền chính hãng trên hệ thống."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => void (tab === 'brands' ? brandsQuery.refetch() : categoriesQuery.refetch())}
-            >
-              Làm mới
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void (tab === 'brands' ? brandsQuery.refetch() : categoriesQuery.refetch())}
+                loading={tab === 'brands' ? brandsQuery.isFetching : categoriesQuery.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
             <PermissionGate
               permission={tab === 'brands' ? 'catalog.brand.manage' : 'catalog.category.manage'}
             >

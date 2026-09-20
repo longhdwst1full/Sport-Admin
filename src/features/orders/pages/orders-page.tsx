@@ -4,10 +4,13 @@ import { PosOrderDrawer } from '@/features/pos/components/pos-order-drawer';
 import {
   DollarOutlined,
   InboxOutlined,
+  PhoneOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SearchOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { Alert, Button, Input, Tabs, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
@@ -119,27 +122,45 @@ export function OrdersPage() {
             <div className="grid w-full flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <Input
                 allowClear
+                prefix={<SearchOutlined className="text-slate-400" />}
                 className="!w-full"
                 value={orderNo}
-                placeholder="Mã đơn"
+                placeholder="Nhập mã đơn hàng..."
                 onChange={(event) => setOrderNo(event.target.value)}
               />
               <Input
                 allowClear
+                prefix={<UserOutlined className="text-slate-400" />}
                 className="!w-full"
                 value={recipientName}
-                placeholder="Tên người nhận"
+                placeholder="Nhập tên người nhận..."
                 onChange={(event) => setRecipientName(event.target.value)}
               />
               <Input
                 allowClear
+                prefix={<PhoneOutlined className="text-slate-400" />}
                 className="!w-full"
                 value={recipientPhone}
-                placeholder="Số điện thoại"
+                placeholder="Nhập số điện thoại..."
                 onChange={(event) => setRecipientPhone(event.target.value)}
               />
             </div>
-            <div className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end">
+            <div className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end items-center">
+              <Tooltip title="Làm mới dữ liệu">
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={() => void orders.refetch()}
+                  loading={orders.isFetching}
+                  aria-label="Làm mới"
+                />
+              </Tooltip>
+              <Button
+                icon={<SettingOutlined />}
+                onClick={() => setColumnModalOpen(true)}
+                className="text-slate-600"
+              >
+                Tùy chỉnh cột
+              </Button>
               <PermissionGate permission="order.manage">
                 <Button
                   type="primary"
@@ -149,13 +170,6 @@ export function OrdersPage() {
                   Tạo đơn
                 </Button>
               </PermissionGate>
-              <Button
-                icon={<SettingOutlined />}
-                onClick={() => setColumnModalOpen(true)}
-                className="text-slate-600"
-              >
-                Tùy chỉnh cột
-              </Button>
             </div>
           </div>
         }
@@ -194,17 +208,6 @@ export function OrdersPage() {
           }}
           onOpen={setSelectedId}
         />
-        <div className="mt-3 flex justify-end border-t border-slate-100 pt-3">
-          <Tooltip title="Làm mới danh sách">
-            <Button
-              type="text"
-              aria-label="Làm mới danh sách đơn hàng"
-              icon={<ReloadOutlined />}
-              loading={orders.isFetching}
-              onClick={() => void orders.refetch()}
-            />
-          </Tooltip>
-        </div>
       </ManagementPage>
 
       <ColumnSettingsModal

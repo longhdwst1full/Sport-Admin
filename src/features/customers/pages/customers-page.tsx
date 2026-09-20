@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { PlusOutlined, ReloadOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select } from 'antd';
+import { MailOutlined, PhoneOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
+import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -161,29 +161,32 @@ export function CustomersPage() {
             <div className="flex flex-1 flex-wrap items-center gap-3">
               <Input
                 allowClear
-                className="!w-52"
+                prefix={<UserOutlined className="text-slate-400" />}
+                className="!w-56"
                 value={name}
-                placeholder="Tên khách"
+                placeholder="Nhập tên khách hàng..."
                 onChange={(event) => setName(event.target.value)}
               />
               <Input
                 allowClear
-                className="!w-44"
+                prefix={<PhoneOutlined className="text-slate-400" />}
+                className="!w-48"
                 value={phone}
-                placeholder="Số điện thoại"
+                placeholder="Nhập số điện thoại..."
                 onChange={(event) => setPhone(event.target.value)}
               />
               <Input
                 allowClear
-                className="!w-52"
+                prefix={<MailOutlined className="text-slate-400" />}
+                className="!w-56"
                 value={email}
-                placeholder="Email"
+                placeholder="Nhập địa chỉ email..."
                 onChange={(event) => setEmail(event.target.value)}
               />
               <Select
                 allowClear
-                className="!w-40"
-                placeholder="Loại khách"
+                className="!w-44"
+                placeholder="Chọn loại khách"
                 value={kind}
                 onChange={setKind}
                 options={customerKindOptions}
@@ -191,14 +194,19 @@ export function CustomersPage() {
               <Select
                 allowClear
                 className="!w-44"
-                placeholder="Trạng thái"
+                placeholder="Chọn trạng thái"
                 value={status}
                 onChange={setStatus}
                 options={customerStatusOptions}
               />
-              <Button icon={<ReloadOutlined />} onClick={() => void customers.refetch()}>
-                Làm mới
-              </Button>
+              <Tooltip title="Làm mới dữ liệu">
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={() => void customers.refetch()}
+                  loading={customers.isFetching}
+                  aria-label="Làm mới"
+                />
+              </Tooltip>
               {canCreateStandaloneCustomer && (
                 <PermissionGate permission="customer.manage">
                   <Button

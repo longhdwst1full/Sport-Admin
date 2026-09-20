@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PlusOutlined, ReloadOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select } from 'antd';
+import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import {
@@ -143,9 +143,14 @@ export function FlashSalesPage() {
               placeholder="Trạng thái"
               options={statusOptions}
             />
-            <Button icon={<ReloadOutlined />} onClick={() => void campaigns.refetch()}>
-              Làm mới
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void campaigns.refetch()}
+                loading={campaigns.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
             {canManage && (
               <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
                 Tạo chiến dịch

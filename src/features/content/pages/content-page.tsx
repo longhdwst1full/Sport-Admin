@@ -82,9 +82,14 @@ export function ContentPage() {
         description="Soạn thảo, quản lý bài viết hướng dẫn thể thao, câu chuyện thương hiệu và tin tức trên storefront."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>
-              Làm mới
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void query.refetch()}
+                loading={query.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
             <PermissionGate permission="cms.content.manage">
               <Button
                 type="primary"

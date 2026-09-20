@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ControlOutlined, GlobalOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select } from 'antd';
+import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import {
@@ -109,7 +109,7 @@ export function SystemParametersPage() {
           </p>
           <Input.TextArea
             rows={2}
-            placeholder="Lý do (không bắt buộc)"
+            placeholder="Nhập lý do ngừng dùng..."
             onChange={(event) => {
               reason = event.target.value;
             }}
@@ -179,9 +179,14 @@ export function SystemParametersPage() {
                 { value: 'INACTIVE', label: 'Ngừng dùng' },
               ]}
             />
-            <Button icon={<ReloadOutlined />} onClick={() => void parameters.refetch()}>
-              Làm mới
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void parameters.refetch()}
+                loading={parameters.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
             {canManage && (
               <Button
                 type="primary"

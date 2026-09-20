@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { KeyOutlined, PlusOutlined, ReloadOutlined, SafetyOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input } from 'antd';
+import { Alert, App, Button, Input, Tooltip } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createAdminRole,
@@ -145,9 +145,14 @@ export function RolesPage() {
         ]}
         filters={
           <div className="flex w-full flex-wrap justify-end gap-3">
-            <Button icon={<ReloadOutlined />} onClick={() => void roles.refetch()}>
-              Làm mới
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void roles.refetch()}
+                loading={roles.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
             {canManage && (
               <Button
                 type="primary"

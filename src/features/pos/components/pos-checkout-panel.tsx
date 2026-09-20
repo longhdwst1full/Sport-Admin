@@ -114,7 +114,7 @@ export function PosCheckoutPanel({
           />
         </Form.Item>
 
-        <Form.Item label="Email (không bắt buộc)">
+        <Form.Item label="Email">
           <Input
             size="large"
             value={values.customerEmail}

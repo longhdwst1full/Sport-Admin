@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Form, Input, Modal, Select, Space, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Form, Input, Modal, Select, Space, Spin, Tag, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -125,17 +125,21 @@ export function ProductPricePanel({
           <Form layout="vertical" onFinish={() => void submit()}>
           <Form.Item label="SKU" required validateStatus={form.formState.errors.variantId ? 'error' : undefined} help={form.formState.errors.variantId?.message}>
             <Controller name="variantId" control={form.control} render={({ field }) => (
-              <Select {...field} options={product.variants.map((variant) => ({ value: variant.id, label: `${variant.sku} — ${variant.name}` }))} />
+              <Select
+                {...field}
+                placeholder="Chọn SKU cần đặt giá"
+                options={product.variants.map((variant) => ({ value: variant.id, label: `${variant.sku} — ${variant.name}` }))}
+              />
             )} />
           </Form.Item>
           <Form.Item label="Giá bán đã VAT (VND)" required validateStatus={form.formState.errors.amount ? 'error' : undefined} help={form.formState.errors.amount?.message}>
-            <Controller name="amount" control={form.control} render={({ field }) => <Input {...field} inputMode="decimal" prefix="₫" />} />
+            <Controller name="amount" control={form.control} render={({ field }) => <Input {...field} inputMode="decimal" prefix="₫" placeholder="Nhập giá bán..." />} />
           </Form.Item>
           <Form.Item label="Áp dụng từ" required validateStatus={form.formState.errors.startsAt ? 'error' : undefined} help={form.formState.errors.startsAt?.message}>
             <Controller name="startsAt" control={form.control} render={({ field }) => <Input {...field} type="datetime-local" prefix={<CalendarOutlined />} />} />
           </Form.Item>
           <Form.Item label="Lý do / ghi chú" validateStatus={form.formState.errors.reason ? 'error' : undefined} help={form.formState.errors.reason?.message ?? 'Bắt buộc nếu giá giảm trên 20%.'}>
-            <Controller name="reason" control={form.control} render={({ field }) => <Input.TextArea {...field} rows={3} maxLength={500} showCount />} />
+            <Controller name="reason" control={form.control} render={({ field }) => <Input.TextArea {...field} rows={3} maxLength={500} showCount placeholder="Nhập lý do hoặc ghi chú..." />} />
           </Form.Item>
           <Button type="primary" htmlType="submit" block loading={createPrice.isPending || replacePrice.isPending} disabled={!variantId}>
             {openWindow ? 'Lập giá thay thế' : 'Tạo giá đầu tiên'}
@@ -154,17 +158,39 @@ export function ProductPricePanel({
           {timeline.isError && <Alert showIcon type="error" message="Không tải được lịch giá" description={getApiErrorMessage(timeline.error, 'Vui lòng thử lại.')} />}
           <div>
             <Typography.Title level={5}>Giá hiện tại</Typography.Title>
-            {timeline.data?.current
-              ? <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={false} dataSource={[timeline.data.current]} columns={priceColumns} />
-              : <Typography.Text type="secondary">Chưa có giá đang hiệu lực.</Typography.Text>}
+            {timeline.isLoading && Boolean(variantId) ? (
+              <div className="py-4 text-center">
+                <Spin size="small" />
+              </div>
+            ) : timeline.data?.current ? (
+              <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={false} dataSource={[timeline.data.current]} columns={priceColumns} />
+            ) : (
+              <Typography.Text type="secondary">Chưa có giá đang hiệu lực.</Typography.Text>
+            )}
           </div>
           <div>
             <Typography.Title level={5}>Sắp áp dụng</Typography.Title>
-            <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" loading={timeline.isPending} pagination={false} dataSource={timeline.data?.upcoming ?? []} columns={priceColumns} locale={{ emptyText: 'Chưa có giá tương lai' }} />
+            <AdminTable<ProductPriceWindowDto>
+              size="small"
+              rowKey="id"
+              loading={Boolean(variantId) && timeline.isLoading}
+              pagination={false}
+              dataSource={timeline.data?.upcoming ?? []}
+              columns={priceColumns}
+              locale={{ emptyText: 'Chưa có giá tương lai' }}
+            />
           </div>
           <div>
             <Typography.Title level={5}>Lịch sử bất biến</Typography.Title>
-            <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={{ pageSize: 5, hideOnSinglePage: true }} dataSource={timeline.data?.history ?? []} columns={priceColumns} locale={{ emptyText: 'Chưa có lịch sử giá' }} />
+            <AdminTable<ProductPriceWindowDto>
+              size="small"
+              rowKey="id"
+              loading={Boolean(variantId) && timeline.isLoading}
+              pagination={{ pageSize: 5, hideOnSinglePage: true }}
+              dataSource={timeline.data?.history ?? []}
+              columns={priceColumns}
+              locale={{ emptyText: 'Chưa có lịch sử giá' }}
+            />
           </div>
         </div>
       </div>

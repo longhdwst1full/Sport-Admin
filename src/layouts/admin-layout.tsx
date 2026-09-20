@@ -126,7 +126,7 @@ export function AdminLayout() {
   const initials = getInitials(displayName);
 
   return (
-    <Layout className="h-[100dvh] min-h-[100vh] overflow-hidden bg-white">
+    <Layout className="h-screen max-h-screen overflow-hidden bg-white">
       {/* ── Command Palette (Cmd+K) ──────────────────────────── */}
       <CommandPalette />
 
@@ -274,26 +274,27 @@ export function AdminLayout() {
         </Sider>
 
         {/* ── Main Content Column ───────────────────────────────── */}
-        <Layout className="h-full min-h-0 min-w-0">
-          {/* ── Header (44px slim bar like JARVIS) ──────────────── */}
-          <Header className="!flex !h-[44px] !items-center !border-b !border-slate-200 !bg-white !px-0 shadow-2xs">
-            {/* Mobile menu toggle (when sidebar hidden) */}
-            {isMobile && (
+        <Layout className="h-full min-h-0 min-w-0 flex flex-col">
+          {/* ── Header (JARVIS Workspace Tab Bar) ──────────────── */}
+          <Header className="!flex !h-[38px] !items-stretch !border-b !border-[#cbd5e1] !bg-[#eef2f6] !px-0 !leading-none shadow-none z-10 shrink-0 select-none">
+            {/* Sidebar toggle button (when collapsed on any screen) */}
+            {collapsed && (
               <Button
                 type="text"
                 size="small"
-                icon={<MenuOutlined className="text-slate-600" />}
+                icon={<MenuOutlined className="text-slate-600 text-sm" />}
                 onClick={() => dispatch(toggleSidebar())}
-                className="ml-2 !text-slate-600"
-                aria-label="Toggle menu"
+                className="ml-2 self-center !text-slate-600 hover:!bg-slate-200/70"
+                aria-label="Mở rộng menu"
+                title="Mở rộng menu"
               />
             )}
 
             {/* Navigation tabs + right actions */}
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-3">
+            <div className="flex min-w-0 flex-1 items-stretch justify-between">
               <NavigationTabs navigationItems={visibleItems} />
 
-              <div className="ml-auto flex shrink-0 items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1.5 border-l border-slate-300/80 pl-2.5 pr-3 bg-[#eef2f6]">
                 {import.meta.env.DEV && (
                   <Tag
                     className="!mr-1 !rounded !border-amber-200 !bg-amber-50 !px-1.5 !py-0 !text-[10px] !font-semibold !text-amber-700"
@@ -313,7 +314,7 @@ export function AdminLayout() {
                     onClick={() =>
                       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))
                     }
-                    className="!text-slate-500 hover:!bg-slate-100 hover:!text-slate-800"
+                    className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
                   />
                 </Tooltip>
 
@@ -326,7 +327,7 @@ export function AdminLayout() {
                       size="small"
                       aria-label="Thông báo"
                       icon={<BellOutlined />}
-                      className="!text-slate-500 hover:!bg-slate-100 hover:!text-slate-800"
+                      className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
                     />
                   </Badge>
                 </Tooltip>
@@ -340,32 +341,20 @@ export function AdminLayout() {
                     aria-label="Cài đặt hệ thống"
                     icon={<SettingOutlined />}
                     onClick={() => setSettingsOpen(true)}
-                    className="!text-slate-500 hover:!bg-slate-100 hover:!text-slate-800"
+                    className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
                   />
                 </Tooltip>
               </div>
             </div>
           </Header>
 
-          {/* ── Content Area ───────────────────────────────────── */}
-          <Content className="relative h-full min-h-0 overflow-auto bg-[#f8fafc] p-3.5 sm:p-5 lg:p-6">
+          {/* ── Content Area (Internal scroll strictly within 100vh) ── */}
+          <Content className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#f8fafc] p-3.5 sm:p-5 lg:p-6">
             <PageContainer>
               <div className="dctd-page-enter" key={location.pathname}>
                 <Outlet />
               </div>
             </PageContainer>
-
-            {/* ── Floating JARVIS Watermark Badge (Bottom Right) ── */}
-            <div className="fixed bottom-3 right-3.5 z-30 pointer-events-auto select-none">
-              <div
-                className="flex size-9 items-center justify-center rounded-lg bg-white border border-slate-200/90 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group hover:scale-105"
-                title="JARVIS Enterprise Portal"
-              >
-                <span className="text-base font-black text-blue-600 group-hover:text-blue-700 font-sans tracking-tighter">
-                  J
-                </span>
-              </div>
-            </div>
           </Content>
         </Layout>
       </Layout>

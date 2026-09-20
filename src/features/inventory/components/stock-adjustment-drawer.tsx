@@ -209,7 +209,7 @@ export function StockAdjustmentDrawer({
             <Form.Item label="Số chứng từ nguồn" required validateStatus={form.formState.errors.externalReference ? 'error' : undefined} help={form.formState.errors.externalReference?.message}>
               <Controller name="externalReference" control={form.control} render={({ field }) => <Input {...field} placeholder="VD: PN-2026-0001" maxLength={100} />} />
             </Form.Item>
-            <Form.Item label="Nhà cung cấp / nguồn nhập" extra="Không bắt buộc trong V1; dùng để đối chiếu chứng từ.">
+            <Form.Item label="Nhà cung cấp / nguồn nhập" extra="Dùng để đối chiếu chứng từ.">
               <Controller name="sourceName" control={form.control} render={({ field }) => <Input {...field} maxLength={255} />} />
             </Form.Item>
           </>

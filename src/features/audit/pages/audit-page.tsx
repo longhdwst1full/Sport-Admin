@@ -101,9 +101,14 @@ export function AuditPage() {
         title="Nhật ký Audit Log"
         description="Toàn bộ hành vi ghi và thay đổi trạng thái dữ liệu trên hệ thống PostgreSQL đều được ghi nhận bất biến."
         actions={
-          <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>
-            Làm mới
-          </Button>
+          <Tooltip title="Làm mới dữ liệu">
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => void query.refetch()}
+              loading={query.isFetching}
+              aria-label="Làm mới"
+            />
+          </Tooltip>
         }
         metrics={[
           {

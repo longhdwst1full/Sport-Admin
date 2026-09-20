@@ -10,7 +10,7 @@ import {
   StarOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Popconfirm, Rate, Space } from 'antd';
+import { App, Button, Popconfirm, Rate, Space, Tooltip } from 'antd';
 import { useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -232,9 +232,14 @@ export function ReviewsPage() {
         description="Kiểm duyệt đánh giá chất lượng sản phẩm từ người mua hàng trước khi xuất bản ra storefront."
         actions={
           <div className="flex gap-2">
-            <Button icon={<ReloadOutlined />} onClick={() => void query.refetch()}>
-              Làm mới
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void query.refetch()}
+                loading={query.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
           </div>
         }
         metrics={[

@@ -1,3 +1,4 @@
+import { BarcodeOutlined, SearchOutlined, TagOutlined } from '@ant-design/icons';
 import { Input, Select } from 'antd';
 
 export function ProductListToolbar({
@@ -27,22 +28,25 @@ export function ProductListToolbar({
     <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Input
         allowClear
+        prefix={<SearchOutlined className="text-slate-400" />}
         value={name}
-        placeholder="Tên sản phẩm"
+        placeholder="Nhập tên sản phẩm..."
         className="!w-full"
         onChange={(event) => onNameChange(event.target.value)}
       />
       <Input
         allowClear
+        prefix={<BarcodeOutlined className="text-slate-400" />}
         value={sku}
-        placeholder="SKU"
+        placeholder="Nhập mã SKU..."
         className="!w-full"
         onChange={(event) => onSkuChange(event.target.value)}
       />
       <Input
         allowClear
+        prefix={<TagOutlined className="text-slate-400" />}
         value={productNo}
-        placeholder="Mã sản phẩm"
+        placeholder="Nhập mã sản phẩm..."
         className="!w-full"
         onChange={(event) => onProductNoChange(event.target.value)}
       />
@@ -50,7 +54,7 @@ export function ProductListToolbar({
         allowClear
         showSearch
         optionFilterProp="label"
-        placeholder="Lọc theo danh mục"
+        placeholder="Chọn danh mục sản phẩm"
         className="!w-full"
         value={category}
         onChange={onCategoryChange}

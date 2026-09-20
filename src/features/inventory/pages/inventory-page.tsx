@@ -7,7 +7,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, Tabs } from 'antd';
+import { Button, Tabs, Tooltip } from 'antd';
 import { useState } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
@@ -42,13 +42,19 @@ export function InventoryPage() {
     setAdjustmentOpen(true);
   };
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const refresh = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
-      queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
-      queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
-      queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() }),
-    ]);
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() }),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -59,9 +65,14 @@ export function InventoryPage() {
         description="Theo dõi tồn khả dụng theo từng kho, đối soát phiếu điều chỉnh và audit sổ kho bất biến từ cơ sở dữ liệu."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button icon={<ReloadOutlined />} onClick={() => void refresh()}>
-              Làm mới dữ liệu
-            </Button>
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => void refresh()}
+                loading={isRefreshing}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
             <PermissionGate permission="inventory.stock.adjust">
               <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>
                 Tạo phiếu điều chỉnh

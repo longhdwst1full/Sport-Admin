@@ -263,7 +263,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
               rows={3}
               maxLength={500}
               showCount
-              placeholder={requiresReason ? 'Nhập tối thiểu 5 ký tự' : 'Không bắt buộc'}
+              placeholder={requiresReason ? 'Nhập tối thiểu 5 ký tự...' : 'Nhập ghi chú...'}
               onChange={(event) => setNote(event.target.value)}
             />
           </div>
