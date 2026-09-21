@@ -63,7 +63,6 @@ export function ProductListTable({
   return (
     <>
       <AdminTable<ProductListRow>
-        fillHeight
         rowKey="id"
         loading={loading}
         dataSource={rows}

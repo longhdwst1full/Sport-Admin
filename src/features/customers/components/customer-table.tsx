@@ -179,7 +179,6 @@ export function CustomerTable({
 
   return (
     <AdminTable<CustomerRowView>
-        fillHeight
       rowKey="id"
       dataSource={rows}
       loading={loading}

@@ -21,3 +21,9 @@ export {
 } from './column-settings-modal';
 
 export { CursorPagination } from './cursor-pagination';
+
+export {
+  TableSurfaceProvider,
+  useTableSurface,
+  type TableSurface,
+} from './table-surface';

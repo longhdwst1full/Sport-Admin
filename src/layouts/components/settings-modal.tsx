@@ -10,7 +10,6 @@ import {
   Select,
   Switch,
   Tabs,
-  Tag,
 } from 'antd';
 import {
   AppstoreOutlined,
@@ -111,20 +110,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               ),
               children: (
                 <div className="space-y-4">
-                      {/* Display density & options */}
-                      <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">
-                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                          Hiển thị giao diện
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-sm font-semibold text-slate-800">Chế độ chuẩn JARVIS</div>
-                            <div className="text-xs text-slate-500">Sidebar tối kết hợp khu vực làm việc sáng sắc nét</div>
-                          </div>
-                          <Tag color="gold" className="!mr-0 font-medium">Tiêu chuẩn</Tag>
-                        </div>
-                      </Card>
-
                   {/* Table display density */}
                   <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">
                     <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">

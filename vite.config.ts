@@ -7,6 +7,11 @@ function vendorChunk(id: string): string | undefined {
     return 'vendor-editor';
   }
   if (id.includes('@ant-design/icons')) return 'vendor-icons';
+  // antd là thư viện lớn nhất trong ứng dụng. Không tách ra thì nó nằm chung `index.js` với toàn bộ
+  // mã nghiệp vụ, nên mỗi lần deploy đổi một dòng code là người dùng tải lại cả thư viện.
+  if (id.includes('/antd/') || id.includes('@ant-design/') || id.includes('rc-')) {
+    return 'vendor-antd';
+  }
   if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) {
     return 'vendor-charts';
   }

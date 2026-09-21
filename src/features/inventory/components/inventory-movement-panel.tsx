@@ -44,7 +44,6 @@ export function InventoryMovementPanel() {
       </div>
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       <AdminTable
-        fillHeight
         className="mt-4"
         rowKey="id"
         loading={query.isPending}

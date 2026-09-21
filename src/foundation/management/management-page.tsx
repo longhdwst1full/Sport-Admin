@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Card, Col, Row, Typography } from 'antd';
+import { TableSurfaceProvider } from '@/foundation/table';
 
 export interface ManagementMetric {
   key: string;
@@ -137,7 +138,13 @@ export function ManagementPage({
             {filters}
           </div>
         )}
-        <div className="min-w-0 w-full overflow-x-auto p-4 sm:p-5 lg:p-6">{children}</div>
+        {/*
+          Bảng trong vùng nội dung của một màn danh sách là bảng chính của màn đó: nó cao hết phần
+          còn lại của màn hình. Khai ở đây một lần để mỗi màn không phải tự nhớ.
+        */}
+        <div className="min-w-0 w-full overflow-x-auto p-4 sm:p-5 lg:p-6">
+          <TableSurfaceProvider value="page">{children}</TableSurfaceProvider>
+        </div>
       </Card>
     </div>
   );

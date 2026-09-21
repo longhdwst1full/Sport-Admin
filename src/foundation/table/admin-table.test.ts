@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ColumnsType } from 'antd/es/table';
 import {
+  ADMIN_TABLE_BODY_HEIGHT,
   ADMIN_TABLE_DEFAULT_PAGE_SIZE,
   ADMIN_TABLE_PAGE_SIZE_OPTIONS,
   withFixedColumnWidths,
@@ -34,3 +35,18 @@ describe('withFixedColumnWidths', () => {
     expect(ADMIN_TABLE_PAGE_SIZE_OPTIONS).toEqual(['20', '30', '50', '100']);
   });
 });
+
+describe('chiều cao thân bảng', () => {
+  it('chỉ trừ đi phần bố cục quanh bảng, phần còn lại là viewport', () => {
+    expect(ADMIN_TABLE_BODY_HEIGHT).toBe('calc(100vh - var(--admin-table-offset, 340px))');
+  });
+
+  /**
+   * Màn nào có thêm hàng thẻ số liệu hoặc bộ lọc cao hơn thì đặt lại biến này trên vùng bao ngoài
+   * bảng, thay vì truyền `scroll.y` khác nhau ở từng chỗ gọi.
+   */
+  it('cho phép màn hình đặt lại khoảng trừ bằng biến CSS', () => {
+    expect(ADMIN_TABLE_BODY_HEIGHT).toContain('--admin-table-offset');
+  });
+});
+
