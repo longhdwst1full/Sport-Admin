@@ -2,8 +2,8 @@ import { DeleteOutlined, DownOutlined, EditOutlined, StarOutlined, UpOutlined, U
 import { App, Button, Form, Image, Input, Modal, Select, Space, Tag, Upload } from 'antd';
 import { useEffect, useState } from 'react';
 import {
-  useArchiveAdminProductMedia,
   useAttachAdminProductMedia,
+  useDeleteAdminProductMedia,
   useReorderAdminProductMedia,
   useUpdateAdminProductMedia,
 } from '@/generated/api/catalog/catalog';
@@ -58,13 +58,17 @@ export function ProductMediaPanel({
       onError: (error) => mutationError(error, 'Không thể sắp xếp ảnh.'),
     },
   });
-  const archive = useArchiveAdminProductMedia({
+  const remove = useDeleteAdminProductMedia({
     mutation: {
-      onSuccess: () => mutationSuccess('Đã gỡ ảnh khỏi sản phẩm; asset Cloudinary vẫn được giữ.'),
-      onError: (error) => mutationError(error, 'Không thể gỡ ảnh.'),
+      onSuccess: () => mutationSuccess('Đã xóa ảnh khỏi sản phẩm và Cloudinary.'),
+      onError: async (error) => {
+        // CONCURRENCY: BE có thể đã chạy compensation và tăng Product version khi provider lỗi.
+        await onChanged();
+        mutationError(error, 'Không thể xóa ảnh.');
+      },
     },
   });
-  const pending = attach.isPending || update.isPending || reorder.isPending || archive.isPending;
+  const pending = attach.isPending || update.isPending || reorder.isPending || remove.isPending;
 
   const move = (index: number, direction: -1 | 1) => {
     const items = reorderProductMedia(product.media, index, direction);
@@ -169,17 +173,17 @@ export function ProductMediaPanel({
                   />
                 )}
                 <TableActionButton
-                  label="Gỡ ảnh"
+                  label="Xóa ảnh"
                   danger
                   icon={<DeleteOutlined />}
                   disabled={pending}
                   onClick={() => modal.confirm({
-                    title: 'Gỡ ảnh khỏi sản phẩm?',
-                    content: 'Liên kết sẽ chuyển INACTIVE; file Cloudinary và metadata asset không bị xóa.',
-                    okText: 'Gỡ ảnh',
+                    title: 'Xóa vĩnh viễn ảnh?',
+                    content: 'Ảnh sẽ bị xóa khỏi sản phẩm và Cloudinary. Hệ thống sẽ chặn nếu ảnh còn được nghiệp vụ khác sử dụng.',
+                    okText: 'Xóa ảnh',
                     okButtonProps: { danger: true },
                     cancelText: 'Hủy',
-                    onOk: () => archive.mutateAsync({
+                    onOk: () => remove.mutateAsync({
                       id: product.id,
                       mediaId: row.id,
                       data: { expectedProductVersion: product.version },

@@ -1,10 +1,10 @@
 # Products — maintenance note
 
-> **Document version:** 1.5.0
+> **Document version:** 1.6.0
 >
-> **Last updated:** 2026-09-20
+> **Last updated:** 2026-09-21
 >
-> **Change summary:** Cố định footer Lưu khi edit và bổ sung tồn đầu theo chi nhánh/kho trong cùng trải nghiệm tạo Product.
+> **Change summary:** Nút xóa ảnh dùng DELETE API để xóa cả liên kết và asset Cloudinary, có guard ảnh dùng chung.
 
 ## Phạm vi
 
@@ -27,12 +27,15 @@ Import từ ngoài chỉ qua `index.ts`.
 
 ## Generated operation
 
-24 operation từ `src/generated/api/catalog`, gồm `useListAdminProducts`, `useGetAdminProduct`, `useCreateAdminProduct`, `useUpdateAdminProduct`, `usePublishAdminProduct`, `useArchiveAdminProduct`, `useReactivateAdminProduct`, nhóm variant (`create/update/archive/reactivate`), media (`attach/update/reorder/archive`), giá (`create/replace/timeline`) và bundle.
+Các operation từ `src/generated/api/catalog`, gồm `useListAdminProducts`, `useGetAdminProduct`, `useCreateAdminProduct`, `useUpdateAdminProduct`, `usePublishAdminProduct`, `useArchiveAdminProduct`, `useReactivateAdminProduct`, nhóm variant (`create/update/archive/reactivate`), media (`attach/update/reorder/archive/delete`), giá (`create/replace/timeline`) và bundle.
 
 ## Quyết định đã ghi
 
 - Publish có điều kiện: `isProductPublishReady` kiểm tra đủ variant/giá/media trước khi mở nút. Backend vẫn kiểm tra lại.
 - Media reorder tính ở `product-media.policy.ts` để việc kéo thả không phụ thuộc thứ tự trả về của API.
+- Nút **Xóa ảnh** gọi `deleteAdminProductMedia`: Backend chỉ xóa Cloudinary khi asset không còn
+  được nơi khác sử dụng. `archiveAdminProductMedia` vẫn là operation gỡ liên kết nhưng hiện không
+  được dùng bởi UI. Khi provider lỗi, FE refetch detail vì Backend compensation tăng Product version.
 - Giá dùng Decimal dạng chuỗi; không parse sang `number` để tính toán (`09-data-transformation.md`).
 - Không mang Redux/Saga và provider tree từ module tham khảo sang feature này. TanStack Query tiếp tục là nguồn server state duy nhất; local state chỉ giữ filter/pagination/UI selection.
 - JSX bảng không đọc trực tiếp generated DTO; `toProductListRow` là biên chống contract lan vào presentation.
@@ -63,7 +66,7 @@ Import từ ngoài chỉ qua `index.ts`.
 | --- | --- |
 | `deleteAdminProduct` | Alias của `archiveAdminProduct` (`changeStatus → ARCHIVED`). Nút **Lưu trữ** ở workflow drawer đã dùng bản `archive`. |
 | `deleteAdminProductVariant` | Alias của `archiveAdminProductVariant`. |
-| `deleteAdminProductMedia` | Alias của `archiveAdminProductMedia`; nút **Gỡ** ở panel ảnh đã dùng bản `archive`. |
+| `archiveAdminProductMedia` | Chỉ gỡ liên kết và giữ asset; UI hiện dùng DELETE để đáp ứng yêu cầu xóa cả Cloudinary. |
 
 Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn tham chiếu tới biến thể. Lưu trữ là hành vi đúng.
 
@@ -73,6 +76,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.6.0 | 2026-09-21 | Product Media DELETE xóa Cloudinary, refetch khi compensation và cảnh báo asset dùng chung. |
 | 1.5.0 | 2026-09-20 | Cố định action footer và thêm khai báo tồn đầu theo branch/warehouse cho từng SKU. |
 | 1.4.0 | 2026-09-20 | Ghép Product + initial variants vào một create drawer và mapper contract có test. |
 | 1.3.0 | 2026-09-19 | Mặc định 30 sản phẩm/trang, thêm page-size selector và giữ table trong viewport. |

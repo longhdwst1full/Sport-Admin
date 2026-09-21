@@ -2621,7 +2621,7 @@ export const useUpdateAdminProductMedia = <
 };
 
 /**
- * @summary Logically delete a product media link without deleting its provider asset
+ * @summary Delete an unshared product image from the product and Cloudinary
  */
 export const deleteAdminProductMedia = (
   id: string,
@@ -2638,6 +2638,7 @@ export const deleteAdminProductMedia = (
 
 export const getDeleteAdminProductMediaMutationOptions = <
   TError = ErrorType<
+    | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
@@ -2689,13 +2690,15 @@ export type DeleteAdminProductMediaMutationError = ErrorType<
   | ErrorResponseDto
   | ErrorResponseDto
   | ErrorResponseDto
+  | ErrorResponseDto
 >;
 
 /**
- * @summary Logically delete a product media link without deleting its provider asset
+ * @summary Delete an unshared product image from the product and Cloudinary
  */
 export const useDeleteAdminProductMedia = <
   TError = ErrorType<
+    | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
