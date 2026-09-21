@@ -17,6 +17,7 @@ import {
 } from './auth-token.store';
 import { AUTH_SESSION_EXPIRED_EVENT, expireAdminSession } from './auth-session-expiry';
 import { rotateTokens } from '@/lib/api/fetcher';
+import { refreshDelayMs } from './access-token-expiry';
 
 interface AuthContextValue {
   currentUser?: CurrentUserDto;
@@ -121,6 +122,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
     };
   }, [queryClient]);
+
+  /**
+   * Xoay token trước khi access token hết hạn.
+   *
+   * Không có vòng này thì refresh chỉ chạy khi một request nào đó gặp 401 — tab để mở qua đêm sẽ
+   * hết hạn lặng lẽ, và thao tác đầu tiên sau đó phải hỏng một lần trước khi phiên được cứu. Mọi
+   * lời gọi đều đi qua `rotateTokens`, nên nó gộp chung với lần xoay do 401 kích hoạt thay vì tiêu
+   * mất refresh token bằng hai lời gọi song song.
+   */
+  useEffect(() => {
+    if (!hasTokens && !usesAuthCookieTransport()) return;
+    const delay = refreshDelayMs(readAuthTokens()?.expiresIn);
+    if (delay === undefined) return;
+    const timer = setTimeout(() => {
+      void rotateTokens().catch(() => {
+        // `rotateTokens` đã dọn token và phát tín hiệu hết phiên khi refresh hỏng thật.
+      });
+    }, delay);
+    return () => clearTimeout(timer);
+    // `hasTokens` đổi sau mỗi lần lưu token mới, nên hẹn giờ được đặt lại theo TTL mới nhất.
+  }, [hasTokens]);
 
   const establishSession = async (
     tokens: TokenPairDto,

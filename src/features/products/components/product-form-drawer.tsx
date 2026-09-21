@@ -1,9 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Divider, Drawer, Form, Input, InputNumber, Select, Typography } from 'antd';
+import { App, Button, Divider, Drawer, Form, Tabs, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { Controller, useFieldArray, useForm, type FieldPath } from 'react-hook-form';
+import { useFieldArray, useForm, type FieldPath } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
 import { useCan } from '@/core/auth/permissions';
@@ -36,9 +35,17 @@ import {
   useSearchActiveAdminBranches,
   useSearchActiveAdminWarehouses,
 } from '@/generated/api/organization/organization';
-import { MoneyInput } from '@/foundation/inputs/money-input';
-import { ProductImagePicker } from './product-image-picker';
-import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
+import { ProductBasicInfoTab } from './product-form/product-basic-info-tab';
+import { ProductMediaTab } from './product-form/product-media-tab';
+import { ProductReviewTab } from './product-form/product-review-tab';
+import { ProductVariantsTab } from './product-form/product-variants-tab';
+import {
+  PRODUCT_FORM_TABS,
+  PRODUCT_TAB_LABELS,
+  adjacentTab,
+  validateProductTabs,
+  type ProductFormTab,
+} from '../model/product-form-tabs';
 import { ProductMediaPanel } from './product-media-panel';
 import { ProductPricePanel } from './product-price-panel';
 import { PermissionGate } from '@/core/auth/permissions';
@@ -146,6 +153,18 @@ export function ProductFormDrawer({
   const form = useForm<ProductFormValues>({ resolver: yupResolver(schema), defaultValues: defaults });
   const variantFields = useFieldArray({ control: form.control, name: 'variants' });
   const isEdit = Boolean(product);
+  const [activeTab, setActiveTab] = useState<ProductFormTab>('basic');
+  /**
+   * Chế độ Sửa chỉ đổi thông tin mô tả: biến thể, giá và ảnh có màn riêng bên dưới với version của
+   * chính chúng, nên hai tab đó không xuất hiện và bảng tóm tắt trước khi tạo cũng không còn nghĩa.
+   */
+  const visibleTabs: readonly ProductFormTab[] = isEdit
+    ? ['basic', 'media']
+    : PRODUCT_FORM_TABS;
+  const previousTab = adjacentTab(activeTab, -1);
+  const nextTabCandidate = adjacentTab(activeTab, 1);
+  // Ở chế độ Sửa, tab cuối cùng nhìn thấy được là `media`, nên không dẫn người dùng sang tab ẩn.
+  const nextTab = nextTabCandidate && visibleTabs.includes(nextTabCandidate) ? nextTabCandidate : undefined;
   const productType = form.watch('productType');
   const initialBranchId = form.watch('initialBranchId');
   const variants = form.watch('variants');
@@ -171,6 +190,20 @@ export function ProductFormDrawer({
     },
     { query: { enabled: open && !isEdit && canAdjustStock && Boolean(initialBranchId) } },
   );
+  // Nhãn cho bảng tóm tắt: đọc từ option đang tải, không giữ bản sao riêng để khỏi lệch khi đổi lựa chọn.
+  const selectedBrandId = form.watch('brandId');
+  const selectedCategoryIds = form.watch('categoryIds');
+  const brandLabel =
+    (product?.brandId === selectedBrandId ? product?.brand : undefined)
+    ?? brands.data?.items.find((item) => item.id === selectedBrandId)?.label;
+  const categoryLabels = (selectedCategoryIds ?? []).map(
+    (id) =>
+      product?.categories.find((category) => category.id === id)?.name
+      ?? categories.data?.items.find((item) => item.id === id)?.label
+      ?? id,
+  );
+  const branchLabel = branches.data?.items.find((item) => item.id === initialBranchId)?.label;
+
   const openingStock = useCreateStockAdjustment({
     request: { headers: { 'Idempotency-Key': openingStockIdempotencyKey.current } },
   });
@@ -316,6 +349,22 @@ export function ProductFormDrawer({
     ]);
   };
 
+  /**
+   * Validate theo từng tab trước khi submit.
+   *
+   * `handleSubmit` chỉ báo form không hợp lệ; nó không nói lỗi nằm ở tab nào. Không nhảy tới tab đó
+   * thì người dùng bấm Tạo, không có gì xảy ra, và ô lỗi nằm ở tab họ không nhìn thấy.
+   */
+  const submitWithTabValidation = async () => {
+    const result = await validateProductTabs(form);
+    if (!result.isValid && result.errorTab) {
+      setActiveTab(result.errorTab);
+      void message.error(`Kiểm tra lại tab "${PRODUCT_TAB_LABELS[result.errorTab]}".`);
+      return;
+    }
+    await submit();
+  };
+
   const submit = form.handleSubmit((values) => {
     if (product) {
       updateProduct.mutate({
@@ -332,17 +381,13 @@ export function ProductFormDrawer({
     }
   });
 
-  const textField = (name: 'name', label: string) => (
-    <Form.Item label={label} required validateStatus={form.formState.errors[name] ? 'error' : undefined} help={form.formState.errors[name]?.message}>
-      <Controller name={name} control={form.control} render={({ field }) => <Input {...field} />} />
-    </Form.Item>
-  );
 
   return (
     <Drawer
       title={isEdit ? 'Sửa thông tin sản phẩm' : 'Tạo sản phẩm và biến thể'}
       width="100%"
-      styles={{ wrapper: { maxWidth: 720 } }}
+      // Nền chìm để các khối trắng của form nổi lên thành từng nhóm rõ ràng.
+      styles={{ wrapper: { maxWidth: 720 }, body: { background: 'var(--color-surface-sunken)' } }}
       push={false}
       open={open}
       onClose={() => { if (!mutationPending) onClose(); }}
@@ -351,23 +396,41 @@ export function ProductFormDrawer({
       keyboard={!mutationPending}
       destroyOnHidden
       footer={(
-        <div className="flex justify-end gap-2">
-          <Button disabled={mutationPending} onClick={onClose}>
-            Hủy
-          </Button>
-          {/*
-            Gọi thẳng `submit()` thay vì nối nút với form bằng thuộc tính `form="product-form"`.
-            Nút nằm ở footer của Drawer, tức là ngoài thẻ <form>; cách nối qua id phụ thuộc vào
-            việc antd có chuyển `id` xuống DOM hay không, và khi không chuyển thì nút trông vẫn
-            bình thường nhưng bấm không có gì xảy ra.
-          */}
-          <Button
-            type="primary"
-            loading={mutationPending}
-            onClick={() => void submit()}
-          >
-            {isEdit ? 'Lưu thay đổi' : 'Tạo sản phẩm'}
-          </Button>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-slate-500">
+            {isEdit
+              ? 'Ảnh và giá lưu riêng ngay khi thao tác, không chờ nút Lưu.'
+              : `Bước ${visibleTabs.indexOf(activeTab) + 1}/${visibleTabs.length} · ${PRODUCT_TAB_LABELS[activeTab]}`}
+          </span>
+          <div className="flex gap-2">
+            <Button disabled={mutationPending} onClick={onClose}>
+              Hủy
+            </Button>
+            {previousTab && (
+              <Button disabled={mutationPending} onClick={() => setActiveTab(previousTab)}>
+                Quay lại
+              </Button>
+            )}
+            {nextTab ? (
+              <Button type="primary" disabled={mutationPending} onClick={() => setActiveTab(nextTab)}>
+                Tiếp tục
+              </Button>
+            ) : (
+              /*
+                Gọi thẳng `submitWithTabValidation()` thay vì nối nút với form bằng thuộc tính
+                `form="product-form"`. Nút nằm ở footer của Drawer, tức là ngoài thẻ <form>; cách
+                nối qua id phụ thuộc vào việc antd có chuyển `id` xuống DOM hay không, và khi không
+                chuyển thì nút trông vẫn bình thường nhưng bấm không có gì xảy ra.
+              */
+              <Button
+                type="primary"
+                loading={mutationPending}
+                onClick={() => void submitWithTabValidation()}
+              >
+                {isEdit ? 'Lưu thay đổi' : 'Tạo sản phẩm'}
+              </Button>
+            )}
+          </div>
         </div>
       )}
     >
@@ -375,386 +438,55 @@ export function ProductFormDrawer({
         id="product-form"
         layout="vertical"
         disabled={mutationPending}
-        onFinish={() => void submit()}
+        onFinish={() => void submitWithTabValidation()}
       >
-        <Typography.Title level={5}>Thông tin sản phẩm</Typography.Title>
-        <Form.Item
-          label="Loại sản phẩm"
-          required
-          validateStatus={form.formState.errors.productType ? 'error' : undefined}
-          help={form.formState.errors.productType?.message}
-          extra="STANDARD là sản phẩm thường; BUNDLE là combo cố định và mỗi SKU combo phải khai báo thành phần trước khi publish."
-        >
-          <Controller
-            name="productType"
-            control={form.control}
-            render={({ field }) => (
-              <Select
-                {...field}
-                disabled={Boolean(product?.variants.length)}
-                options={[
-                  { value: CreateProductDtoProductType.STANDARD, label: 'Sản phẩm thường' },
-                  { value: CreateProductDtoProductType.BUNDLE, label: 'Combo cố định' },
-                ]}
-                onChange={(value) => {
-                  field.onChange(value);
-                  if (value === CreateProductDtoProductType.BUNDLE) {
-                    variantFields.fields.forEach((_, index) => {
-                      form.setValue(`variants.${index}.openingQuantity`, 0);
-                    });
-                    form.setValue('initialBranchId', undefined);
-                    form.setValue('initialWarehouseCode', undefined);
-                  }
-                }}
-              />
-            )}
-          />
-        </Form.Item>
-        {textField('name', 'Tên sản phẩm')}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Form.Item label="Thương hiệu" validateStatus={form.formState.errors.brandId ? 'error' : undefined} help={form.formState.errors.brandId?.message}>
-            <Controller
-              name="brandId"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  allowClear
-                  showSearch
-                  filterOption={false}
-                  onSearch={setBrandSearch}
-                  loading={brands.isFetching}
-                  options={[
-                    ...(product?.brandId && product.brand
-                      ? [{ value: product.brandId, label: product.brand }]
-                      : []),
-                    ...(brands.data?.items ?? []).map((item) => ({ value: item.id, label: `${item.code} — ${item.label}` })),
-                  ].filter((item, index, items) => items.findIndex(({ value }) => value === item.value) === index)}
+        {/*
+          Một form duy nhất trải qua nhiều tab, không phải bốn form rời: một `useForm`, một lần
+          submit, một transaction ở Backend. Tab chỉ chia nhỏ phần nhìn — đổi tab không lưu gì cả,
+          nên người nhập quay lại sửa được mọi lúc trước khi bấm Tạo.
+        */}
+        <Tabs
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key as ProductFormTab)}
+          items={visibleTabs.map((tab) => ({
+            key: tab,
+            label: PRODUCT_TAB_LABELS[tab],
+            children:
+              tab === 'basic' ? (
+                <ProductBasicInfoTab
+                  form={form}
+                  product={product}
+                  brands={brands}
+                  categories={categories}
+                  onBrandSearch={setBrandSearch}
+                  onCategorySearch={setCategorySearch}
                 />
-              )}
-            />
-          </Form.Item>
-          <Form.Item label="Danh mục" required validateStatus={form.formState.errors.categoryIds ? 'error' : undefined} help={form.formState.errors.categoryIds?.message}>
-            <Controller
-              name="categoryIds"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  mode="multiple"
-                  showSearch
-                  filterOption={false}
-                  onSearch={setCategorySearch}
-                  loading={categories.isFetching}
-                  options={[
-                    ...(product?.categories ?? []).map((category) => ({ value: category.id, label: category.name })),
-                    ...(categories.data?.items ?? []).map((item) => ({ value: item.id, label: `${item.code} — ${item.label}` })),
-                  ].filter((item, index, items) => items.findIndex(({ value }) => value === item.value) === index)}
+              ) : tab === 'media' ? (
+                <ProductMediaTab form={form} isEdit={isEdit} disabled={mutationPending} />
+              ) : tab === 'variants' ? (
+                <ProductVariantsTab
+                  form={form}
+                  variantFields={variantFields}
+                  productType={productType}
+                  canAdjustStock={canAdjustStock}
+                  initialBranchId={initialBranchId}
+                  hasOpeningStock={hasOpeningStock}
+                  branches={branches}
+                  warehouses={warehouses}
+                  onBranchSearch={setBranchSearch}
+                  onWarehouseSearch={setWarehouseSearch}
+                  isEdit={isEdit}
                 />
-              )}
-            />
-          </Form.Item>
-        </div>
-        <Form.Item
-          label="Danh mục chính"
-          required
-          validateStatus={form.formState.errors.primaryCategoryId ? 'error' : undefined}
-          help={form.formState.errors.primaryCategoryId?.message}
-        >
-          <Controller
-            name="primaryCategoryId"
-            control={form.control}
-            render={({ field }) => (
-              <Select
-                {...field}
-                options={form.watch('categoryIds').map((categoryId) => ({
-                  value: categoryId,
-                  label: product?.categories.find(({ id }) => id === categoryId)?.name
-                    ?? categories.data?.items.find(({ id }) => id === categoryId)?.label
-                    ?? categoryId,
-                }))}
-                placeholder="Chọn trong danh mục đã gán"
-              />
-            )}
-          />
-        </Form.Item>
-        {!isEdit && (
-          <Form.Item
-            label="Ảnh sản phẩm"
-            extra="Tải nhiều ảnh ngay tại đây; ảnh đầu danh sách là ảnh chính. Ảnh được gắn vào sản phẩm sau khi tạo."
-          >
-            <Controller
-              name="images"
-              control={form.control}
-              render={({ field }) => (
-                <ProductImagePicker
-                  value={field.value ?? []}
-                  disabled={mutationPending}
-                  onChange={field.onChange}
+              ) : (
+                <ProductReviewTab
+                  form={form}
+                  brandLabel={brandLabel}
+                  categoryLabels={categoryLabels}
+                  branchLabel={branchLabel}
                 />
-              )}
-            />
-          </Form.Item>
-        )}
-
-        <Form.Item label="Mô tả ngắn">
-          <Controller name="shortDescription" control={form.control} render={({ field }) => <Input {...field} />} />
-        </Form.Item>
-        <Form.Item
-          label="Mô tả chi tiết"
-        >
-          <Controller
-            name="description"
-            control={form.control}
-            render={({ field }) => (
-              <RichTextEditor
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="Nhập mô tả, thông số và hướng dẫn sử dụng sản phẩm..."
-              />
-            )}
-          />
-        </Form.Item>
-        {!isEdit && (
-          <>
-            <Divider />
-            <div className="mb-4">
-              <Typography.Title level={5} className="!mb-1">Biến thể bán hàng (SKU)</Typography.Title>
-              <Typography.Text type="secondary">
-                SKU được Backend tự sinh. Khai báo màu sắc, kích thước hoặc phiên bản khách hàng sẽ chọn khi mua.
-              </Typography.Text>
-            </div>
-            <Alert
-              className="mb-4"
-              type="info"
-              showIcon
-              message="Sản phẩm và toàn bộ biến thể được lưu cùng một lần"
-              description="Nếu một biến thể không hợp lệ, hệ thống sẽ không tạo dữ liệu sản phẩm dở dang. Giá và ảnh có thể cấu hình sau khi lưu."
-            />
-            {productType === CreateProductDtoProductType.STANDARD && canAdjustStock && (
-              <Card size="small" className="mb-4" title="Tồn đầu theo chi nhánh / kho">
-                <Alert
-                  className="mb-4"
-                  type="info"
-                  showIcon
-                  message="Sản phẩm dùng chung toàn hệ thống; số lượng được quản lý riêng theo từng kho"
-                  description="V1 có đúng một kho cho mỗi chi nhánh. Chọn chi nhánh, hệ thống tự chọn kho tương ứng; nhập số lượng cho từng SKU bên dưới. Để 0 nếu chưa nhập hàng."
-                />
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Form.Item
-                    label="Chi nhánh nhập tồn đầu"
-                    required={hasOpeningStock}
-                    validateStatus={form.formState.errors.initialBranchId ? 'error' : undefined}
-                    help={form.formState.errors.initialBranchId?.message}
-                  >
-                    <Controller
-                      name="initialBranchId"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          allowClear
-                          showSearch
-                          filterOption={false}
-                          onSearch={setBranchSearch}
-                          loading={branches.isFetching}
-                          placeholder="Chọn chi nhánh"
-                          options={(branches.data?.items ?? []).map((item) => ({
-                            value: item.id,
-                            label: `${item.code} — ${item.label}`,
-                          }))}
-                          onChange={(value) => {
-                            field.onChange(value);
-                            form.setValue('initialWarehouseCode', undefined, { shouldValidate: true });
-                          }}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label="Kho nhập tồn đầu"
-                    required={hasOpeningStock}
-                    validateStatus={form.formState.errors.initialWarehouseCode ? 'error' : undefined}
-                    help={form.formState.errors.initialWarehouseCode?.message}
-                  >
-                    <Controller
-                      name="initialWarehouseCode"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          allowClear
-                          showSearch
-                          filterOption={false}
-                          disabled={!initialBranchId}
-                          onSearch={setWarehouseSearch}
-                          loading={warehouses.isFetching}
-                          placeholder={initialBranchId ? 'Chọn kho' : 'Chọn chi nhánh trước'}
-                          options={(warehouses.data?.items ?? []).map((item) => ({
-                            value: item.code,
-                            label: `${item.code} — ${item.label}`,
-                          }))}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </div>
-              </Card>
-            )}
-            {productType === CreateProductDtoProductType.STANDARD && !canAdjustStock && (
-              <Alert
-                className="mb-4"
-                type="warning"
-                showIcon
-                message="Tài khoản chưa có quyền nhập tồn kho"
-                description="Sản phẩm và SKU vẫn được tạo. Người có quyền inventory.stock.adjust có thể nhập tồn tại màn Tồn kho."
-              />
-            )}
-            {productType === CreateProductDtoProductType.BUNDLE && (
-              <Alert
-                className="mb-4"
-                type="info"
-                showIcon
-                message="Combo không có tồn vật lý riêng"
-                description="Tồn bán được của combo được tính từ các SKU thành phần sau khi cấu hình combo."
-              />
-            )}
-            <div className="space-y-4">
-              {variantFields.fields.map((variant, index) => (
-                <Card
-                  key={variant.id}
-                  size="small"
-                  title={`Biến thể ${index + 1}`}
-                  extra={(
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      aria-label={`Xóa biến thể ${index + 1}`}
-                      disabled={variantFields.fields.length === 1}
-                      onClick={() => variantFields.remove(index)}
-                    />
-                  )}
-                >
-                  <div className="grid gap-x-4 md:grid-cols-2 xl:grid-cols-3">
-                    <Form.Item label="SKU" extra="Tự sinh sau khi lưu và không thể thay đổi.">
-                      <Input value="Tự động" disabled />
-                    </Form.Item>
-                    <Form.Item
-                      label="Tên biến thể"
-                      required
-                      validateStatus={form.formState.errors.variants?.[index]?.name ? 'error' : undefined}
-                      help={form.formState.errors.variants?.[index]?.name?.message}
-                    >
-                      <Controller
-                        name={`variants.${index}.name`}
-                        control={form.control}
-                        render={({ field }) => <Input {...field} placeholder="Ví dụ: Đen - Size 40" />}
-                      />
-                    </Form.Item>
-                    <Form.Item
-                      label="Barcode"
-                      validateStatus={form.formState.errors.variants?.[index]?.barcode ? 'error' : undefined}
-                      help={form.formState.errors.variants?.[index]?.barcode?.message}
-                    >
-                      <Controller
-                        name={`variants.${index}.barcode`}
-                        control={form.control}
-                        render={({ field }) => <Input {...field} placeholder="Không bắt buộc" />}
-                      />
-                    </Form.Item>
-                    {([
-                      ['weightGrams', 'Khối lượng (g)', 0],
-                      ['lengthMm', 'Dài (mm)', 1],
-                      ['widthMm', 'Rộng (mm)', 1],
-                      ['heightMm', 'Cao (mm)', 1],
-                    ] as const).map(([fieldName, label, min]) => {
-                      const error = form.formState.errors.variants?.[index]?.[fieldName];
-                      return (
-                        <Form.Item
-                          key={fieldName}
-                          label={label}
-                          validateStatus={error ? 'error' : undefined}
-                          help={error?.message}
-                        >
-                          <Controller
-                            name={`variants.${index}.${fieldName}`}
-                            control={form.control}
-                            render={({ field }) => (
-                              <InputNumber
-                                className="!w-full"
-                                min={min}
-                                precision={0}
-                                value={field.value}
-                                onBlur={field.onBlur}
-                                onChange={(value) => field.onChange(value ?? undefined)}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                      );
-                    })}
-                    {!isEdit && (
-                      <Form.Item
-                        label="Giá bán (đã gồm VAT)"
-                        extra="Bỏ trống nếu chưa chốt giá; sản phẩm chỉ xuất bản được khi SKU đã có giá."
-                        validateStatus={form.formState.errors.variants?.[index]?.price ? 'error' : undefined}
-                        help={form.formState.errors.variants?.[index]?.price?.message}
-                      >
-                        <Controller
-                          name={`variants.${index}.price`}
-                          control={form.control}
-                          render={({ field }) => (
-                            <MoneyInput
-                              className="!w-full"
-                              value={field.value ? Number(field.value) : undefined}
-                              onBlur={field.onBlur}
-                              onChange={(value) => field.onChange(value ? String(value) : '')}
-                            />
-                          )}
-                        />
-                      </Form.Item>
-                    )}
-                    {productType === CreateProductDtoProductType.STANDARD && canAdjustStock && (
-                      <Form.Item
-                        label="Số lượng tồn đầu"
-                        required
-                        extra="Nhập 0 nếu chưa có hàng tại kho đã chọn."
-                        validateStatus={form.formState.errors.variants?.[index]?.openingQuantity ? 'error' : undefined}
-                        help={form.formState.errors.variants?.[index]?.openingQuantity?.message}
-                      >
-                        <Controller
-                          name={`variants.${index}.openingQuantity`}
-                          control={form.control}
-                          render={({ field }) => (
-                            <InputNumber
-                              className="!w-full"
-                              min={0}
-                              precision={0}
-                              value={field.value}
-                              onBlur={field.onBlur}
-                              onChange={(value) => field.onChange(value ?? 0)}
-                            />
-                          )}
-                        />
-                      </Form.Item>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-            <Button
-              className="mt-4"
-              type="dashed"
-              block
-              icon={<PlusOutlined />}
-              disabled={variantFields.fields.length >= 50}
-              onClick={() => variantFields.append(emptyVariant())}
-            >
-              Thêm biến thể
-            </Button>
-          </>
-        )}
+              ),
+          }))}
+        />
 
         {/*
           Ở chế độ Sửa, ảnh và giá nằm ngay trong form thay vì bắt người dùng đóng form rồi đi tìm

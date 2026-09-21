@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { PlusOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Divider, Drawer, Form, Input, Skeleton, Space, Switch, Typography } from 'antd';
+import { EnvironmentOutlined, PlusOutlined as AddIcon, StopOutlined, UserOutlined } from '@ant-design/icons';
+import { Alert, App, Button, Drawer, Form, Input, Skeleton, Space, Switch, Tag } from 'antd';
+import { FormSection } from '@/foundation/layout/form-section';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createAdminCustomer,
@@ -137,7 +138,8 @@ export function CustomerFormDrawer({
       aria-label={editing ? `Sửa khách ${editing.customerNo}` : 'Thêm khách hàng'}
       onClose={() => (mutation.isPending ? undefined : onClose())}
       width="100%"
-      styles={{ wrapper: { maxWidth: 720 } }}
+      // Nền chìm để các khối trắng của form nổi lên thành từng nhóm rõ ràng.
+      styles={{ wrapper: { maxWidth: 720 }, body: { background: 'var(--color-surface-sunken)' } }}
       destroyOnHidden
       title={editing ? `Sửa khách ${editing.customerNo}` : 'Thêm khách hàng'}
       footer={
@@ -166,6 +168,12 @@ export function CustomerFormDrawer({
           disabled={mutation.isPending}
           onFinish={(values) => mutation.mutate(values)}
         >
+          <FormSection
+            title="Thông tin liên hệ"
+            description="Email và số điện thoại đều bắt buộc: đây là cách nhận lại khách ở lần mua sau và gửi thông báo đơn."
+            icon={<UserOutlined />}
+            className="mb-4"
+          >
           <div className="grid gap-x-5 sm:grid-cols-[1fr_180px]">
             <div>
               <Form.Item
@@ -218,27 +226,37 @@ export function CustomerFormDrawer({
                 <Switch />
               </Form.Item>
               {editing && (
-                <Form.Item label="Chặn hồ sơ" extra="Chặn là ngừng dùng hồ sơ, không xoá lịch sử mua.">
-                  <Switch
-                    checked={blocked}
-                    loading={statusPending}
-                    disabled={!current || statusPending}
-                    onChange={toggleBlocked}
-                  />
+                <Form.Item
+                  label={
+                    <span className="flex items-center gap-2">
+                      <StopOutlined className="text-slate-400" />
+                      Chặn hồ sơ
+                    </span>
+                  }
+                  extra="Chặn là ngừng dùng hồ sơ, không xoá lịch sử mua."
+                >
+                  <Space>
+                    <Switch
+                      checked={blocked}
+                      loading={statusPending}
+                      disabled={!current || statusPending}
+                      onChange={toggleBlocked}
+                    />
+                    <Tag color={blocked ? 'red' : 'green'}>
+                      {blocked ? 'Đang chặn' : 'Đang hoạt động'}
+                    </Tag>
+                  </Space>
                 </Form.Item>
               )}
             </div>
           </div>
+          </FormSection>
 
-          <Divider />
-          <Typography.Title level={5} className="!mb-1">
-            Sổ địa chỉ
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Địa chỉ lưu cùng lúc với hồ sơ. Địa chỉ bị xoá khỏi danh sách chỉ ngừng sử dụng, đơn cũ
-            vẫn tra lại được nơi đã giao.
-          </Typography.Text>
-
+          <FormSection
+            title="Sổ địa chỉ"
+            description="Địa chỉ lưu cùng lúc với hồ sơ. Địa chỉ bị xoá khỏi danh sách chỉ ngừng sử dụng, đơn cũ vẫn tra lại được nơi đã giao."
+            icon={<EnvironmentOutlined />}
+          >
           <Form.List name="addresses">
             {(fields, { add, remove }) => (
               <div className="mt-3">
@@ -273,7 +291,7 @@ export function CustomerFormDrawer({
                 <Button
                   type="dashed"
                   block
-                  icon={<PlusOutlined />}
+                  icon={<AddIcon />}
                   disabled={fields.length >= 10}
                   onClick={() => add(emptyCustomerAddress())}
                 >
@@ -282,6 +300,7 @@ export function CustomerFormDrawer({
               </div>
             )}
           </Form.List>
+          </FormSection>
         </Form>
       )}
     </Drawer>
