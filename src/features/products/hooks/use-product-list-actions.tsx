@@ -4,6 +4,7 @@ import { useCan } from '@/core/auth/permissions';
 import {
   deleteAdminProduct,
   getListAdminProductsQueryKey,
+  publishAdminProduct,
   updateAdminProduct,
 } from '@/generated/api/catalog/catalog';
 import { getApiErrorMessage } from '@/lib/api/error';
@@ -27,6 +28,36 @@ export function useProductListActions() {
     },
     onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
   });
+
+  /**
+   * Xuất bản nằm ở cột thao tác của danh sách, không nằm trong form sửa thông tin.
+   * Sửa nội dung và đổi vòng đời là hai việc khác nhau; gộp vào một chỗ khiến người dùng
+   * bấm Lưu mà không rõ sản phẩm có lên website hay chưa.
+   */
+  const publishMutation = useMutation({
+    mutationFn: (row: ProductListRow) =>
+      publishAdminProduct(row.id, { expectedVersion: row.version }),
+    onSuccess: async () => {
+      await invalidateList();
+      void message.success('Đã xuất bản sản phẩm lên website');
+    },
+    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+  });
+
+  const confirmPublish = (row: ProductListRow) => {
+    modal.confirm({
+      title: `Xuất bản ${row.name}?`,
+      content: (
+        <div className="space-y-2 text-sm text-slate-500">
+          <p>Sản phẩm sẽ hiển thị công khai với giá đã bao gồm VAT.</p>
+          <p>SKU phải có giá hiệu lực, nếu không backend sẽ từ chối.</p>
+        </div>
+      ),
+      okText: 'Xuất bản',
+      cancelText: 'Huỷ',
+      onOk: () => publishMutation.mutateAsync(row),
+    });
+  };
 
   const archiveMutation = useMutation({
     mutationFn: (row: ProductListRow) =>
@@ -56,6 +87,8 @@ export function useProductListActions() {
 
   return {
     canManage,
+    confirmPublish,
+    publishBusyId: publishMutation.isPending ? publishMutation.variables?.id : undefined,
     confirmArchive,
     archiveBusyId: archiveMutation.isPending ? archiveMutation.variables?.id : undefined,
     toggleVisibility: (row: ProductListRow, next: boolean) =>

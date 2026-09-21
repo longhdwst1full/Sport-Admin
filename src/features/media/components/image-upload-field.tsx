@@ -6,7 +6,8 @@ import { uploadImage } from '@/lib/media/upload-image';
 
 interface ImageUploadFieldProps {
   value: string;
-  onChange: (url: string) => void;
+  /** `assetId` chỉ có khi ảnh vừa được tải lên; dán URL tay thì không có. */
+  onChange: (url: string, assetId?: string) => void;
   disabled?: boolean;
 }
 
@@ -37,7 +38,7 @@ export function ImageUploadField({ value, onChange, disabled }: ImageUploadField
           setUploading(true);
           void uploadImage(file)
             .then((asset) => {
-              onChange(asset.secureUrl);
+              onChange(asset.secureUrl, asset.id);
               onSuccess?.(asset);
               void message.success('Đã tải ảnh lên Cloudinary');
             })

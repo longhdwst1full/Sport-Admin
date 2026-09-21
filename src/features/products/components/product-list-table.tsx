@@ -1,5 +1,6 @@
 import {
   CheckCircleOutlined,
+  CloudUploadOutlined,
   DeleteOutlined,
   EditOutlined,
   ReloadOutlined,
@@ -34,10 +35,12 @@ export function ProductListTable({
   canManage,
   visibilityBusyId,
   archiveBusyId,
+  publishBusyId,
   onPageChange,
   onOpen,
   onToggleVisibility,
   onArchive,
+  onPublish,
   onRefresh,
 }: {
   rows: ProductListRow[];
@@ -49,10 +52,12 @@ export function ProductListTable({
   canManage: boolean;
   visibilityBusyId?: string;
   archiveBusyId?: string;
+  publishBusyId?: string;
   onPageChange: (page: number, pageSize: number) => void;
   onOpen: (slug: string) => void;
   onToggleVisibility: (row: ProductListRow, next: boolean) => void;
   onArchive: (row: ProductListRow) => void;
+  onPublish: (row: ProductListRow) => void;
   onRefresh: () => void;
 }) {
   return (
@@ -171,7 +176,7 @@ export function ProductListTable({
             title: '',
             key: 'actions',
             align: 'right',
-            width: 100,
+            width: 140,
             fixed: 'right',
             render: (_value, row) => (
               <TableActions>
@@ -181,6 +186,15 @@ export function ProductListTable({
                   className="!text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
                   onClick={() => onOpen(row.slug)}
                 />
+                {canManage && row.status === 'DRAFT' && (
+                  <TableActionButton
+                    label={`Xuất bản sản phẩm ${row.name}`}
+                    icon={<CloudUploadOutlined />}
+                    className="!text-emerald-600 hover:!bg-emerald-50"
+                    loading={publishBusyId === row.id}
+                    onClick={() => onPublish(row)}
+                  />
+                )}
                 {canManage && row.status !== 'ARCHIVED' && (
                   <TableActionButton
                     label={`Lưu trữ sản phẩm ${row.name}`}

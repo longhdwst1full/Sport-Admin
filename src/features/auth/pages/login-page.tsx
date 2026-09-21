@@ -15,6 +15,7 @@ import { consumeExpiredSessionFlash } from '@/core/auth/auth-session-expiry';
 const schema: yup.ObjectSchema<LoginDto> = yup.object({
   identifier: yup.string().trim().required('Vui lòng nhập email hoặc số điện thoại').max(255),
   password: yup.string().min(8, 'Mật khẩu tối thiểu 8 ký tự').required('Vui lòng nhập mật khẩu'),
+  rememberMe: yup.boolean().optional(),
 });
 
 export function LoginPage() {
@@ -116,7 +117,9 @@ export function LoginPage() {
           <Form
             layout="vertical"
             requiredMark={false}
-            onFinish={() => void form.handleSubmit((data) => login.mutate({ data }))()}
+            onFinish={() => void form.handleSubmit((data) => login.mutate({
+              data: { ...data, rememberMe: remember },
+            }))()}
             className="space-y-4"
           >
             <Form.Item

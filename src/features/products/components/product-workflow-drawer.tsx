@@ -122,9 +122,9 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     mutation: {
       onSuccess: async () => {
         await refresh();
-        void message.success('Sản phẩm đã được publish ra storefront.');
+        void message.success('Đã xuất bản sản phẩm lên website.');
       },
-      onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể publish sản phẩm.')),
+      onError: (error) => void message.error(getApiErrorMessage(error, 'Không xuất bản được sản phẩm.')),
     },
   });
 
@@ -132,9 +132,9 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     mutation: {
       onSuccess: async () => {
         await refresh();
-        void message.success('Đã archive; sản phẩm không còn hiển thị trên storefront.');
+        void message.success('Đã lưu trữ; sản phẩm không còn hiển thị trên website.');
       },
-      onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể archive sản phẩm.')),
+      onError: (error) => void message.error(getApiErrorMessage(error, 'Không lưu trữ được sản phẩm.')),
     },
   });
 
@@ -142,7 +142,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     mutation: {
       onSuccess: async () => {
         await refresh();
-        void message.success('Đã đưa sản phẩm về DRAFT để kiểm tra trước khi publish lại.');
+        void message.success('Đã đưa sản phẩm về bản nháp để kiểm tra trước khi xuất bản lại.');
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể khôi phục sản phẩm.')),
     },
@@ -152,9 +152,9 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     mutation: {
       onSuccess: async () => {
         await refresh();
-        void message.success('Đã archive SKU.');
+        void message.success('Đã lưu trữ SKU.');
       },
-      onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể archive SKU.')),
+      onError: (error) => void message.error(getApiErrorMessage(error, 'Không lưu trữ được SKU.')),
     },
   });
 
@@ -187,9 +187,9 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
   const confirmPublish = () => {
     if (!product) return;
     Modal.confirm({
-      title: `Publish “${product.name}”?`,
+      title: `Xuất bản “${product.name}”?`,
       content: 'Sản phẩm sẽ hiển thị công khai với giá đã bao gồm VAT. Version hiện tại sẽ được kiểm tra để tránh ghi đè thay đổi của người khác.',
-      okText: 'Publish',
+      okText: 'Xuất bản',
       cancelText: 'Hủy',
       onOk: () => publish.mutateAsync({ id: product.id, data: { expectedVersion: product.version } }),
     });
@@ -201,12 +201,12 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     const isCombo = product.productType === 'BUNDLE';
     Modal.confirm({
       title: isArchived
-        ? `Khôi phục “${product.name}” về DRAFT?`
-        : `Archive ${isCombo ? 'combo' : 'sản phẩm'} “${product.name}”?`,
+        ? `Đưa “${product.name}” về bản nháp?`
+        : `Lưu trữ ${isCombo ? 'combo' : 'sản phẩm'} “${product.name}”?`,
       content: isArchived
-        ? 'Sản phẩm chưa hiển thị lại ngay. Cần kiểm tra SKU, giá và publish lại.'
-        : 'Sản phẩm sẽ ẩn ngay khỏi storefront và chặn giao dịch mới. Đơn hàng lịch sử không bị thay đổi.',
-      okText: isArchived ? 'Khôi phục về DRAFT' : 'Archive',
+        ? 'Sản phẩm chưa hiển thị lại ngay. Cần kiểm tra SKU, giá rồi xuất bản lại.'
+        : 'Sản phẩm sẽ ẩn ngay khỏi website và chặn giao dịch mới. Đơn hàng lịch sử không bị thay đổi.',
+      okText: isArchived ? 'Đưa về bản nháp' : 'Lưu trữ',
       okButtonProps: { danger: !isArchived },
       cancelText: 'Hủy',
       onOk: () => isArchived
@@ -218,11 +218,11 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
   const confirmVariantLifecycle = (variant: ProductVariantDto) => {
     const isActive = variant.status === 'ACTIVE';
     Modal.confirm({
-      title: `${isActive ? 'Archive' : 'Kích hoạt lại'} SKU “${variant.sku}”?`,
+      title: `${isActive ? 'Lưu trữ' : 'Kích hoạt lại'} SKU “${variant.sku}”?`,
       content: isActive
         ? 'SKU sẽ không còn được bán mới. Nếu SKU đang là thành phần của combo published, backend sẽ từ chối để tránh combo mất thành phần.'
         : 'SKU chỉ được kích hoạt lại khi Product chưa bị archive.',
-      okText: isActive ? 'Archive SKU' : 'Kích hoạt lại',
+      okText: isActive ? 'Lưu trữ SKU' : 'Kích hoạt lại',
       okButtonProps: { danger: isActive },
       cancelText: 'Hủy',
       onOk: () => isActive
@@ -261,14 +261,14 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
               </PermissionGate>
               <PermissionGate permission="catalog.product.publish">
                 {product.status === 'DRAFT' && (
-                  <Button type="primary" disabled={!canPublish} loading={publish.isPending} onClick={confirmPublish}>Publish</Button>
+                  <Button type="primary" disabled={!canPublish} loading={publish.isPending} onClick={confirmPublish}>Xuất bản</Button>
                 )}
                 <Button
                   danger={product.status !== 'ARCHIVED'}
                   loading={archiveProduct.isPending || reactivateProduct.isPending}
                   onClick={confirmProductLifecycle}
                 >
-                  {product.status === 'ARCHIVED' ? 'Khôi phục về DRAFT' : 'Archive'}
+                  {product.status === 'ARCHIVED' ? 'Đưa về bản nháp' : 'Lưu trữ'}
                 </Button>
               </PermissionGate>
             </Space>
@@ -287,7 +287,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
               type="info"
               showIcon
               message={product.productType === 'BUNDLE'
-                ? 'Mọi SKU ACTIVE của combo phải có giá hiệu lực và danh sách thành phần hợp lệ trước khi publish.'
+                ? 'Mọi SKU đang bán của combo phải có giá hiệu lực và thành phần hợp lệ trước khi xuất bản.'
                 : 'Cần ít nhất một SKU ACTIVE có giá hiệu lực trước khi publish.'}
             />
           )}

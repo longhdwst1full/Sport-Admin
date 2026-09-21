@@ -18,4 +18,6 @@ export interface LoginDto {
    * @maxLength 128
    */
   password: string;
+  /** Keep the refresh cookie after the browser closes. Omitted or false creates a session cookie. */
+  rememberMe?: boolean;
 }

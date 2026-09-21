@@ -18,7 +18,6 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { toSlug } from '@/shared/utils';
 
 interface BrandFormValues {
-  code: string;
   name: string;
   slug: string;
   description?: string;
@@ -29,11 +28,16 @@ interface CategoryFormValues extends BrandFormValues {
   sortOrder: number;
 }
 
-const codeRule = /^[A-Z0-9-]+$/;
+/**
+ * Mã thương hiệu/danh mục trùng với slug đường dẫn, chỉ khác cách viết. Sinh từ slug thay vì bắt
+ * người dùng nhập hai lần cùng một thứ rồi tự xoay xở giữ chúng khớp nhau.
+ */
+const toMasterCode = (slug: string): string =>
+  slug.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '-');
+
 const slugRule = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const brandSchema: yup.ObjectSchema<BrandFormValues> = yup.object({
-  code: yup.string().trim().matches(codeRule, 'Chỉ dùng chữ hoa, số và dấu gạch ngang (VD: NIKE-VN)').required('Nhập mã'),
   name: yup.string().trim().max(255).required('Nhập tên thương hiệu'),
   slug: yup.string().trim().matches(slugRule, 'Slug chỉ gồm chữ thường, số và gạch ngang (VD: nike-sport)').required('Nhập slug'),
   description: yup.string().trim().optional(),
@@ -44,7 +48,7 @@ const categorySchema: yup.ObjectSchema<CategoryFormValues> = brandSchema.shape({
   sortOrder: yup.number().integer().min(0).required('Nhập thứ tự hiển thị'),
 });
 
-const brandDefaults: BrandFormValues = { code: '', name: '', slug: '', description: '' };
+const brandDefaults: BrandFormValues = { name: '', slug: '', description: '' };
 const categoryDefaults: CategoryFormValues = { ...brandDefaults, parentId: undefined, sortOrder: 0 };
 
 function FieldError({ message }: { message?: string }) {
@@ -85,7 +89,7 @@ export function BrandFormDrawer({
     if (!open) return;
     form.reset(
       brand
-        ? { code: brand.code, name: brand.name, slug: brand.slug, description: brand.description ?? '' }
+        ? { name: brand.name, slug: brand.slug, description: brand.description ?? '' }
         : brandDefaults,
     );
   }, [brand, form, open]);
@@ -94,9 +98,6 @@ export function BrandFormDrawer({
     if (!brand && !form.getValues('slug')) {
       const generated = toSlug(val);
       form.setValue('slug', generated, { shouldValidate: true });
-      if (!form.getValues('code')) {
-        form.setValue('code', generated.toUpperCase().replace(/[^A-Z0-9-]/g, '-'), { shouldValidate: true });
-      }
     }
   };
 
@@ -113,7 +114,7 @@ export function BrandFormDrawer({
       });
       return;
     }
-    create.mutate({ data: values });
+    create.mutate({ data: { ...values, code: toMasterCode(values.slug) } });
   });
   const pending = create.isPending || update.isPending;
 
@@ -164,28 +165,7 @@ export function BrandFormDrawer({
           />
         </Form.Item>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Form.Item
-            label={<span className="text-xs font-semibold text-slate-700">Mã thương hiệu</span>}
-            required
-            validateStatus={form.formState.errors.code ? 'error' : undefined}
-            help={<FieldError message={form.formState.errors.code?.message} />}
-          >
-            <Controller
-              name="code"
-              control={form.control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  placeholder="NIKE-VN"
-                  disabled={Boolean(brand)}
-                  className="!rounded-lg uppercase font-mono"
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
+        <Form.Item
             label={<span className="text-xs font-semibold text-slate-700">Slug đường dẫn</span>}
             required
             validateStatus={form.formState.errors.slug ? 'error' : undefined}
@@ -199,7 +179,6 @@ export function BrandFormDrawer({
               )}
             />
           </Form.Item>
-        </div>
 
         <Form.Item
           label={<span className="text-xs font-semibold text-slate-700">Mô tả giới thiệu</span>}
@@ -259,7 +238,6 @@ export function CategoryFormDrawer({
     form.reset(
       category
         ? {
-            code: category.code,
             name: category.name,
             slug: category.slug,
             description: category.description ?? '',
@@ -274,9 +252,6 @@ export function CategoryFormDrawer({
     if (!category && !form.getValues('slug')) {
       const generated = toSlug(val);
       form.setValue('slug', generated, { shouldValidate: true });
-      if (!form.getValues('code')) {
-        form.setValue('code', generated.toUpperCase().replace(/[^A-Z0-9-]/g, '-'), { shouldValidate: true });
-      }
     }
   };
 
@@ -296,7 +271,8 @@ export function CategoryFormDrawer({
     }
     create.mutate({
       data: {
-        code: values.code,
+        // Mã trùng slug đường dẫn nên sinh từ slug; không bắt người dùng nhập hai lần cùng một thứ.
+        code: toMasterCode(values.slug),
         name: values.name,
         slug: values.slug,
         ...(values.description ? { description: values.description } : {}),
@@ -354,28 +330,7 @@ export function CategoryFormDrawer({
           />
         </Form.Item>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Form.Item
-            label={<span className="text-xs font-semibold text-slate-700">Mã danh mục</span>}
-            required
-            validateStatus={form.formState.errors.code ? 'error' : undefined}
-            help={<FieldError message={form.formState.errors.code?.message} />}
-          >
-            <Controller
-              name="code"
-              control={form.control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  placeholder="GIAY-BONG-DA"
-                  disabled={Boolean(category)}
-                  className="!rounded-lg uppercase font-mono"
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
+        <Form.Item
             label={<span className="text-xs font-semibold text-slate-700">Slug đường dẫn</span>}
             required
             validateStatus={form.formState.errors.slug ? 'error' : undefined}
@@ -389,7 +344,6 @@ export function CategoryFormDrawer({
               )}
             />
           </Form.Item>
-        </div>
 
         {!category && (
           <Form.Item

@@ -103,6 +103,8 @@ export function ProductsPage() {
           onOpen={setSelectedSlug}
           onToggleVisibility={actions.toggleVisibility}
           onArchive={actions.confirmArchive}
+          onPublish={actions.confirmPublish}
+          publishBusyId={actions.publishBusyId}
           onRefresh={() => void list.query.refetch()}
         />
       </ManagementPage>

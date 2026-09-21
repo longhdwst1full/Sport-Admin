@@ -60,4 +60,25 @@ test.describe('AUTH — Đăng nhập', () => {
     await page.goto('/products');
     await expect(page).toHaveURL(/\/login$/);
   });
+
+  test('AUTH-06: ghi nhớ đăng nhập -> gửi preference cho Backend', async ({ page }) => {
+    let loginPayload: unknown;
+    await page.route('**/api/v1/admin/auth/login', async (route) => {
+      loginPayload = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(tokenPairBody()),
+      });
+    });
+    await mockJson(page, '**/api/v1/admin/auth/me', currentUserBody());
+    await mockJson(page, '**/api/v1/admin/reports/**', {});
+
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.login('admin@baoansport.vn', 'Password@123', true);
+
+    await expect(page).not.toHaveURL(/\/login$/);
+    expect(loginPayload).toMatchObject({ rememberMe: true });
+  });
 });

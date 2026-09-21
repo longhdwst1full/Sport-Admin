@@ -14,6 +14,8 @@ export interface ProductVariantFormValues {
   widthMm?: number;
   heightMm?: number;
   openingQuantity: number;
+  /** Giá bán đã gồm VAT, nhập ngay ở màn tạo; tạo bản giá sau khi có SKU thật. */
+  price?: string;
 }
 
 export interface ProductFormValues {
@@ -26,6 +28,10 @@ export interface ProductFormValues {
   description?: string;
   initialBranchId?: string;
   initialWarehouseCode?: string;
+  /** Ảnh đại diện nhập ngay ở màn tạo; gắn vào sản phẩm sau khi tạo xong. */
+  coverImageUrl?: string;
+  /** ID media của ảnh vừa tải lên; gắn ảnh cần ID chứ không phải URL. */
+  coverMediaAssetId?: string;
   variants: ProductVariantFormValues[];
 }
 
@@ -37,6 +43,7 @@ export const emptyVariant = (): ProductVariantFormValues => ({
   widthMm: undefined,
   heightMm: undefined,
   openingQuantity: 0,
+  price: '',
 });
 
 const optionalText = (value?: string): string | undefined => value?.trim() || undefined;

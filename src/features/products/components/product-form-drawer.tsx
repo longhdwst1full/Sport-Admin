@@ -10,7 +10,9 @@ import { useCan } from '@/core/auth/permissions';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import {
   getListAdminProductsQueryKey,
+  useAttachAdminProductMedia,
   useCreateAdminProduct,
+  useCreateAdminProductPrice,
   useSearchActiveAdminBrands,
   useSearchActiveAdminCategories,
   useUpdateAdminProduct,
@@ -33,6 +35,8 @@ import {
   useSearchActiveAdminBranches,
   useSearchActiveAdminWarehouses,
 } from '@/generated/api/organization/organization';
+import { MoneyInput } from '@/foundation/inputs/money-input';
+import { ImageUploadField } from '@/features/media';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import {
@@ -43,6 +47,7 @@ import {
   type ProductFormValues,
 } from '../model/product-form.mapper';
 import { toOpeningStockItems } from '../model/product-opening-stock.mapper';
+import { toInitialPriceCommands } from '../model/product-initial-setup';
 
 const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
   productType: yup
@@ -71,6 +76,8 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
       return !hasOpeningStock || Boolean(values.initialBranchId && value);
     },
   ),
+  coverImageUrl: yup.string().trim().optional(),
+  coverMediaAssetId: yup.string().trim().optional(),
   variants: yup
     .array()
     .of(yup.object({
@@ -84,6 +91,11 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
         .integer('Số lượng phải là số nguyên')
         .min(0, 'Số lượng không được âm')
         .required('Nhập số lượng tồn đầu'),
+      price: yup.string().trim().optional().test(
+        'price-positive',
+        'Giá phải là số lớn hơn 0',
+        (value) => !value || (Number.isFinite(Number(value)) && Number(value) > 0),
+      ),
     }))
     .min(1, 'Cần ít nhất một biến thể')
     .max(50, 'Tối đa 50 biến thể mỗi lần tạo')
@@ -100,6 +112,8 @@ const defaults: ProductFormValues = {
   description: '',
   initialBranchId: undefined,
   initialWarehouseCode: undefined,
+  coverImageUrl: '',
+  coverMediaAssetId: undefined,
   variants: [emptyVariant()],
 };
 
@@ -158,6 +172,8 @@ export function ProductFormDrawer({
   const openingStock = useCreateStockAdjustment({
     request: { headers: { 'Idempotency-Key': openingStockIdempotencyKey.current } },
   });
+  const createPrice = useCreateAdminProductPrice();
+  const attachMedia = useAttachAdminProductMedia();
   const createProduct = useCreateAdminProduct({
     mutation: {
       onSuccess: async (createdProduct) => {
@@ -180,12 +196,47 @@ export function ProductFormDrawer({
         } catch (error) {
           openingStockError = error;
         }
+
+        // Giá và ảnh phải chạy SAU khi có sản phẩm: bản ghi giá gắn vào variantId, còn ảnh gắn
+        // vào productId — cả hai ID chỉ tồn tại sau bước tạo. Lỗi ở đây không được làm hỏng sản
+        // phẩm vừa tạo, nên gom lại báo cảnh báo thay vì ném ra ngoài.
+        const followUpErrors: string[] = [];
+        for (const command of toInitialPriceCommands(values.variants, createdProduct)) {
+          try {
+            await createPrice.mutateAsync({
+              variantId: command.variantId,
+              data: { amount: command.amount, startsAt: new Date().toISOString() },
+            });
+          } catch (error) {
+            followUpErrors.push(`giá SKU: ${getApiErrorMessage(error)}`);
+          }
+        }
+        if (values.coverMediaAssetId) {
+          try {
+            await attachMedia.mutateAsync({
+              id: createdProduct.id,
+              data: {
+                mediaAssetId: values.coverMediaAssetId,
+                isPrimary: true,
+                expectedProductVersion: createdProduct.version,
+              },
+            });
+          } catch (error) {
+            followUpErrors.push(`ảnh đại diện: ${getApiErrorMessage(error)}`);
+          }
+        }
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
         ]);
+        if (followUpErrors.length > 0) {
+          void message.warning(
+            `Đã tạo sản phẩm nhưng chưa lưu được ${followUpErrors.join('; ')}`,
+            8,
+          );
+        }
         if (openingStockError) {
           void message.warning(
             `Đã tạo sản phẩm nhưng chưa ghi được tồn đầu: ${getApiErrorMessage(openingStockError)}`,
@@ -406,6 +457,28 @@ export function ProductFormDrawer({
             )}
           />
         </Form.Item>
+        {!isEdit && (
+          <Form.Item
+            label="Ảnh đại diện"
+            extra="Tải lên ngay ở đây; ảnh sẽ được gắn làm ảnh chính sau khi tạo sản phẩm."
+          >
+            <Controller
+              name="coverImageUrl"
+              control={form.control}
+              render={({ field }) => (
+                <ImageUploadField
+                  value={field.value ?? ''}
+                  onChange={(url, assetId) => {
+                    field.onChange(url);
+                    // Gắn ảnh vào sản phẩm cần media asset id; dán URL tay thì không gắn được.
+                    form.setValue('coverMediaAssetId', assetId);
+                  }}
+                />
+              )}
+            />
+          </Form.Item>
+        )}
+
         <Form.Item label="Mô tả ngắn">
           <Controller name="shortDescription" control={form.control} render={({ field }) => <Input {...field} />} />
         </Form.Item>
@@ -603,6 +676,27 @@ export function ProductFormDrawer({
                         </Form.Item>
                       );
                     })}
+                    {!isEdit && (
+                      <Form.Item
+                        label="Giá bán (đã gồm VAT)"
+                        extra="Bỏ trống nếu chưa chốt giá; sản phẩm chỉ xuất bản được khi SKU đã có giá."
+                        validateStatus={form.formState.errors.variants?.[index]?.price ? 'error' : undefined}
+                        help={form.formState.errors.variants?.[index]?.price?.message}
+                      >
+                        <Controller
+                          name={`variants.${index}.price`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <MoneyInput
+                              className="!w-full"
+                              value={field.value ? Number(field.value) : undefined}
+                              onBlur={field.onBlur}
+                              onChange={(value) => field.onChange(value ? String(value) : '')}
+                            />
+                          )}
+                        />
+                      </Form.Item>
+                    )}
                     {productType === CreateProductDtoProductType.STANDARD && canAdjustStock && (
                       <Form.Item
                         label="Số lượng tồn đầu"

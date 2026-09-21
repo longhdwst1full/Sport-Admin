@@ -46,6 +46,7 @@ const meta = {
     onOpen: () => undefined,
     onToggleVisibility: () => undefined,
     onArchive: () => undefined,
+    onPublish: () => undefined,
     onRefresh: () => undefined,
   },
 } satisfies Meta<typeof ProductListTable>;
