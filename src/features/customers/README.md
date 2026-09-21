@@ -1,10 +1,10 @@
 # Customers — maintenance note
 
-> **Document version:** 2.1.1
+> **Document version:** 3.0.0
 >
-> **Last updated:** 2026-09-18
+> **Last updated:** 2026-09-21
 >
-> **Change summary:** Đặt accessible name cho Drawer tạo/sửa khách và bổ sung Playwright cho tìm kiếm, validation, tạo hồ sơ, quyền.
+> **Change summary:** Form khách gộp ảnh đại diện, sổ địa chỉ (chọn tỉnh/quận/phường theo danh mục hãng vận chuyển) và công tắc chặn hồ sơ; email và SĐT trở thành bắt buộc.
 
 ## Phạm vi
 
@@ -19,12 +19,29 @@ Ngoài phạm vi: gộp khách trùng và quản lý credential của tài kho�
 - `components/customer-detail-drawer.tsx` tự tải chi tiết qua `useGetAdminCustomer`; không
   đoán dữ liệu chi tiết từ dòng trong danh sách.
 - `model/customer.mapper.ts` là nơi duy nhất đọc tên trường generated; component nhận view model.
+- `components/customer-form-drawer.tsx` tạo/sửa hồ sơ; ở chế độ Sửa nó tự đọc `useGetAdminCustomer`
+  vì dòng trong danh sách không chở ảnh đại diện lẫn sổ địa chỉ.
+- `model/customer-form.mapper.ts` dịch form ↔ DTO (có test). Mã quận/phường chỉ sống trong form để
+  nạp select; contract `customer_addresses` chỉ nhận **tên** quận/phường và `provinceCode` là mã.
+- `components/customer-address-fields.tsx` dùng `listShippingProvinces/Districts/Wards` — cùng danh
+  mục địa giới mà vận đơn dùng, nên địa chỉ đã lưu tạo được vận đơn mà không phải map tay.
 - Lọc chạy server-side: mỗi ô là một điều kiện riêng, cộng dồn bằng AND — giống màn đơn hàng.
 - Backend kiểm `customer.view`; route FE gate cùng quyền chỉ để cải thiện UX.
 - Tạo/sửa/ngừng/mở/xóa dùng generated mutation và quyền `customer.manage`.
 - Nút tạo hồ sơ độc lập chỉ hiện cho scope GLOBAL. Người dùng theo chi nhánh tạo khách qua POS/đơn
   hàng vì customer không có `branch_id` riêng.
 - Mutation thành công invalidate cả list và detail; delete loại detail cache để không hiện dữ liệu cũ.
+
+## Ràng buộc form
+
+- **Email và SĐT đều bắt buộc** (đổi từ 2026-09-21; trước đó chỉ cần một trong hai và gửi chuỗi rỗng
+  là xoá). Contract mới không xoá liên hệ bằng chuỗi rỗng — xem `API-20260921-CUSTOMER-AVATAR-ADDRESSES`.
+- Sổ địa chỉ gửi kèm payload hồ sơ, nằm dưới cùng một `expectedVersion`: không có cửa sổ nào hồ sơ đã
+  lưu mà địa chỉ thì chưa. Địa chỉ xoá khỏi danh sách chỉ chuyển `INACTIVE` ở Backend.
+- Đúng một địa chỉ mặc định; không ai đánh dấu thì lấy dòng đầu — cùng quy tắc với Backend.
+- `avatarAssetId` chỉ gửi khi ảnh thực sự đổi. Gửi `null` khi không đổi sẽ gỡ mất ảnh đang dùng.
+- Công tắc **Chặn hồ sơ** gọi thẳng `activateAdminCustomer`/`deactivateAdminCustomer` chứ không đi qua
+  nút Lưu: đó là lệnh riêng của Backend và có version của chính nó.
 
 ## Quy tắc mutation
 

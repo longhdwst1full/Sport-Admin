@@ -15,11 +15,11 @@ import {
 } from '@/generated/api/catalog/catalog';
 import type { BrandDto, CategoryDto } from '@/generated/api/catalog/models';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { toSlug } from '@/shared/utils';
 
 interface BrandFormValues {
   name: string;
-  slug: string;
+  /** Chỉ dùng khi sửa: lúc tạo Backend tự suy slug từ tên. */
+  slug?: string;
   description?: string;
 }
 
@@ -28,18 +28,15 @@ interface CategoryFormValues extends BrandFormValues {
   sortOrder: number;
 }
 
-/**
- * Mã thương hiệu/danh mục trùng với slug đường dẫn, chỉ khác cách viết. Sinh từ slug thay vì bắt
- * người dùng nhập hai lần cùng một thứ rồi tự xoay xở giữ chúng khớp nhau.
- */
-const toMasterCode = (slug: string): string =>
-  slug.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '-');
-
 const slugRule = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const brandSchema: yup.ObjectSchema<BrandFormValues> = yup.object({
   name: yup.string().trim().max(255).required('Nhập tên thương hiệu'),
-  slug: yup.string().trim().matches(slugRule, 'Slug chỉ gồm chữ thường, số và gạch ngang (VD: nike-sport)').required('Nhập slug'),
+  slug: yup
+    .string()
+    .trim()
+    .matches(slugRule, 'Slug chỉ gồm chữ thường, số và gạch ngang (VD: nike-sport)')
+    .optional(),
   description: yup.string().trim().optional(),
 });
 
@@ -48,7 +45,7 @@ const categorySchema: yup.ObjectSchema<CategoryFormValues> = brandSchema.shape({
   sortOrder: yup.number().integer().min(0).required('Nhập thứ tự hiển thị'),
 });
 
-const brandDefaults: BrandFormValues = { name: '', slug: '', description: '' };
+const brandDefaults: BrandFormValues = { name: '', description: '' };
 const categoryDefaults: CategoryFormValues = { ...brandDefaults, parentId: undefined, sortOrder: 0 };
 
 function FieldError({ message }: { message?: string }) {
@@ -94,27 +91,23 @@ export function BrandFormDrawer({
     );
   }, [brand, form, open]);
 
-  const handleNameChange = (val: string) => {
-    if (!brand && !form.getValues('slug')) {
-      const generated = toSlug(val);
-      form.setValue('slug', generated, { shouldValidate: true });
-    }
-  };
-
   const submit = form.handleSubmit((values) => {
     if (brand) {
       update.mutate({
         id: brand.id,
         data: {
           name: values.name,
-          slug: values.slug,
+          ...(values.slug ? { slug: values.slug } : {}),
           ...(values.description ? { description: values.description } : {}),
           expectedVersion: brand.version,
         },
       });
       return;
     }
-    create.mutate({ data: { ...values, code: toMasterCode(values.slug) } });
+    // Mã và slug đường dẫn do Backend suy từ tên; gửi kèm ở đây sẽ tạo ra hai nguồn sự thật.
+    create.mutate({
+      data: { name: values.name, ...(values.description ? { description: values.description } : {}) },
+    });
   });
   const pending = create.isPending || update.isPending;
 
@@ -158,27 +151,33 @@ export function BrandFormDrawer({
                 className="!rounded-lg"
                 onChange={(e) => {
                   field.onChange(e);
-                  handleNameChange(e.target.value);
                 }}
               />
             )}
           />
         </Form.Item>
 
-        <Form.Item
+        {brand && (
+          <Form.Item
             label={<span className="text-xs font-semibold text-slate-700">Slug đường dẫn</span>}
-            required
             validateStatus={form.formState.errors.slug ? 'error' : undefined}
             help={<FieldError message={form.formState.errors.slug?.message} />}
+            extra="Đây là URL công khai. Đổi slug làm hỏng link cũ và SEO."
           >
             <Controller
               name="slug"
               control={form.control}
               render={({ field }) => (
-                <Input {...field} placeholder="nike-viet-nam" className="!rounded-lg font-mono text-xs" />
+                <Input
+                  {...field}
+                  value={field.value ?? ''}
+                  placeholder="nike-viet-nam"
+                  className="!rounded-lg font-mono text-xs"
+                />
               )}
             />
           </Form.Item>
+        )}
 
         <Form.Item
           label={<span className="text-xs font-semibold text-slate-700">Mô tả giới thiệu</span>}
@@ -248,20 +247,13 @@ export function CategoryFormDrawer({
     );
   }, [category, form, open]);
 
-  const handleNameChange = (val: string) => {
-    if (!category && !form.getValues('slug')) {
-      const generated = toSlug(val);
-      form.setValue('slug', generated, { shouldValidate: true });
-    }
-  };
-
   const submit = form.handleSubmit((values) => {
     if (category) {
       update.mutate({
         id: category.id,
         data: {
           name: values.name,
-          slug: values.slug,
+          ...(values.slug ? { slug: values.slug } : {}),
           ...(values.description ? { description: values.description } : {}),
           sortOrder: values.sortOrder,
           expectedVersion: category.version,
@@ -271,10 +263,8 @@ export function CategoryFormDrawer({
     }
     create.mutate({
       data: {
-        // Mã trùng slug đường dẫn nên sinh từ slug; không bắt người dùng nhập hai lần cùng một thứ.
-        code: toMasterCode(values.slug),
+        // Mã và slug đường dẫn do Backend suy từ tên; gửi kèm ở đây sẽ tạo ra hai nguồn sự thật.
         name: values.name,
-        slug: values.slug,
         ...(values.description ? { description: values.description } : {}),
         ...(values.parentId ? { parentId: values.parentId } : {}),
         sortOrder: values.sortOrder,
@@ -323,27 +313,33 @@ export function CategoryFormDrawer({
                 className="!rounded-lg"
                 onChange={(e) => {
                   field.onChange(e);
-                  handleNameChange(e.target.value);
                 }}
               />
             )}
           />
         </Form.Item>
 
-        <Form.Item
+        {category && (
+          <Form.Item
             label={<span className="text-xs font-semibold text-slate-700">Slug đường dẫn</span>}
-            required
             validateStatus={form.formState.errors.slug ? 'error' : undefined}
             help={<FieldError message={form.formState.errors.slug?.message} />}
+            extra="Đây là URL công khai /category/<slug>. Đổi slug làm hỏng link cũ và SEO."
           >
             <Controller
               name="slug"
               control={form.control}
               render={({ field }) => (
-                <Input {...field} placeholder="giay-bong-da" className="!rounded-lg font-mono text-xs" />
+                <Input
+                  {...field}
+                  value={field.value ?? ''}
+                  placeholder="giay-bong-da"
+                  className="!rounded-lg font-mono text-xs"
+                />
               )}
             />
           </Form.Item>
+        )}
 
         {!category && (
           <Form.Item

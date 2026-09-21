@@ -7,9 +7,11 @@
  */
 
 export interface CreateBrandDto {
-  code: string;
   name: string;
-  slug: string;
+  /** Bỏ trống để Backend suy từ tên. Chỉ gửi khi cần giữ mã của hệ thống cũ. */
+  code?: string;
+  /** Bỏ trống để Backend suy từ tên và tự thêm hậu tố khi trùng. */
+  slug?: string;
   description?: string;
   /** @pattern ^[1-9][0-9]*$ */
   logoAssetId?: string;

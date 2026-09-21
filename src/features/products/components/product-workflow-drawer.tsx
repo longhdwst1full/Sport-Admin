@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CheckCircleOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, Modal, Select, Skeleton, Space, Tag, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, Select, Skeleton, Space, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
@@ -62,7 +62,7 @@ const bundleSchema: yup.ObjectSchema<BundleFormValues> = yup.object({
 const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
 export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClose: () => void }) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const [componentSearch, setComponentSearch] = useState('');
   const [editingVariant, setEditingVariant] = useState<ProductVariantDto>();
@@ -186,7 +186,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
 
   const confirmPublish = () => {
     if (!product) return;
-    Modal.confirm({
+    modal.confirm({
       title: `Xuất bản “${product.name}”?`,
       content: 'Sản phẩm sẽ hiển thị công khai với giá đã bao gồm VAT. Version hiện tại sẽ được kiểm tra để tránh ghi đè thay đổi của người khác.',
       okText: 'Xuất bản',
@@ -199,7 +199,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     if (!product) return;
     const isArchived = product.status === 'ARCHIVED';
     const isCombo = product.productType === 'BUNDLE';
-    Modal.confirm({
+    modal.confirm({
       title: isArchived
         ? `Đưa “${product.name}” về bản nháp?`
         : `Lưu trữ ${isCombo ? 'combo' : 'sản phẩm'} “${product.name}”?`,
@@ -217,7 +217,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
 
   const confirmVariantLifecycle = (variant: ProductVariantDto) => {
     const isActive = variant.status === 'ACTIVE';
-    Modal.confirm({
+    modal.confirm({
       title: `${isActive ? 'Lưu trữ' : 'Kích hoạt lại'} SKU “${variant.sku}”?`,
       content: isActive
         ? 'SKU sẽ không còn được bán mới. Nếu SKU đang là thành phần của combo published, backend sẽ từ chối để tránh combo mất thành phần.'

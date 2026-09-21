@@ -11,6 +11,11 @@ import { useAuth } from '@/core/auth/auth-context';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { consumeExpiredSessionFlash } from '@/core/auth/auth-session-expiry';
+import {
+  forgetIdentifier,
+  readRememberedIdentifier,
+  rememberIdentifier,
+} from '../model/remembered-identifier';
 
 const schema: yup.ObjectSchema<LoginDto> = yup.object({
   identifier: yup.string().trim().required('Vui lòng nhập email hoặc số điện thoại').max(255),
@@ -23,10 +28,13 @@ export function LoginPage() {
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [remember, setRemember] = useState(false);
+  // Có tên đã ghi nhớ nghĩa là lần trước người dùng đã bật ô này; giữ nguyên lựa chọn đó.
+  const [rememberedIdentifier] = useState(readRememberedIdentifier);
+  const [remember, setRemember] = useState(() => Boolean(rememberedIdentifier));
   const form = useForm<LoginDto>({
     resolver: yupResolver(schema),
-    defaultValues: { identifier: '', password: '' },
+    // SECURITY: chỉ điền sẵn tên đăng nhập. Mật khẩu không bao giờ được lưu hay điền hộ.
+    defaultValues: { identifier: rememberedIdentifier, password: '' },
   });
 
   useEffect(() => {
@@ -117,9 +125,11 @@ export function LoginPage() {
           <Form
             layout="vertical"
             requiredMark={false}
-            onFinish={() => void form.handleSubmit((data) => login.mutate({
-              data: { ...data, rememberMe: remember },
-            }))()}
+            onFinish={() => void form.handleSubmit((data) => {
+              if (remember) rememberIdentifier(data.identifier);
+              else forgetIdentifier();
+              login.mutate({ data: { ...data, rememberMe: remember } });
+            })()}
             className="space-y-4"
           >
             <Form.Item
@@ -173,7 +183,12 @@ export function LoginPage() {
             <div className="!mb-5 flex items-center justify-between">
               <Checkbox
                 checked={remember}
-                onChange={(event) => setRemember(event.target.checked)}
+                onChange={(event) => {
+                  setRemember(event.target.checked);
+                  // Bỏ chọn là quên ngay, không đợi lần đăng nhập sau: người dùng vừa nói rằng
+                  // họ không muốn máy này nhớ mình nữa.
+                  if (!event.target.checked) forgetIdentifier();
+                }}
                 className="!text-sm !text-slate-600"
               >
                 Ghi nhớ đăng nhập

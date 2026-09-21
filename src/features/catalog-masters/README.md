@@ -1,10 +1,10 @@
 # Catalog masters — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 2.0.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-09-21
 >
-> **Change summary:** Tạo note; Category giờ là nguồn dữ liệu thật của trang danh mục Storefront.
+> **Change summary:** Tách Thương hiệu và Danh mục thành hai màn/menu riêng (`/brands`, `/categories`); dùng chung drawer, mapper và cột bảng.
 
 ## Phạm vi
 
@@ -14,7 +14,18 @@
 
 ## Ranh giới
 
-`pages/catalog-masters-page.tsx` (tab Brand/Category) → `components/master-data-form-drawers.tsx` (form) → `model/catalog-masters.mapper.ts` (form ↔ DTO, có test).
+Hai màn độc lập, mỗi màn một mục menu và một `PermissionRoute` riêng:
+
+| Màn | Route | Quyền vào màn |
+| --- | --- | --- |
+| `pages/brands-page.tsx` | `/brands` | `catalog.brand.view` |
+| `pages/categories-page.tsx` | `/categories` | `catalog.category.view` |
+
+`/catalog-masters` (màn ghép cũ) redirect về `/brands`.
+
+Dùng chung: `components/master-data-form-drawers.tsx` (form Brand/Category), `components/master-columns.tsx` (cột Mã + Trạng thái, `MASTER_STATUSES`), `model/catalog-masters.mapper.ts` (lọc tìm kiếm, có test).
+
+Trước đây một màn gộp hai tab gác bằng `catalog.brand.view`, nên người chỉ có quyền danh mục không vào được. Tách ra để quyền vào màn khớp đúng dữ liệu màn đó quản.
 
 ## Generated operation
 
@@ -54,4 +65,5 @@ Storefront cache ISR 5 phút, nên thay đổi không xuất hiện tức thì.
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.0.0 | 2026-09-21 | Tách hai màn Thương hiệu / Danh mục, thêm redirect đường dẫn cũ. |
 | 1.0.0 | 2026-09-13 | Tạo note; ghi rõ ảnh hưởng Category ra Storefront. |

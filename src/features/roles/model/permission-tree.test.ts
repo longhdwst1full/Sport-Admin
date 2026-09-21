@@ -35,7 +35,7 @@ describe('cây quyền theo màn hình', () => {
   });
 
   it('gom họ quyền phụ về cùng màn hình của nó', () => {
-    // Menu chỉ trỏ catalog.brand.view, nhưng màn "Thương hiệu & danh mục" quản cả hai.
+    // Brand và Category giờ là hai màn riêng; mỗi họ quyền tự khớp mục menu của nó.
     const tree = buildPermissionTree([
       permission('catalog.brand.view', 'view'),
       permission('catalog.category.manage', 'manage'),

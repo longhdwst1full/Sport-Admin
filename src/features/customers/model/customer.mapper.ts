@@ -20,6 +20,8 @@ export interface CustomerRowView {
   kind: string;
   status: string;
   marketingConsent: boolean;
+  /** Ảnh đại diện để nhận diện nhanh trong bảng; rỗng thì hiện chữ cái đầu của tên. */
+  avatarUrl?: string;
   orderCount: number;
   lifetimeValueLabel: string;
   lastOrderLabel: string;
@@ -37,6 +39,7 @@ export function toCustomerRowView(dto: AdminCustomerSummaryDto): CustomerRowView
     id: dto.id,
     customerNo: dto.customerNo,
     name: dto.name,
+    avatarUrl: dto.avatarUrl ?? undefined,
     version: dto.version,
     phone: dto.phone ?? '—',
     email: dto.email ?? '—',

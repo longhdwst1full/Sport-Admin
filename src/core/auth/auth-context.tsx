@@ -5,7 +5,6 @@ import {
   getAdminCurrentUser,
   getGetAdminCurrentUserQueryKey,
   logoutAdmin,
-  refreshAdminToken,
   useGetAdminCurrentUser,
 } from '@/generated/api/auth/auth';
 import type { CurrentUserDto, TokenPairDto } from '@/generated/api/auth/models';
@@ -17,6 +16,7 @@ import {
   usesAuthCookieTransport,
 } from './auth-token.store';
 import { AUTH_SESSION_EXPIRED_EVENT, expireAdminSession } from './auth-session-expiry';
+import { rotateTokens } from '@/lib/api/fetcher';
 
 interface AuthContextValue {
   currentUser?: CurrentUserDto;
@@ -102,10 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     let active = true;
-    void refreshAdminToken({})
-      .then((tokens) => {
-        if (active) saveAuthTokens(tokens);
-      })
+    // Đi qua `rotateTokens` của fetcher thay vì gọi thẳng SDK: hàm đó gộp mọi lời gọi refresh
+    // đang bay vào một promise. StrictMode chạy effect hai lần trong dev, và một request 401 có
+    // thể xoay token cùng lúc — hai lời gọi song song làm lần thứ hai cầm refresh token đã bị
+    // tiêu và nhận 401, tức là đăng xuất một phiên vẫn còn hợp lệ.
+    void rotateTokens()
+      .then(() => undefined)
       .catch(() => {
         if (active) {
           clearAuthTokens();

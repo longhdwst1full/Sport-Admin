@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Form, Input, Modal, Select, Space, Spin, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Form, Input, Select, Space, Spin, Tag, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -45,7 +45,7 @@ export function ProductPricePanel({
   product: ProductDetailDto;
   onChanged: () => Promise<void>;
 }) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const canManage = useCan('catalog.price.manage');
   const queryClient = useQueryClient();
   const form = useForm<PriceFormValues>({
@@ -99,7 +99,7 @@ export function ProductPricePanel({
           data: { amount: values.amount, startsAt, reason: values.reason?.trim() || undefined },
         });
 
-    Modal.confirm({
+    modal.confirm({
       title: reduction > 0.2 ? 'Xác nhận giảm giá trên 20%' : 'Xác nhận lịch giá',
       content: reduction > 0.2
         ? `Giá giảm ${(reduction * 100).toFixed(1)}%. Lý do sẽ được lưu vào audit và không thể sửa lịch sử.`

@@ -5,6 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { AdminCustomerAddressInputDto } from './adminCustomerAddressInputDto';
 
 export interface UpdateAdminCustomerDto {
   /**
@@ -15,14 +16,25 @@ export interface UpdateAdminCustomerDto {
   /** @maxLength 255 */
   name?: string;
   /**
-   * Gửi chuỗi rỗng để xoá số điện thoại
+   * SĐT là bắt buộc trên hồ sơ, nên gửi giá trị mới chứ không gửi chuỗi rỗng để xoá.
    * @maxLength 32
    */
   phone?: string;
   /**
-   * Gửi chuỗi rỗng để xoá email
+   * Email là bắt buộc trên hồ sơ, nên gửi giá trị mới chứ không gửi chuỗi rỗng để xoá.
    * @maxLength 255
    */
   email?: string;
   marketingConsent?: boolean;
+  /**
+   * Gửi null để gỡ ảnh đại diện; bỏ trống để giữ nguyên
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
+  avatarAssetId?: string | null;
+  /**
+   * Trạng thái địa chỉ mong muốn sau khi lưu; bỏ trống để không đụng tới địa chỉ
+   * @maxItems 10
+   */
+  addresses?: AdminCustomerAddressInputDto[];
 }

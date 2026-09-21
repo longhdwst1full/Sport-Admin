@@ -60,7 +60,6 @@ const FAMILY_LABELS: Record<string, string> = {
 
 /** Họ quyền dùng chung một màn hình dù menu chỉ trỏ tới một mã. */
 const FAMILY_TO_SCREEN_PERMISSION: Record<string, string> = {
-  'catalog.category': 'catalog.brand.view',
   'catalog.price': 'catalog.product.view',
   'org.warehouse': 'org.branch.view',
   'inventory.stocktake': 'inventory.stock.view',

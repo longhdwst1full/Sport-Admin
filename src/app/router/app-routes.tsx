@@ -23,9 +23,14 @@ const ProductsPage = lazy(() =>
     default: module.ProductsPage,
   })),
 );
-const CatalogMastersPage = lazy(() =>
+const BrandsPage = lazy(() =>
   import('@/features/catalog-masters').then((module) => ({
-    default: module.CatalogMastersPage,
+    default: module.BrandsPage,
+  })),
+);
+const CategoriesPage = lazy(() =>
+  import('@/features/catalog-masters').then((module) => ({
+    default: module.CategoriesPage,
   })),
 );
 const InventoryPage = lazy(() =>
@@ -131,13 +136,23 @@ export function AppRoutes() {
           }
         />
         <Route
-          path="catalog-masters"
+          path="brands"
           element={
             <PermissionRoute permission="catalog.brand.view">
-              <CatalogMastersPage />
+              <BrandsPage />
             </PermissionRoute>
           }
         />
+        <Route
+          path="categories"
+          element={
+            <PermissionRoute permission="catalog.category.view">
+              <CategoriesPage />
+            </PermissionRoute>
+          }
+        />
+        {/* Đường dẫn cũ của màn ghép Thương hiệu & danh mục; giữ để link/bookmark cũ không gãy. */}
+        <Route path="catalog-masters" element={<Navigate to="/brands" replace />} />
         <Route
           path="inventory"
           element={

@@ -5,14 +5,25 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { AdminCustomerAddressInputDto } from './adminCustomerAddressInputDto';
 
 export interface CreateAdminCustomerDto {
   /** @maxLength 255 */
   name: string;
-  /** @maxLength 32 */
-  phone?: string;
+  /**
+   * Bắt buộc: hồ sơ khách phải có cả SĐT và email để nhận lại khách và gửi thông báo đơn.
+   * @maxLength 32
+   */
+  phone: string;
   /** @maxLength 255 */
-  email?: string;
+  email: string;
   /** Khách đồng ý nhận tin khuyến mãi */
   marketingConsent?: boolean;
+  /**
+   * Media asset đã upload dùng làm ảnh đại diện
+   * @pattern ^[1-9][0-9]*$
+   */
+  avatarAssetId?: string;
+  /** @maxItems 10 */
+  addresses?: AdminCustomerAddressInputDto[];
 }

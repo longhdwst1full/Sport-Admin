@@ -1,13 +1,24 @@
 // @vitest-environment jsdom
 import type { AxiosAdapter, InternalAxiosRequestConfig } from 'axios';
 import axios, { AxiosError, AxiosHeaders } from 'axios';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { apiFetcher, isCredentialEndpoint } from './fetcher';
 import { clearAuthTokens, saveAuthTokens } from '@/core/auth/auth-token.store';
 import {
   AUTH_SESSION_EXPIRED_EVENT,
   consumeExpiredSessionFlash,
 } from '@/core/auth/auth-session-expiry';
+
+function unauthorized(config: InternalAxiosRequestConfig): AxiosError {
+  const echoed = { ...config, headers: AxiosHeaders.from(config.headers) };
+  return new AxiosError('Unauthorized', AxiosError.ERR_BAD_REQUEST, echoed, undefined, {
+    config: echoed,
+    data: { statusCode: 401, code: 'UNAUTHORIZED', message: 'Phiên hết hạn' },
+    headers: {},
+    status: 401,
+    statusText: 'Unauthorized',
+  });
+}
 
 describe('apiFetcher', () => {
   afterEach(() => {
@@ -71,6 +82,54 @@ describe('apiFetcher', () => {
   it('tài nguyên thường vẫn được xoay token', () => {
     expect(isCredentialEndpoint('/api/v1/admin/products')).toBe(false);
     expect(isCredentialEndpoint('/api/v1/admin/reports/revenue')).toBe(false);
+  });
+
+  /**
+   * Hồi quy: Backend cấp refresh token qua HttpOnly cookie (AUTH_TOKEN_TRANSPORT=COOKIE) thì
+   * JavaScript không đọc được token nào. Bản cũ coi đó là "không cứu được phiên" và đăng xuất
+   * ngay mà không gọi /refresh lần nào, dù phiên vẫn còn hợp lệ.
+   */
+  it('vẫn gọi refresh khi JavaScript không cầm refresh token', async () => {
+    clearAuthTokens();
+    saveAuthTokens({
+      accessToken: 'het-han',
+      refreshToken: undefined,
+      tokenType: 'Bearer',
+      expiresIn: 900,
+      mustChangePassword: false,
+    });
+    let refreshCalls = 0;
+    const originalPost = axios.post.bind(axios);
+    vi.spyOn(axios, 'post').mockImplementation(async (url: string, ...rest: unknown[]) => {
+      if (String(url).includes('/admin/auth/refresh')) {
+        refreshCalls += 1;
+        return {
+          data: {
+            accessToken: 'token-moi',
+            tokenType: 'Bearer',
+            expiresIn: 900,
+            mustChangePassword: false,
+          },
+        };
+      }
+      return originalPost(url, ...(rest as []));
+    });
+
+    let attempt = 0;
+    const adapter: AxiosAdapter = async (config) => {
+      attempt += 1;
+      if (attempt === 1) throw unauthorized(config);
+      return { config, data: { ok: true }, headers: {}, status: 200, statusText: 'OK' };
+    };
+
+    const result = await apiFetcher<{ ok: boolean }>(
+      { url: '/api/v1/admin/reports/top-products', method: 'GET' },
+      { adapter },
+    );
+
+    expect(refreshCalls).toBe(1);
+    expect(result).toEqual({ ok: true });
+    vi.restoreAllMocks();
   });
 
   it('phát tín hiệu hết phiên khi API trả 401 mà không còn refresh credential', async () => {

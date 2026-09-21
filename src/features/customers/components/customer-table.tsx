@@ -1,4 +1,4 @@
-import { Popconfirm, Tag, Tooltip } from 'antd';
+import { Avatar, Popconfirm, Tag, Tooltip } from 'antd';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { CheckCircleOutlined, DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import { PermissionGate } from '@/core/auth/permissions';
@@ -39,9 +39,14 @@ export function CustomerTable({
       title: 'Khách hàng',
       width: 260,
       render: (_value: unknown, row: CustomerRowView) => (
-        <div>
-          <div className="font-semibold text-slate-800">{row.name}</div>
-          <div className="font-mono text-xs text-slate-500">{row.customerNo}</div>
+        <div className="flex items-center gap-3">
+          <Avatar src={row.avatarUrl} size={36}>
+            {row.name.trim().charAt(0).toUpperCase()}
+          </Avatar>
+          <div>
+            <div className="font-semibold text-slate-800">{row.name}</div>
+            <div className="font-mono text-xs text-slate-500">{row.customerNo}</div>
+          </div>
         </div>
       ),
     },

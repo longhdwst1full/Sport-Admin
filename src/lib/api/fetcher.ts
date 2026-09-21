@@ -2,10 +2,8 @@ import axios, { type AxiosRequestConfig } from 'axios';
 import {
   clearAuthTokens,
   getAccessToken,
-  hasRefreshCredential,
   readAuthTokens,
   saveAuthTokens,
-  usesAuthCookieTransport,
 } from '@/core/auth/auth-token.store';
 import type { TokenPairDto } from '@/generated/api/auth/models';
 import { expireAdminSession } from '@/core/auth/auth-session-expiry';
@@ -32,9 +30,20 @@ const apiClient = axios.create({
 
 let refreshPromise: Promise<TokenPairDto> | undefined;
 
-async function rotateTokens(): Promise<TokenPairDto> {
+/**
+ * Một lần xoay token tại một thời điểm cho toàn ứng dụng.
+ *
+ * Refresh token dùng một lần: Backend thu hồi session cũ ngay khi rotate. Hai lời gọi song song
+ * nghĩa là lời gọi thứ hai cầm token đã bị tiêu, nhận 401 "đã dùng rồi" và đá người dùng ra
+ * đăng nhập lại dù phiên vẫn còn sống. Vì vậy mọi nơi cần xoay token đều phải đi qua hàm này,
+ * kể cả bước khôi phục phiên lúc tải trang.
+ *
+ * Không gửi được refresh token trong body cũng vẫn gọi: transport COOKIE giữ token trong
+ * HttpOnly cookie mà JavaScript không đọc được. Đoán rằng "không có token thì không cứu được"
+ * là cách chắc chắn nhất để đăng xuất một phiên đang hợp lệ.
+ */
+export async function rotateTokens(): Promise<TokenPairDto> {
   const refreshToken = readAuthTokens()?.refreshToken;
-  if (!refreshToken && !usesAuthCookieTransport()) throw new Error('No refresh token is available');
   refreshPromise ??= axios
     .post<TokenPairDto>(
       '/api/v1/admin/auth/refresh',
@@ -101,23 +110,23 @@ export async function apiFetcher<T>(
       // trước là đúng luồng, chặn ở đây thì không bao giờ xoay được token.
       !isAuthEndpoint
     ) {
-      if (!hasRefreshCredential()) {
-        clearAuthTokens();
-        expireAdminSession();
-      } else {
+      // Luôn thử xoay token trước khi kết luận phiên đã chết. Nhánh cũ tự quyết định dựa trên
+      // việc JavaScript có đọc được refresh token hay không, nên ở transport COOKIE — và ở mọi
+      // trường hợp Backend cấp token qua cookie trong khi Admin build ở chế độ BODY — nó đăng
+      // xuất ngay mà không hề gọi /refresh lần nào.
+      try {
         const tokens = await rotateTokens();
-        try {
-          const response = await apiClient.request<T>({
-            ...requestConfig,
-            headers: { ...requestConfig.headers, Authorization: `Bearer ${tokens.accessToken}` },
-          });
-          return response.data;
-        } catch (retryError) {
-          if (axios.isAxiosError(retryError) && retryError.response?.status === 401) {
-            clearAuthTokens();
-            expireAdminSession();
-          }
-          throw retryError;
+        const response = await apiClient.request<T>({
+          ...requestConfig,
+          headers: { ...requestConfig.headers, Authorization: `Bearer ${tokens.accessToken}` },
+        });
+        return response.data;
+      } catch (retryError) {
+        // `rotateTokens` đã dọn token và phát tín hiệu hết phiên khi refresh hỏng. Ở đây chỉ
+        // cần trả về lỗi 401 gốc để caller thấy đúng nguyên nhân ban đầu.
+        if (axios.isAxiosError(retryError) && retryError.response?.status === 401) {
+          clearAuthTokens();
+          expireAdminSession();
         }
       }
     }

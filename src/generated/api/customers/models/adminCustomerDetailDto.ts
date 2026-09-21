@@ -24,6 +24,17 @@ export interface AdminCustomerDetailDto {
   kind: AdminCustomerDetailDtoKind;
   /** Khách có đồng ý nhận tin khuyến mãi */
   marketingConsent: boolean;
+  /**
+   * Media asset dùng làm ảnh đại diện; null nếu chưa có ảnh
+   * @nullable
+   * @pattern ^[1-9][0-9]*$
+   */
+  avatarAssetId: string | null;
+  /**
+   * URL ảnh đại diện lấy từ media asset, chỉ để hiển thị
+   * @nullable
+   */
+  avatarUrl: string | null;
   /** Số đơn đã đặt, không tính đơn đã huỷ */
   orderCount: number;
   /** Tổng tiền khách đã thực trả (đơn đã thanh toán, chưa huỷ) */

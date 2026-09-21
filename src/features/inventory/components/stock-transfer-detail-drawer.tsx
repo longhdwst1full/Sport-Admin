@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, InputNumber, Modal, Skeleton, Tag, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, InputNumber, Skeleton, Tag, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import { useEffect } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -59,7 +59,7 @@ function receiveDefaults(transfer?: StockTransferDetailDto): ReceiveValues {
 }
 
 export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClose: () => void }) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const detail = useGetStockTransfer(id ?? '', { query: { enabled: Boolean(id) } });
   const form = useForm<ReceiveValues>({ resolver: yupResolver(receiveSchema), defaultValues: { items: [] } });
@@ -98,7 +98,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
 
   const confirmSubmit = () => {
     if (!transfer) return;
-    Modal.confirm({
+    modal.confirm({
       title: `Gửi phiếu ${transfer.transferNo}?`,
       content: 'Sau khi gửi, phiếu chuyển sang Chờ xuất và không thể sửa danh sách SKU trong V1.',
       okText: 'Gửi phiếu',
@@ -108,7 +108,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
   };
   const confirmShip = () => {
     if (!transfer) return;
-    Modal.confirm({
+    modal.confirm({
       title: `Xác nhận xuất toàn bộ phiếu ${transfer.transferNo}?`,
       content: 'Hệ thống sẽ trừ tồn khả dụng tại kho xuất và ghi TRANSFER_OUT. Thao tác này không thể hoàn tác trực tiếp.',
       okText: 'Xuất kho',
@@ -131,7 +131,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
         return;
       }
     }
-    Modal.confirm({
+    modal.confirm({
       title: `Hoàn tất nhận phiếu ${transfer.transferNo}?`,
       content: 'Chỉ số lượng nhận tốt được cộng vào tồn có thể bán. Hàng hỏng được lưu riêng để truy vết.',
       okText: 'Xác nhận đã nhận',
