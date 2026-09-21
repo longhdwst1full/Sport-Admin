@@ -1,9 +1,9 @@
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Select, Space, Tag, Typography } from 'antd';
+import { Card, Input, Select, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable , CursorPagination } from '@/foundation/table';
 import { useListInventoryMovements } from '@/generated/api/inventory/inventory';
 import { ListInventoryMovementsMovementType } from '@/generated/api/inventory/models';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
@@ -44,6 +44,7 @@ export function InventoryMovementPanel() {
       </div>
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       <AdminTable
+        fillHeight
         className="mt-4"
         rowKey="id"
         loading={query.isPending}
@@ -62,10 +63,26 @@ export function InventoryMovementPanel() {
           { title: 'Lý do / người tạo', key: 'reason', render: (_, row) => <div>{row.reason}<div className="text-xs text-slate-500">{row.createdByDisplayName}</div></div> },
         ]}
       />
-      <Space className="mt-4 flex justify-end">
-        <Button disabled={history.length === 0 || query.isFetching} onClick={() => { const previous = [...history]; setCursor(previous.pop() || undefined); setHistory(previous); }}>Trang trước</Button>
-        <Button disabled={!query.data?.nextCursor || query.isFetching} onClick={() => { setHistory((items) => [...items, cursor ?? '']); setCursor(query.data?.nextCursor ?? undefined); }}>Trang sau</Button>
-      </Space>
+      <CursorPagination
+        pageIndex={history.length}
+        rowCount={query.data?.items.length ?? 0}
+        hasPrevious={history.length > 0}
+        hasNext={Boolean(query.data?.nextCursor)}
+        loading={query.isFetching}
+        onFirst={() => {
+          setHistory([]);
+          setCursor(undefined);
+        }}
+        onPrevious={() => {
+          const previous = [...history];
+          setCursor(previous.pop() || undefined);
+          setHistory(previous);
+        }}
+        onNext={() => {
+          setHistory((items) => [...items, cursor ?? '']);
+          setCursor(query.data?.nextCursor ?? undefined);
+        }}
+      />
     </Card>
   );
 }

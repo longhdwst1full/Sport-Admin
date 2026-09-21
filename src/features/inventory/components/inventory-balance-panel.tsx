@@ -248,6 +248,7 @@ export function InventoryBalancePanel({
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
 
       <AdminTable
+        fillHeight
         className="mt-3"
         rowKey="id"
         loading={query.isPending}

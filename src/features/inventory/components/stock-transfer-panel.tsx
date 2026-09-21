@@ -81,6 +81,7 @@ export function StockTransferPanel({
       </div>
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       <AdminTable
+        fillHeight
         rowKey="id"
         loading={query.isPending}
         dataSource={query.data?.items ?? []}

@@ -29,6 +29,8 @@ describe('withFixedColumnWidths', () => {
   it('keeps the shared pagination default and selectable page sizes aligned', () => {
     expect(ADMIN_TABLE_DEFAULT_PAGE_SIZE).toBe(30);
     expect(ADMIN_TABLE_PAGE_SIZE_OPTIONS).toContain(String(ADMIN_TABLE_DEFAULT_PAGE_SIZE));
-    expect(ADMIN_TABLE_PAGE_SIZE_OPTIONS).toEqual(['10', '20', '30', '50', '100']);
+    // Bỏ mức 10: bảng cao hết màn hình hiển thị được hơn hai chục dòng, chọn 10 chỉ tạo thêm
+    // lượt lật trang cho một khoảng trống lớn bên dưới.
+    expect(ADMIN_TABLE_PAGE_SIZE_OPTIONS).toEqual(['20', '30', '50', '100']);
   });
 });

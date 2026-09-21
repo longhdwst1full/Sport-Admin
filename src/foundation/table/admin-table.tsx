@@ -4,6 +4,7 @@ import type { MouseEvent } from 'react';
 import type { TableProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
+  ADMIN_TABLE_BODY_HEIGHT,
   ADMIN_TABLE_DEFAULT_COLUMN_WIDTH,
   ADMIN_TABLE_DEFAULT_PAGE_SIZE,
   ADMIN_TABLE_PAGE_SIZE_OPTIONS,
@@ -14,6 +15,13 @@ export interface AdminTableProps<RecordType extends object>
   extends Omit<TableProps<RecordType>, 'columns'> {
   columns?: ColumnsType<RecordType>;
   defaultColumnWidth?: number;
+  /**
+   * Thân bảng cao hết phần còn lại của màn hình, tiêu đề cột đứng yên.
+   *
+   * Tắt cho bảng nằm trong drawer, modal hoặc thẻ chi tiết: ở đó bảng chỉ có vài dòng và chiều cao
+   * theo viewport sẽ để lại một khoảng trống lớn dưới dòng cuối.
+   */
+  fillHeight?: boolean;
 }
 
 /**
@@ -23,6 +31,7 @@ export interface AdminTableProps<RecordType extends object>
 export function AdminTable<RecordType extends object>({
   columns,
   defaultColumnWidth = ADMIN_TABLE_DEFAULT_COLUMN_WIDTH,
+  fillHeight = false,
   pagination,
   scroll,
   tableLayout = 'fixed',
@@ -56,7 +65,11 @@ export function AdminTable<RecordType extends object>({
         {...props}
         columns={withFixedColumnWidths(columns, defaultColumnWidth)}
         tableLayout={tableLayout}
-        scroll={{ ...scroll, x: scroll?.x ?? 'max-content' }}
+        scroll={{
+          ...scroll,
+          x: scroll?.x ?? 'max-content',
+          ...(fillHeight && scroll?.y === undefined ? { y: ADMIN_TABLE_BODY_HEIGHT } : {}),
+        }}
         pagination={normalizedPagination}
         locale={{
           emptyText: (

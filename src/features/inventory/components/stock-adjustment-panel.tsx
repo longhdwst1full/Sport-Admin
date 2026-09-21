@@ -1,6 +1,6 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Button, Card, Drawer, Tag, Typography } from 'antd';
-import { AdminTable, TableActionButton } from '@/foundation/table';
+import { Card, Drawer, Tag, Typography } from 'antd';
+import { AdminTable, TableActionButton , CursorPagination } from '@/foundation/table';
 import { useState } from 'react';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { useGetStockAdjustment, useListStockAdjustments } from '@/generated/api/inventory/inventory';
@@ -22,6 +22,7 @@ export function StockAdjustmentPanel() {
     <Card variant="borderless">
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       <AdminTable
+        fillHeight
         rowKey="id"
         loading={query.isPending}
         dataSource={query.data?.items ?? []}
@@ -41,10 +42,27 @@ export function StockAdjustmentPanel() {
           { title: '', key: 'actions', width: 72, fixed: 'right', render: (_, row) => <TableActionButton label={`Xem phiếu ${row.adjustmentNo}`} icon={<EyeOutlined />} onClick={() => setSelectedId(row.id)} /> },
         ]}
       />
-      <div className="mt-4 flex justify-end gap-2">
-        <Button disabled={history.length === 0 || query.isFetching} onClick={() => { const previous = [...history]; setCursor(previous.pop() || undefined); setHistory(previous); }}>Trang trước</Button>
-        <Button disabled={!query.data?.nextCursor || query.isFetching} onClick={() => { setHistory((items) => [...items, cursor ?? '']); setCursor(query.data?.nextCursor ?? undefined); }}>Trang sau</Button>
-      </div>
+      <CursorPagination
+        pageIndex={history.length}
+        rowCount={query.data?.items.length ?? 0}
+        totalLabel="phiếu"
+        hasPrevious={history.length > 0}
+        hasNext={Boolean(query.data?.nextCursor)}
+        loading={query.isFetching}
+        onFirst={() => {
+          setHistory([]);
+          setCursor(undefined);
+        }}
+        onPrevious={() => {
+          const previous = [...history];
+          setCursor(previous.pop() || undefined);
+          setHistory(previous);
+        }}
+        onNext={() => {
+          setHistory((items) => [...items, cursor ?? '']);
+          setCursor(query.data?.nextCursor ?? undefined);
+        }}
+      />
       <Drawer title={detail.data ? `Phiếu ${detail.data.adjustmentNo}` : 'Chi tiết phiếu'} width={720} open={Boolean(selectedId)} onClose={() => setSelectedId(undefined)} loading={detail.isPending}>
         {detail.isError && <QueryErrorAlert error={detail.error} retry={() => void detail.refetch()} />}
         {detail.data && (
