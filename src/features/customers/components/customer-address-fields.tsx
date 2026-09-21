@@ -109,7 +109,15 @@ export function CustomerAddressFields({
             placeholder="Chọn tỉnh/thành"
             options={toOptions(provinces.data?.items)}
             // Đổi tỉnh thì quận/phường cũ không còn thuộc về nó nữa, phải xoá theo.
-            onChange={() => patch({ districtCode: '', district: '', wardCode: '', ward: '' })}
+            onChange={(_code, option) =>
+              patch({
+                province: (option as { label?: string } | undefined)?.label ?? '',
+                districtCode: '',
+                district: '',
+                wardCode: '',
+                ward: '',
+              })
+            }
           />
         </Form.Item>
         <Form.Item name={[name, 'districtCode']} label="Quận/Huyện">

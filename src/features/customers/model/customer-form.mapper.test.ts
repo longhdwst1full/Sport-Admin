@@ -29,13 +29,26 @@ describe('toAddressPayload', () => {
     expect(payload.map((item) => item.isDefault)).toEqual([false, true]);
   });
 
-  /** Mã quận/phường chỉ dùng để nạp select; contract chỉ nhận tên chữ. */
-  it('không gửi mã quận/phường lên Backend', () => {
+  /**
+   * Hãng vận chuyển định tuyến bằng mã, không bằng tên. Bản cũ chỉ gửi tên nên địa chỉ lưu xong
+   * không tạo được vận đơn và mở lại form thì hai ô quận/phường trống.
+   */
+  it('gửi cả tên lẫn mã quận/phường lên Backend', () => {
     const [payload] = toAddressPayload([
       address({ districtCode: '1442', district: 'Quận 1', wardCode: '21012', ward: 'Bến Thành' }),
     ]);
 
-    expect(payload).toMatchObject({ district: 'Quận 1', ward: 'Bến Thành' });
+    expect(payload).toMatchObject({
+      district: 'Quận 1',
+      districtCode: '1442',
+      ward: 'Bến Thành',
+      wardCode: '21012',
+    });
+  });
+
+  it('bỏ qua mã rỗng thay vì gửi chuỗi trống', () => {
+    const [payload] = toAddressPayload([address({ districtCode: '', wardCode: '  ' })]);
+
     expect(payload).not.toHaveProperty('districtCode');
     expect(payload).not.toHaveProperty('wardCode');
   });

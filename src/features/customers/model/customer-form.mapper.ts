@@ -11,8 +11,9 @@ export interface CustomerAddressFormValues {
   recipient: string;
   phone: string;
   addressLine: string;
+  province?: string;
   provinceCode: string;
-  /** Mã quận/phường chỉ dùng để nạp danh sách cấp dưới; contract chỉ nhận tên chữ. */
+  /** Mã quận/phường là thứ hãng vận chuyển dùng để định tuyến; thiếu là không tạo được vận đơn. */
   districtCode?: string;
   district?: string;
   wardCode?: string;
@@ -51,18 +52,25 @@ export function toCustomerFormValues(detail: AdminCustomerDetailDto): CustomerFo
       recipient: address.recipient,
       phone: address.phone,
       addressLine: address.addressLine,
+      province: address.province ?? undefined,
       provinceCode: address.provinceCode,
       district: address.district ?? undefined,
+      districtCode: address.districtCode ?? undefined,
       ward: address.ward ?? undefined,
+      wardCode: address.wardCode ?? undefined,
       isDefault: address.isDefault,
     })),
   };
 }
 
 /**
- * Backend nhận tên quận/phường chứ không nhận mã, nên mã chỉ sống trong form để nạp select.
- * Địa chỉ nào cũng phải có đúng một bản mặc định; không ai đánh dấu thì lấy dòng đầu tiên —
- * cùng quy tắc với Backend để hai bên không hiểu khác nhau về địa chỉ giao mặc định.
+ * Gửi lên **cả tên lẫn mã** địa giới.
+ *
+ * Trước đây chỉ gửi tên: địa chỉ lưu xong không tạo được vận đơn vì hãng định tuyến bằng mã, và mở
+ * lại form thì hai ô quận/phường trống trơn do không có mã để nạp danh sách.
+ *
+ * Địa chỉ nào cũng phải có đúng một bản mặc định; không ai đánh dấu thì lấy dòng đầu tiên — cùng
+ * quy tắc với Backend để hai bên không hiểu khác nhau về địa chỉ giao mặc định.
  */
 export function toAddressPayload(
   addresses: CustomerAddressFormValues[],
@@ -74,8 +82,11 @@ export function toAddressPayload(
     phone: address.phone.trim(),
     addressLine: address.addressLine.trim(),
     provinceCode: address.provinceCode.trim(),
+    ...(address.province?.trim() ? { province: address.province.trim() } : {}),
     ...(address.district?.trim() ? { district: address.district.trim() } : {}),
+    ...(address.districtCode?.trim() ? { districtCode: address.districtCode.trim() } : {}),
     ...(address.ward?.trim() ? { ward: address.ward.trim() } : {}),
+    ...(address.wardCode?.trim() ? { wardCode: address.wardCode.trim() } : {}),
     isDefault: hasDefault ? address.isDefault : index === 0,
   }));
 }

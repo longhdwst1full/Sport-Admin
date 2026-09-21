@@ -5,6 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { AdminCustomerAddressInputDtoCodeProvider } from './adminCustomerAddressInputDtoCodeProvider';
 
 export interface AdminCustomerAddressInputDto {
   /**
@@ -20,13 +21,27 @@ export interface AdminCustomerAddressInputDto {
   addressLine: string;
   /** @maxLength 255 */
   ward?: string;
+  /**
+   * Mã phường/xã theo danh mục hãng vận chuyển. Thiếu thì địa chỉ không tạo được vận đơn.
+   * @maxLength 32
+   */
+  wardCode?: string;
   /** @maxLength 255 */
   district?: string;
+  /**
+   * Mã quận/huyện theo danh mục hãng vận chuyển. Thiếu thì địa chỉ không tạo được vận đơn.
+   * @maxLength 32
+   */
+  districtCode?: string;
+  /** @maxLength 255 */
+  province?: string;
   /**
    * Mã tỉnh/thành theo danh mục hãng vận chuyển
    * @maxLength 32
    */
   provinceCode: string;
+  /** Hãng đã cấp bộ mã gửi kèm. Bỏ trống thì hiểu là hãng mặc định của hệ thống. */
+  codeProvider?: AdminCustomerAddressInputDtoCodeProvider;
   /** Đúng một địa chỉ mặc định cho mỗi khách */
   isDefault?: boolean;
 }

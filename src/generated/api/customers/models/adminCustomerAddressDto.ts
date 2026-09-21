@@ -5,6 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { AdminCustomerAddressDtoCodeProvider } from './adminCustomerAddressDtoCodeProvider';
 
 export interface AdminCustomerAddressDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -14,9 +15,26 @@ export interface AdminCustomerAddressDto {
   addressLine: string;
   /** @nullable */
   ward: string | null;
+  /**
+   * Mã phường/xã của hãng vận chuyển; thiếu thì không tạo được vận đơn.
+   * @nullable
+   */
+  wardCode: string | null;
   /** @nullable */
   district: string | null;
-  /** Mã tỉnh/thành. Bảng địa chỉ chỉ lưu mã, không lưu tên. */
+  /**
+   * Mã quận/huyện của hãng vận chuyển; thiếu thì không tạo được vận đơn.
+   * @nullable
+   */
+  districtCode: string | null;
+  /** @nullable */
+  province: string | null;
+  /** Mã tỉnh/thành của hãng vận chuyển. */
   provinceCode: string;
+  /**
+   * Hãng đã cấp bộ mã địa giới này. Mã của hãng khác không dùng lẫn được, nên địa chỉ lưu từ hãng cũ phải chọn lại khi đổi hãng.
+   * @nullable
+   */
+  codeProvider: AdminCustomerAddressDtoCodeProvider;
   isDefault: boolean;
 }

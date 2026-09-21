@@ -7,7 +7,9 @@
  */
 
 export * from './adminCustomerAddressDto';
+export * from './adminCustomerAddressDtoCodeProvider';
 export * from './adminCustomerAddressInputDto';
+export * from './adminCustomerAddressInputDtoCodeProvider';
 export * from './adminCustomerDetailDto';
 export * from './adminCustomerDetailDtoKind';
 export * from './adminCustomerDetailDtoStatus';
