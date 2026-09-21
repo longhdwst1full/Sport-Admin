@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Alert, App, Button, Card, Drawer, Popconfirm } from 'antd';
-import { ClearOutlined } from '@ant-design/icons';
+import { ClearOutlined, WalletOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreatePosOrder } from '@/generated/api/orders/orders';
 import { getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
@@ -12,9 +12,13 @@ import {
 } from '@/generated/api/orders/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { PosCartTable } from './pos-cart-table';
-import { PosCheckoutPanel, type PosCheckoutValues } from './pos-checkout-panel';
+import type { PosCheckoutValues } from '../model/pos-checkout';
+import { PosCounterHeader } from './pos-counter-header';
+import { PosCustomerPanel } from './pos-customer-panel';
+import { PosPaymentPanel } from './pos-payment-panel';
 import { PosProductPicker } from './pos-product-picker';
 import { PosReceiptModal } from './pos-receipt-modal';
+import { moneyFormatter } from '../constants/pos.constants';
 import {
   addLine,
   cartQuantity,
@@ -49,6 +53,7 @@ const EMPTY_CHECKOUT: PosCheckoutValues = {
   deliveryMode: 'PICKUP',
   delivery: EMPTY_DELIVERY,
   handOverImmediately: false,
+  cashReceived: null,
 };
 
 /**
@@ -163,9 +168,9 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
       <Drawer
         open={open}
         onClose={closeDrawer}
-        width="min(1400px, 96vw)"
+        width="min(1080px, 96vw)"
         destroyOnHidden
-        title="Tạo đơn"
+        title="Tạo đơn hàng tại cửa hàng"
         extra={
           <Popconfirm
             title="Xoá toàn bộ đơn đang lập?"
@@ -179,17 +184,45 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
             </Button>
           </Popconfirm>
         }
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-slate-500">
+                Tổng thanh toán · {quantity} sản phẩm
+              </span>
+              <div className="text-2xl font-black text-emerald-700">
+                {moneyFormatter.format(total)}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="large" disabled={mutation.isPending} onClick={closeDrawer}>
+                Hủy
+              </Button>
+              <Button
+                size="large"
+                type="primary"
+                icon={<WalletOutlined />}
+                loading={mutation.isPending}
+                disabled={Boolean(blockedReason)}
+                onClick={submit}
+              >
+                Tạo & hoàn tất đơn
+              </Button>
+            </div>
+          </div>
+        }
       >
-        <Alert
-          className="mb-4"
-          type="info"
-          showIcon
-          message={
-            checkout.deliveryMode === 'PICKUP'
-              ? 'Đơn tại quầy được ghi nhận đã thanh toán và đã giao; tồn kho trừ ngay khi bán.'
-              : 'Đơn giao hàng giữ chỗ tồn kho như đơn của khách; kho xử lý theo luồng thường.'
-          }
+        <PosCounterHeader
+          branchId={checkout.branchId}
+          disabled={mutation.isPending}
+          onChange={(branchId) => {
+            // Đổi chi nhánh là đổi kho: tồn và giá vừa hiển thị không còn đúng nữa, giữ lại giỏ cũ
+            // sẽ cho nhân viên bán thứ kho mới không có.
+            if (branchId !== checkout.branchId) setLines([]);
+            setCheckout((current) => ({ ...current, branchId }));
+          }}
         />
+
         {mutation.isError && (
           <Alert
             className="mb-4"
@@ -203,20 +236,21 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
           />
         )}
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(320px,0.9fr)]">
-          <Card
-            title="Chọn sản phẩm"
-            className="h-[620px] overflow-hidden"
-            styles={{ body: { height: 'calc(100% - 56px)' } }}
-          >
-            <PosProductPicker
-              pickedIds={pickedIds}
-              branchId={checkout.branchId}
-              onPick={(item: PosCatalogItemDto) => setLines((current) => addLine(current, item))}
-            />
-          </Card>
+        <Card size="small" title="Khách hàng" className="mb-4">
+          <PosCustomerPanel
+            values={checkout}
+            disabled={mutation.isPending}
+            onChange={(patch) => setCheckout((current) => ({ ...current, ...patch }))}
+          />
+        </Card>
 
-          <Card title="Đơn đang lập" className="h-[620px] overflow-auto">
+        <Card size="small" title="Sản phẩm" className="mb-4">
+          <PosProductPicker
+            pickedIds={pickedIds}
+            branchId={checkout.branchId}
+            onPick={(item: PosCatalogItemDto) => setLines((current) => addLine(current, item))}
+          />
+          <div className="mt-4">
             <PosCartTable
               lines={lines}
               disabled={mutation.isPending}
@@ -225,25 +259,33 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
               }
               onRemove={(variantId) => setLines((current) => removeLine(current, variantId))}
             />
-          </Card>
+          </div>
+        </Card>
 
-          <Card title="Khách hàng & thu tiền" className="h-[620px] overflow-auto">
-            <PosCheckoutPanel
-              values={checkout}
-              total={total}
-              quantity={quantity}
-              submitting={mutation.isPending}
-              blockedReason={blockedReason}
-              onChange={(patch) => {
-                // Đổi chi nhánh là đổi kho: tồn và giá vừa hiển thị không còn đúng nữa,
-                // giữ lại giỏ cũ sẽ cho nhân viên bán thứ kho mới không có.
-                if (patch.branchId && patch.branchId !== checkout.branchId) setLines([]);
-                setCheckout((current) => ({ ...current, ...patch }));
-              }}
-              onSubmit={submit}
-            />
-          </Card>
-        </div>
+        <Card size="small" title="Thanh toán">
+          <PosPaymentPanel
+            total={total}
+            method={checkout.paymentMethod}
+            isDelivery={checkout.deliveryMode === 'DELIVERY'}
+            handOverImmediately={checkout.handOverImmediately}
+            cashReceived={checkout.cashReceived}
+            disabled={mutation.isPending}
+            onChange={(patch) => setCheckout((current) => ({ ...current, ...patch }))}
+          />
+          <Alert
+            className="mt-3"
+            type="info"
+            showIcon
+            message={
+              checkout.deliveryMode === 'PICKUP'
+                ? 'Đơn tại quầy được ghi nhận đã thanh toán và đã giao; tồn kho trừ ngay khi bán.'
+                : 'Đơn giao hàng giữ chỗ tồn kho như đơn của khách; kho xử lý theo luồng thường.'
+            }
+          />
+          {blockedReason && (
+            <Alert className="mt-3" type="warning" showIcon message={blockedReason} />
+          )}
+        </Card>
       </Drawer>
 
       <PosReceiptModal

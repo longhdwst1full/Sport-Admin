@@ -21,10 +21,12 @@ import type {
 import type {
   ErrorResponseDto,
   GetAdminReportRevenueParams,
+  GetAdminReportTopCustomersParams,
   GetAdminReportTopProductsParams,
   InventoryReportDto,
   OverviewReportDto,
   RevenueReportDto,
+  TopCustomerListDto,
   TopProductListDto,
 } from './models';
 
@@ -148,7 +150,7 @@ export function useGetAdminReportOverview<
 }
 
 /**
- * @summary Doanh thu đã thực nhận theo khoảng thời gian, kèm chuỗi theo ngày
+ * @summary Doanh thu đã thực nhận theo khoảng thời gian, gom theo ngày/tháng/quý/năm
  */
 export const getAdminReportRevenue = (
   params?: GetAdminReportRevenueParams,
@@ -249,7 +251,7 @@ export function useGetAdminReportRevenue<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary Doanh thu đã thực nhận theo khoảng thời gian, kèm chuỗi theo ngày
+ * @summary Doanh thu đã thực nhận theo khoảng thời gian, gom theo ngày/tháng/quý/năm
  */
 
 export function useGetAdminReportRevenue<
@@ -512,6 +514,137 @@ export function useGetAdminReportTopProducts<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetAdminReportTopProductsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Khách mua nhiều nhất tính trên đơn đã hoàn tất
+ */
+export const getAdminReportTopCustomers = (
+  params?: GetAdminReportTopCustomersParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<TopCustomerListDto>({
+    url: `/api/v1/admin/reports/top-customers`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getGetAdminReportTopCustomersQueryKey = (
+  params?: GetAdminReportTopCustomersParams,
+) => {
+  return [`/api/v1/admin/reports/top-customers`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAdminReportTopCustomersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: GetAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminReportTopCustomers>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminReportTopCustomersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminReportTopCustomers>>> = ({
+    signal,
+  }) => getAdminReportTopCustomers(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAdminReportTopCustomersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminReportTopCustomers>>
+>;
+export type GetAdminReportTopCustomersQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+
+export function useGetAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | GetAdminReportTopCustomersParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminReportTopCustomers>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminReportTopCustomers>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: GetAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminReportTopCustomers>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminReportTopCustomers>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: GetAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminReportTopCustomers>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Khách mua nhiều nhất tính trên đơn đã hoàn tất
+ */
+
+export function useGetAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof getAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: GetAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminReportTopCustomers>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAdminReportTopCustomersQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

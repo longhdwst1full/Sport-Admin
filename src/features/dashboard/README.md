@@ -1,10 +1,25 @@
 # Dashboard — maintenance note
 
-> **Document version:** 2.1.0
+> **Document version:** 2.2.0
 >
-> **Last updated:** 2026-09-18
+> **Last updated:** 2026-09-21
 >
-> **Change summary:** Chuẩn hoá Dashboard theo design system DC, tách KPI presentation và sửa loading theo từng nguồn dữ liệu.
+> **Change summary:** Thêm bộ chọn kỳ (ngày/tháng/quý/năm), biểu đồ số đơn theo kỳ, bảng khách mua nhiều nhất và bảng màu biểu đồ đã qua kiểm tra tương phản/CVD.
+
+## Biểu đồ và bảng màu
+
+- Bộ chọn kỳ đổi **cả** `granularity` lẫn khoảng thời gian gửi lên: gom theo quý trên 30 ngày mặc
+  định của Backend chỉ cho đúng một cột. Khoảng mặc định: ngày 30 ngày · tháng 12 tháng · quý 8 quý ·
+  năm 5 năm.
+- Biểu đồ doanh thu và biểu đồ số đơn dùng chung một khoảng và một mức gom, nên hai biểu đồ luôn nói
+  về cùng một tập đơn.
+- `CHART_COLORS` là bảng màu phân loại **thứ tự cố định**, không xoay vòng. Bảng cũ trượt kiểm tra:
+  cặp hồng/đỏ cạnh nhau chỉ cách ΔE 11.4 với mắt thường (ngưỡng 15) và hai màu dưới 3:1 tương phản
+  với nền. Bảng hiện tại đạt cả sáu kiểm tra ở nền sáng lẫn nền tối — đổi màu phải chạy lại trình
+  kiểm tra, không ước lượng bằng mắt.
+- Biểu đồ một chuỗi không dựng chú giải (tiêu đề thẻ đã nói đó là gì); biểu đồ nhiều chuỗi luôn có
+  chú giải để danh tính không chỉ dựa vào màu.
+- Hiệu ứng hiện thẻ tôn trọng `prefers-reduced-motion`.
 
 ## Phạm vi
 

@@ -5,10 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { TopCustomerDto } from './topCustomerDto';
 
-export interface RevenuePointDto {
-  /** Khoá kỳ theo mức gom: YYYY-MM-DD, YYYY-MM, YYYY-Qn hoặc YYYY. */
-  date: string;
-  amount: string;
-  orderCount: number;
+export interface TopCustomerListDto {
+  items: TopCustomerDto[];
 }

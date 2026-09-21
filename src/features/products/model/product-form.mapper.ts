@@ -28,10 +28,11 @@ export interface ProductFormValues {
   description?: string;
   initialBranchId?: string;
   initialWarehouseCode?: string;
-  /** Ảnh đại diện nhập ngay ở màn tạo; gắn vào sản phẩm sau khi tạo xong. */
-  coverImageUrl?: string;
-  /** ID media của ảnh vừa tải lên; gắn ảnh cần ID chứ không phải URL. */
-  coverMediaAssetId?: string;
+  /**
+   * Ảnh tải lên ngay ở màn tạo; gắn vào sản phẩm sau khi tạo xong vì API gắn ảnh cần productId.
+   * Ảnh đầu danh sách là ảnh chính.
+   */
+  images: Array<{ assetId: string; url: string }>;
   variants: ProductVariantFormValues[];
 }
 
@@ -106,6 +107,8 @@ export const toProductFormValues = (
     description: product.description ?? '',
     initialBranchId: undefined,
     initialWarehouseCode: undefined,
+    // Ở chế độ sửa, ảnh do `ProductMediaPanel` quản lý trực tiếp qua API media, không đi qua form.
+    images: [],
     // Edit metadata không gửi variants. Placeholder chỉ giúp record cũ chưa có SKU vẫn qua
     // validation của form dùng chung; không tạo SKU ngầm trong update payload.
     variants: variants.length > 0 ? variants : [emptyVariant()],

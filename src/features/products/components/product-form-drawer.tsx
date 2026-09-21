@@ -9,6 +9,7 @@ import * as yup from 'yup';
 import { useCan } from '@/core/auth/permissions';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import {
+  getGetAdminProductQueryKey,
   getListAdminProductsQueryKey,
   useAttachAdminProductMedia,
   useCreateAdminProduct,
@@ -36,8 +37,11 @@ import {
   useSearchActiveAdminWarehouses,
 } from '@/generated/api/organization/organization';
 import { MoneyInput } from '@/foundation/inputs/money-input';
-import { ImageUploadField } from '@/features/media';
+import { ProductImagePicker } from './product-image-picker';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
+import { ProductMediaPanel } from './product-media-panel';
+import { ProductPricePanel } from './product-price-panel';
+import { PermissionGate } from '@/core/auth/permissions';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import {
   emptyVariant,
@@ -76,8 +80,7 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
       return !hasOpeningStock || Boolean(values.initialBranchId && value);
     },
   ),
-  coverImageUrl: yup.string().trim().optional(),
-  coverMediaAssetId: yup.string().trim().optional(),
+  images: yup.array().of(yup.object({ assetId: yup.string().required(), url: yup.string().required() })).default([]),
   variants: yup
     .array()
     .of(yup.object({
@@ -112,8 +115,7 @@ const defaults: ProductFormValues = {
   description: '',
   initialBranchId: undefined,
   initialWarehouseCode: undefined,
-  coverImageUrl: '',
-  coverMediaAssetId: undefined,
+  images: [],
   variants: [emptyVariant()],
 };
 
@@ -211,18 +213,24 @@ export function ProductFormDrawer({
             followUpErrors.push(`giá SKU: ${getApiErrorMessage(error)}`);
           }
         }
-        if (values.coverMediaAssetId) {
+        // Ảnh gắn tuần tự vì mỗi lần gắn tăng version của Product; gắn song song thì lần thứ hai
+        // trở đi sẽ trượt expectedProductVersion và rụng mất ảnh.
+        // Mỗi lần gắn ảnh tăng version của Product đúng 1 (`claimProductVersion` ở Backend), nên
+        // version cho lần gắn thứ n suy được mà không cần đọc lại sản phẩm. Lỗi giữa chừng thì dừng
+        // hẳn: các lần sau chắc chắn trượt version và chỉ tạo thêm thông báo lỗi trùng lặp.
+        for (const [index, image] of values.images.entries()) {
           try {
             await attachMedia.mutateAsync({
               id: createdProduct.id,
               data: {
-                mediaAssetId: values.coverMediaAssetId,
-                isPrimary: true,
-                expectedProductVersion: createdProduct.version,
+                mediaAssetId: image.assetId,
+                isPrimary: index === 0,
+                expectedProductVersion: createdProduct.version + index,
               },
             });
           } catch (error) {
-            followUpErrors.push(`ảnh đại diện: ${getApiErrorMessage(error)}`);
+            followUpErrors.push(`ảnh ${index + 1}: ${getApiErrorMessage(error)}`);
+            break;
           }
         }
         await Promise.all([
@@ -300,6 +308,14 @@ export function ProductFormDrawer({
     }
   }, [form, initialBranchId, isEdit, open, warehouses.data?.items]);
 
+  /** Media và giá đổi ngoài form; đọc lại chi tiết để version gửi lần sau không còn cũ. */
+  const refreshProduct = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminProductQueryKey(product?.slug) }),
+    ]);
+  };
+
   const submit = form.handleSubmit((values) => {
     if (product) {
       updateProduct.mutate({
@@ -326,7 +342,7 @@ export function ProductFormDrawer({
     <Drawer
       title={isEdit ? 'Sửa thông tin sản phẩm' : 'Tạo sản phẩm và biến thể'}
       width="100%"
-      styles={{ wrapper: { maxWidth: 920 } }}
+      styles={{ wrapper: { maxWidth: 720 } }}
       push={false}
       open={open}
       onClose={() => { if (!mutationPending) onClose(); }}
@@ -339,11 +355,16 @@ export function ProductFormDrawer({
           <Button disabled={mutationPending} onClick={onClose}>
             Hủy
           </Button>
+          {/*
+            Gọi thẳng `submit()` thay vì nối nút với form bằng thuộc tính `form="product-form"`.
+            Nút nằm ở footer của Drawer, tức là ngoài thẻ <form>; cách nối qua id phụ thuộc vào
+            việc antd có chuyển `id` xuống DOM hay không, và khi không chuyển thì nút trông vẫn
+            bình thường nhưng bấm không có gì xảy ra.
+          */}
           <Button
             type="primary"
-            htmlType="submit"
-            form="product-form"
             loading={mutationPending}
+            onClick={() => void submit()}
           >
             {isEdit ? 'Lưu thay đổi' : 'Tạo sản phẩm'}
           </Button>
@@ -459,20 +480,17 @@ export function ProductFormDrawer({
         </Form.Item>
         {!isEdit && (
           <Form.Item
-            label="Ảnh đại diện"
-            extra="Tải lên ngay ở đây; ảnh sẽ được gắn làm ảnh chính sau khi tạo sản phẩm."
+            label="Ảnh sản phẩm"
+            extra="Tải nhiều ảnh ngay tại đây; ảnh đầu danh sách là ảnh chính. Ảnh được gắn vào sản phẩm sau khi tạo."
           >
             <Controller
-              name="coverImageUrl"
+              name="images"
               control={form.control}
               render={({ field }) => (
-                <ImageUploadField
-                  value={field.value ?? ''}
-                  onChange={(url, assetId) => {
-                    field.onChange(url);
-                    // Gắn ảnh vào sản phẩm cần media asset id; dán URL tay thì không gắn được.
-                    form.setValue('coverMediaAssetId', assetId);
-                  }}
+                <ProductImagePicker
+                  value={field.value ?? []}
+                  disabled={mutationPending}
+                  onChange={field.onChange}
                 />
               )}
             />
@@ -735,6 +753,26 @@ export function ProductFormDrawer({
             >
               Thêm biến thể
             </Button>
+          </>
+        )}
+
+        {/*
+          Ở chế độ Sửa, ảnh và giá nằm ngay trong form thay vì bắt người dùng đóng form rồi đi tìm
+          một drawer khác. Hai khối này ghi thẳng qua API riêng của chúng (media/price), không đi
+          qua nút Lưu của form — mỗi thao tác có version và điều kiện hợp lệ của chính nó.
+        */}
+        {isEdit && product && (
+          <>
+            <Divider />
+            <PermissionGate permission="catalog.product.manage">
+              <Typography.Title level={5}>Ảnh sản phẩm và SKU</Typography.Title>
+              <ProductMediaPanel product={product} onChanged={refreshProduct} />
+            </PermissionGate>
+
+            <Divider />
+            <PermissionGate permission="catalog.price.view">
+              <ProductPricePanel product={product} onChanged={refreshProduct} />
+            </PermissionGate>
           </>
         )}
       </Form>

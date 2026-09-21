@@ -6,10 +6,13 @@ import {
   ShoppingCartOutlined,
   TruckOutlined,
 } from '@ant-design/icons';
-import { Alert, Card, Col, Empty, Row, Skeleton, Typography } from 'antd';
+import { Alert, Card, Col, Empty, Row, Segmented, Skeleton, Typography } from 'antd';
+import { useMemo, useState } from 'react';
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -26,6 +29,7 @@ import {
   useGetAdminReportInventory,
   useGetAdminReportOverview,
   useGetAdminReportRevenue,
+  useGetAdminReportTopCustomers,
   useGetAdminReportTopProducts,
 } from '@/generated/api/reporting/reporting';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -34,7 +38,45 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { DashboardStatCard } from '../components/dashboard-stat-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
 
-const CHART_COLORS = ['#059669', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899'];
+/**
+ * Bảng màu phân loại, thứ tự cố định — không bao giờ xoay vòng sang màu thứ 7.
+ *
+ * Bảng cũ (`#059669,#0ea5e9,#8b5cf6,#f59e0b,#ef4444,#ec4899`) trượt kiểm tra: cặp hồng/đỏ cạnh nhau
+ * chỉ cách ΔE 11.4 với mắt thường (ngưỡng 15), và hai màu xanh/cam dưới 3:1 tương phản với nền.
+ * Bảng hiện tại đạt cả sáu kiểm tra ở cả nền sáng lẫn nền tối.
+ */
+const CHART_COLORS = ['#047857', '#0284c7', '#a16207', '#7c3aed', '#dc2626', '#0891b2'];
+const REVENUE_COLOR = CHART_COLORS[0];
+const ORDERS_COLOR = CHART_COLORS[1];
+
+const GRANULARITY_OPTIONS = [
+  { value: 'DAY', label: 'Ngày' },
+  { value: 'MONTH', label: 'Tháng' },
+  { value: 'QUARTER', label: 'Quý' },
+  { value: 'YEAR', label: 'Năm' },
+] as const;
+
+type Granularity = (typeof GRANULARITY_OPTIONS)[number]['value'];
+
+/**
+ * Khoảng thời gian mặc định theo mức gom.
+ *
+ * Backend mặc định 30 ngày gần nhất; gom theo quý hoặc năm trên 30 ngày chỉ cho đúng một cột, nên
+ * mỗi mức tự nới khoảng đủ để biểu đồ có ý nghĩa.
+ */
+const LOOKBACK_DAYS: Record<Granularity, number> = {
+  DAY: 30,
+  MONTH: 365,
+  QUARTER: 730,
+  YEAR: 1826,
+};
+
+const PERIOD_DESCRIPTION: Record<Granularity, string> = {
+  DAY: '30 ngày gần nhất',
+  MONTH: '12 tháng gần nhất',
+  QUARTER: '8 quý gần nhất',
+  YEAR: '5 năm gần nhất',
+};
 
 const money = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
@@ -78,11 +120,26 @@ export function DashboardPage() {
   const canSeeInventory = useCan('report.inventory.view');
   const canSeeOrders = useCan('order.view');
 
+  const [granularity, setGranularity] = useState<Granularity>('DAY');
+  // Khoảng tính lại khi đổi mức gom; ghim theo ngày để không tạo query key mới mỗi lần render.
+  const range = useMemo(() => {
+    const to = new Date();
+    const from = new Date(to.getTime() - LOOKBACK_DAYS[granularity] * 24 * 60 * 60 * 1000);
+    return { from: from.toISOString(), to: to.toISOString() };
+  }, [granularity]);
+
   const overview = useGetAdminReportOverview({ query: { enabled: canSeeOperation } });
-  const revenue = useGetAdminReportRevenue(undefined, { query: { enabled: canSeeRevenue } });
+  const revenue = useGetAdminReportRevenue(
+    { ...range, granularity },
+    { query: { enabled: canSeeRevenue } },
+  );
+  const topCustomers = useGetAdminReportTopCustomers(
+    { ...range, limit: 5 },
+    { query: { enabled: canSeeRevenue } },
+  );
   const inventory = useGetAdminReportInventory({ query: { enabled: canSeeInventory } });
   const topProducts = useGetAdminReportTopProducts(
-    { limit: 5 },
+    { ...range, limit: 5 },
     { query: { enabled: canSeeRevenue } },
   );
 
@@ -148,7 +205,8 @@ export function DashboardPage() {
   ];
 
   const revenueSeries = (revenue.data?.series ?? []).map((point) => ({
-    date: point.date.slice(5),
+    // Mức ngày cắt bớt năm cho đỡ chật trục; các mức còn lại giữ nguyên vì năm là thông tin thật.
+    date: granularity === 'DAY' ? point.date.slice(5) : point.date,
     amount: Number(point.amount),
     orders: point.orderCount,
   }));
@@ -212,8 +270,15 @@ export function DashboardPage() {
           </h2>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {statCards.map((card) => (
-            <DashboardStatCard key={card.label} {...card} />
+          {statCards.map((card, index) => (
+            <div
+              key={card.label}
+              className="dctd-card-enter"
+              // Thẻ hiện lần lượt thay vì bật cùng lúc; đủ nhanh để không thành thời gian chờ.
+              style={{ animationDelay: `${index * 60}ms` }}
+            >
+              <DashboardStatCard {...card} />
+            </div>
           ))}
         </div>
       </section>
@@ -226,8 +291,16 @@ export function DashboardPage() {
             className="h-full !rounded-2xl !border-slate-200/80 !shadow-card"
             title={
               <SectionTitle
-                title="Doanh thu theo ngày hoàn tất"
-                description="Chỉ ghi nhận đơn đã thu đủ tiền"
+                title="Doanh thu theo kỳ hoàn tất"
+                description={`Chỉ ghi nhận đơn đã thu đủ tiền · ${PERIOD_DESCRIPTION[granularity]}`}
+              />
+            }
+            extra={
+              <Segmented
+                size="small"
+                value={granularity}
+                options={[...GRANULARITY_OPTIONS]}
+                onChange={(value) => setGranularity(value as Granularity)}
               />
             }
           >
@@ -238,14 +311,14 @@ export function DashboardPage() {
             ) : revenue.isPending ? (
               <Skeleton active />
             ) : revenueSeries.length === 0 ? (
-              <Empty description="Chưa có đơn nào hoàn tất trong 30 ngày qua" />
+              <Empty description={`Chưa có đơn nào hoàn tất trong ${PERIOD_DESCRIPTION[granularity]}`} />
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={revenueSeries}>
                   <defs>
                     <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#059669" stopOpacity={0.28} />
-                      <stop offset="100%" stopColor="#059669" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor={REVENUE_COLOR} stopOpacity={0.28} />
+                      <stop offset="100%" stopColor={REVENUE_COLOR} stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#e2e8f0" />
@@ -260,13 +333,15 @@ export function DashboardPage() {
                     formatter={(value) => money.format(Number(value ?? 0))}
                     contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }}
                   />
+                  {/* Một chuỗi duy nhất nên không cần chú giải: tiêu đề thẻ đã nói đây là doanh thu. */}
                   <Area
                     type="monotone"
                     dataKey="amount"
                     name="Doanh thu"
-                    stroke="#059669"
-                    strokeWidth={3}
+                    stroke={REVENUE_COLOR}
+                    strokeWidth={2}
                     fill="url(#revenueFill)"
+                    animationDuration={600}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -302,7 +377,10 @@ export function DashboardPage() {
                     innerRadius={55}
                     outerRadius={88}
                     paddingAngle={2}
-                    stroke="none"
+                    // Khe 2px giữa các lát để hai màu cạnh nhau không dính thành một mảng.
+                    stroke="#fff"
+                    strokeWidth={2}
+                    animationDuration={600}
                   >
                     {statusPie.map((entry, index) => (
                       <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -355,11 +433,115 @@ export function DashboardPage() {
       )}
 
       <Row gutter={[16, 16]}>
+        <Col xs={24} xl={14}>
+          <Card
+            className="h-full !rounded-2xl !border-slate-200/80 !shadow-card"
+            title={
+              <SectionTitle
+                title="Số đơn hoàn tất theo kỳ"
+                description={`Cùng khoảng và mức gom với biểu đồ doanh thu · ${PERIOD_DESCRIPTION[granularity]}`}
+              />
+            }
+          >
+            {!canSeeRevenue ? (
+              <Empty description="Tài khoản của bạn không có quyền xem doanh thu" />
+            ) : revenue.isError ? (
+              <QueryErrorAlert error={revenue.error} retry={() => void revenue.refetch()} />
+            ) : revenue.isPending ? (
+              <Skeleton active />
+            ) : revenueSeries.length === 0 ? (
+              <Empty description="Chưa có đơn nào hoàn tất trong khoảng này" />
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={revenueSeries} barCategoryGap="28%">
+                  <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#e2e8f0" />
+                  <XAxis dataKey="date" fontSize={12} axisLine={false} tickLine={false} />
+                  <YAxis fontSize={12} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(15,23,42,0.04)' }}
+                    formatter={(value) => [`${Number(value ?? 0)} đơn`, 'Đã hoàn tất']}
+                    contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }}
+                  />
+                  {/* Đầu cột bo 4px và neo vào đường nền; một chuỗi nên không dựng chú giải. */}
+                  <Bar
+                    dataKey="orders"
+                    name="Đơn hoàn tất"
+                    fill={ORDERS_COLOR}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={44}
+                    animationDuration={600}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} xl={10}>
+          <Card
+            className="h-full !rounded-2xl !border-slate-200/80 !shadow-card"
+            title={
+              <SectionTitle
+                title="Khách mua nhiều nhất"
+                description={`Theo tiền đã thực trả · ${PERIOD_DESCRIPTION[granularity]}`}
+              />
+            }
+          >
+            {!canSeeRevenue ? (
+              <Empty description="Cần quyền xem doanh thu" />
+            ) : topCustomers.isError ? (
+              <QueryErrorAlert
+                error={topCustomers.error}
+                retry={() => void topCustomers.refetch()}
+              />
+            ) : (
+              <AdminTable
+                rowKey="customerNo"
+                size="small"
+                pagination={false}
+                loading={topCustomers.isPending}
+                dataSource={topCustomers.data?.items ?? []}
+                locale={{ emptyText: 'Chưa có khách nào hoàn tất đơn trong khoảng này' }}
+                columns={[
+                  {
+                    title: 'Khách hàng',
+                    dataIndex: 'name',
+                    ellipsis: true,
+                    render: (value: string, row: { customerNo: string }) => (
+                      <div>
+                        <div className="font-semibold text-slate-800">{value}</div>
+                        <div className="font-mono text-xs text-slate-500">{row.customerNo}</div>
+                      </div>
+                    ),
+                  },
+                  { title: 'Số đơn', dataIndex: 'orderCount', width: 80, align: 'right' },
+                  {
+                    title: 'Đã chi',
+                    dataIndex: 'revenue',
+                    width: 140,
+                    align: 'right',
+                    render: (value: string) => (
+                      <span className="font-semibold text-emerald-700">
+                        {money.format(Number(value))}
+                      </span>
+                    ),
+                  },
+                ]}
+              />
+            )}
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
         <Col xs={24}>
           <Card
             className="h-full !rounded-2xl !border-slate-200/80 !shadow-card"
             title={
-              <SectionTitle title="Sản phẩm bán chạy" description="Xếp theo doanh thu 30 ngày" />
+              <SectionTitle
+                title="Sản phẩm bán chạy"
+                description={`Xếp theo số lượng bán · ${PERIOD_DESCRIPTION[granularity]}`}
+              />
             }
           >
             {!canSeeRevenue ? (

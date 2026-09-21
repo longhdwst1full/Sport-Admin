@@ -4,7 +4,7 @@ import {
   useListShippingProvinces,
   useListShippingWards,
 } from '@/generated/api/shipping/shipping';
-import type { PosDeliveryValues } from './pos-checkout-panel';
+import type { PosDeliveryValues } from '../model/pos-checkout';
 
 /**
  * Địa chỉ giao lấy mã địa giới từ hãng vận chuyển.

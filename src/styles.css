@@ -441,6 +441,22 @@ a,
   }
 }
 
+/* Thẻ số liệu hiện lần lượt; độ trễ do component đặt qua `animation-delay`. */
+.dctd-card-enter {
+  animation: dctdPageEnter 0.4s ease-out both;
+}
+
+/*
+ * Người bật "giảm chuyển động" trong hệ điều hành đang nói rằng chuyển động làm họ khó chịu hoặc
+ * chóng mặt. Giữ nguyên trạng thái cuối, bỏ phần chạy.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .dctd-page-enter,
+  .dctd-card-enter {
+    animation: none;
+  }
+}
+
 /* ─── Card hover lift ─────────────────────────────────────────── */
 .dctd-card-interactive {
   transition:

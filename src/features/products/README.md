@@ -1,10 +1,22 @@
 # Products — maintenance note
 
-> **Document version:** 1.6.0
+> **Document version:** 1.7.0
 >
 > **Last updated:** 2026-09-21
 >
-> **Change summary:** Nút xóa ảnh dùng DELETE API để xóa cả liên kết và asset Cloudinary, có guard ảnh dùng chung.
+> **Change summary:** Form sửa sản phẩm hiển thị luôn ảnh và lịch giá; nút Lưu gọi thẳng submit thay vì nối qua thuộc tính `form`; drawer thu về 720px.
+
+## Ghi chú bảo trì quan trọng
+
+- Nút **Lưu/Tạo** ở footer Drawer gọi thẳng `submit()`. Không nối lại bằng `htmlType="submit"` +
+  `form="product-form"`: nút nằm ngoài thẻ `<form>`, và khi thuộc tính `id` không xuống tới DOM thì
+  nút trông vẫn bình thường nhưng bấm không có gì xảy ra.
+- Ở chế độ **Sửa**, `ProductMediaPanel` và `ProductPricePanel` nằm ngay trong form. Hai khối này ghi
+  qua API riêng của chúng (media/price) chứ **không** đi qua nút Lưu — mỗi thao tác có version và
+  điều kiện hợp lệ riêng. Sau khi chúng ghi xong, form đọc lại chi tiết để version gửi lần sau
+  không còn cũ.
+- Mọi hộp xác nhận dùng `App.useApp().modal`, không dùng `Modal.confirm` tĩnh: với React 19, static
+  method của antd không render nếu thiếu patch tương thích, làm `onOk` không bao giờ chạy.
 
 ## Phạm vi
 

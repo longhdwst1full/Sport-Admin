@@ -1,10 +1,31 @@
 # POS — Bán tại quầy — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 2.0.0
 >
-> **Last updated:** 2026-09-15
+> **Last updated:** 2026-09-21
 >
-> **Change summary:** Chuyển sang danh mục bán tại quầy có combo và tồn khả dụng theo chi nhánh.
+> **Change summary:** Dựng lại màn theo phiếu bán tại cửa hàng: chi nhánh + nhân viên ở đầu phiếu, khách hàng → sản phẩm → thanh toán theo chiều dọc, thêm tiền khách đưa/tiền thối cho tiền mặt.
+
+## Bố cục màn hình
+
+Phiếu đọc từ trên xuống, đúng thứ tự nhân viên làm việc:
+
+| Khối | Thành phần | Ghi chú |
+| --- | --- | --- |
+| Đầu phiếu | `pos-counter-header.tsx` | Chọn **chi nhánh**; nhân viên lấy từ phiên đăng nhập. Không chọn kho — V1 mỗi chi nhánh đúng một kho, Backend tự suy. Đổi chi nhánh là xoá giỏ vì tồn/giá của kho cũ không còn đúng. |
+| Khách hàng | `pos-customer-panel.tsx` | Tìm theo SĐT, khách mới nhập tay; kèm hình thức nhận hàng và địa chỉ giao. |
+| Sản phẩm | `pos-product-picker.tsx` + `pos-cart-table.tsx` | Tìm theo SKU/tên, bảng dòng hàng với SL, đơn giá, thành tiền. |
+| Thanh toán | `pos-payment-panel.tsx` | Tiền mặt (nhập tiền khách đưa → tiền thối), chuyển khoản, COD (chỉ đơn giao). |
+| Chân phiếu | Drawer footer | Tổng thanh toán + **Hủy** / **Tạo & hoàn tất đơn**. |
+
+`model/pos-checkout.ts` giữ kiểu dữ liệu của phiếu; `model/pos-cash.ts` tính tiền thối (có test).
+
+**Tiền khách đưa không gửi lên Backend.** Đơn chỉ ghi nhận đã thu đủ hay chưa; gửi kèm số tiền đưa
+sẽ tạo một khoản thu không khớp tổng đơn mà không ai đối soát được.
+
+Đây **không phải POS**: không ca làm, không két tiền, không đối soát cuối ca, không tách nhiều
+phương thức thanh toán trên một đơn. Đơn tại quầy dùng chung `Order`/`OrderItem`/`Payment`/
+`Inventory` với đơn online, chỉ khác `channel = STORE`.
 
 ## Phạm vi
 

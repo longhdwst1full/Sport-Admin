@@ -6,9 +6,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface RevenuePointDto {
-  /** Khoá kỳ theo mức gom: YYYY-MM-DD, YYYY-MM, YYYY-Qn hoặc YYYY. */
-  date: string;
-  amount: string;
+export interface TopCustomerDto {
+  customerNo: string;
+  name: string;
+  /** Số đơn đã hoàn tất trong khoảng */
   orderCount: number;
+  /** Tổng tiền đã thực trả trong khoảng */
+  revenue: string;
 }

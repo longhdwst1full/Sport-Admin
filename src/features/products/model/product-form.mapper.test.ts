@@ -14,6 +14,7 @@ describe('product form mapper', () => {
       primaryCategoryId: '3',
       shortDescription: '  Mô tả ngắn  ',
       description: '  <p>Chi tiết</p>  ',
+      images: [],
       variants: [
         { ...emptyVariant(), name: ' Đen - 40 ', barcode: ' BAR-40 ', weightGrams: 850, openingQuantity: 8 },
         { ...emptyVariant(), name: 'Đen - 41', lengthMm: 300 },
