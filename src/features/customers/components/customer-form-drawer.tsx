@@ -12,7 +12,7 @@ import {
   useDeactivateAdminCustomer,
   useGetAdminCustomer,
 } from '@/generated/api/customers/customers';
-import { ImageUploadField } from '@/features/media';
+import { CustomerAvatarField } from './customer-avatar-field';
 import type { CustomerRowView } from '../model/customer.mapper';
 import {
   emptyCustomerAddress,
@@ -174,8 +174,25 @@ export function CustomerFormDrawer({
             icon={<UserOutlined />}
             className="mb-4"
           >
-          <div className="grid gap-x-5 sm:grid-cols-[1fr_180px]">
+          {/* Ảnh đứng riêng bên trái để phần thông tin bên phải giữ được lưới hai cột đều nhau. */}
+          <div className="grid gap-5 sm:grid-cols-[112px_minmax(0,1fr)]">
+            <CustomerAvatarField
+              url={avatarUrl}
+              disabled={mutation.isPending}
+              onChange={({ url, assetId }) =>
+                // Gắn ảnh vào hồ sơ cần media asset id; gỡ ảnh thì xoá cả hai.
+                form.setFieldsValue({ avatarUrl: url, avatarAssetId: assetId })
+              }
+            />
+
             <div>
+              <Form.Item name="avatarUrl" noStyle>
+                <input type="hidden" />
+              </Form.Item>
+              <Form.Item name="avatarAssetId" noStyle>
+                <input type="hidden" />
+              </Form.Item>
+
               <Form.Item
                 name="name"
                 label="Tên khách hàng"
@@ -183,72 +200,64 @@ export function CustomerFormDrawer({
               >
                 <Input maxLength={255} placeholder="Nguyễn Minh Anh" />
               </Form.Item>
-              <Form.Item
-                name="phone"
-                label="Số điện thoại"
-                rules={[{ required: true, whitespace: true, message: 'Nhập số điện thoại' }]}
-              >
-                <Input maxLength={32} placeholder="0912345678" />
-              </Form.Item>
-              <Form.Item
-                name="email"
-                label="Email"
-                rules={[
-                  { required: true, whitespace: true, message: 'Nhập email' },
-                  { type: 'email', message: 'Email không hợp lệ' },
-                ]}
-              >
-                <Input maxLength={255} placeholder="minh.anh@example.com" />
-              </Form.Item>
-            </div>
 
-            <div>
-              <Form.Item label="Ảnh đại diện" extra="Tải ảnh lên hoặc dán URL đã có.">
-                <Form.Item name="avatarUrl" noStyle>
-                  <input type="hidden" />
-                </Form.Item>
-                <Form.Item name="avatarAssetId" noStyle>
-                  <input type="hidden" />
-                </Form.Item>
-                <ImageUploadField
-                  value={avatarUrl ?? ''}
-                  onChange={(url, assetId) =>
-                    // Gắn ảnh vào hồ sơ cần media asset id; dán URL tay thì không gắn được.
-                    form.setFieldsValue({ avatarUrl: url, avatarAssetId: assetId })
-                  }
-                />
-              </Form.Item>
-              <Form.Item
-                name="marketingConsent"
-                label="Nhận tin khuyến mãi"
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-              {editing && (
+              <div className="grid gap-x-4 sm:grid-cols-2">
                 <Form.Item
-                  label={
-                    <span className="flex items-center gap-2">
-                      <StopOutlined className="text-slate-400" />
-                      Chặn hồ sơ
-                    </span>
-                  }
-                  extra="Chặn là ngừng dùng hồ sơ, không xoá lịch sử mua."
+                  name="phone"
+                  label="Số điện thoại"
+                  rules={[{ required: true, whitespace: true, message: 'Nhập số điện thoại' }]}
                 >
-                  <Space>
-                    <Switch
-                      checked={blocked}
-                      loading={statusPending}
-                      disabled={!current || statusPending}
-                      onChange={toggleBlocked}
-                    />
-                    <Tag color={blocked ? 'red' : 'green'}>
-                      {blocked ? 'Đang chặn' : 'Đang hoạt động'}
-                    </Tag>
-                  </Space>
+                  <Input maxLength={32} placeholder="0912345678" />
                 </Form.Item>
-              )}
+                <Form.Item
+                  name="email"
+                  label="Email"
+                  rules={[
+                    { required: true, whitespace: true, message: 'Nhập email' },
+                    { type: 'email', message: 'Email không hợp lệ' },
+                  ]}
+                >
+                  <Input maxLength={255} placeholder="minh.anh@example.com" />
+                </Form.Item>
+              </div>
             </div>
+          </div>
+
+          {/* Hai công tắc nằm cùng một hàng có nền riêng: chúng là tuỳ chọn của hồ sơ, không phải
+              trường nhập, nên tách khỏi lưới bên trên để mắt không đọc nhầm là ô bỏ trống. */}
+          <div className="mt-2 grid gap-3 rounded-xl bg-slate-50 p-3 sm:grid-cols-2">
+            <Form.Item
+              name="marketingConsent"
+              label="Nhận tin khuyến mãi"
+              valuePropName="checked"
+              className="!mb-0"
+            >
+              <Switch />
+            </Form.Item>
+            {editing && (
+              <Form.Item
+                label={
+                  <span className="flex items-center gap-2">
+                    <StopOutlined className="text-slate-400" />
+                    Chặn hồ sơ
+                  </span>
+                }
+                extra="Chặn là ngừng dùng hồ sơ, không xoá lịch sử mua."
+                className="!mb-0"
+              >
+                <Space>
+                  <Switch
+                    checked={blocked}
+                    loading={statusPending}
+                    disabled={!current || statusPending}
+                    onChange={toggleBlocked}
+                  />
+                  <Tag color={blocked ? 'red' : 'green'}>
+                    {blocked ? 'Đang chặn' : 'Đang hoạt động'}
+                  </Tag>
+                </Space>
+              </Form.Item>
+            )}
           </div>
           </FormSection>
 
@@ -259,7 +268,7 @@ export function CustomerFormDrawer({
           >
           <Form.List name="addresses">
             {(fields, { add, remove }) => (
-              <div className="mt-3">
+              <div>
                 {fields.length === 0 && (
                   <Alert
                     className="mb-3"

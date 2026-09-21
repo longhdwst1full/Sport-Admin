@@ -1,3 +1,4 @@
+import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import { DeleteOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Select, Tag } from 'antd';
 import type { FormInstance } from 'antd';
@@ -36,14 +37,14 @@ export function CustomerAddressFields({
   const districtCode = Form.useWatch([...path, 'districtCode'], form) as string | undefined;
   const isDefault = Form.useWatch([...path, 'isDefault'], form) as boolean | undefined;
 
-  const provinces = useListShippingProvinces();
+  const provinces = useListShippingProvinces({ query: { ...CACHE_POLICY.REFERENCE } });
   const districts = useListShippingDistricts(
     { provinceCode: provinceCode ?? '' },
-    { query: { enabled: Boolean(provinceCode) } },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(provinceCode) } },
   );
   const wards = useListShippingWards(
     { districtCode: districtCode ?? '' },
-    { query: { enabled: Boolean(districtCode) } },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(districtCode) } },
   );
 
   const patch = (values: Partial<CustomerFormValues['addresses'][number]>) => {
@@ -56,7 +57,7 @@ export function CustomerAddressFields({
   return (
     <Card
       size="small"
-      className="mb-3"
+      className="mb-3 !rounded-xl !border-slate-200 transition hover:!border-emerald-300"
       title={
         <span className="flex items-center gap-2">
           Địa chỉ {index + 1}
@@ -81,7 +82,7 @@ export function CustomerAddressFields({
         </span>
       }
     >
-      <div className="grid gap-x-3 sm:grid-cols-2">
+      <div className="grid gap-x-4 sm:grid-cols-2">
         <Form.Item
           name={[name, 'recipient']}
           label="Người nhận"

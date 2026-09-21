@@ -1,3 +1,4 @@
+import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import { Form, Input, Select } from 'antd';
 import {
   useListShippingDistricts,
@@ -19,14 +20,14 @@ export function DeliveryAddressFields({
   value: PosDeliveryValues;
   onChange: (patch: Partial<PosDeliveryValues>) => void;
 }) {
-  const provinces = useListShippingProvinces();
+  const provinces = useListShippingProvinces({ query: { ...CACHE_POLICY.REFERENCE } });
   const districts = useListShippingDistricts(
     { provinceCode: value.provinceCode },
-    { query: { enabled: Boolean(value.provinceCode) } },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(value.provinceCode) } },
   );
   const wards = useListShippingWards(
     { districtCode: value.districtCode },
-    { query: { enabled: Boolean(value.districtCode) } },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(value.districtCode) } },
   );
 
   const toOptions = (items: { code: string; name: string }[] | undefined) =>

@@ -1,3 +1,4 @@
+import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -96,7 +97,7 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
 
   const branchesQuery = useSearchActiveAdminBranches(
     { search: debouncedBranchSearch || undefined, page: 1, limit: 20 },
-    { query: { enabled: open } },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: open } },
   );
 
   const roles = useMemo(() => rolesQuery.data?.items ?? [], [rolesQuery.data]);

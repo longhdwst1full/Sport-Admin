@@ -1,10 +1,29 @@
 # Products — maintenance note
 
-> **Document version:** 1.7.0
+> **Document version:** 1.8.0
 >
 > **Last updated:** 2026-09-21
 >
-> **Change summary:** Form sửa sản phẩm hiển thị luôn ảnh và lịch giá; nút Lưu gọi thẳng submit thay vì nối qua thuộc tính `form`; drawer thu về 720px.
+> **Change summary:** Màn tạo sản phẩm chia bốn tab trên cùng một form; validate theo tab và nhảy tới tab lỗi; các khối dùng `FormSection` chung với màn khách hàng.
+
+## Cấu trúc màn tạo/sửa
+
+Một `useForm` duy nhất trải qua nhiều tab — **không phải bốn form rời**: một lần submit, một
+transaction ở Backend. Đổi tab không lưu gì cả.
+
+| Tab | Thành phần | Trường |
+| --- | --- | --- |
+| Thông tin cơ bản | `product-form/product-basic-info-tab.tsx` | loại, tên, thương hiệu, danh mục, danh mục chính |
+| Hình ảnh & mô tả | `product-form/product-media-tab.tsx` | ảnh (nhiều), mô tả ngắn, mô tả chi tiết |
+| Biến thể & giá | `product-form/product-variants-tab.tsx` | SKU, kích thước, giá, tồn đầu kỳ |
+| Kiểm tra & tạo | `product-form/product-review-tab.tsx` | đọc lại từ `watch()` trước khi gửi |
+
+`model/product-form-tabs.ts` giữ ánh xạ tab → trường và hàm `validateProductTabs` (có test).
+`handleSubmit` chỉ báo form không hợp lệ chứ không nói lỗi ở tab nào; không nhảy tới tab đó thì
+người dùng bấm Tạo, không có gì xảy ra, và ô lỗi nằm ở tab họ không nhìn thấy.
+
+Chế độ **Sửa** chỉ hiện hai tab đầu: biến thể, giá và ảnh có panel riêng bên dưới với version của
+chính chúng, nên bảng tóm tắt trước khi tạo không còn nghĩa.
 
 ## Ghi chú bảo trì quan trọng
 

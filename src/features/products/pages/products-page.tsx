@@ -9,6 +9,7 @@ import { ProductFormDrawer } from '../components/product-form-drawer';
 import { ProductListTable } from '../components/product-list-table';
 import { ProductListToolbar } from '../components/product-list-toolbar';
 import { ProductWorkflowDrawer } from '../components/product-workflow-drawer';
+import { useProductFormPrefetch } from '../hooks/use-product-form-prefetch';
 import { useProductList } from '../hooks/use-product-list';
 import { useProductListActions } from '../hooks/use-product-list-actions';
 
@@ -16,6 +17,7 @@ export function ProductsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState<string>();
   const list = useProductList();
+  const prefetchProductForm = useProductFormPrefetch();
   const actions = useProductListActions();
   const total = list.query.data?.meta.total ?? 0;
 
@@ -32,6 +34,10 @@ export function ProductsPage() {
               size="large"
               icon={<PlusOutlined />}
               className="!rounded-xl !font-semibold"
+              // Nạp danh mục/thương hiệu ngay khi người dùng rê chuột lên nút: form mở ra là có sẵn
+              // dữ liệu thay vì để họ nhìn ô chọn quay vòng.
+              onMouseEnter={prefetchProductForm}
+              onFocus={prefetchProductForm}
               onClick={() => setCreateOpen(true)}
             >
               Thêm sản phẩm

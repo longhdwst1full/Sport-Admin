@@ -19,3 +19,5 @@ export {
   type ColumnItem,
   type ColumnSettingsModalProps,
 } from './column-settings-modal';
+
+export { CursorPagination } from './cursor-pagination';

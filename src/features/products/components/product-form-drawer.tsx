@@ -1,3 +1,4 @@
+import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Button, Divider, Drawer, Form, Tabs, Typography } from 'antd';
@@ -171,15 +172,15 @@ export function ProductFormDrawer({
   const hasOpeningStock = variants.some(({ openingQuantity }) => openingQuantity > 0);
   const brands = useSearchActiveAdminBrands(
     { search: debouncedBrand || undefined, page: 1, limit: 20 },
-    { query: { enabled: open } },
+    { query: { ...CACHE_POLICY.LOOKUP, enabled: open } },
   );
   const categories = useSearchActiveAdminCategories(
     { search: debouncedCategory || undefined, page: 1, limit: 20 },
-    { query: { enabled: open } },
+    { query: { ...CACHE_POLICY.LOOKUP, enabled: open } },
   );
   const branches = useSearchActiveAdminBranches(
     { search: debouncedBranch || undefined, page: 1, limit: 50 },
-    { query: { enabled: open && !isEdit && canAdjustStock } },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: open && !isEdit && canAdjustStock } },
   );
   const warehouses = useSearchActiveAdminWarehouses(
     {
@@ -188,7 +189,7 @@ export function ProductFormDrawer({
       page: 1,
       limit: 50,
     },
-    { query: { enabled: open && !isEdit && canAdjustStock && Boolean(initialBranchId) } },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: open && !isEdit && canAdjustStock && Boolean(initialBranchId) } },
   );
   // Nhãn cho bảng tóm tắt: đọc từ option đang tải, không giữ bản sao riêng để khỏi lệch khi đổi lựa chọn.
   const selectedBrandId = form.watch('brandId');

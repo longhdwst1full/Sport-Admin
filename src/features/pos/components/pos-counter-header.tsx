@@ -1,3 +1,4 @@
+import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import { useEffect, useMemo } from 'react';
 import { Form, Select, Tag, Tooltip } from 'antd';
 import { LockOutlined, ShopOutlined, UserOutlined } from '@ant-design/icons';
@@ -25,7 +26,7 @@ export function PosCounterHeader({
   onChange: (branchId: string) => void;
 }) {
   const auth = useAuth();
-  const branches = useListAdminBranches();
+  const branches = useListAdminBranches({ query: { ...CACHE_POLICY.REFERENCE } });
   // Chi nhánh đã ngừng vẫn tồn tại để đọc lại lịch sử, nhưng không phải nơi thu tiền hôm nay.
   const activeBranches = useMemo(
     () =>

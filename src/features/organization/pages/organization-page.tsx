@@ -1,3 +1,4 @@
+import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import {
   BankOutlined,
   EditOutlined,
@@ -54,7 +55,7 @@ export function OrganizationPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<BranchDto>();
   const canViewWarehouses = useCan('org.warehouse.view');
-  const branchesQuery = useListAdminBranches();
+  const branchesQuery = useListAdminBranches({ query: { ...CACHE_POLICY.REFERENCE } });
   const warehousesQuery = useListAdminWarehouses({ query: { enabled: canViewWarehouses } });
   const branches = branchesQuery.data?.items ?? [];
   const warehouses = warehousesQuery.data?.items ?? [];
