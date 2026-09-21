@@ -6,9 +6,14 @@ function vendorChunk(id: string): string | undefined {
   if (id.includes('ckeditor4-react') || id.includes('ckeditor4-integrations-common')) {
     return 'vendor-editor';
   }
-  if (id.includes('@ant-design/icons')) return 'vendor-icons';
   // antd là thư viện lớn nhất trong ứng dụng. Không tách ra thì nó nằm chung `index.js` với toàn bộ
   // mã nghiệp vụ, nên mỗi lần deploy đổi một dòng code là người dùng tải lại cả thư viện.
+  //
+  // `@ant-design/icons` PHẢI nằm chung chunk với `@ant-design/colors` và `antd`. Tách riêng sẽ tạo
+  // vòng import giữa hai chunk (antd → icons → colors → antd); khi đó chunk icons được chạy trước,
+  // `blue` từ `@ant-design/colors` chưa được khởi tạo và dòng `setTwoToneColor(blue.primary)` chạy
+  // ở cấp module ném "Cannot read properties of undefined (reading 'primary')" — trang trắng ngay
+  // khi tải. Kích thước tiết kiệm được không đáng để đánh đổi.
   if (id.includes('/antd/') || id.includes('@ant-design/') || id.includes('rc-')) {
     return 'vendor-antd';
   }
