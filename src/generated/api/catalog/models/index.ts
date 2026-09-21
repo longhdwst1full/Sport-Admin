@@ -28,7 +28,6 @@ export * from './createPriceDto';
 export * from './createProductDto';
 export * from './createProductDtoProductType';
 export * from './createVariantDto';
-export * from './createVariantDtoWeightGrams';
 export * from './errorDetailDto';
 export * from './errorResponseDto';
 export * from './listAdminProductsParams';

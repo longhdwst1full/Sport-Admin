@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { CreateProductDtoProductType } from './createProductDtoProductType';
+import type { CreateVariantDto } from './createVariantDto';
 
 export interface CreateProductDto {
   productType?: CreateProductDtoProductType;
@@ -17,4 +18,10 @@ export interface CreateProductDto {
   categoryIds: string[];
   /** @pattern ^[1-9][0-9]*$ */
   primaryCategoryId: string;
+  /**
+   * Danh sách SKU ban đầu được tạo atomic cùng sản phẩm
+   * @minItems 1
+   * @maxItems 50
+   */
+  variants: CreateVariantDto[];
 }

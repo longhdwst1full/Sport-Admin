@@ -5,12 +5,11 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateVariantDtoWeightGrams } from './createVariantDtoWeightGrams';
 
 export interface CreateVariantDto {
   barcode?: string;
   name: string;
-  weightGrams?: CreateVariantDtoWeightGrams;
+  weightGrams?: number;
   lengthMm?: number;
   widthMm?: number;
   heightMm?: number;

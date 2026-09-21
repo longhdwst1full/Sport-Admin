@@ -1494,7 +1494,7 @@ export function useListAdminProducts<
 }
 
 /**
- * @summary Create product
+ * @summary Create product and its initial SKU variants atomically
  */
 export const createAdminProduct = (
   createProductDto: BodyType<CreateProductDto>,
@@ -1510,7 +1510,9 @@ export const createAdminProduct = (
 };
 
 export const getCreateAdminProductMutationOptions = <
-  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1548,13 +1550,17 @@ export type CreateAdminProductMutationResult = NonNullable<
   Awaited<ReturnType<typeof createAdminProduct>>
 >;
 export type CreateAdminProductMutationBody = BodyType<CreateProductDto>;
-export type CreateAdminProductMutationError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+export type CreateAdminProductMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
 
 /**
- * @summary Create product
+ * @summary Create product and its initial SKU variants atomically
  */
 export const useCreateAdminProduct = <
-  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
   TContext = unknown,
 >(
   options?: {

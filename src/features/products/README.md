@@ -1,17 +1,17 @@
 # Products — maintenance note
 
-> **Document version:** 1.3.0
+> **Document version:** 1.5.0
 >
-> **Last updated:** 2026-09-19
+> **Last updated:** 2026-09-20
 >
-> **Change summary:** Danh sách mặc định 30 sản phẩm, cho chọn 10/20/30/50/100 và cuộn thân bảng theo viewport.
+> **Change summary:** Cố định footer Lưu khi edit và bổ sung tồn đầu theo chi nhánh/kho trong cùng trải nghiệm tạo Product.
 
 ## Phạm vi
 
 | Trong phạm vi | Ngoài phạm vi |
 | --- | --- |
 | CRUD sản phẩm, variant, bundle, giá, media; publish/archive | Brand/Category — thuộc `features/catalog-masters` |
-| Policy publish và policy sắp xếp media (có test) | Tồn kho — thuộc `features/inventory` |
+| Khai báo tồn đầu khi onboarding Product/SKU | Ledger, điều chỉnh và chuyển kho — thuộc `features/inventory` |
 
 ## Ranh giới
 
@@ -36,6 +36,19 @@ Import từ ngoài chỉ qua `index.ts`.
 - Giá dùng Decimal dạng chuỗi; không parse sang `number` để tính toán (`09-data-transformation.md`).
 - Không mang Redux/Saga và provider tree từ module tham khảo sang feature này. TanStack Query tiếp tục là nguồn server state duy nhất; local state chỉ giữ filter/pagination/UI selection.
 - JSX bảng không đọc trực tiếp generated DTO; `toProductListRow` là biên chống contract lan vào presentation.
+- Tạo mới dùng `createAdminProduct` aggregate: thông tin Product và 1–50 initial variants
+  nằm trong cùng form/request. Backend commit/rollback Product, category, SKU và audit atomic;
+  FE không gọi tuần tự create Product rồi create Variant.
+- Edit Product metadata không nhúng sửa variants. Thêm/sửa/archive SKU sau create tiếp tục ở
+  workflow drawer bằng operation riêng để giữ lifecycle và optimistic version rõ ràng.
+- Product không thuộc riêng một branch. Form chỉ chọn branch/warehouse cho phiếu tồn đầu của từng
+  SKU; V1 một branch có đúng một warehouse.
+- Product + initial variants commit atomic ở Catalog. Tồn đầu được ghi ngay sau đó bằng operation
+  Inventory `OPENING_BALANCE` có idempotency key. Nếu bước này lỗi, Product vẫn ở DRAFT và FE báo
+  partial success để người dùng không submit lại tạo trùng Product.
+- Combo không có tồn vật lý riêng; khả năng bán được suy ra từ các SKU thành phần.
+- Nút Lưu/Hủy nằm ở footer cố định của Drawer; không đặt ở header vì nested drawer/viewport hẹp có
+  thể làm action tràn khỏi vùng nhìn thấy.
 
 ## Checklist khi sửa
 
@@ -60,6 +73,8 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.5.0 | 2026-09-20 | Cố định action footer và thêm khai báo tồn đầu theo branch/warehouse cho từng SKU. |
+| 1.4.0 | 2026-09-20 | Ghép Product + initial variants vào một create drawer và mapper contract có test. |
 | 1.3.0 | 2026-09-19 | Mặc định 30 sản phẩm/trang, thêm page-size selector và giữ table trong viewport. |
 | 1.2.0 | 2026-09-19 | Tách ProductsPage thành page/hook/action/toolbar/table/constants/mapper và bổ sung Storybook cho bảng. |
 | 1.1.0 | 2026-09-19 | Chuẩn hóa pagination và toolbar dưới bảng theo layout quản trị responsive. |
