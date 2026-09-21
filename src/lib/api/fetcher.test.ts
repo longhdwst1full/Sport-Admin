@@ -163,4 +163,35 @@ describe('apiFetcher', () => {
     expect(consumeExpiredSessionFlash()).toBe(true);
   });
 
+  /**
+   * Endpoint tải báo cáo chạy `responseType: 'blob'`, nên axios trả cả thân LỖI dưới dạng Blob.
+   * Giữ nguyên Blob thì màn hình hiện "[object Blob]" thay vì lý do thật.
+   */
+  it('đọc được nội dung lỗi của endpoint tải file', async () => {
+    clearAuthTokens();
+    const payload = { statusCode: 403, code: 'FORBIDDEN', message: 'Không đủ quyền' };
+    const adapter: AxiosAdapter = async (config) => {
+      throw new AxiosError(
+        'Forbidden',
+        AxiosError.ERR_BAD_REQUEST,
+        { ...config, headers: AxiosHeaders.from(config.headers) },
+        undefined,
+        {
+          config: { ...config, headers: AxiosHeaders.from(config.headers) },
+          data: new Blob([JSON.stringify(payload)], { type: 'application/json' }),
+          headers: {},
+          status: 403,
+          statusText: 'Forbidden',
+        },
+      );
+    };
+
+    await expect(
+      apiFetcher(
+        { url: '/api/v1/admin/reports/revenue/export', method: 'GET', responseType: 'blob' },
+        { adapter },
+      ),
+    ).rejects.toMatchObject({ status: 403, payload });
+  });
+
 });

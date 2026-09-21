@@ -20,6 +20,11 @@ import type {
 
 import type {
   ErrorResponseDto,
+  ExportAdminReportInventoryParams,
+  ExportAdminReportRevenueByBranchParams,
+  ExportAdminReportRevenueParams,
+  ExportAdminReportTopCustomersParams,
+  ExportAdminReportTopProductsParams,
   GetAdminReportRevenueParams,
   GetAdminReportTopCustomersParams,
   GetAdminReportTopProductsParams,
@@ -645,6 +650,668 @@ export function useGetAdminReportTopCustomers<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetAdminReportTopCustomersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Tải doanh thu theo kỳ ra file CSV hoặc XLSX
+ */
+export const exportAdminReportRevenue = (
+  params?: ExportAdminReportRevenueParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<Blob>({
+    url: `/api/v1/admin/reports/revenue/export`,
+    method: 'GET',
+    params,
+    responseType: 'blob',
+    signal,
+  });
+};
+
+export const getExportAdminReportRevenueQueryKey = (params?: ExportAdminReportRevenueParams) => {
+  return [`/api/v1/admin/reports/revenue/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportAdminReportRevenueQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenue>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportAdminReportRevenueQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAdminReportRevenue>>> = ({
+    signal,
+  }) => exportAdminReportRevenue(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportAdminReportRevenueQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAdminReportRevenue>>
+>;
+export type ExportAdminReportRevenueQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+
+export function useExportAdminReportRevenue<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ExportAdminReportRevenueParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenue>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportRevenue>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportRevenue<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenue>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportRevenue>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportRevenue<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenue>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Tải doanh thu theo kỳ ra file CSV hoặc XLSX
+ */
+
+export function useExportAdminReportRevenue<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenue>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenue>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportAdminReportRevenueQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Tải bóc tách doanh thu theo chi nhánh ra file CSV hoặc XLSX
+ */
+export const exportAdminReportRevenueByBranch = (
+  params?: ExportAdminReportRevenueByBranchParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<Blob>({
+    url: `/api/v1/admin/reports/revenue/by-branch/export`,
+    method: 'GET',
+    params,
+    responseType: 'blob',
+    signal,
+  });
+};
+
+export const getExportAdminReportRevenueByBranchQueryKey = (
+  params?: ExportAdminReportRevenueByBranchParams,
+) => {
+  return [`/api/v1/admin/reports/revenue/by-branch/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportAdminReportRevenueByBranchQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueByBranchParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportAdminReportRevenueByBranchQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>> = ({
+    signal,
+  }) => exportAdminReportRevenueByBranch(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportAdminReportRevenueByBranchQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>
+>;
+export type ExportAdminReportRevenueByBranchQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useExportAdminReportRevenueByBranch<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ExportAdminReportRevenueByBranchParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportRevenueByBranch<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueByBranchParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportRevenueByBranch<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueByBranchParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Tải bóc tách doanh thu theo chi nhánh ra file CSV hoặc XLSX
+ */
+
+export function useExportAdminReportRevenueByBranch<
+  TData = Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportRevenueByBranchParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportRevenueByBranch>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportAdminReportRevenueByBranchQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Tải danh sách sản phẩm bán chạy ra file CSV hoặc XLSX
+ */
+export const exportAdminReportTopProducts = (
+  params?: ExportAdminReportTopProductsParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<Blob>({
+    url: `/api/v1/admin/reports/top-products/export`,
+    method: 'GET',
+    params,
+    responseType: 'blob',
+    signal,
+  });
+};
+
+export const getExportAdminReportTopProductsQueryKey = (
+  params?: ExportAdminReportTopProductsParams,
+) => {
+  return [`/api/v1/admin/reports/top-products/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportAdminReportTopProductsQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopProductsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopProducts>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportAdminReportTopProductsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAdminReportTopProducts>>> = ({
+    signal,
+  }) => exportAdminReportTopProducts(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportAdminReportTopProductsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAdminReportTopProducts>>
+>;
+export type ExportAdminReportTopProductsQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+
+export function useExportAdminReportTopProducts<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ExportAdminReportTopProductsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopProducts>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportTopProducts>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportTopProducts<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopProductsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopProducts>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportTopProducts>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportTopProducts<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopProductsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopProducts>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Tải danh sách sản phẩm bán chạy ra file CSV hoặc XLSX
+ */
+
+export function useExportAdminReportTopProducts<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopProducts>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopProductsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopProducts>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportAdminReportTopProductsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Tải danh sách khách mua nhiều nhất ra file CSV hoặc XLSX
+ */
+export const exportAdminReportTopCustomers = (
+  params?: ExportAdminReportTopCustomersParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<Blob>({
+    url: `/api/v1/admin/reports/top-customers/export`,
+    method: 'GET',
+    params,
+    responseType: 'blob',
+    signal,
+  });
+};
+
+export const getExportAdminReportTopCustomersQueryKey = (
+  params?: ExportAdminReportTopCustomersParams,
+) => {
+  return [`/api/v1/admin/reports/top-customers/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportAdminReportTopCustomersQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopCustomers>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportAdminReportTopCustomersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAdminReportTopCustomers>>> = ({
+    signal,
+  }) => exportAdminReportTopCustomers(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportAdminReportTopCustomersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAdminReportTopCustomers>>
+>;
+export type ExportAdminReportTopCustomersQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useExportAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ExportAdminReportTopCustomersParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopCustomers>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportTopCustomers>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopCustomers>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportTopCustomers>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopCustomers>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Tải danh sách khách mua nhiều nhất ra file CSV hoặc XLSX
+ */
+
+export function useExportAdminReportTopCustomers<
+  TData = Awaited<ReturnType<typeof exportAdminReportTopCustomers>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportTopCustomersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportTopCustomers>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportAdminReportTopCustomersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Tải danh sách tồn kho cần nhập thêm ra file CSV hoặc XLSX
+ */
+export const exportAdminReportInventory = (
+  params?: ExportAdminReportInventoryParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<Blob>({
+    url: `/api/v1/admin/reports/inventory/export`,
+    method: 'GET',
+    params,
+    responseType: 'blob',
+    signal,
+  });
+};
+
+export const getExportAdminReportInventoryQueryKey = (
+  params?: ExportAdminReportInventoryParams,
+) => {
+  return [`/api/v1/admin/reports/inventory/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportAdminReportInventoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAdminReportInventory>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportInventoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportInventory>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportAdminReportInventoryQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAdminReportInventory>>> = ({
+    signal,
+  }) => exportAdminReportInventory(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAdminReportInventory>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportAdminReportInventoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAdminReportInventory>>
+>;
+export type ExportAdminReportInventoryQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+
+export function useExportAdminReportInventory<
+  TData = Awaited<ReturnType<typeof exportAdminReportInventory>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ExportAdminReportInventoryParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportInventory>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportInventory>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportInventory>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportInventory<
+  TData = Awaited<ReturnType<typeof exportAdminReportInventory>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportInventoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportInventory>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAdminReportInventory>>,
+          TError,
+          Awaited<ReturnType<typeof exportAdminReportInventory>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAdminReportInventory<
+  TData = Awaited<ReturnType<typeof exportAdminReportInventory>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportInventoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportInventory>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Tải danh sách tồn kho cần nhập thêm ra file CSV hoặc XLSX
+ */
+
+export function useExportAdminReportInventory<
+  TData = Awaited<ReturnType<typeof exportAdminReportInventory>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ExportAdminReportInventoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportAdminReportInventory>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportAdminReportInventoryQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

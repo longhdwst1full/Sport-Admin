@@ -131,10 +131,40 @@ export async function apiFetcher<T>(
       }
     }
     if (axios.isAxiosError(error)) {
-      throw new ApiError(error.response?.status ?? 0, error.response?.data);
+      throw new ApiError(error.response?.status ?? 0, await readErrorPayload(error.response?.data));
     }
     throw error;
   }
+}
+
+/**
+ * Endpoint tải file chạy với `responseType: 'blob'`, nên axios trả cả thân LỖI dưới dạng Blob.
+ * Giữ nguyên Blob thì màn hình hiện "[object Blob]" thay vì lý do thật (hết quyền, sai khoảng
+ * thời gian), và người dùng không biết phải sửa gì.
+ */
+async function readErrorPayload(data: unknown): Promise<unknown> {
+  if (!(data instanceof Blob)) return data;
+  const text = await readBlobText(data);
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    // Lỗi không phải JSON (proxy, gateway) vẫn giữ nguyên văn bản để còn đọc được.
+    return text;
+  }
+}
+
+/**
+ * `Blob.text()` không có ở Safari cũ và ở môi trường test jsdom, nên có đường lùi qua `FileReader`.
+ * Không có đường lùi thì chính đoạn xử lý lỗi lại ném lỗi và nuốt mất nguyên nhân gốc.
+ */
+function readBlobText(blob: Blob): Promise<string> {
+  if (typeof blob.text === 'function') return blob.text();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(reader.error ?? new Error('Không đọc được nội dung lỗi'));
+    reader.readAsText(blob);
+  });
 }
 
 export type ErrorType<Error> = ApiError<Error>;

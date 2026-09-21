@@ -10,7 +10,8 @@ import type { CreateContentPostDtoPostType } from './createContentPostDtoPostTyp
 export interface CreateContentPostDto {
   postType: CreateContentPostDtoPostType;
   title: string;
-  slug: string;
+  /** Đường dẫn bài viết. Bỏ trống để backend sinh từ tiêu đề. */
+  slug?: string;
   excerpt: string;
   body: string;
   coverUrl: string;

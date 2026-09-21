@@ -28,7 +28,6 @@ export function ContentEditorDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
-  const [slug, setSlug] = useState('');
   const [postType, setPostType] = useState<PostType>(CreateContentPostDtoPostType.NEWS);
   const [excerpt, setExcerpt] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
@@ -38,7 +37,6 @@ export function ContentEditorDrawer({
   useEffect(() => {
     if (!open) return;
     setTitle(editing?.title ?? '');
-    setSlug(editing?.slug ?? '');
     setPostType((editing?.postType as PostType) ?? CreateContentPostDtoPostType.NEWS);
     setExcerpt(editing?.excerpt ?? '');
     setCoverUrl(editing?.coverUrl ?? '');
@@ -49,7 +47,6 @@ export function ContentEditorDrawer({
   const savePost = useMutation({
     mutationFn: (payload: {
       title: string;
-      slug: string;
       postType: PostType;
       excerpt: string;
       coverUrl: string;
@@ -71,13 +68,12 @@ export function ContentEditorDrawer({
   });
 
   const submit = () => {
-    if (!title.trim() || !slug.trim() || !excerpt.trim() || !coverUrl.trim() || !body.trim()) {
-      void message.warning('Điền đủ tiêu đề, slug, mô tả, ảnh và nội dung.');
+    if (!title.trim() || !excerpt.trim() || !coverUrl.trim() || !body.trim()) {
+      void message.warning('Điền đủ tiêu đề, mô tả, ảnh và nội dung.');
       return;
     }
     savePost.mutate({
       title: title.trim(),
-      slug: slug.trim(),
       postType,
       excerpt: excerpt.trim(),
       coverUrl: coverUrl.trim(),
@@ -110,21 +106,17 @@ export function ContentEditorDrawer({
         <Form.Item label="Tiêu đề" required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} />
         </Form.Item>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Form.Item label="Slug" required>
-            <Input value={slug} onChange={(event) => setSlug(event.target.value)} />
-          </Form.Item>
-          <Form.Item label="Loại bài viết" required>
-            <Select
-              value={postType}
-              onChange={setPostType}
-              options={Object.values(CreateContentPostDtoPostType).map((value) => ({
-                value,
-                label: value.replaceAll('_', ' '),
-              }))}
-            />
-          </Form.Item>
-        </div>
+        {/* Đường dẫn bài viết do backend sinh từ tiêu đề, nên form không hỏi nữa. */}
+        <Form.Item label="Loại bài viết" required>
+          <Select
+            value={postType}
+            onChange={setPostType}
+            options={Object.values(CreateContentPostDtoPostType).map((value) => ({
+              value,
+              label: value.replaceAll('_', ' '),
+            }))}
+          />
+        </Form.Item>
         <Form.Item label="Mô tả ngắn" required>
           <Input.TextArea
             rows={2}
@@ -142,7 +134,7 @@ export function ContentEditorDrawer({
           />
         </Form.Item>
         <Form.Item
-          label="Nội dung (CKEditor 4)"
+          label="Nội dung"
           required
           extra="Ảnh trong nội dung dùng công cụ Image tích hợp của CKEditor 4; editor có vùng nhập HTML dự phòng nếu CDN không khả dụng."
         >
