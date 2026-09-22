@@ -5,7 +5,7 @@ export class AdminShellPage {
   constructor(private readonly page: Page) {}
 
   readonly menu = () => this.page.getByRole('menu');
-  readonly menuItem = (label: string) => this.page.getByRole('menuitem', { name: label });
+  readonly menuItem = (label: string) => this.page.locator('.ant-menu-item').filter({ hasText: label });
   readonly pageTitle = (title: string) => this.page.getByRole('heading', { name: title });
 
   async open(path = '/'): Promise<void> {

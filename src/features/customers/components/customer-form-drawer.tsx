@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { EnvironmentOutlined, PlusOutlined as AddIcon, StopOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Drawer, Form, Input, Skeleton, Space, Switch, Tag } from 'antd';
 import { FormSection } from '@/foundation/layout/form-section';
@@ -132,14 +132,27 @@ export function CustomerFormDrawer({
 
   const loadingDetail = Boolean(editing) && detail.isPending;
 
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < 768,
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <Drawer
       open={open}
       aria-label={editing ? `Sửa khách ${editing.customerNo}` : 'Thêm khách hàng'}
       onClose={() => (mutation.isPending ? undefined : onClose())}
-      width="100%"
-      // Nền chìm để các khối trắng của form nổi lên thành từng nhóm rõ ràng.
-      styles={{ wrapper: { maxWidth: 720 }, body: { background: 'var(--color-surface-sunken)' } }}
+      width={isMobile ? '100%' : '70%'}
+      // Chiếm tầm 70% chiều rộng màn hình, không chiếm all
+      styles={{
+        wrapper: isMobile ? { maxWidth: '100%' } : { maxWidth: '70vw' },
+        body: { background: 'var(--color-surface-sunken)' },
+      }}
       destroyOnHidden
       title={editing ? `Sửa khách ${editing.customerNo}` : 'Thêm khách hàng'}
       footer={
@@ -205,16 +218,30 @@ export function CustomerFormDrawer({
                 <Form.Item
                   name="phone"
                   label="Số điện thoại"
-                  rules={[{ required: true, whitespace: true, message: 'Nhập số điện thoại' }]}
+                  dependencies={['email']}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator: (_rule, value: string | undefined) =>
+                        value?.trim() || String(getFieldValue('email') ?? '').trim()
+                          ? Promise.resolve()
+                          : Promise.reject(new Error('Nhập số điện thoại hoặc email')),
+                    }),
+                  ]}
                 >
                   <Input maxLength={32} placeholder="0912345678" />
                 </Form.Item>
                 <Form.Item
                   name="email"
                   label="Email"
+                  dependencies={['phone']}
                   rules={[
-                    { required: true, whitespace: true, message: 'Nhập email' },
                     { type: 'email', message: 'Email không hợp lệ' },
+                    ({ getFieldValue }) => ({
+                      validator: (_rule, value: string | undefined) =>
+                        value?.trim() || String(getFieldValue('phone') ?? '').trim()
+                          ? Promise.resolve()
+                          : Promise.reject(new Error('Nhập email hoặc số điện thoại')),
+                    }),
                   ]}
                 >
                   <Input maxLength={255} placeholder="minh.anh@example.com" />

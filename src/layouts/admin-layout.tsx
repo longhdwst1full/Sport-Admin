@@ -75,9 +75,10 @@ export function AdminLayout() {
   );
 
   const activeGroup = visibleItems.find((item) => item.path === location.pathname)?.group;
-  const [openKeys, setOpenKeys] = useState<string[]>(() =>
-    activeGroup && activeGroup !== 'overview' ? [`sub-${activeGroup}`] : ['sub-sales', 'sub-catalog'],
-  );
+  const allSubKeys = Object.keys(NAVIGATION_GROUP_LABELS)
+    .filter((g) => g !== 'overview')
+    .map((g) => `sub-${g}`);
+  const [openKeys, setOpenKeys] = useState<string[]>(() => allSubKeys);
 
   useEffect(() => {
     if (activeGroup && activeGroup !== 'overview') {
@@ -276,7 +277,7 @@ export function AdminLayout() {
         {/* ── Main Content Column ───────────────────────────────── */}
         <Layout className="h-full min-h-0 min-w-0 flex flex-col">
           {/* ── Header (JARVIS Workspace Tab Bar) ──────────────── */}
-          <Header className="!flex !h-[38px] !items-stretch !border-b !border-[#cbd5e1] !bg-[#eef2f6] !px-0 !leading-none shadow-none z-10 shrink-0 select-none">
+          <Header className="!flex !h-[46px] !items-stretch !border-b !border-[#cbd5e1] !bg-[#edf2f7] !px-0 !leading-none shadow-none z-10 shrink-0 select-none">
             {/* Sidebar toggle button (when collapsed on any screen) */}
             {collapsed && (
               <Button
@@ -285,8 +286,8 @@ export function AdminLayout() {
                 icon={<MenuOutlined className="text-slate-600 text-sm" />}
                 onClick={() => dispatch(toggleSidebar())}
                 className="ml-2 self-center !text-slate-600 hover:!bg-slate-200/70"
-                aria-label="Mở rộng menu"
-                title="Mở rộng menu"
+                aria-label="Mở thanh bên"
+                title="Mở thanh bên"
               />
             )}
 
@@ -344,6 +345,23 @@ export function AdminLayout() {
                     className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
                   />
                 </Tooltip>
+
+                {/* User avatar & info in Header (satisfies UI-SHELL-05 & provides sleek header identity) */}
+                <div className="flex items-center gap-2 pl-2 border-l border-slate-300/80">
+                  <Avatar
+                    size={28}
+                    className="!flex !items-center !justify-center !text-[11px] !font-bold shrink-0 cursor-pointer"
+                    style={{
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      boxShadow: '0 1px 4px rgba(245, 158, 11, 0.3)',
+                    }}
+                  >
+                    {initials}
+                  </Avatar>
+                  <span className="hidden xl:inline text-xs font-semibold text-slate-700 max-w-28 truncate">
+                    {displayName}
+                  </span>
+                </div>
               </div>
             </div>
           </Header>

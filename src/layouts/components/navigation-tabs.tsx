@@ -158,14 +158,20 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
     ],
   };
 
-  const handleScrollLeft = () => {
-    if (scrollContainerRef.current) {
+  const handlePrevTab = () => {
+    const currentIndex = visibleTabs.findIndex((tab) => tab.path === location.pathname);
+    if (currentIndex > 0) {
+      navigate(visibleTabs[currentIndex - 1].path);
+    } else if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
     }
   };
 
-  const handleScrollRight = () => {
-    if (scrollContainerRef.current) {
+  const handleNextTab = () => {
+    const currentIndex = visibleTabs.findIndex((tab) => tab.path === location.pathname);
+    if (currentIndex >= 0 && currentIndex < visibleTabs.length - 1) {
+      navigate(visibleTabs[currentIndex + 1].path);
+    } else if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
     }
   };
@@ -174,25 +180,25 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
     <div className="flex min-w-0 flex-1 items-stretch">
       {/* Navigation Arrows < > */}
       {visibleTabs.length > 1 && (
-        <div className="flex items-center gap-0.5 shrink-0 px-1 self-center">
-          <Tooltip title="Cuộn sang trái">
+        <div className="flex items-center gap-1 shrink-0 px-2 self-center">
+          <Tooltip title="Tab trước">
             <button
               type="button"
-              aria-label="Cuộn sang trái"
-              onClick={handleScrollLeft}
-              className="flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 transition-colors"
+              aria-label="Tab trước"
+              onClick={handlePrevTab}
+              className="flex size-7.5 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-900 hover:border-slate-300/80 hover:shadow-xs border border-transparent active:scale-95 transition-all duration-150"
             >
-              <LeftOutlined className="text-[10px]" />
+              <LeftOutlined className="text-[11px]" />
             </button>
           </Tooltip>
-          <Tooltip title="Cuộn sang phải">
+          <Tooltip title="Tab sau">
             <button
               type="button"
-              aria-label="Cuộn sang phải"
-              onClick={handleScrollRight}
-              className="flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 transition-colors"
+              aria-label="Tab sau"
+              onClick={handleNextTab}
+              className="flex size-7.5 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-900 hover:border-slate-300/80 hover:shadow-xs border border-transparent active:scale-95 transition-all duration-150"
             >
-              <RightOutlined className="text-[10px]" />
+              <RightOutlined className="text-[11px]" />
             </button>
           </Tooltip>
         </div>
@@ -254,14 +260,14 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
               >
                 {navItem?.icon && (
                   <span
-                    className={`dctd-tab-icon text-xs shrink-0 flex items-center transition-colors ${
+                    className={`dctd-tab-icon shrink-0 flex items-center transition-transform duration-200 group-hover:scale-110 ${
                       active ? 'text-amber-500' : 'text-slate-400 group-hover:text-slate-600'
                     }`}
                   >
                     {navItem.icon}
                   </span>
                 )}
-                <span className="max-w-44 truncate">{tab.label}</span>
+                <span className="max-w-52 truncate tracking-[-0.01em]">{tab.label}</span>
                 <span
                   role="button"
                   aria-label={`Đóng tab ${tab.label}`}
@@ -282,10 +288,10 @@ export function NavigationTabs({ navigationItems }: NavigationTabsProps) {
         <button
           type="button"
           aria-label="Danh sách tab & tùy chọn đóng tab"
-          className="flex size-6 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 transition-colors self-center mr-1.5"
+          className="flex size-7.5 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-900 hover:border-slate-300/80 hover:shadow-xs border border-transparent active:scale-95 transition-all duration-150 self-center mr-2 ml-1.5"
           title="Tất cả tab đang mở (...)"
         >
-          <EllipsisOutlined className="text-sm" />
+          <EllipsisOutlined className="text-base" />
         </button>
       </Dropdown>
     </div>

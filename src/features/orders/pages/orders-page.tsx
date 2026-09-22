@@ -119,11 +119,11 @@ export function OrdersPage() {
         ]}
         filters={
           <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="grid w-full flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-1 flex-wrap items-center gap-3">
               <Input
                 allowClear
                 prefix={<SearchOutlined className="text-slate-400" />}
-                className="!w-full"
+                className="w-full sm:!w-[220px] md:!w-[240px]"
                 value={orderNo}
                 placeholder="Nhập mã đơn hàng..."
                 onChange={(event) => setOrderNo(event.target.value)}
@@ -131,7 +131,7 @@ export function OrdersPage() {
               <Input
                 allowClear
                 prefix={<UserOutlined className="text-slate-400" />}
-                className="!w-full"
+                className="w-full sm:!w-[220px] md:!w-[240px]"
                 value={recipientName}
                 placeholder="Nhập tên người nhận..."
                 onChange={(event) => setRecipientName(event.target.value)}
@@ -139,7 +139,7 @@ export function OrdersPage() {
               <Input
                 allowClear
                 prefix={<PhoneOutlined className="text-slate-400" />}
-                className="!w-full"
+                className="w-full sm:!w-[220px] md:!w-[240px]"
                 value={recipientPhone}
                 placeholder="Nhập số điện thoại..."
                 onChange={(event) => setRecipientPhone(event.target.value)}
