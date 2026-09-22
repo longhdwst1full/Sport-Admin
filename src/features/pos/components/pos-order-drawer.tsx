@@ -10,7 +10,7 @@ import {
   type OrderDetailDto,
   type PosCatalogItemDto,
 } from '@/generated/api/orders/models';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { PosCartTable } from './pos-cart-table';
 import type { PosCheckoutValues } from '../model/pos-checkout';
 import { PosCounterHeader } from './pos-counter-header';
@@ -20,15 +20,16 @@ import { PosProductPicker } from './pos-product-picker';
 import { PosReceiptModal } from './pos-receipt-modal';
 import { moneyFormatter } from '../constants/pos.constants';
 import {
+  type PosCartLine,
   addLine,
   cartQuantity,
   cartTotal,
+  dropFlashPrice,
   linesOverStock,
   linesWithoutPrice,
   removeLine,
   setQuantity,
   toOrderItems,
-  type PosCartLine,
 } from '../model/pos-cart';
 
 const EMPTY_DELIVERY = {
@@ -55,6 +56,16 @@ const EMPTY_CHECKOUT: PosCheckoutValues = {
   handOverImmediately: false,
   cashReceived: null,
 };
+
+/**
+ * Mã lỗi Backend trả khi suất flash hết giữa lúc lập đơn. Phiên bán đã bị dọn và không có đơn nào
+ * được tạo, nên màn hình chỉ cần cập nhật giá rồi để nhân viên xác nhận lại.
+ */
+const POS_FLASH_SALE_REPRICED = 'POS_FLASH_SALE_REPRICED';
+
+function isRepriced(error: unknown): boolean {
+  return getApiErrorPayload(error)?.code === POS_FLASH_SALE_REPRICED;
+}
 
 /**
  * Lập đơn bán trực tiếp ngay trong màn Đơn hàng.
@@ -88,6 +99,22 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         ]);
         setReceipt(order);
         void message.success(`Đã bán xong đơn ${order.orderNo}.`);
+      },
+      /**
+       * Suất flash hết đúng lúc đang lập đơn: Backend đã dọn phiên bán và KHÔNG tạo đơn.
+       *
+       * Cập nhật giá dòng về giá gốc rồi bắt nhân viên bấm lại, thay vì tự gửi lại ngay — con số
+       * nhân viên vừa đọc cho khách đã đổi, khách phải được nghe lại trước khi trả tiền. Khoá
+       * chống trùng phải đổi theo, vì lần gửi lại là một giao dịch khác.
+       */
+      onError: (error) => {
+        const payload = getApiErrorPayload(error);
+        if (payload?.code !== POS_FLASH_SALE_REPRICED) return;
+        const affected = (payload.details ?? []).flatMap((detail) =>
+          detail.field ? [detail.field] : [],
+        );
+        setLines((current) => dropFlashPrice(current, affected));
+        setIdempotencyKey(crypto.randomUUID());
       },
     },
   });
@@ -226,9 +253,13 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         {mutation.isError && (
           <Alert
             className="mb-4"
-            type="error"
+            type={isRepriced(mutation.error) ? 'warning' : 'error'}
             showIcon
-            message="Không tạo được đơn tại quầy"
+            message={
+              isRepriced(mutation.error)
+                ? 'Giá đã đổi — chưa tạo đơn'
+                : 'Không tạo được đơn tại quầy'
+            }
             description={getApiErrorMessage(
               mutation.error,
               'Kiểm tra lại tồn kho, giá sản phẩm và quyền bán hàng của tài khoản.',

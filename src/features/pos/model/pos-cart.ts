@@ -19,6 +19,23 @@ export interface PosCartLine {
    * lại khi tạo đơn, nên đây chỉ để cảnh báo sớm cho nhân viên.
    */
   availableQuantity: number;
+  /**
+   * Giá flash sale đang chạy; `null` khi không có chương trình, hoặc khi Backend đã báo suất vừa
+   * hết và dòng này quay về giá gốc.
+   */
+  flashPrice: number | null;
+  /** Số suất còn lại lúc chọn hàng. Ảnh chụp như `availableQuantity`, không phải chỗ đã giữ. */
+  flashSaleAvailableQuantity: number | null;
+}
+
+/**
+ * Giá thực sự thu của một dòng: có suất flash thì lấy giá flash.
+ *
+ * Màn này KHÔNG phải nguồn giá — Backend chốt lại lúc tạo đơn. Nhưng con số hiện ở đây là con số
+ * nhân viên đọc cho khách, nên nó phải bằng con số Backend sẽ tính.
+ */
+export function effectivePrice(line: PosCartLine): number | null {
+  return line.flashPrice ?? line.unitPrice;
 }
 
 export function toCartLine(item: PosCatalogItemDto): PosCartLine {
@@ -36,7 +53,16 @@ export function toCartLine(item: PosCatalogItemDto): PosCartLine {
       quantity: component.quantity,
     })),
     availableQuantity: item.availableQuantity,
+    flashPrice: toPrice(item.flashPrice),
+    flashSaleAvailableQuantity: item.flashSaleAvailableQuantity,
   };
+}
+
+/** Tiền về từ API là chuỗi thập phân để không mất chính xác; đổi sang số chỉ để hiển thị/cộng. */
+function toPrice(value: string | null | undefined): number | null {
+  if (value == null) return null;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 export function addLine(lines: PosCartLine[], item: PosCatalogItemDto): PosCartLine[] {
@@ -46,7 +72,13 @@ export function addLine(lines: PosCartLine[], item: PosCatalogItemDto): PosCartL
   const quantity = Math.min(existing.quantity + 1, Math.max(item.availableQuantity, 1));
   return lines.map((line) =>
     line.variantId === item.id
-      ? { ...line, quantity, availableQuantity: item.availableQuantity }
+      ? {
+          ...line,
+          quantity,
+          availableQuantity: item.availableQuantity,
+          flashPrice: toPrice(item.flashPrice),
+          flashSaleAvailableQuantity: item.flashSaleAvailableQuantity,
+        }
       : line,
   );
 }
@@ -65,7 +97,22 @@ export function removeLine(lines: PosCartLine[], variantId: string): PosCartLine
 }
 
 export function lineTotal(line: PosCartLine): number {
-  return line.unitPrice == null ? 0 : line.unitPrice * line.quantity;
+  const price = effectivePrice(line);
+  return price == null ? 0 : price * line.quantity;
+}
+
+/**
+ * Bỏ giá flash của những dòng Backend vừa báo là hết suất, để màn hình hiện đúng giá sẽ thu.
+ *
+ * `variantIds` rỗng nghĩa là Backend không xác định được dòng nào — bỏ giá flash của tất cả, vì
+ * hiện sai một dòng giá thấp hơn thực thu còn tệ hơn là để nhân viên xem lại nhiều dòng.
+ */
+export function dropFlashPrice(lines: PosCartLine[], variantIds: string[]): PosCartLine[] {
+  return lines.map((line) =>
+    variantIds.length === 0 || variantIds.includes(line.variantId)
+      ? { ...line, flashPrice: null, flashSaleAvailableQuantity: null }
+      : line,
+  );
 }
 
 export function cartTotal(lines: PosCartLine[]): number {

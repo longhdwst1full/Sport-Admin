@@ -2,7 +2,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { Button, Empty, InputNumber, Popconfirm, Tag, Tooltip } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import { moneyFormatter } from '../constants/pos.constants';
-import { lineTotal, type PosCartLine } from '../model/pos-cart';
+import { effectivePrice, lineTotal, type PosCartLine } from '../model/pos-cart';
 
 export function PosCartTable({
   lines,
@@ -57,12 +57,28 @@ export function PosCartTable({
           dataIndex: 'unitPrice',
           width: 140,
           align: 'right',
-          render: (_value, line) =>
-            line.unitPrice == null ? (
-              <Tag color="red">Chưa có giá</Tag>
-            ) : (
-              moneyFormatter.format(line.unitPrice)
-            ),
+          render: (_value, line) => {
+            if (line.unitPrice == null) return <Tag color="red">Chưa có giá</Tag>;
+            // Giá flash hiện kèm giá gốc gạch ngang: nhân viên đọc đúng số sẽ thu, và vẫn nói
+            // được với khách là đang giảm bao nhiêu.
+            if (line.flashPrice == null) return moneyFormatter.format(line.unitPrice);
+            return (
+              <div>
+                <div className="font-semibold text-rose-600">
+                  {moneyFormatter.format(line.flashPrice)}
+                </div>
+                <div className="text-xs text-slate-400 line-through">
+                  {moneyFormatter.format(line.unitPrice)}
+                </div>
+                <Tag color="volcano" className="mt-1">
+                  Flash sale
+                  {line.flashSaleAvailableQuantity != null
+                    ? ` · còn ${line.flashSaleAvailableQuantity} suất`
+                    : ''}
+                </Tag>
+              </div>
+            );
+          },
         },
         {
           title: 'Số lượng',
@@ -96,7 +112,13 @@ export function PosCartTable({
           width: 150,
           align: 'right',
           render: (_value, line) => (
-            <span className="font-semibold text-slate-800">
+            <span
+              className={
+                effectivePrice(line) !== line.unitPrice
+                  ? 'font-semibold text-rose-600'
+                  : 'font-semibold text-slate-800'
+              }
+            >
               {moneyFormatter.format(lineTotal(line))}
             </span>
           ),

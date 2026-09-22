@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { PosCatalogItemDto } from '@/generated/api/orders/models';
 import {
   addLine,
+  dropFlashPrice,
+  effectivePrice,
   cartQuantity,
   cartTotal,
   linesOverStock,
@@ -19,6 +21,8 @@ const gianTa: PosCatalogItemDto = {
   isBundle: false,
   components: [],
   availableQuantity: 21,
+  flashPrice: null,
+  flashSaleAvailableQuantity: null,
 };
 const gheTap: PosCatalogItemDto = {
   id: '1555',
@@ -28,6 +32,8 @@ const gheTap: PosCatalogItemDto = {
   isBundle: false,
   components: [],
   availableQuantity: 20,
+  flashPrice: null,
+  flashSaleAvailableQuantity: null,
 };
 const chuaCoGia: PosCatalogItemDto = {
   id: '1556',
@@ -37,6 +43,8 @@ const chuaCoGia: PosCatalogItemDto = {
   isBundle: false,
   components: [],
   availableQuantity: 2,
+  flashPrice: null,
+  flashSaleAvailableQuantity: null,
 };
 const combo: PosCatalogItemDto = {
   id: '20',
@@ -49,6 +57,8 @@ const combo: PosCatalogItemDto = {
     { productVariantId: '1557', sku: 'THAM-YOGA', name: 'Thảm', quantity: 1 },
   ],
   availableQuantity: 3,
+  flashPrice: null,
+  flashSaleAvailableQuantity: null,
 };
 
 describe('giỏ hàng tại quầy', () => {
@@ -91,10 +101,7 @@ describe('giỏ hàng tại quầy', () => {
   it('giữ lại thành phần combo để nhân viên biết đang bán gì', () => {
     const lines = addLine([], combo);
     expect(lines[0].isBundle).toBe(true);
-    expect(lines[0].components.map((component) => component.sku)).toEqual([
-      'HQ-909S',
-      'THAM-YOGA',
-    ]);
+    expect(lines[0].components.map((component) => component.sku)).toEqual(['HQ-909S', 'THAM-YOGA']);
   });
 
   /**
@@ -118,5 +125,68 @@ describe('giỏ hàng tại quầy', () => {
       { productVariantId: '1554', quantity: 1 },
       { productVariantId: '1555', quantity: 3 },
     ]);
+  });
+});
+
+/**
+ * Khách tới quầy được cùng giá flash với web. Màn này không phải nguồn giá, nhưng con số hiện ở
+ * đây là con số nhân viên đọc cho khách — nó phải bằng con số Backend sẽ thu.
+ */
+describe('giá flash sale tại quầy', () => {
+  const flashItem: PosCatalogItemDto = {
+    ...gianTa,
+    flashPrice: '13900000.00',
+    flashSaleAvailableQuantity: 4,
+  };
+
+  it('thu theo giá flash khi có chương trình, không phải giá gốc', () => {
+    const [line] = addLine([], flashItem);
+
+    expect(line.unitPrice).toBe(16000000);
+    expect(line.flashPrice).toBe(13900000);
+    expect(effectivePrice(line)).toBe(13900000);
+  });
+
+  it('tổng giỏ tính theo giá flash', () => {
+    const lines = addLine(addLine([], flashItem), flashItem);
+
+    expect(cartQuantity(lines)).toBe(2);
+    expect(cartTotal(lines)).toBe(27800000);
+  });
+
+  it('không có chương trình thì thu giá gốc', () => {
+    const [line] = addLine([], gianTa);
+
+    expect(line.flashPrice).toBeNull();
+    expect(effectivePrice(line)).toBe(16000000);
+  });
+
+  /** Backend báo hết suất: dòng đó phải quay về giá gốc trước khi nhân viên xác nhận lại. */
+  it('bỏ giá flash của đúng dòng Backend báo hết suất', () => {
+    const lines = addLine(addLine([], flashItem), {
+      ...gheTap,
+      flashPrice: '3900000.00',
+      flashSaleAvailableQuantity: 2,
+    });
+
+    const repriced = dropFlashPrice(lines, [flashItem.id]);
+
+    expect(effectivePrice(repriced[0])).toBe(16000000);
+    expect(repriced[0].flashSaleAvailableQuantity).toBeNull();
+    // Dòng khác không bị đụng tới: suất của nó vẫn còn.
+    expect(effectivePrice(repriced[1])).toBe(3900000);
+  });
+
+  it('Backend không nói rõ dòng nào thì bỏ giá flash của tất cả', () => {
+    const lines = addLine(addLine([], flashItem), {
+      ...gheTap,
+      flashPrice: '3900000.00',
+      flashSaleAvailableQuantity: 2,
+    });
+
+    const repriced = dropFlashPrice(lines, []);
+
+    expect(repriced.every((line) => line.flashPrice === null)).toBe(true);
+    expect(cartTotal(repriced)).toBe(16000000 + 4100000);
   });
 });

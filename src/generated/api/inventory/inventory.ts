@@ -26,6 +26,7 @@ import type {
   CreateStockTransferDto,
   ErrorResponseDto,
   InventoryBalanceListDto,
+  InventoryBalanceSummaryDto,
   InventoryMovementListDto,
   ListInventoryBalancesParams,
   ListInventoryMovementsParams,
@@ -38,6 +39,7 @@ import type {
   StockTransferDetailDto,
   StockTransferListDto,
   StockTransferTransitionDto,
+  SummarizeInventoryBalancesParams,
 } from './models';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
@@ -165,6 +167,139 @@ export function useListInventoryBalances<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListInventoryBalancesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Tổng hợp tồn kho trên toàn bộ dòng khớp bộ lọc, không chỉ trang đang xem
+ */
+export const summarizeInventoryBalances = (
+  params?: SummarizeInventoryBalancesParams,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<InventoryBalanceSummaryDto>({
+    url: `/api/v1/admin/inventory/balances/summary`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getSummarizeInventoryBalancesQueryKey = (
+  params?: SummarizeInventoryBalancesParams,
+) => {
+  return [`/api/v1/admin/inventory/balances/summary`, ...(params ? [params] : [])] as const;
+};
+
+export const getSummarizeInventoryBalancesQueryOptions = <
+  TData = Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SummarizeInventoryBalancesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof summarizeInventoryBalances>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSummarizeInventoryBalancesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof summarizeInventoryBalances>>> = ({
+    signal,
+  }) => summarizeInventoryBalances(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SummarizeInventoryBalancesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof summarizeInventoryBalances>>
+>;
+export type SummarizeInventoryBalancesQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useSummarizeInventoryBalances<
+  TData = Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | SummarizeInventoryBalancesParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof summarizeInventoryBalances>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+          TError,
+          Awaited<ReturnType<typeof summarizeInventoryBalances>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSummarizeInventoryBalances<
+  TData = Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SummarizeInventoryBalancesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof summarizeInventoryBalances>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+          TError,
+          Awaited<ReturnType<typeof summarizeInventoryBalances>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSummarizeInventoryBalances<
+  TData = Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SummarizeInventoryBalancesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof summarizeInventoryBalances>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Tổng hợp tồn kho trên toàn bộ dòng khớp bộ lọc, không chỉ trang đang xem
+ */
+
+export function useSummarizeInventoryBalances<
+  TData = Awaited<ReturnType<typeof summarizeInventoryBalances>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: SummarizeInventoryBalancesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof summarizeInventoryBalances>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSummarizeInventoryBalancesQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

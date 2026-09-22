@@ -3,6 +3,7 @@ import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Card, Form, Input, Select, Space, Spin, Tag, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
+import { MoneyInput } from '@/foundation/inputs/money-input';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
@@ -133,7 +134,23 @@ export function ProductPricePanel({
             )} />
           </Form.Item>
           <Form.Item label="Giá bán đã VAT (VND)" required validateStatus={form.formState.errors.amount ? 'error' : undefined} help={form.formState.errors.amount?.message}>
-            <Controller name="amount" control={form.control} render={({ field }) => <Input {...field} inputMode="decimal" prefix="₫" placeholder="Nhập giá bán..." />} />
+            {/* Giá niêm yết 6-8 chữ số: không có dấu phân cách thì 1890000 và 18900000 nhìn gần
+                như nhau, và sai một chữ số là sai giá gấp mười lần. Form giữ giá dạng chuỗi thập
+                phân vì contract nhận `1990000.00`, nên chuyển qua lại ở đúng chỗ này. */}
+            <Controller
+              name="amount"
+              control={form.control}
+              render={({ field }) => (
+                <MoneyInput
+                  className="!w-full"
+                  prefix="₫"
+                  placeholder="Nhập giá bán..."
+                  value={field.value ? Number(field.value) : undefined}
+                  onBlur={field.onBlur}
+                  onChange={(value) => field.onChange(value == null ? '' : String(value))}
+                />
+              )}
+            />
           </Form.Item>
           <Form.Item label="Áp dụng từ" required validateStatus={form.formState.errors.startsAt ? 'error' : undefined} help={form.formState.errors.startsAt?.message}>
             <Controller name="startsAt" control={form.control} render={({ field }) => <Input {...field} type="datetime-local" prefix={<CalendarOutlined />} />} />

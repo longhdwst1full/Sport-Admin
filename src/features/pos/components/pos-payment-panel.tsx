@@ -1,4 +1,5 @@
-import { Alert, Descriptions, Form, InputNumber, Radio, Switch } from 'antd';
+import { Alert, Descriptions, Form, Radio, Switch } from 'antd';
+import { MoneyInput } from '@/foundation/inputs/money-input';
 import { CreatePosOrderDtoPaymentMethod } from '@/generated/api/orders/models';
 import { changeFor, shortfallFor } from '../model/pos-cash';
 import {
@@ -64,15 +65,14 @@ export function PosPaymentPanel({
       {method === CreatePosOrderDtoPaymentMethod.CASH && (
         <div className="grid gap-3 sm:grid-cols-2">
           <Form.Item label="Tiền khách đưa" className="!mb-0">
-            <InputNumber
+            {/* Dùng MoneyInput thay cho formatter/parser viết tay: hai bản quy tắc phân cách
+                hàng nghìn là hai chỗ để chúng lệch nhau. */}
+            <MoneyInput
               className="!w-full"
               size="large"
-              min={0}
               step={1000}
               disabled={disabled}
               value={cashReceived ?? undefined}
-              formatter={(value) => (value ? Number(value).toLocaleString('vi-VN') : '')}
-              parser={(value) => Number((value ?? '').replace(/\D/g, ''))}
               placeholder="Nhập số tiền nhận"
               onChange={(value) => onChange({ cashReceived: value == null ? null : Number(value) })}
             />

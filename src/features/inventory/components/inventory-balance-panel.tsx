@@ -7,7 +7,10 @@ import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
-import { useListInventoryBalances } from '@/generated/api/inventory/inventory';
+import {
+  useListInventoryBalances,
+  useSummarizeInventoryBalances,
+} from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/models';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 
@@ -60,14 +63,27 @@ export function InventoryBalancePanel({
   });
   const items = useMemo(() => query.data?.items ?? [], [query.data?.items]);
 
+  /**
+   * Thẻ số liệu hỏi riêng một endpoint tổng hợp.
+   *
+   * Trước đây ba thẻ đếm trên `items` của trang đang xem (25 dòng), nên "sắp hết hàng: 12" thực
+   * chất là "12 trong 25 dòng đang hiện" và đổi trang là số đổi theo. `page`/`limit` KHÔNG truyền
+   * vào đây — chỉ bộ lọc, để đổi trang không phải tính lại tổng.
+   */
+  const summary = useSummarizeInventoryBalances({
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(warehouseCode ? { warehouseCode } : {}),
+  });
+
   useEffect(() => {
+    if (!summary.data) return;
     onMetricsChange({
-      total: query.data?.total ?? 0,
-      low: items.filter((item) => item.status === 'LOW_STOCK').length,
-      out: items.filter((item) => item.status === 'OUT_OF_STOCK').length,
-      available: items.reduce((sum, item) => sum + item.available, 0),
+      total: summary.data.trackedBalances,
+      low: summary.data.lowStock,
+      out: summary.data.outOfStock,
+      available: summary.data.totalAvailable,
     });
-  }, [items, onMetricsChange, query.data?.total]);
+  }, [onMetricsChange, summary.data]);
 
   const columns = [
     ...(colVisibility.sku !== false

@@ -23,4 +23,14 @@ export interface PosCatalogItemDto {
   components: PosCatalogComponentDto[];
   /** Tồn khả dụng tại kho của chi nhánh bán (đã trừ hàng đang giữ). Combo lấy theo thành phần thiếu nhất vì combo không có tồn riêng. */
   availableQuantity: number;
+  /**
+   * Giá flash sale đang hiệu lực; null khi không có chương trình nào áp cho SKU này. Giá cuối vẫn do Backend chốt lúc tạo đơn.
+   * @nullable
+   */
+  flashPrice: string | null;
+  /**
+   * Số suất flash còn lại. null khi không có chương trình. Suất có thể hết giữa lúc lập đơn, khi đó tạo đơn trả 409 POS_FLASH_SALE_REPRICED kèm giá gốc.
+   * @nullable
+   */
+  flashSaleAvailableQuantity: number | null;
 }

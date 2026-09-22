@@ -93,15 +93,15 @@ export function InventoryPage() {
             icon: <InboxOutlined />,
             tone: 'blue',
           },
-          // Ba chỉ số dưới đếm trên trang đang xem vì API tồn kho chưa có bộ lọc/tổng hợp theo
-          // trạng thái. Ghi rõ phạm vi còn hơn để người đọc tưởng đó là số toàn hệ thống.
+          // Bốn chỉ số lấy từ `summarizeInventoryBalances`: tính trên toàn bộ dòng khớp bộ lọc
+          // đang áp, không phụ thuộc trang đang xem.
           {
             key: 'available',
             label: 'Có thể bán ngay',
             value: metrics.available,
             icon: <SwapOutlined />,
             tone: 'green',
-            hint: 'Cộng trên trang đang xem',
+            hint: 'Toàn bộ dòng khớp bộ lọc',
           },
           {
             key: 'low',
@@ -109,7 +109,7 @@ export function InventoryPage() {
             value: metrics.low,
             icon: <WarningOutlined />,
             tone: 'orange',
-            hint: 'Đếm trên trang đang xem',
+            hint: 'Toàn bộ dòng khớp bộ lọc',
           },
           {
             key: 'out',
@@ -117,7 +117,7 @@ export function InventoryPage() {
             value: metrics.out,
             icon: <AuditOutlined />,
             tone: 'red',
-            hint: 'Đếm trên trang đang xem',
+            hint: 'Toàn bộ dòng khớp bộ lọc',
           },
         ]}
       >
