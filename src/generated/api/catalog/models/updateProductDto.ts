@@ -5,10 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { UpdateProductDtoProductType } from './updateProductDtoProductType';
+import type { ProductType } from './productType';
 
 export interface UpdateProductDto {
-  productType?: UpdateProductDtoProductType;
+  productType?: ProductType;
   name?: string;
   categoryIds?: string[];
   /** @pattern ^[1-9][0-9]*$ */

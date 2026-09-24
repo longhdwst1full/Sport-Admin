@@ -1,9 +1,9 @@
 import type {
-  CreateAdminReturnDtoFault,
-  CreateAdminReturnDtoReasonCode,
+  ReturnFault,
+  ReturnReasonCode,
   InspectReturnItemDto,
-  InspectReturnItemDtoCondition,
-  InspectReturnItemDtoDisposition,
+  ReturnCondition,
+  ReturnItemDisposition,
   ReturnEligibilityLineDto,
   ReturnEvidenceInputDto,
   ReturnItemDto,
@@ -13,8 +13,8 @@ import type { UploadedSignedImage } from '@/lib/media/upload-signed-image';
 
 /** Một dòng form kiểm hàng, cùng thứ tự với `detail.items`. */
 export interface InspectionRow {
-  condition: InspectReturnItemDtoCondition;
-  disposition?: InspectReturnItemDtoDisposition;
+  condition: ReturnCondition;
+  disposition?: ReturnItemDisposition;
   note?: string;
 }
 
@@ -42,9 +42,9 @@ export function toProofImages(images: readonly UploadedSignedImage[]): ReturnEvi
 }
 
 export interface CreateReturnFormValues {
-  reasonCode: CreateAdminReturnDtoReasonCode;
+  reasonCode: ReturnReasonCode;
   description?: string;
-  fault?: CreateAdminReturnDtoFault;
+  fault?: ReturnFault;
   windowOverrideNote?: string;
   /** Số lượng muốn trả theo `orderItemId`; 0 hoặc trống là không trả dòng đó. */
   quantities: Record<string, number | undefined>;

@@ -3,10 +3,10 @@ import {
   createAdminMediaUpload,
   finalizeAdminMediaUpload,
 } from '@/generated/api/media/media';
-import type { CreateMediaUploadDtoContentType } from '@/generated/api/media/models/createMediaUploadDtoContentType';
+import type { ImageMimeType } from '@/generated/api/media/models/imageMimeType';
 import type { MediaAssetDto } from '@/generated/api/media/models/mediaAssetDto';
 
-const allowedTypes = new Set<CreateMediaUploadDtoContentType>([
+const allowedTypes = new Set<ImageMimeType>([
   'image/jpeg',
   'image/png',
   'image/webp',
@@ -19,8 +19,8 @@ interface CloudinaryUploadResponse {
   signature: string;
 }
 
-function isAllowedContentType(value: string): value is CreateMediaUploadDtoContentType {
-  return allowedTypes.has(value as CreateMediaUploadDtoContentType);
+function isAllowedContentType(value: string): value is ImageMimeType {
+  return allowedTypes.has(value as ImageMimeType);
 }
 
 export async function uploadImage(file: File, signal?: AbortSignal): Promise<MediaAssetDto> {

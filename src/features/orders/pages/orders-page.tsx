@@ -15,7 +15,7 @@ import {
 import { Alert, Button, Input, Tabs, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
 import { useListAdminOrders } from '@/generated/api/orders/orders';
-import type { ListAdminOrdersStatusGroup } from '@/generated/api/orders/models';
+import type { OrderStatusGroup } from '@/generated/api/orders/models';
 import { ManagementPage } from '@/foundation/management';
 import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
 import { PageTransition } from '@/foundation/layout/page-transition';
@@ -24,7 +24,7 @@ import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
 import { moneyFormatter, ORDER_PAGE_SIZE, orderTabs } from '../constants/order.constants';
 
-type OrderTab = 'ALL' | ListAdminOrdersStatusGroup;
+type OrderTab = 'ALL' | OrderStatusGroup;
 
 const ORDER_COLUMNS: ColumnItem[] = [
   { id: 'order', label: 'Mã đơn hàng', fixed: true },

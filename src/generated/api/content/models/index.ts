@@ -8,13 +8,11 @@
 
 export * from './archiveContentPostDto';
 export * from './contentPostDto';
-export * from './contentPostDtoPostType';
-export * from './contentPostDtoStatus';
 export * from './contentPostListDto';
+export * from './contentPostStatus';
+export * from './contentPostType';
 export * from './createContentPostDto';
-export * from './createContentPostDtoPostType';
 export * from './errorDetailDto';
 export * from './errorResponseDto';
 export * from './listAdminPostsParams';
-export * from './listAdminPostsPostType';
 export * from './updateContentPostDto';

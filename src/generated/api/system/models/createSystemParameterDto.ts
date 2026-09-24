@@ -5,8 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateSystemParameterDtoGroupCode } from './createSystemParameterDtoGroupCode';
-import type { CreateSystemParameterDtoValueType } from './createSystemParameterDtoValueType';
+import type { SystemParameterGroup } from './systemParameterGroup';
+import type { SystemParameterValueType } from './systemParameterValueType';
 
 export interface CreateSystemParameterDto {
   /**
@@ -15,11 +15,11 @@ export interface CreateSystemParameterDto {
    * @pattern ^[A-Z][A-Z0-9_]*$
    */
   code: string;
-  groupCode: CreateSystemParameterDtoGroupCode;
+  groupCode: SystemParameterGroup;
   /** @maxLength 255 */
   label: string;
   description?: string;
-  valueType: CreateSystemParameterDtoValueType;
+  valueType: SystemParameterValueType;
   /** @maxLength 500 */
   value: string;
   /** @nullable */

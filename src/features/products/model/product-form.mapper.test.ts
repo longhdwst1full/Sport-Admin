@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CreateProductDtoProductType } from '@/generated/api/catalog/models';
+import { ProductType } from '@/generated/api/catalog/models';
 import type { ProductDetailDto } from '@/generated/api/catalog/models';
 import { toOpeningStockItems } from './product-opening-stock.mapper';
 import { emptyVariant, toCreateProductDto } from './product-form.mapper';
@@ -7,7 +7,7 @@ import { emptyVariant, toCreateProductDto } from './product-form.mapper';
 describe('product form mapper', () => {
   it('maps product and multiple initial variants into the generated create contract', () => {
     const payload = toCreateProductDto({
-      productType: CreateProductDtoProductType.STANDARD,
+      productType: ProductType.STANDARD,
       name: '  Giày chạy bộ  ',
       brandId: '2',
       categoryIds: ['3'],

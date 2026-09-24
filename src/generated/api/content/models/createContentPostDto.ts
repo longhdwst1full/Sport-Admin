@@ -5,10 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateContentPostDtoPostType } from './createContentPostDtoPostType';
+import type { ContentPostType } from './contentPostType';
 
 export interface CreateContentPostDto {
-  postType: CreateContentPostDtoPostType;
+  postType: ContentPostType;
   title: string;
   /** Đường dẫn bài viết. Bỏ trống để backend sinh từ tiêu đề. */
   slug?: string;

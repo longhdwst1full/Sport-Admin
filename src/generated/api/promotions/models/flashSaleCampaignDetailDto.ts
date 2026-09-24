@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { FlashSaleCampaignDetailDtoStatus } from './flashSaleCampaignDetailDtoStatus';
+import type { FlashSaleCampaignStatus } from './flashSaleCampaignStatus';
 import type { FlashSaleItemDto } from './flashSaleItemDto';
 
 export interface FlashSaleCampaignDetailDto {
@@ -17,7 +17,7 @@ export interface FlashSaleCampaignDetailDto {
   description?: string | null;
   startsAt: string;
   endsAt: string;
-  status: FlashSaleCampaignDetailDtoStatus;
+  status: FlashSaleCampaignStatus;
   itemCount: number;
   version: string;
   items: FlashSaleItemDto[];

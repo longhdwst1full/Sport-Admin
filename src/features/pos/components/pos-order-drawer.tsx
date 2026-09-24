@@ -6,7 +6,7 @@ import { useCreatePosOrder } from '@/generated/api/orders/orders';
 import { getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getListInventoryBalancesQueryKey } from '@/generated/api/inventory/inventory';
 import {
-  CreatePosOrderDtoPaymentMethod,
+  PosPaymentMethod,
   type OrderDetailDto,
   type PosCatalogItemDto,
 } from '@/generated/api/orders/models';
@@ -49,7 +49,7 @@ const EMPTY_CHECKOUT: PosCheckoutValues = {
   customerName: '',
   customerPhone: '',
   customerEmail: '',
-  paymentMethod: CreatePosOrderDtoPaymentMethod.CASH,
+  paymentMethod: PosPaymentMethod.CASH,
   note: '',
   deliveryMode: 'PICKUP',
   delivery: EMPTY_DELIVERY,

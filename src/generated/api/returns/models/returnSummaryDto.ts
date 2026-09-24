@@ -5,9 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ReturnSummaryDtoStatus } from './returnSummaryDtoStatus';
-import type { ReturnSummaryDtoChannel } from './returnSummaryDtoChannel';
-import type { ReturnSummaryDtoReasonCode } from './returnSummaryDtoReasonCode';
+import type { ReturnStatus } from './returnStatus';
+import type { ReturnChannel } from './returnChannel';
+import type { ReturnReasonCode } from './returnReasonCode';
 import type { ReturnSummaryDtoFault } from './returnSummaryDtoFault';
 
 export interface ReturnSummaryDto {
@@ -17,9 +17,9 @@ export interface ReturnSummaryDto {
   /** @pattern ^[1-9][0-9]*$ */
   orderId: string;
   orderNo: string;
-  status: ReturnSummaryDtoStatus;
-  channel: ReturnSummaryDtoChannel;
-  reasonCode: ReturnSummaryDtoReasonCode;
+  status: ReturnStatus;
+  channel: ReturnChannel;
+  reasonCode: ReturnReasonCode;
   /** @nullable */
   fault?: ReturnSummaryDtoFault;
   recipientName: string;

@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ReturnItemDtoItemType } from './returnItemDtoItemType';
+import type { OrderItemType } from './orderItemType';
 import type { ReturnItemDtoCondition } from './returnItemDtoCondition';
 import type { ReturnItemDtoDisposition } from './returnItemDtoDisposition';
 
@@ -17,7 +17,7 @@ export interface ReturnItemDto {
   sku: string;
   productName: string;
   variantName: string;
-  itemType: ReturnItemDtoItemType;
+  itemType: OrderItemType;
   quantity: number;
   unitPrice: string;
   /** @nullable */

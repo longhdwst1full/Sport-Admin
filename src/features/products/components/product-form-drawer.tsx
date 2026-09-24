@@ -19,7 +19,7 @@ import {
   useUpdateAdminProduct,
 } from '@/generated/api/catalog/catalog';
 import {
-  CreateProductDtoProductType,
+  ProductType,
   type ProductDetailDto,
 } from '@/generated/api/catalog/models';
 import {
@@ -29,8 +29,8 @@ import {
   useCreateStockAdjustment,
 } from '@/generated/api/inventory/inventory';
 import {
-  CreateStockAdjustmentDtoAdjustmentType,
-  CreateStockAdjustmentDtoReasonCode,
+  StockAdjustmentType,
+  StockAdjustmentReason,
 } from '@/generated/api/inventory/models';
 import {
   useSearchActiveAdminBranches,
@@ -63,8 +63,8 @@ import { toInitialPriceCommands } from '../model/product-initial-setup';
 
 const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
   productType: yup
-    .mixed<CreateProductDtoProductType>()
-    .oneOf(Object.values(CreateProductDtoProductType))
+    .mixed<ProductType>()
+    .oneOf(Object.values(ProductType))
     .required('Chọn loại sản phẩm'),
   name: yup.string().trim().required('Nhập tên sản phẩm'),
   brandId: yup.string().matches(ENTITY_ID_PATTERN, 'Thương hiệu không hợp lệ').optional(),
@@ -114,7 +114,7 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
 });
 
 const defaults: ProductFormValues = {
-  productType: CreateProductDtoProductType.STANDARD,
+  productType: ProductType.STANDARD,
   name: '',
   brandId: undefined,
   categoryIds: [],
@@ -222,8 +222,8 @@ export function ProductFormDrawer({
             await openingStock.mutateAsync({
               data: {
                 warehouseCode: values.initialWarehouseCode,
-                adjustmentType: CreateStockAdjustmentDtoAdjustmentType.OPENING_BALANCE,
-                reasonCode: CreateStockAdjustmentDtoReasonCode.INITIAL_STOCK,
+                adjustmentType: StockAdjustmentType.OPENING_BALANCE,
+                reasonCode: StockAdjustmentReason.INITIAL_STOCK,
                 reason: `Khởi tạo tồn đầu khi tạo sản phẩm ${createdProduct.productNo}`,
                 items,
               },

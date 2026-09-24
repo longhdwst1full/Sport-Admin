@@ -4,6 +4,8 @@ import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { ReturnSummaryDto } from '@/generated/api/returns/models';
 import { RETURN_PAGE_SIZE, returnReasonLabels, returnStatusPresentation } from '../constants/return.constants';
+import { RETURN_LIST_TABLE_COLUMNS, type ReturnListColumnId } from '../constants/return-table-columns';
+import { buildTableColumns } from '../model/build-table-columns';
 
 export function ReturnTable({
   rows,
@@ -20,6 +22,16 @@ export function ReturnTable({
   onPageChange: (page: number) => void;
   onOpen: (returnId: string) => void;
 }) {
+  const columns = buildTableColumns<ReturnSummaryDto, ReturnListColumnId>(RETURN_LIST_TABLE_COLUMNS, {
+    returnNo: (row) => <Typography.Text strong>{row.returnNo}</Typography.Text>,
+    reasonCode: (row) => returnReasonLabels[row.reasonCode],
+    status: (row) => <StatusTag status={row.status} presentations={returnStatusPresentation} />,
+    createdAt: (row) => new Date(row.createdAt).toLocaleString('vi-VN'),
+    action: (row) => (
+      <TableActionButton label={`Xem phiếu ${row.returnNo}`} icon={<EyeOutlined />} onClick={() => onOpen(row.id)} />
+    ),
+  });
+
   return (
     <AdminTable
       rowKey="id"
@@ -37,45 +49,7 @@ export function ReturnTable({
         showTotal: (value) => `${value} phiếu trả`,
         onChange: onPageChange,
       }}
-      columns={[
-        {
-          title: 'Mã phiếu',
-          dataIndex: 'returnNo',
-          fixed: 'left',
-          width: 200,
-          render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
-        },
-        { title: 'Đơn hàng', dataIndex: 'orderNo', width: 180 },
-        { title: 'Khách', dataIndex: 'recipientName', width: 180 },
-        {
-          title: 'Lý do',
-          dataIndex: 'reasonCode',
-          width: 150,
-          render: (value: ReturnSummaryDto['reasonCode']) => returnReasonLabels[value],
-        },
-        { title: 'Số dòng', dataIndex: 'itemCount', width: 90 },
-        {
-          title: 'Trạng thái',
-          dataIndex: 'status',
-          width: 150,
-          render: (value: ReturnSummaryDto['status']) => <StatusTag status={value} presentations={returnStatusPresentation} />,
-        },
-        {
-          title: 'Tạo lúc',
-          dataIndex: 'createdAt',
-          width: 170,
-          render: (value: string) => new Date(value).toLocaleString('vi-VN'),
-        },
-        {
-          title: '',
-          key: 'action',
-          fixed: 'right',
-          width: 72,
-          render: (_, row) => (
-            <TableActionButton label={`Xem phiếu ${row.returnNo}`} icon={<EyeOutlined />} onClick={() => onOpen(row.id)} />
-          ),
-        },
-      ]}
+      columns={columns}
     />
   );
 }

@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListStockTransfersStatus } from './listStockTransfersStatus';
+import type { StockTransferStatus } from './stockTransferStatus';
 
 export type ListStockTransfersParams = {
   /**
@@ -25,5 +25,5 @@ export type ListStockTransfersParams = {
    * @maxLength 32
    */
   warehouseCode?: string;
-  status?: ListStockTransfersStatus;
+  status?: StockTransferStatus;
 };

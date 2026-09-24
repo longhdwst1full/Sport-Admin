@@ -5,7 +5,7 @@ import { useDebounce } from 'use-debounce';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { useListStockTransfers } from '@/generated/api/inventory/inventory';
-import { ListStockTransfersStatus } from '@/generated/api/inventory/models';
+import { StockTransferStatus } from '@/generated/api/inventory/models';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { StockTransferDetailDrawer } from './stock-transfer-detail-drawer';
 
@@ -30,7 +30,7 @@ export function StockTransferPanel({
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [warehouseCode, setWarehouseCode] = useState<string>();
-  const [status, setStatus] = useState<ListStockTransfersStatus>();
+  const [status, setStatus] = useState<StockTransferStatus>();
   const [warehouseSearch, setWarehouseSearch] = useState('');
   const [debouncedSearch] = useDebounce(search.trim(), 300);
   const [debouncedWarehouseSearch] = useDebounce(warehouseSearch.trim(), 300);

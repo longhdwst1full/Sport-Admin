@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminFlashSalesStatus } from './listAdminFlashSalesStatus';
+import type { FlashSaleCampaignStatus } from './flashSaleCampaignStatus';
 
 export type ListAdminFlashSalesParams = {
   /**
@@ -17,7 +17,7 @@ export type ListAdminFlashSalesParams = {
    * @maximum 100
    */
   limit?: number;
-  status?: ListAdminFlashSalesStatus;
+  status?: FlashSaleCampaignStatus;
   /**
    * Mã hoặc tên chiến dịch
    * @maxLength 100

@@ -5,16 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { ReturnFault } from './returnFault';
 
 /**
  * @nullable
  */
-export type ReturnDetailDtoFault =
-  | (typeof ReturnDetailDtoFault)[keyof typeof ReturnDetailDtoFault]
-  | null;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ReturnDetailDtoFault = {
-  SHOP: 'SHOP',
-  CUSTOMER: 'CUSTOMER',
-} as const;
+export type ReturnDetailDtoFault = ReturnFault | null;

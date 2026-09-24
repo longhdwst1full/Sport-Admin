@@ -7,19 +7,16 @@
  */
 
 export * from './changeFlashSaleCampaignStatusDto';
-export * from './changeFlashSaleCampaignStatusDtoStatus';
 export * from './createFlashSaleCampaignDto';
 export * from './errorDetailDto';
 export * from './errorResponseDto';
 export * from './flashSaleCampaignDetailDto';
-export * from './flashSaleCampaignDetailDtoStatus';
 export * from './flashSaleCampaignListDto';
+export * from './flashSaleCampaignStatus';
 export * from './flashSaleCampaignSummaryDto';
-export * from './flashSaleCampaignSummaryDtoStatus';
 export * from './flashSaleItemDto';
-export * from './flashSaleItemDtoStatus';
+export * from './flashSaleItemStatus';
 export * from './listAdminFlashSalesParams';
-export * from './listAdminFlashSalesStatus';
 export * from './removeFlashSaleItemDto';
 export * from './updateFlashSaleCampaignDto';
 export * from './upsertFlashSaleItemDto';

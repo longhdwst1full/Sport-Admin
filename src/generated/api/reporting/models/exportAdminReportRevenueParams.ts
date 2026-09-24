@@ -5,8 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ExportAdminReportRevenueGranularity } from './exportAdminReportRevenueGranularity';
-import type { ExportAdminReportRevenueFormat } from './exportAdminReportRevenueFormat';
+import type { ReportGranularity } from './reportGranularity';
+import type { ReportExportFormat } from './reportExportFormat';
 
 export type ExportAdminReportRevenueParams = {
   /**
@@ -20,9 +20,9 @@ export type ExportAdminReportRevenueParams = {
   /**
    * Gom biểu đồ theo ngày, tháng, quý hoặc năm.
    */
-  granularity?: ExportAdminReportRevenueGranularity;
+  granularity?: ReportGranularity;
   /**
    * Định dạng file tải về.
    */
-  format?: ExportAdminReportRevenueFormat;
+  format?: ReportExportFormat;
 };

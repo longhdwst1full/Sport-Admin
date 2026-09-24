@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { RevenueReportDtoGranularity } from './revenueReportDtoGranularity';
+import type { ReportGranularity } from './reportGranularity';
 import type { RevenuePointDto } from './revenuePointDto';
 import type { BranchRevenueDto } from './branchRevenueDto';
 
@@ -25,7 +25,7 @@ export interface RevenueReportDto {
   /** Giá trị trung bình mỗi đơn đã hoàn tất */
   averageOrderValue: string;
   /** Mức gom đã áp dụng cho `series` */
-  granularity: RevenueReportDtoGranularity;
+  granularity: ReportGranularity;
   /** Doanh thu thực nhận theo kỳ hoàn tất */
   series: RevenuePointDto[];
   /** Bóc tách theo chi nhánh */

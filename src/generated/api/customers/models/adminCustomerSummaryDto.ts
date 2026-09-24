@@ -5,8 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { AdminCustomerSummaryDtoStatus } from './adminCustomerSummaryDtoStatus';
-import type { AdminCustomerSummaryDtoKind } from './adminCustomerSummaryDtoKind';
+import type { CustomerStatus } from './customerStatus';
+import type { CustomerKind } from './customerKind';
 
 export interface AdminCustomerSummaryDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -17,9 +17,9 @@ export interface AdminCustomerSummaryDto {
   email: string | null;
   /** @nullable */
   phone: string | null;
-  status: AdminCustomerSummaryDtoStatus;
+  status: CustomerStatus;
   /** Suy từ việc khách có tài khoản đăng nhập hay không */
-  kind: AdminCustomerSummaryDtoKind;
+  kind: CustomerKind;
   /** Khách có đồng ý nhận tin khuyến mãi */
   marketingConsent: boolean;
   /**

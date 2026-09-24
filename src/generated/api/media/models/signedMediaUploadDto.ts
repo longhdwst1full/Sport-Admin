@@ -5,10 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { SignedMediaUploadDtoProvider } from './signedMediaUploadDtoProvider';
+import type { MediaProvider } from './mediaProvider';
 
 export interface SignedMediaUploadDto {
-  provider: SignedMediaUploadDtoProvider;
+  provider: MediaProvider;
   uploadUrl: string;
   cloudName: string;
   apiKey: string;

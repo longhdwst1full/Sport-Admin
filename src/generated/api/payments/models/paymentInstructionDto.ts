@@ -5,10 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { PaymentInstructionDtoMethod } from './paymentInstructionDtoMethod';
+import type { PaymentMethod } from './paymentMethod';
 
 export interface PaymentInstructionDto {
-  method: PaymentInstructionDtoMethod;
+  method: PaymentMethod;
   provider: string;
   reference: string;
   customerMessage: string;

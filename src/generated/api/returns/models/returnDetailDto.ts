@@ -5,12 +5,12 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ReturnDetailDtoStatus } from './returnDetailDtoStatus';
-import type { ReturnDetailDtoChannel } from './returnDetailDtoChannel';
-import type { ReturnDetailDtoReasonCode } from './returnDetailDtoReasonCode';
+import type { ReturnStatus } from './returnStatus';
+import type { ReturnChannel } from './returnChannel';
+import type { ReturnReasonCode } from './returnReasonCode';
 import type { ReturnDetailDtoFault } from './returnDetailDtoFault';
 import type { ReturnEvidenceImageDto } from './returnEvidenceImageDto';
-import type { ReturnDetailDtoAllowedRefundMethodsItem } from './returnDetailDtoAllowedRefundMethodsItem';
+import type { RefundMethod } from './refundMethod';
 import type { ReturnItemDto } from './returnItemDto';
 import type { RefundDto } from './refundDto';
 import type { ReturnHistoryDto } from './returnHistoryDto';
@@ -22,9 +22,9 @@ export interface ReturnDetailDto {
   /** @pattern ^[1-9][0-9]*$ */
   orderId: string;
   orderNo: string;
-  status: ReturnDetailDtoStatus;
-  channel: ReturnDetailDtoChannel;
-  reasonCode: ReturnDetailDtoReasonCode;
+  status: ReturnStatus;
+  channel: ReturnChannel;
+  reasonCode: ReturnReasonCode;
   /** @nullable */
   fault?: ReturnDetailDtoFault;
   recipientName: string;
@@ -60,7 +60,7 @@ export interface ReturnDetailDto {
   pendingRefundAmount: string;
   /** Số tiền còn được hoàn, đã chặn theo cả phiếu và số tiền đã thu */
   refundableAmount: string;
-  allowedRefundMethods: ReturnDetailDtoAllowedRefundMethodsItem[];
+  allowedRefundMethods: RefundMethod[];
   items: ReturnItemDto[];
   refunds: RefundDto[];
   history: ReturnHistoryDto[];

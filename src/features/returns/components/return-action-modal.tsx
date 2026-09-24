@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Alert, Checkbox, Form, Input, Modal, Radio, Select, Table, Typography } from 'antd';
 import { createAdminReturnRefundProofUpload } from '@/generated/api/returns/returns';
 import type {
-  InspectReturnItemDtoCondition,
-  InspectReturnItemDtoDisposition,
-  RefundDtoMethod,
+  ReturnCondition,
+  ReturnItemDisposition,
+  RefundMethod,
   ReturnDetailDto,
+  ReturnItemDto,
 } from '@/generated/api/returns/models';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { MoneyInput } from '@/foundation/inputs/money-input';
@@ -17,7 +18,9 @@ import {
   refundMethodLabels,
   returnFaultLabels,
 } from '../constants/return.constants';
+import { INSPECTION_TABLE_COLUMNS, type InspectionColumnId } from '../constants/return-table-columns';
 import type { ReturnCommand } from '../hooks/use-return-command';
+import { buildTableColumns } from '../model/build-table-columns';
 import type { ReturnAction } from '../model/return-actions.policy';
 import { toInspectionPayload, toProofImages, type InspectionRow } from '../model/return-form.mapper';
 import { EvidenceImageUpload } from './evidence-image-upload';
@@ -38,7 +41,7 @@ interface FormValues {
   note?: string;
   reason?: string;
   items?: InspectionRow[];
-  method?: RefundDtoMethod;
+  method?: RefundMethod;
   amount?: number;
   externalRef?: string;
   cashHandedOver?: boolean;
@@ -72,7 +75,7 @@ export function ReturnActionModal({ detail, action, submitting, error, onSubmit,
     form.resetFields();
     setProofImages([]);
     form.setFieldsValue({
-      items: detail.items.map(() => ({ condition: 'SELLABLE' as InspectReturnItemDtoCondition })),
+      items: detail.items.map(() => ({ condition: 'SELLABLE' as ReturnCondition })),
       method: detail.allowedRefundMethods[0],
       amount: refundable,
     });
@@ -124,6 +127,49 @@ export function ReturnActionModal({ detail, action, submitting, error, onSubmit,
       <Input.TextArea rows={2} maxLength={500} showCount />
     </Form.Item>
   );
+
+  const inspectionColumns = buildTableColumns<ReturnItemDto, InspectionColumnId>(INSPECTION_TABLE_COLUMNS, {
+    product: (item) => (
+      <div>
+        <strong>{item.productName}</strong>
+        <div className="text-xs text-slate-500">{item.sku} · {item.variantName}</div>
+        {item.itemType === 'BUNDLE' && <div className="text-xs text-amber-600">Combo: kiểm nguyên bộ</div>}
+      </div>
+    ),
+    condition: (_item, index) => (
+      <Form.Item name={['items', index, 'condition']} noStyle rules={[{ required: true }]}>
+        <Select
+          className="w-full"
+          options={Object.entries(inspectionConditionLabels).map(([value, label]) => ({ value, label }))}
+        />
+      </Form.Item>
+    ),
+    disposition: (_item, index) => {
+      const condition = conditions?.[index]?.condition;
+      // UX: chỉ hàng hỏng mới có lựa chọn; hai trường hợp còn lại do API cố định.
+      if (condition !== 'DAMAGED') {
+        return (
+          <Typography.Text type="secondary">
+            {inspectionDispositionLabels[condition === 'MISSING' ? 'WRITE_OFF' : 'RESTOCK']}
+          </Typography.Text>
+        );
+      }
+      return (
+        <Form.Item name={['items', index, 'disposition']} noStyle rules={[{ required: true, message: 'Chọn cách xử lý hàng hỏng' }]}>
+          <Select<ReturnItemDisposition>
+            className="w-full"
+            placeholder="Chọn"
+            options={(['HOLD', 'WRITE_OFF'] as const).map((value) => ({ value, label: inspectionDispositionLabels[value] }))}
+          />
+        </Form.Item>
+      );
+    },
+    note: (_item, index) => (
+      <Form.Item name={['items', index, 'note']} noStyle>
+        <Input maxLength={500} placeholder="Tuỳ chọn" />
+      </Form.Item>
+    ),
+  });
 
   return (
     <Modal
@@ -202,71 +248,7 @@ export function ReturnActionModal({ detail, action, submitting, error, onSubmit,
               size="small"
               pagination={false}
               dataSource={detail.items}
-              columns={[
-                {
-                  title: 'Sản phẩm',
-                  render: (_, item) => (
-                    <div>
-                      <strong>{item.productName}</strong>
-                      <div className="text-xs text-slate-500">{item.sku} · {item.variantName}</div>
-                      {item.itemType === 'BUNDLE' && <div className="text-xs text-amber-600">Combo: kiểm nguyên bộ</div>}
-                    </div>
-                  ),
-                },
-                { title: 'SL', dataIndex: 'quantity', width: 56 },
-                {
-                  title: 'Tình trạng',
-                  width: 170,
-                  render: (_, _item, index) => (
-                    <Form.Item name={['items', index, 'condition']} noStyle rules={[{ required: true }]}>
-                      <Select
-                        className="w-full"
-                        options={Object.entries(inspectionConditionLabels).map(([value, label]) => ({ value, label }))}
-                      />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Xử lý',
-                  width: 190,
-                  render: (_, _item, index) => {
-                    const condition = conditions?.[index]?.condition;
-                    // UX: chỉ hàng hỏng mới có lựa chọn; hai trường hợp còn lại do API cố định.
-                    if (condition !== 'DAMAGED') {
-                      return (
-                        <Typography.Text type="secondary">
-                          {inspectionDispositionLabels[condition === 'MISSING' ? 'WRITE_OFF' : 'RESTOCK']}
-                        </Typography.Text>
-                      );
-                    }
-                    return (
-                      <Form.Item
-                        name={['items', index, 'disposition']}
-                        noStyle
-                        rules={[{ required: true, message: 'Chọn cách xử lý hàng hỏng' }]}
-                      >
-                        <Select<InspectReturnItemDtoDisposition>
-                          className="w-full"
-                          placeholder="Chọn"
-                          options={(['HOLD', 'WRITE_OFF'] as const).map((value) => ({
-                            value,
-                            label: inspectionDispositionLabels[value],
-                          }))}
-                        />
-                      </Form.Item>
-                    );
-                  },
-                },
-                {
-                  title: 'Ghi chú',
-                  width: 180,
-                  render: (_, _item, index) => (
-                    <Form.Item name={['items', index, 'note']} noStyle>
-                      <Input maxLength={500} placeholder="Tuỳ chọn" />
-                    </Form.Item>
-                  ),
-                },
-              ]}
+              columns={inspectionColumns}
             />
             <div className="mt-4">{noteField}</div>
           </>

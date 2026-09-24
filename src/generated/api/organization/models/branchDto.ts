@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { BranchDtoStatus } from './branchDtoStatus';
+import type { OrganizationStatus } from './organizationStatus';
 import type { AddressDto } from './addressDto';
 
 export interface BranchDto {
@@ -13,7 +13,7 @@ export interface BranchDto {
   id: string;
   code: string;
   name: string;
-  status: BranchDtoStatus;
+  status: OrganizationStatus;
   phone?: string;
   email?: string;
   address: AddressDto;

@@ -4,7 +4,7 @@ import { usePermissions } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { useGetAdminReturn } from '@/generated/api/returns/returns';
-import type { ReturnDetailDto } from '@/generated/api/returns/models';
+import type { RefundDto, ReturnDetailDto, ReturnItemDto } from '@/generated/api/returns/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {
   inspectionConditionLabels,
@@ -16,7 +16,14 @@ import {
   returnReasonLabels,
   returnStatusPresentation,
 } from '../constants/return.constants';
+import {
+  REFUND_TABLE_COLUMNS,
+  RETURN_ITEM_TABLE_COLUMNS,
+  type RefundColumnId,
+  type ReturnItemColumnId,
+} from '../constants/return-table-columns';
 import { useReturnCommand, type ReturnCommand } from '../hooks/use-return-command';
+import { buildTableColumns } from '../model/build-table-columns';
 import { availableReturnActions, type ReturnAction } from '../model/return-actions.policy';
 import { ReturnActionModal } from './return-action-modal';
 
@@ -175,6 +182,47 @@ function ReturnSummary({ detail }: { detail: ReturnDetailDto }) {
   );
 }
 
+const itemColumns = buildTableColumns<ReturnItemDto, ReturnItemColumnId>(RETURN_ITEM_TABLE_COLUMNS, {
+  product: (item) => (
+    <div>
+      <strong>{item.productName}</strong>
+      <div className="text-xs text-slate-500">{item.sku} · {item.variantName}</div>
+      {item.itemType === 'BUNDLE' && <Tag color="gold" className="mt-1">Combo nguyên bộ</Tag>}
+    </div>
+  ),
+  unitPrice: (item) => <CurrencyAmount amount={item.unitPrice} />,
+  inspection: (item) => item.condition ? (
+    <div>
+      <div>{inspectionConditionLabels[item.condition]}</div>
+      {item.disposition && <div className="text-xs text-slate-500">{inspectionDispositionLabels[item.disposition]}</div>}
+      {item.note && <div className="text-xs text-slate-500">{item.note}</div>}
+    </div>
+  ) : <span className="text-slate-400">Chưa kiểm</span>,
+  refundCap: (item) => (item.refundCap ? <CurrencyAmount amount={item.refundCap} /> : '—'),
+});
+
+const refundColumns = buildTableColumns<RefundDto, RefundColumnId>(REFUND_TABLE_COLUMNS, {
+  method: (refund) => refundMethodLabels[refund.method],
+  amount: (refund) => <CurrencyAmount amount={refund.amount} />,
+  status: (refund) => <StatusTag status={refund.status} presentations={refundStatusPresentation} />,
+  reconciliation: (refund) => (
+    <div className="text-xs">
+      {refund.externalRef && <div>Mã GD: <Typography.Text copyable>{refund.externalRef}</Typography.Text></div>}
+      {refund.processedAt && <div className="text-slate-500">{formatDateTime(refund.processedAt)}</div>}
+      {refund.failureReason && <div className="text-rose-600">{refund.failureReason}</div>}
+      {refund.proofImages.length > 0 && (
+        <Image.PreviewGroup>
+          <Space className="mt-1">
+            {refund.proofImages.map((image) => (
+              <Image key={image.url} width={40} height={40} src={image.thumbnailUrl} preview={{ src: image.url }} className="rounded object-cover" />
+            ))}
+          </Space>
+        </Image.PreviewGroup>
+      )}
+    </div>
+  ),
+});
+
 function ReturnItems({ detail }: { detail: ReturnDetailDto }) {
   return (
     <Card size="small" title="Sản phẩm trả" className="rounded-2xl">
@@ -183,32 +231,7 @@ function ReturnItems({ detail }: { detail: ReturnDetailDto }) {
         size="small"
         pagination={false}
         dataSource={detail.items}
-        columns={[
-          {
-            title: 'Sản phẩm',
-            render: (_, item) => (
-              <div>
-                <strong>{item.productName}</strong>
-                <div className="text-xs text-slate-500">{item.sku} · {item.variantName}</div>
-                {item.itemType === 'BUNDLE' && <Tag color="gold" className="mt-1">Combo nguyên bộ</Tag>}
-              </div>
-            ),
-          },
-          { title: 'SL', dataIndex: 'quantity', width: 56 },
-          { title: 'Đơn giá', width: 120, render: (_, item) => <CurrencyAmount amount={item.unitPrice} /> },
-          {
-            title: 'Kết quả kiểm',
-            width: 200,
-            render: (_, item) => item.condition ? (
-              <div>
-                <div>{inspectionConditionLabels[item.condition]}</div>
-                {item.disposition && <div className="text-xs text-slate-500">{inspectionDispositionLabels[item.disposition]}</div>}
-                {item.note && <div className="text-xs text-slate-500">{item.note}</div>}
-              </div>
-            ) : <span className="text-slate-400">Chưa kiểm</span>,
-          },
-          { title: 'Trần hoàn', width: 120, render: (_, item) => (item.refundCap ? <CurrencyAmount amount={item.refundCap} /> : '—') },
-        ]}
+        columns={itemColumns}
       />
     </Card>
   );
@@ -225,31 +248,7 @@ function ReturnRefunds({ detail }: { detail: ReturnDetailDto }) {
           size="small"
           pagination={false}
           dataSource={detail.refunds}
-          columns={[
-            { title: 'Mã', dataIndex: 'refundNo', width: 190 },
-            { title: 'Phương thức', width: 120, render: (_, refund) => refundMethodLabels[refund.method] },
-            { title: 'Số tiền', width: 120, render: (_, refund) => <CurrencyAmount amount={refund.amount} /> },
-            { title: 'Trạng thái', width: 150, render: (_, refund) => <StatusTag status={refund.status} presentations={refundStatusPresentation} /> },
-            {
-              title: 'Đối chiếu',
-              render: (_, refund) => (
-                <div className="text-xs">
-                  {refund.externalRef && <div>Mã GD: <Typography.Text copyable>{refund.externalRef}</Typography.Text></div>}
-                  {refund.processedAt && <div className="text-slate-500">{formatDateTime(refund.processedAt)}</div>}
-                  {refund.failureReason && <div className="text-rose-600">{refund.failureReason}</div>}
-                  {refund.proofImages.length > 0 && (
-                    <Image.PreviewGroup>
-                      <Space className="mt-1">
-                        {refund.proofImages.map((image) => (
-                          <Image key={image.url} width={40} height={40} src={image.thumbnailUrl} preview={{ src: image.url }} className="rounded object-cover" />
-                        ))}
-                      </Space>
-                    </Image.PreviewGroup>
-                  )}
-                </div>
-              ),
-            },
-          ]}
+          columns={refundColumns}
         />
       )}
       <div className="mt-3 flex flex-wrap gap-4 text-sm">

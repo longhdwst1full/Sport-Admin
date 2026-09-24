@@ -1,17 +1,17 @@
 import {
   AssignUserRoleDtoScopeType,
-  type AssignUserRoleDtoRoleCode,
+  type AssignableStaffRoleCode,
   type AssignUserRoleDto,
 } from '@/generated/api/iam/models';
 
 export interface AssignmentFormValues {
-  roleCode: AssignUserRoleDtoRoleCode | '';
+  roleCode: AssignableStaffRoleCode | '';
   branchId: string;
 }
 
 export function toAssignUserRoleDto(values: AssignmentFormValues): AssignUserRoleDto {
   return {
-    roleCode: values.roleCode as AssignUserRoleDtoRoleCode,
+    roleCode: values.roleCode as AssignableStaffRoleCode,
     scopeType: AssignUserRoleDtoScopeType.BRANCH,
     branchId: values.branchId,
   };

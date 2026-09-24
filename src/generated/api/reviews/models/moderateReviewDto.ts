@@ -5,10 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ModerateReviewDtoStatus } from './moderateReviewDtoStatus';
+import type { ReviewModerationStatus } from './reviewModerationStatus';
 
 export interface ModerateReviewDto {
-  status: ModerateReviewDtoStatus;
+  status: ReviewModerationStatus;
   reason?: string;
   /** @minimum 0 */
   expectedVersion?: number;

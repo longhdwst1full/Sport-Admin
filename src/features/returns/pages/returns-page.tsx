@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useDebounce } from 'use-debounce';
 import { ManagementPage } from '@/foundation/management';
 import { useGetAdminReturnQueueSummary, useListAdminReturns } from '@/generated/api/returns/returns';
-import { ListAdminReturnsStatus } from '@/generated/api/returns/models';
+import { ReturnStatus } from '@/generated/api/returns/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { ReturnDetailDrawer } from '../components/return-detail-drawer';
 import { ReturnTable } from '../components/return-table';
@@ -13,8 +13,8 @@ import { RETURN_PAGE_SIZE, returnStatusPresentation } from '../constants/return.
 
 const statusOptions = Object.entries(returnStatusPresentation).map(([value, { label }]) => ({ value, label }));
 
-function parseStatus(value: string | null): ListAdminReturnsStatus | undefined {
-  return value && value in ListAdminReturnsStatus ? (value as ListAdminReturnsStatus) : undefined;
+function parseStatus(value: string | null): ReturnStatus | undefined {
+  return value && value in ReturnStatus ? (value as ReturnStatus) : undefined;
 }
 
 /**

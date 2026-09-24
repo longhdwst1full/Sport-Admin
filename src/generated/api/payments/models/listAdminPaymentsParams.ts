@@ -5,8 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminPaymentsStatus } from './listAdminPaymentsStatus';
-import type { ListAdminPaymentsMethod } from './listAdminPaymentsMethod';
+import type { PaymentStatus } from './paymentStatus';
+import type { PaymentMethod } from './paymentMethod';
 
 export type ListAdminPaymentsParams = {
   /**
@@ -18,8 +18,8 @@ export type ListAdminPaymentsParams = {
    * @maximum 100
    */
   limit?: number;
-  status?: ListAdminPaymentsStatus;
-  method?: ListAdminPaymentsMethod;
+  status?: PaymentStatus;
+  method?: PaymentMethod;
   /**
    * Mã thanh toán, mã đơn, tên hoặc SĐT người nhận
    */

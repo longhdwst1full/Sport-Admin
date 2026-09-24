@@ -26,7 +26,7 @@ import {
   useListAdminRoles,
 } from '@/generated/api/iam/iam';
 import {
-  AssignUserRoleDtoRoleCode,
+  AssignableStaffRoleCode,
   type UserDto,
 } from '@/generated/api/iam/models';
 import {
@@ -47,7 +47,7 @@ interface RoleAssignmentDrawerProps {
 const schema: yup.ObjectSchema<AssignmentFormValues> = yup.object({
   roleCode: yup
     .mixed<AssignmentFormValues['roleCode']>()
-    .oneOf(Object.values(AssignUserRoleDtoRoleCode))
+    .oneOf(Object.values(AssignableStaffRoleCode))
     .required('Vui lòng chọn vai trò cần gán'),
   branchId: yup.string().required('Vui lòng chọn chi nhánh'),
 });

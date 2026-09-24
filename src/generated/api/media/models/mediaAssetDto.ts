@@ -5,13 +5,13 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { MediaAssetDtoProvider } from './mediaAssetDtoProvider';
+import type { MediaProvider } from './mediaProvider';
 import type { MediaAssetDtoStatus } from './mediaAssetDtoStatus';
 
 export interface MediaAssetDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
-  provider: MediaAssetDtoProvider;
+  provider: MediaProvider;
   providerAssetId: string;
   publicId: string;
   secureUrl: string;

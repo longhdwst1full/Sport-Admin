@@ -5,11 +5,11 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateProductDtoProductType } from './createProductDtoProductType';
+import type { ProductType } from './productType';
 import type { CreateVariantDto } from './createVariantDto';
 
 export interface CreateProductDto {
-  productType?: CreateProductDtoProductType;
+  productType?: ProductType;
   name: string;
   /** @pattern ^[1-9][0-9]*$ */
   brandId?: string;

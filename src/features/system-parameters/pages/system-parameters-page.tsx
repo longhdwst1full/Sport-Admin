@@ -11,7 +11,7 @@ import {
   useListAdminSystemParameters,
 } from '@/generated/api/system/system';
 import type {
-  ListAdminSystemParametersStatus,
+  SystemParameterStatus,
   SystemParameterDto,
 } from '@/generated/api/system/models';
 import { useCan } from '@/core/auth/permissions';
@@ -34,7 +34,7 @@ export function SystemParametersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [groupCode, setGroupCode] = useState<string>();
-  const [status, setStatus] = useState<ListAdminSystemParametersStatus>();
+  const [status, setStatus] = useState<SystemParameterStatus>();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SystemParameterDto>();
   const [debouncedSearch] = useDebounce(search.trim(), 350);

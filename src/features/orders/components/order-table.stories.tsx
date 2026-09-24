@@ -1,19 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  AdminOrderSummaryDtoFulfillmentStatus,
-  AdminOrderSummaryDtoPaymentStatus,
-  AdminOrderSummaryDtoStatus,
-  type AdminOrderSummaryDto,
+  OrderFulfillmentStatus,
+  PaymentStatus,
+  OrderStatus,
+  type OrderSummaryDto,
 } from '@/generated/api/orders/models';
 import { OrderTable } from './order-table';
 
-const demoRows: AdminOrderSummaryDto[] = [
+const demoRows: OrderSummaryDto[] = [
   {
     id: '101',
     orderNo: 'ORD-20260911-00000101',
-    status: AdminOrderSummaryDtoStatus.PENDING_CONFIRMATION,
-    paymentStatus: AdminOrderSummaryDtoPaymentStatus.PENDING,
-    fulfillmentStatus: AdminOrderSummaryDtoFulfillmentStatus.PENDING,
+    status: OrderStatus.PENDING_CONFIRMATION,
+    paymentStatus: PaymentStatus.PENDING,
+    fulfillmentStatus: OrderFulfillmentStatus.PENDING,
     paymentMethod: 'COD',
     shippingMethod: 'STANDARD_DELIVERY',
     branchId: '1',

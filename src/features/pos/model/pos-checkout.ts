@@ -1,4 +1,4 @@
-import type { CreatePosOrderDtoPaymentMethod } from '@/generated/api/orders/models';
+import type { PosPaymentMethod } from '@/generated/api/orders/models';
 
 export interface PosDeliveryValues {
   recipient: string;
@@ -17,7 +17,7 @@ export interface PosCheckoutValues {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
-  paymentMethod: CreatePosOrderDtoPaymentMethod;
+  paymentMethod: PosPaymentMethod;
   note: string;
   /** Khách nhận tại quầy hay đơn đi giao hàng. */
   deliveryMode: 'PICKUP' | 'DELIVERY';

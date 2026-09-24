@@ -1,4 +1,4 @@
-import { CreatePosOrderDtoPaymentMethod } from '@/generated/api/orders/models';
+import { PosPaymentMethod } from '@/generated/api/orders/models';
 
 export const POS_PERMISSION = 'order.manage';
 
@@ -14,16 +14,16 @@ export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
  * Nhãn tiếng Việt tách khỏi mã nghiệp vụ: đổi chữ hiển thị không được làm đổi giá trị
  * gửi lên Backend.
  */
-export const posPaymentMethodLabels: Record<CreatePosOrderDtoPaymentMethod, string> = {
-  [CreatePosOrderDtoPaymentMethod.CASH]: 'Tiền mặt',
-  [CreatePosOrderDtoPaymentMethod.BANK_TRANSFER]: 'Chuyển khoản',
-  [CreatePosOrderDtoPaymentMethod.COD]: 'Thu hộ khi giao (COD)',
+export const posPaymentMethodLabels: Record<PosPaymentMethod, string> = {
+  [PosPaymentMethod.CASH]: 'Tiền mặt',
+  [PosPaymentMethod.BANK_TRANSFER]: 'Chuyển khoản',
+  [PosPaymentMethod.COD]: 'Thu hộ khi giao (COD)',
 };
 
-export const posPaymentMethodHints: Record<CreatePosOrderDtoPaymentMethod, string> = {
-  [CreatePosOrderDtoPaymentMethod.CASH]: 'Thu tiền mặt tại quầy, ghi nhận đã thanh toán ngay.',
-  [CreatePosOrderDtoPaymentMethod.BANK_TRANSFER]:
+export const posPaymentMethodHints: Record<PosPaymentMethod, string> = {
+  [PosPaymentMethod.CASH]: 'Thu tiền mặt tại quầy, ghi nhận đã thanh toán ngay.',
+  [PosPaymentMethod.BANK_TRANSFER]:
     'Khách chuyển khoản tại quầy; chỉ bấm thu tiền sau khi đã thấy báo có.',
-  [CreatePosOrderDtoPaymentMethod.COD]:
+  [PosPaymentMethod.COD]:
     'Thu tiền khi giao. Đơn tạo ở trạng thái chờ thanh toán và chỉ dùng cho đơn có giao hàng.',
 };

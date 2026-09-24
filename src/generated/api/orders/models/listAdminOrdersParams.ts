@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminOrdersStatusGroup } from './listAdminOrdersStatusGroup';
+import type { OrderStatusGroup } from './orderStatusGroup';
 
 export type ListAdminOrdersParams = {
   /**
@@ -20,7 +20,7 @@ export type ListAdminOrdersParams = {
   /**
    * Nhóm trạng thái dùng trực tiếp cho các tab màn quản lý đơn hàng
    */
-  statusGroup?: ListAdminOrdersStatusGroup;
+  statusGroup?: OrderStatusGroup;
   /**
    * Tìm gộp theo mã đơn, tên/SĐT/email người nhận. Giữ cho tương thích ngược.
    * @maxLength 100

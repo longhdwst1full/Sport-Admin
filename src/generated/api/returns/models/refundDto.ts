@@ -5,17 +5,17 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { RefundDtoMethod } from './refundDtoMethod';
-import type { RefundDtoStatus } from './refundDtoStatus';
+import type { RefundMethod } from './refundMethod';
+import type { RefundStatus } from './refundStatus';
 import type { ReturnEvidenceImageDto } from './returnEvidenceImageDto';
 
 export interface RefundDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
   refundNo: string;
-  method: RefundDtoMethod;
+  method: RefundMethod;
   amount: string;
-  status: RefundDtoStatus;
+  status: RefundStatus;
   /** @nullable */
   externalRef?: string | null;
   /** @nullable */

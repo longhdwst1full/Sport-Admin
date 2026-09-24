@@ -5,8 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { AdminPaymentSummaryDtoMethod } from './adminPaymentSummaryDtoMethod';
-import type { AdminPaymentSummaryDtoStatus } from './adminPaymentSummaryDtoStatus';
+import type { PaymentMethod } from './paymentMethod';
+import type { PaymentStatus } from './paymentStatus';
 
 export interface AdminPaymentSummaryDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -15,8 +15,8 @@ export interface AdminPaymentSummaryDto {
   orderNo: string;
   recipientName: string;
   recipientPhone: string;
-  method: AdminPaymentSummaryDtoMethod;
-  status: AdminPaymentSummaryDtoStatus;
+  method: PaymentMethod;
+  status: PaymentStatus;
   expectedAmount: string;
   receivedAmount: string;
   createdAt: string;

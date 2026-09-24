@@ -5,9 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { OrderDetailDtoStatus } from './orderDetailDtoStatus';
-import type { OrderDetailDtoPaymentStatus } from './orderDetailDtoPaymentStatus';
-import type { OrderDetailDtoFulfillmentStatus } from './orderDetailDtoFulfillmentStatus';
+import type { OrderStatus } from './orderStatus';
+import type { PaymentStatus } from './paymentStatus';
+import type { OrderFulfillmentStatus } from './orderFulfillmentStatus';
 import type { OrderRecipientDto } from './orderRecipientDto';
 import type { OrderItemDto } from './orderItemDto';
 import type { OrderStatusHistoryDto } from './orderStatusHistoryDto';
@@ -16,9 +16,9 @@ export interface OrderDetailDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
   orderNo: string;
-  status: OrderDetailDtoStatus;
-  paymentStatus: OrderDetailDtoPaymentStatus;
-  fulfillmentStatus: OrderDetailDtoFulfillmentStatus;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  fulfillmentStatus: OrderFulfillmentStatus;
   paymentMethod: string;
   shippingMethod: string;
   /** @pattern ^[1-9][0-9]*$ */

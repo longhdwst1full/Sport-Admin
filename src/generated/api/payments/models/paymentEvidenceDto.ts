@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { PaymentEvidenceDtoStatus } from './paymentEvidenceDtoStatus';
+import type { PaymentEvidenceStatus } from './paymentEvidenceStatus';
 
 export interface PaymentEvidenceDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -16,7 +16,7 @@ export interface PaymentEvidenceDto {
   thumbnailUrl: string;
   mimeType: string;
   sizeBytes: number;
-  status: PaymentEvidenceDtoStatus;
+  status: PaymentEvidenceStatus;
   note?: string;
   reviewReason?: string;
   createdAt: string;

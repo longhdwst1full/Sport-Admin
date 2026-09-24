@@ -1,6 +1,6 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
-import type { AdminOrderSummaryDto } from '@/generated/api/orders/models';
+import type { OrderSummaryDto } from '@/generated/api/orders/models';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
@@ -10,7 +10,7 @@ import {
 } from '../constants/order.constants';
 
 interface OrderTableProps {
-  rows: AdminOrderSummaryDto[];
+  rows: OrderSummaryDto[];
   loading: boolean;
   page: number;
   pageSize: number;
@@ -54,7 +54,7 @@ export function OrderTable({
             key: 'order',
             fixed: 'left' as const,
             width: 200,
-            render: (_: unknown, row: AdminOrderSummaryDto) => (
+            render: (_: unknown, row: OrderSummaryDto) => (
               <div>
                 <span className="font-mono font-bold text-slate-800 text-sm">{row.orderNo}</span>
                 <div className="mt-0.5 text-xs text-slate-400">
@@ -71,7 +71,7 @@ export function OrderTable({
             title: 'Khách nhận hàng',
             key: 'recipient',
             width: 240,
-            render: (_: unknown, row: AdminOrderSummaryDto) => {
+            render: (_: unknown, row: OrderSummaryDto) => {
               const gradient = getRecipientGradient(row.recipient.name);
               const initial = row.recipient.name.slice(0, 1).toUpperCase();
               return (
@@ -101,7 +101,7 @@ export function OrderTable({
             title: 'Chi nhánh xuất',
             key: 'branch',
             width: 190,
-            render: (_: unknown, row: AdminOrderSummaryDto) => (
+            render: (_: unknown, row: OrderSummaryDto) => (
               <div>
                 <div className="text-xs font-medium text-slate-700">{row.branchName}</div>
                 <div className="text-[11px] text-slate-400 truncate">{row.warehouseName}</div>
@@ -146,7 +146,7 @@ export function OrderTable({
             title: 'Thanh toán',
             key: 'payment',
             width: 170,
-            render: (_: unknown, row: AdminOrderSummaryDto) => {
+            render: (_: unknown, row: OrderSummaryDto) => {
               const state = paymentStatusPresentation[row.paymentStatus] ?? {
                 label: row.paymentStatus,
                 color: 'default',
@@ -187,7 +187,7 @@ export function OrderTable({
             key: 'actions',
             fixed: 'right' as const,
             width: 60,
-            render: (_: unknown, row: AdminOrderSummaryDto) => (
+            render: (_: unknown, row: OrderSummaryDto) => (
               <TableActionButton
                 label={`Xem đơn ${row.orderNo}`}
                 icon={<EyeOutlined className="text-slate-500 hover:text-emerald-600" />}

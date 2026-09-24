@@ -5,11 +5,11 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminPostsPostType } from './listAdminPostsPostType';
+import type { ContentPostType } from './contentPostType';
 
 export type ListAdminPostsParams = {
   /**
    * Lọc theo loại bài viết. Bỏ trống để lấy tất cả.
    */
-  postType?: ListAdminPostsPostType;
+  postType?: ContentPostType;
 };

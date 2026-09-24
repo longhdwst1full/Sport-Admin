@@ -5,10 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { AdminOrderSummaryDto } from './adminOrderSummaryDto';
+import type { OrderSummaryDto } from './orderSummaryDto';
 
 export interface AdminOrderListDto {
-  items: AdminOrderSummaryDto[];
+  items: OrderSummaryDto[];
   page: number;
   limit: number;
   total: number;

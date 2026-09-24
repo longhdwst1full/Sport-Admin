@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ProductReviewDtoStatus } from './productReviewDtoStatus';
+import type { ReviewModerationStatus } from './reviewModerationStatus';
 import type { ReviewCommentDto } from './reviewCommentDto';
 
 export interface ProductReviewDto {
@@ -21,7 +21,7 @@ export interface ProductReviewDto {
   content: string;
   verifiedPurchase: boolean;
   /** Đánh giá hiển thị ngay khi gửi; REJECTED là đã bị Admin gỡ khỏi website */
-  status: ProductReviewDtoStatus;
+  status: ReviewModerationStatus;
   /** @minimum 0 */
   version: number;
   moderationReason?: string;

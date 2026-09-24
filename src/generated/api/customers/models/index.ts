@@ -6,23 +6,19 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './addressCodeProvider';
 export * from './adminCustomerAddressDto';
 export * from './adminCustomerAddressDtoCodeProvider';
 export * from './adminCustomerAddressInputDto';
-export * from './adminCustomerAddressInputDtoCodeProvider';
 export * from './adminCustomerDetailDto';
-export * from './adminCustomerDetailDtoKind';
-export * from './adminCustomerDetailDtoStatus';
 export * from './adminCustomerListDto';
 export * from './adminCustomerOrderDto';
 export * from './adminCustomerSummaryDto';
-export * from './adminCustomerSummaryDtoKind';
-export * from './adminCustomerSummaryDtoStatus';
 export * from './createAdminCustomerDto';
+export * from './customerKind';
+export * from './customerStatus';
 export * from './customerStatusCommandDto';
 export * from './errorDetailDto';
 export * from './errorResponseDto';
-export * from './listAdminCustomersKind';
 export * from './listAdminCustomersParams';
-export * from './listAdminCustomersStatus';
 export * from './updateAdminCustomerDto';

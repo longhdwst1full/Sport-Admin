@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { AdminCustomerAddressInputDtoCodeProvider } from './adminCustomerAddressInputDtoCodeProvider';
+import type { AddressCodeProvider } from './addressCodeProvider';
 
 export interface AdminCustomerAddressInputDto {
   /**
@@ -41,7 +41,7 @@ export interface AdminCustomerAddressInputDto {
    */
   provinceCode: string;
   /** Hãng đã cấp bộ mã gửi kèm. Bỏ trống thì hiểu là hãng mặc định của hệ thống. */
-  codeProvider?: AdminCustomerAddressInputDtoCodeProvider;
+  codeProvider?: AddressCodeProvider;
   /** Đúng một địa chỉ mặc định cho mỗi khách */
   isDefault?: boolean;
 }

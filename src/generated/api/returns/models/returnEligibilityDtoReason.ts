@@ -5,18 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { ReturnIneligibleReason } from './returnIneligibleReason';
 
 /**
  * @nullable
  */
-export type ReturnEligibilityDtoReason =
-  | (typeof ReturnEligibilityDtoReason)[keyof typeof ReturnEligibilityDtoReason]
-  | null;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ReturnEligibilityDtoReason = {
-  ORDER_NOT_RETURNABLE: 'ORDER_NOT_RETURNABLE',
-  OPEN_RETURN_EXISTS: 'OPEN_RETURN_EXISTS',
-  WINDOW_EXPIRED: 'WINDOW_EXPIRED',
-  NOTHING_RETURNABLE: 'NOTHING_RETURNABLE',
-} as const;
+export type ReturnEligibilityDtoReason = ReturnIneligibleReason | null;

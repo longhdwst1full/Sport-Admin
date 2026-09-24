@@ -5,8 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminCustomersStatus } from './listAdminCustomersStatus';
-import type { ListAdminCustomersKind } from './listAdminCustomersKind';
+import type { CustomerStatus } from './customerStatus';
+import type { CustomerKind } from './customerKind';
 
 export type ListAdminCustomersParams = {
   /**
@@ -33,6 +33,6 @@ export type ListAdminCustomersParams = {
    * @maxLength 255
    */
   email?: string;
-  status?: ListAdminCustomersStatus;
-  kind?: ListAdminCustomersKind;
+  status?: CustomerStatus;
+  kind?: CustomerKind;
 };

@@ -5,11 +5,11 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { AssignUserRoleDtoRoleCode } from './assignUserRoleDtoRoleCode';
+import type { AssignableStaffRoleCode } from './assignableStaffRoleCode';
 import type { AssignUserRoleDtoScopeType } from './assignUserRoleDtoScopeType';
 
 export interface AssignUserRoleDto {
-  roleCode: AssignUserRoleDtoRoleCode;
+  roleCode: AssignableStaffRoleCode;
   scopeType: AssignUserRoleDtoScopeType;
   /** @pattern ^[1-9][0-9]*$ */
   branchId: string;

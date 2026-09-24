@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { WarehouseDtoStatus } from './warehouseDtoStatus';
+import type { OrganizationStatus } from './organizationStatus';
 
 export interface WarehouseDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -14,6 +14,6 @@ export interface WarehouseDto {
   branchId: string;
   code: string;
   name: string;
-  status: WarehouseDtoStatus;
+  status: OrganizationStatus;
   version: number;
 }

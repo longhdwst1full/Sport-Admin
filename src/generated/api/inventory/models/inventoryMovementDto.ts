@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { InventoryMovementDtoMovementType } from './inventoryMovementDtoMovementType';
+import type { InventoryMovementType } from './inventoryMovementType';
 
 export interface InventoryMovementDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -13,7 +13,7 @@ export interface InventoryMovementDto {
   warehouseCode: string;
   sku: string;
   productName: string;
-  movementType: InventoryMovementDtoMovementType;
+  movementType: InventoryMovementType;
   quantityDelta: number;
   balanceAfter: number;
   referenceType: string;

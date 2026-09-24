@@ -5,9 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ProductSummaryDtoProductType } from './productSummaryDtoProductType';
-import type { ProductSummaryDtoStatus } from './productSummaryDtoStatus';
-import type { ProductSummaryDtoCurrency } from './productSummaryDtoCurrency';
+import type { ProductType } from './productType';
+import type { ProductStatus } from './productStatus';
+import type { CurrencyCode } from './currencyCode';
 
 export interface ProductSummaryDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -28,14 +28,14 @@ export interface ProductSummaryDto {
   slug: string;
   brand?: string;
   primaryCategory?: string;
-  productType: ProductSummaryDtoProductType;
-  status: ProductSummaryDtoStatus;
+  productType: ProductType;
+  status: ProductStatus;
   /** Có hiển thị trên website hay không. Tách khỏi status để ẩn tạm một sản phẩm đang bán mà không phải đẩy về DRAFT. */
   isPublished: boolean;
   version: number;
   /** @nullable */
   minPrice?: string | null;
-  currency: ProductSummaryDtoCurrency;
+  currency: CurrencyCode;
   /** @nullable */
   imageUrl?: string | null;
 }

@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ProductMediaDtoStatus } from './productMediaDtoStatus';
+import type { ProductMediaStatus } from './productMediaStatus';
 
 export interface ProductMediaDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -25,5 +25,5 @@ export interface ProductMediaDto {
   /** @minimum 0 */
   sortOrder: number;
   isPrimary: boolean;
-  status: ProductMediaDtoStatus;
+  status: ProductMediaStatus;
 }

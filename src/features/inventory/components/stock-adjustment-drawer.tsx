@@ -13,8 +13,8 @@ import {
   useCreateStockAdjustment,
 } from '@/generated/api/inventory/inventory';
 import {
-  CreateStockAdjustmentDtoAdjustmentType,
-  CreateStockAdjustmentDtoReasonCode,
+  StockAdjustmentType,
+  StockAdjustmentReason,
   type InventoryBalanceDto,
 } from '@/generated/api/inventory/models';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
@@ -23,8 +23,8 @@ import { getApiErrorMessage } from '@/lib/api/error';
 interface StockAdjustmentValues {
   warehouseCode: string;
   sku: string;
-  adjustmentType: CreateStockAdjustmentDtoAdjustmentType;
-  reasonCode: CreateStockAdjustmentDtoReasonCode;
+  adjustmentType: StockAdjustmentType;
+  reasonCode: StockAdjustmentReason;
   externalReference?: string;
   sourceName?: string;
   quantityDelta: number;
@@ -32,29 +32,29 @@ interface StockAdjustmentValues {
 }
 
 const adjustmentTypeOptions = [
-  { value: CreateStockAdjustmentDtoAdjustmentType.CORRECTION, label: 'Điều chỉnh chênh lệch' },
-  { value: CreateStockAdjustmentDtoAdjustmentType.OPENING_BALANCE, label: 'Nhập tồn đầu kỳ' },
-  { value: CreateStockAdjustmentDtoAdjustmentType.MANUAL_RECEIPT, label: 'Nhập hàng thủ công' },
+  { value: StockAdjustmentType.CORRECTION, label: 'Điều chỉnh chênh lệch' },
+  { value: StockAdjustmentType.OPENING_BALANCE, label: 'Nhập tồn đầu kỳ' },
+  { value: StockAdjustmentType.MANUAL_RECEIPT, label: 'Nhập hàng thủ công' },
 ];
 
 const reasonCodeOptions = [
-  { value: CreateStockAdjustmentDtoReasonCode.MANUAL, label: 'Điều chỉnh thủ công' },
-  { value: CreateStockAdjustmentDtoReasonCode.COUNT_CORRECTION, label: 'Chênh lệch kiểm kê' },
-  { value: CreateStockAdjustmentDtoReasonCode.INITIAL_STOCK, label: 'Khởi tạo tồn đầu kỳ' },
-  { value: CreateStockAdjustmentDtoReasonCode.EXTERNAL_RECEIPT, label: 'Nhập từ chứng từ ngoài' },
+  { value: StockAdjustmentReason.MANUAL, label: 'Điều chỉnh thủ công' },
+  { value: StockAdjustmentReason.COUNT_CORRECTION, label: 'Chênh lệch kiểm kê' },
+  { value: StockAdjustmentReason.INITIAL_STOCK, label: 'Khởi tạo tồn đầu kỳ' },
+  { value: StockAdjustmentReason.EXTERNAL_RECEIPT, label: 'Nhập từ chứng từ ngoài' },
 ];
 
 const schema: yup.ObjectSchema<StockAdjustmentValues> = yup.object({
   warehouseCode: yup.string().trim().required('Chọn kho'),
   sku: yup.string().trim().required('Chọn SKU'),
-  adjustmentType: yup.mixed<CreateStockAdjustmentDtoAdjustmentType>()
-    .oneOf(Object.values(CreateStockAdjustmentDtoAdjustmentType))
+  adjustmentType: yup.mixed<StockAdjustmentType>()
+    .oneOf(Object.values(StockAdjustmentType))
     .required('Chọn loại phiếu'),
-  reasonCode: yup.mixed<CreateStockAdjustmentDtoReasonCode>()
-    .oneOf(Object.values(CreateStockAdjustmentDtoReasonCode))
+  reasonCode: yup.mixed<StockAdjustmentReason>()
+    .oneOf(Object.values(StockAdjustmentReason))
     .required('Chọn nguyên nhân'),
   externalReference: yup.string().trim().when('adjustmentType', {
-    is: CreateStockAdjustmentDtoAdjustmentType.MANUAL_RECEIPT,
+    is: StockAdjustmentType.MANUAL_RECEIPT,
     then: (value) => value.required('Nhập số chứng từ nguồn'),
     otherwise: (value) => value.optional().strip(),
   }),
@@ -63,7 +63,7 @@ const schema: yup.ObjectSchema<StockAdjustmentValues> = yup.object({
     .integer('Số lượng phải là số nguyên')
     .notOneOf([0], 'Số lượng thay đổi phải khác 0')
     .test('receipt-positive', 'Phiếu nhập chỉ nhận số lượng dương', function validate(value) {
-      return this.parent.adjustmentType === CreateStockAdjustmentDtoAdjustmentType.CORRECTION
+      return this.parent.adjustmentType === StockAdjustmentType.CORRECTION
         || (typeof value === 'number' && value > 0);
     })
     .required(),
@@ -91,8 +91,8 @@ export function StockAdjustmentDrawer({
     defaultValues: {
       warehouseCode: '',
       sku: '',
-      adjustmentType: CreateStockAdjustmentDtoAdjustmentType.CORRECTION,
-      reasonCode: CreateStockAdjustmentDtoReasonCode.MANUAL,
+      adjustmentType: StockAdjustmentType.CORRECTION,
+      reasonCode: StockAdjustmentReason.MANUAL,
       externalReference: '',
       sourceName: '',
       quantityDelta: 0,
@@ -117,8 +117,8 @@ export function StockAdjustmentDrawer({
     form.reset({
       warehouseCode: balance?.warehouseCode ?? '',
       sku: balance?.sku ?? '',
-      adjustmentType: CreateStockAdjustmentDtoAdjustmentType.CORRECTION,
-      reasonCode: CreateStockAdjustmentDtoReasonCode.MANUAL,
+      adjustmentType: StockAdjustmentType.CORRECTION,
+      reasonCode: StockAdjustmentReason.MANUAL,
       externalReference: '',
       sourceName: '',
       quantityDelta: 0,
@@ -204,7 +204,7 @@ export function StockAdjustmentDrawer({
         <Form.Item label="Nguyên nhân" required validateStatus={form.formState.errors.reasonCode ? 'error' : undefined} help={form.formState.errors.reasonCode?.message}>
           <Controller name="reasonCode" control={form.control} render={({ field }) => <Select {...field} options={reasonCodeOptions} />} />
         </Form.Item>
-        {adjustmentType === CreateStockAdjustmentDtoAdjustmentType.MANUAL_RECEIPT && (
+        {adjustmentType === StockAdjustmentType.MANUAL_RECEIPT && (
           <>
             <Form.Item label="Số chứng từ nguồn" required validateStatus={form.formState.errors.externalReference ? 'error' : undefined} help={form.formState.errors.externalReference?.message}>
               <Controller name="externalReference" control={form.control} render={({ field }) => <Input {...field} placeholder="VD: PN-2026-0001" maxLength={100} />} />
@@ -234,7 +234,7 @@ export function StockAdjustmentDrawer({
             )}
           />
         </Form.Item>
-        <Form.Item label="Số lượng thay đổi" required extra={adjustmentType === CreateStockAdjustmentDtoAdjustmentType.CORRECTION ? 'Dùng số dương để nhập thêm, số âm để giảm tồn.' : 'Phiếu nhập chỉ chấp nhận số nguyên dương.'} validateStatus={form.formState.errors.quantityDelta ? 'error' : undefined} help={form.formState.errors.quantityDelta?.message}>
+        <Form.Item label="Số lượng thay đổi" required extra={adjustmentType === StockAdjustmentType.CORRECTION ? 'Dùng số dương để nhập thêm, số âm để giảm tồn.' : 'Phiếu nhập chỉ chấp nhận số nguyên dương.'} validateStatus={form.formState.errors.quantityDelta ? 'error' : undefined} help={form.formState.errors.quantityDelta?.message}>
           <Controller name="quantityDelta" control={form.control} render={({ field }) => <InputNumber {...field} precision={0} className="w-full" />} />
         </Form.Item>
         <Form.Item label="Lý do" required validateStatus={form.formState.errors.reason ? 'error' : undefined} help={form.formState.errors.reason?.message}>

@@ -11,8 +11,8 @@ import {
   useListAdminOrders,
 } from '@/generated/api/orders/orders';
 import {
-  ListAdminOrdersStatusGroup,
-  type AdminOrderSummaryDto,
+  OrderStatusGroup,
+  type OrderSummaryDto,
 } from '@/generated/api/orders/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 
@@ -36,7 +36,7 @@ export function PendingOrdersCard() {
   const idempotencyKeys = useRef<Record<string, string>>({});
 
   const query = useListAdminOrders({
-    statusGroup: ListAdminOrdersStatusGroup.PENDING_CONFIRMATION,
+    statusGroup: OrderStatusGroup.PENDING_CONFIRMATION,
     limit: 10,
   });
 
@@ -95,7 +95,7 @@ export function PendingOrdersCard() {
       ) : rows.length === 0 ? (
         <Empty description="Không còn đơn nào chờ xác nhận" />
       ) : (
-        <AdminTable<AdminOrderSummaryDto>
+        <AdminTable<OrderSummaryDto>
           rowKey="id"
           size="small"
           pagination={false}

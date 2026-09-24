@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { UserRoleAssignmentDtoScopeType } from './userRoleAssignmentDtoScopeType';
+import type { ScopeType } from './scopeType';
 import type { UserRoleAssignmentDtoStatus } from './userRoleAssignmentDtoStatus';
 
 export interface UserRoleAssignmentDto {
@@ -16,7 +16,7 @@ export interface UserRoleAssignmentDto {
   /** @pattern ^[1-9][0-9]*$ */
   roleId: string;
   roleCode: string;
-  scopeType: UserRoleAssignmentDtoScopeType;
+  scopeType: ScopeType;
   /** @pattern ^[1-9][0-9]*$ */
   branchId?: string;
   status: UserRoleAssignmentDtoStatus;

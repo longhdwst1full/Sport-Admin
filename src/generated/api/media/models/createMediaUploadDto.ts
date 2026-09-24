@@ -5,11 +5,11 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateMediaUploadDtoContentType } from './createMediaUploadDtoContentType';
+import type { ImageMimeType } from './imageMimeType';
 
 export interface CreateMediaUploadDto {
   fileName: string;
-  contentType: CreateMediaUploadDtoContentType;
+  contentType: ImageMimeType;
   /**
    * @minimum 1
    * @maximum 10485760

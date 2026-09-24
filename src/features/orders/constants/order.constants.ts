@@ -1,4 +1,4 @@
-import type { ListAdminOrdersStatusGroup } from '@/generated/api/orders/models';
+import type { OrderStatusGroup } from '@/generated/api/orders/models';
 
 export const ORDER_PAGE_SIZE = 20;
 
@@ -8,7 +8,7 @@ export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
 });
 
 export const orderTabs: Array<{
-  key: 'ALL' | ListAdminOrdersStatusGroup;
+  key: 'ALL' | OrderStatusGroup;
   label: string;
 }> = [
   { key: 'ALL', label: 'Tất cả' },

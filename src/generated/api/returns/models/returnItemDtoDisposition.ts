@@ -5,17 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { ReturnItemDisposition } from './returnItemDisposition';
 
 /**
  * @nullable
  */
-export type ReturnItemDtoDisposition =
-  | (typeof ReturnItemDtoDisposition)[keyof typeof ReturnItemDtoDisposition]
-  | null;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ReturnItemDtoDisposition = {
-  RESTOCK: 'RESTOCK',
-  HOLD: 'HOLD',
-  WRITE_OFF: 'WRITE_OFF',
-} as const;
+export type ReturnItemDtoDisposition = ReturnItemDisposition | null;

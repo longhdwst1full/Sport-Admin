@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { StockTransferDetailDtoStatus } from './stockTransferDetailDtoStatus';
+import type { StockTransferStatus } from './stockTransferStatus';
 import type { StockTransferItemDto } from './stockTransferItemDto';
 
 export interface StockTransferDetailDto {
@@ -14,7 +14,7 @@ export interface StockTransferDetailDto {
   transferNo: string;
   fromWarehouseCode: string;
   toWarehouseCode: string;
-  status: StockTransferDetailDtoStatus;
+  status: StockTransferStatus;
   reason: string;
   itemCount: number;
   /** @pattern ^[1-9][0-9]*$ */
