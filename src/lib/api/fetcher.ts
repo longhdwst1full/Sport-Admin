@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig } from 'axios';
+import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios';
 import {
   clearAuthTokens,
   getAccessToken,
@@ -84,10 +84,30 @@ export function isCredentialEndpoint(url: string | undefined): boolean {
   return CREDENTIAL_ENDPOINTS.some((path) => value.includes(path));
 }
 
+/**
+ * Như `apiFetcher` nhưng trả cả response.
+ *
+ * Cần cho luồng tải file: tên file do server đặt nằm ở header `Content-Disposition`, mà
+ * `apiFetcher` chỉ trả `response.data` nên header bị mất.
+ */
+export async function apiFetcherWithResponse<T>(
+  config: AxiosRequestConfig,
+  options: AxiosRequestConfig = {},
+): Promise<AxiosResponse<T>> {
+  return request<T>(config, options);
+}
+
 export async function apiFetcher<T>(
   config: AxiosRequestConfig,
   options: AxiosRequestConfig = {},
 ): Promise<T> {
+  return (await request<T>(config, options)).data;
+}
+
+async function request<T>(
+  config: AxiosRequestConfig,
+  options: AxiosRequestConfig = {},
+): Promise<AxiosResponse<T>> {
   const accessToken = getAccessToken();
   const requestConfig: AxiosRequestConfig = {
     ...config,
@@ -99,8 +119,7 @@ export async function apiFetcher<T>(
     },
   };
   try {
-    const response = await apiClient.request<T>(requestConfig);
-    return response.data;
+    return await apiClient.request<T>(requestConfig);
   } catch (error) {
     const isAuthEndpoint = isCredentialEndpoint(config.url);
     if (
@@ -116,11 +135,10 @@ export async function apiFetcher<T>(
       // xuất ngay mà không hề gọi /refresh lần nào.
       try {
         const tokens = await rotateTokens();
-        const response = await apiClient.request<T>({
+        return await apiClient.request<T>({
           ...requestConfig,
           headers: { ...requestConfig.headers, Authorization: `Bearer ${tokens.accessToken}` },
         });
-        return response.data;
       } catch (retryError) {
         // `rotateTokens` đã dọn token và phát tín hiệu hết phiên khi refresh hỏng. Ở đây chỉ
         // cần trả về lỗi 401 gốc để caller thấy đúng nguyên nhân ban đầu.

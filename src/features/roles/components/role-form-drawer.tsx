@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { canEditRolePermissions } from '../model/role-lifecycle.policy';
 import { Alert, Drawer, Form, Input, Select, Space, Button } from 'antd';
 import type { PermissionDto, RoleDto } from '@/generated/api/iam/models';
 import { ROOT_ROLE_CODE } from '../constants/role.constants';
@@ -74,7 +75,7 @@ export function RoleFormDrawer({
           message="Vai trò hệ thống"
           description={
             isRootRole
-              ? 'OWNER là vai trò quản trị gốc nên không thể ngừng hoạt động. Bạn vẫn tinh chỉnh được tên và danh sách quyền.'
+              ? 'OWNER là vai trò quản trị gốc: không ngừng hoạt động được và phải giữ nguyên toàn bộ catalog quyền. Bạn chỉ đổi được tên và mô tả.'
               : 'Mã vai trò được hệ thống tham chiếu nên không thể đổi. Có thể ngừng hoặc kích hoạt lại vai trò bằng trường Trạng thái.'
           }
         />
@@ -139,7 +140,16 @@ export function RoleFormDrawer({
             },
           ]}
         >
-          <PermissionPicker permissions={permissions} grantableCodes={grantableCodes} />
+          {/*
+            Backend từ chối mọi thay đổi tập quyền của OWNER — đây là tài khoản break-glass duy
+            nhất, thu hẹp quyền của nó là tự khoá mình ra khỏi hệ thống. Khoá luôn ở form thay vì
+            để người dùng bỏ tick rồi mới nhận 403: thao tác hỏng được biết trước khi bấm Lưu.
+          */}
+          <PermissionPicker
+            permissions={permissions}
+            grantableCodes={grantableCodes}
+            disabled={!canEditRolePermissions(editing)}
+          />
         </Form.Item>
       </Form>
     </Drawer>

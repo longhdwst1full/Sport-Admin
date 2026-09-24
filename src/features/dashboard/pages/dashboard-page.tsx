@@ -37,6 +37,7 @@ import { AdminTable } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { DashboardStatCard } from '../components/dashboard-stat-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
+import { ReportExportButton } from '../components/report-export-button';
 
 /**
  * Bảng màu phân loại, thứ tự cố định — không bao giờ xoay vòng sang màu thứ 7.
@@ -296,12 +297,21 @@ export function DashboardPage() {
               />
             }
             extra={
-              <Segmented
-                size="small"
-                value={granularity}
-                options={[...GRANULARITY_OPTIONS]}
-                onChange={(value) => setGranularity(value as Granularity)}
-              />
+              <div className="flex items-center gap-2">
+                <Segmented
+                  size="small"
+                  value={granularity}
+                  options={[...GRANULARITY_OPTIONS]}
+                  onChange={(value) => setGranularity(value as Granularity)}
+                />
+                {/* File tải về dùng đúng khoảng và mức gom đang xem trên màn hình. */}
+                <ReportExportButton
+                  path="/api/v1/admin/reports/revenue/export"
+                  params={{ ...range, granularity }}
+                  fallbackFilename="bao-cao-doanh-thu"
+                  disabled={!canSeeRevenue}
+                />
+              </div>
             }
           >
             {!canSeeRevenue ? (
@@ -404,6 +414,26 @@ export function DashboardPage() {
               description="Doanh thu thực nhận và dự thu"
             />
           }
+          extra={
+            <div className="flex items-center gap-2">
+              <ReportExportButton
+                path="/api/v1/admin/reports/revenue/by-branch/export"
+                params={{ ...range, granularity }}
+                fallbackFilename="bao-cao-doanh-thu-chi-nhanh"
+                disabled={!canSeeRevenue}
+                label="Tải"
+              />
+              {/* Báo cáo tồn kho là danh sách CẦN NHẬP (chạm ngưỡng đặt lại), không phải toàn bộ
+                  tồn — nhãn phải nói đúng thứ sẽ tải về. */}
+              <ReportExportButton
+                path="/api/v1/admin/reports/inventory/export"
+                params={{}}
+                fallbackFilename="bao-cao-ton-kho"
+                disabled={!canSeeInventory}
+                label="Tải hàng cần nhập"
+              />
+            </div>
+          }
         >
           <AdminTable
             rowKey="branchName"
@@ -486,6 +516,16 @@ export function DashboardPage() {
                 description={`Theo tiền đã thực trả · ${PERIOD_DESCRIPTION[granularity]}`}
               />
             }
+            extra={
+              // Màn hình chỉ hiện 5 khách; file tải về là toàn bộ danh sách của khoảng đang xem.
+              <ReportExportButton
+                path="/api/v1/admin/reports/top-customers/export"
+                params={{ ...range, limit: 50 }}
+                fallbackFilename="bao-cao-khach-mua-nhieu"
+                disabled={!canSeeRevenue}
+                label="Tải"
+              />
+            }
           >
             {!canSeeRevenue ? (
               <Empty description="Cần quyền xem doanh thu" />
@@ -541,6 +581,15 @@ export function DashboardPage() {
               <SectionTitle
                 title="Sản phẩm bán chạy"
                 description={`Xếp theo số lượng bán · ${PERIOD_DESCRIPTION[granularity]}`}
+              />
+            }
+            extra={
+              <ReportExportButton
+                path="/api/v1/admin/reports/top-products/export"
+                params={{ ...range, limit: 50 }}
+                fallbackFilename="bao-cao-san-pham-ban-chay"
+                disabled={!canSeeRevenue}
+                label="Tải"
               />
             }
           >

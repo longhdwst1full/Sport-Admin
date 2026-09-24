@@ -14,3 +14,14 @@ export function getRoleRemovalMode(
   if (!role.system) return 'DELETE';
   return role.status === 'ACTIVE' ? 'DEACTIVATE' : 'BLOCKED';
 }
+
+/**
+ * Tập quyền của OWNER có được phép sửa trên giao diện hay không.
+ *
+ * Backend từ chối mọi thay đổi tập quyền của OWNER: đây là tài khoản break-glass duy nhất, thu hẹp
+ * quyền của nó là tự khoá mình ra khỏi hệ thống. Form phải khoá sẵn thay vì để người dùng bỏ tick
+ * rồi mới nhận 403 — thao tác hỏng cần được biết trước khi bấm Lưu, không phải sau.
+ */
+export function canEditRolePermissions(role: Pick<RoleDto, 'code'> | undefined): boolean {
+  return role?.code !== ROOT_ROLE_CODE;
+}
