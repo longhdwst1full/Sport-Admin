@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Input, InputNumber, Select } from 'antd';
+import { App, Button, Drawer, Form, Input, InputNumber, Select, Switch } from 'antd';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -26,6 +26,8 @@ interface BrandFormValues {
 interface CategoryFormValues extends BrandFormValues {
   parentId?: string;
   sortOrder: number;
+  /** D54: tắt thì sản phẩm thuộc danh mục không tạo được phiếu trả. */
+  returnable: boolean;
 }
 
 const slugRule = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -43,10 +45,11 @@ const brandSchema: yup.ObjectSchema<BrandFormValues> = yup.object({
 const categorySchema: yup.ObjectSchema<CategoryFormValues> = brandSchema.shape({
   parentId: yup.string().matches(ENTITY_ID_PATTERN, 'Danh mục cha không hợp lệ').optional(),
   sortOrder: yup.number().integer().min(0).required('Nhập thứ tự hiển thị'),
+  returnable: yup.boolean().required(),
 });
 
 const brandDefaults: BrandFormValues = { name: '', description: '' };
-const categoryDefaults: CategoryFormValues = { ...brandDefaults, parentId: undefined, sortOrder: 0 };
+const categoryDefaults: CategoryFormValues = { ...brandDefaults, parentId: undefined, sortOrder: 0, returnable: true };
 
 function FieldError({ message }: { message?: string }) {
   return message ? <span className="text-red-500 text-xs">{message}</span> : null;
@@ -242,6 +245,7 @@ export function CategoryFormDrawer({
             description: category.description ?? '',
             parentId: category.parentId,
             sortOrder: category.sortOrder,
+            returnable: category.returnable,
           }
         : categoryDefaults,
     );
@@ -256,6 +260,7 @@ export function CategoryFormDrawer({
           ...(values.slug ? { slug: values.slug } : {}),
           ...(values.description ? { description: values.description } : {}),
           sortOrder: values.sortOrder,
+          returnable: values.returnable,
           expectedVersion: category.version,
         },
       });
@@ -268,6 +273,7 @@ export function CategoryFormDrawer({
         ...(values.description ? { description: values.description } : {}),
         ...(values.parentId ? { parentId: values.parentId } : {}),
         sortOrder: values.sortOrder,
+        returnable: values.returnable,
       },
     });
   });
@@ -372,6 +378,17 @@ export function CategoryFormDrawer({
             name="sortOrder"
             control={form.control}
             render={({ field }) => <InputNumber {...field} min={0} className="w-full !rounded-lg" />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label={<span className="text-xs font-semibold text-slate-700">Cho phép đổi trả</span>}
+          extra="Tắt với hàng không nhận trả (đồ lót, hàng vệ sinh...). Khách và nhân viên sẽ không tạo được phiếu trả cho sản phẩm thuộc danh mục này."
+        >
+          <Controller
+            name="returnable"
+            control={form.control}
+            render={({ field }) => <Switch checked={field.value} onChange={field.onChange} />}
           />
         </Form.Item>
 

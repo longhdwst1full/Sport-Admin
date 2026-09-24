@@ -10,6 +10,7 @@ import {
   InboxOutlined,
   KeyOutlined,
   PartitionOutlined,
+  RollbackOutlined,
   SafetyCertificateOutlined,
   ShoppingCartOutlined,
   DollarOutlined,
@@ -60,6 +61,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     group: 'sales',
     icon: <CarOutlined />,
     permission: 'fulfillment.view',
+  },
+  {
+    path: '/returns',
+    label: 'Đổi trả',
+    group: 'sales',
+    icon: <RollbackOutlined />,
+    permission: 'return.view',
   },
   {
     path: '/customers',

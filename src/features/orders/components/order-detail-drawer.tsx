@@ -42,6 +42,7 @@ import {
   paymentStatusPresentation,
 } from '../constants/order.constants';
 import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
+import { OrderReturnPanel } from '@/features/returns';
 import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
 
 interface OrderDetailDrawerProps {
@@ -463,6 +464,9 @@ export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) 
 
             {/* Fulfillment workflow panel */}
             <FulfillmentWorkflowPanel orderId={order.id} />
+
+            {/* Đổi trả: tự ẩn khi đơn chưa giao hoặc tài khoản không có return.create */}
+            <OrderReturnPanel orderId={order.id} />
           </div>
 
           {/* Sticky Bottom Action Footer */}

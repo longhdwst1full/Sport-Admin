@@ -8,10 +8,15 @@ import { useListInventoryMovements } from '@/generated/api/inventory/inventory';
 import { ListInventoryMovementsMovementType } from '@/generated/api/inventory/models';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 
-const movementLabels: Record<string, { label: string; color: string }> = {
+// Khai theo enum sinh từ contract: backend thêm loại movement mà quên nhãn thì compile báo lỗi.
+const movementLabels: Record<ListInventoryMovementsMovementType, { label: string; color: string }> = {
   ADJUST: { label: 'Điều chỉnh', color: 'blue' },
+  RECEIVE: { label: 'Nhập kho', color: 'green' },
   TRANSFER_OUT: { label: 'Chuyển đi', color: 'orange' },
   TRANSFER_IN: { label: 'Chuyển đến', color: 'green' },
+  SALE_SHIP: { label: 'Xuất bán', color: 'purple' },
+  DELIVERY_RETURN_RESTOCK: { label: 'Nhập lại hàng giao thất bại', color: 'gold' },
+  RETURN_RESTOCK: { label: 'Nhập lại hàng khách trả', color: 'cyan' },
 };
 
 export function InventoryMovementPanel() {
@@ -40,7 +45,7 @@ export function InventoryMovementPanel() {
       <div className="mb-4 flex flex-wrap gap-3">
         <Input allowClear prefix={<SearchOutlined />} placeholder="Lọc theo SKU" value={sku} className="max-w-xs" onChange={(event) => setSku(event.target.value)} />
         <Select allowClear showSearch optionFilterProp="label" placeholder="Tất cả kho" className="min-w-60" loading={warehouses.isPending} options={(warehouses.data?.items ?? []).map((item) => ({ value: item.code, label: `${item.code} — ${item.label}` }))} onChange={setWarehouseCode} />
-        <Select allowClear placeholder="Loại biến động" className="min-w-44" options={Object.entries(ListInventoryMovementsMovementType).map(([label, value]) => ({ value, label: movementLabels[label]?.label ?? label }))} onChange={setMovementType} />
+        <Select allowClear placeholder="Loại biến động" className="min-w-44" options={Object.values(ListInventoryMovementsMovementType).map((value) => ({ value, label: movementLabels[value].label }))} onChange={setMovementType} />
       </div>
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       <AdminTable
@@ -55,7 +60,7 @@ export function InventoryMovementPanel() {
           { title: 'Thời điểm', dataIndex: 'occurredAt', width: 180, render: (value) => new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) },
           { title: 'SKU', dataIndex: 'sku', width: 180, render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },
           { title: 'Kho', dataIndex: 'warehouseCode', width: 150 },
-          { title: 'Loại', dataIndex: 'movementType', width: 130, render: (value: string) => <Tag color={movementLabels[value]?.color}>{movementLabels[value]?.label ?? value}</Tag> },
+          { title: 'Loại', dataIndex: 'movementType', width: 130, render: (value: ListInventoryMovementsMovementType) => <Tag color={movementLabels[value]?.color}>{movementLabels[value]?.label ?? value}</Tag> },
           { title: 'Thay đổi', dataIndex: 'quantityDelta', align: 'right', width: 100, render: (value: number) => <Typography.Text type={value < 0 ? 'danger' : 'success'} strong>{value > 0 ? `+${value}` : value}</Typography.Text> },
           { title: 'Tồn sau', dataIndex: 'balanceAfter', align: 'right', width: 100 },
           { title: 'Chứng từ', key: 'reference', width: 210, render: (_, row) => <div><Typography.Text code>{row.referenceId}</Typography.Text><div className="text-xs text-slate-500">{row.referenceType}</div></div> },

@@ -48,16 +48,31 @@ describe('cây quyền theo màn hình', () => {
   });
 
   it('không giấu quyền chưa gắn màn hình nào', () => {
-    const tree = buildPermissionTree([permission('return.decide', 'decide', true)]);
+    // Mã giả định chưa có màn hình (Bảo hành chưa làm) — hiện mã thô thay vì bị giấu.
+    const tree = buildPermissionTree([permission('warranty.decide', 'decide', true)]);
 
     const unmapped = tree.find((group) => group.key === UNMAPPED_GROUP_KEY);
-    expect(unmapped?.screens[0]).toMatchObject({ key: 'return', label: 'Đổi trả' });
+    expect(unmapped?.screens[0]).toMatchObject({ key: 'warranty', label: 'warranty' });
     expect(unmapped?.screens[0].permissions[0].sensitive).toBe(true);
+  });
+
+  it('gắn quyền hoàn tiền và nhận trả quá hạn vào màn Đổi trả', () => {
+    const tree = buildPermissionTree([
+      permission('return.decide', 'decide', true),
+      permission('payment.refund.approve', 'refund_approve', true),
+      permission('return.window.override', 'override', true),
+    ]);
+
+    expect(tree.find((group) => group.key === UNMAPPED_GROUP_KEY)).toBeUndefined();
+    const sales = tree.find((group) => group.key === 'sales');
+    expect(sales?.screens.map((screen) => screen.label)).toEqual(
+      expect.arrayContaining(['Đổi trả', 'Hoàn tiền', 'Nhận trả quá hạn']),
+    );
   });
 
   it('đẩy nhóm chưa có màn hình xuống cuối', () => {
     const tree = buildPermissionTree([
-      permission('return.view', 'view'),
+      permission('warranty.view', 'view'),
       permission('order.view', 'view'),
     ]);
 

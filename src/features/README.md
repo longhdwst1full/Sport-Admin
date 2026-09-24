@@ -1,10 +1,10 @@
 # Admin features — maintenance guide
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-09
+> **Last updated:** 2026-09-24
 >
-> **Change summary:** Bổ sung bản đồ feature, ranh giới thư mục và checklist bảo trì cho Sport Admin.
+> **Change summary:** Thêm feature `returns` (đổi trả & hoàn tiền) vào bản đồ.
 
 ## Luồng phụ thuộc chuẩn
 
@@ -33,6 +33,7 @@ app route/navigation
 | `catalog-masters` | Brand/category CRUD lifecycle | Dropdown tạo sản phẩm dùng active-search API, không dùng list quản trị. |
 | `products` | Product, variant, price, media, combo | Là feature lớn; mapper/policy tách riêng và editor/media giữ lazy boundary. |
 | `inventory` | Balance, movement, adjustment, transfer | Không sửa balance trực tiếp; UI gửi command và idempotency key. |
+| `returns` | Đổi trả: hàng đợi, duyệt, nhận & kiểm, hoàn tiền có chứng từ, tạo phiếu hộ từ chi tiết đơn | Lệnh là action có Idempotency-Key + expectedVersion; ảnh tải bằng chữ ký API. Xem README trong feature. |
 | `shipping-consultations` | Nhân viên chốt phí/ETA giao riêng | Đây là Checkout consultation, chưa phải Order CRUD. Xem README trong feature. |
 | `content` / `reviews` | Nội dung và kiểm duyệt | CKEditor chỉ thuộc Content; lifecycle dùng action có xác nhận. |
 | `audit` | Nhật ký nhạy cảm | Chỉ đọc, server pagination; không expose dữ liệu đã redact. |
@@ -67,4 +68,5 @@ Không comment lại JSX như “render button”, “set loading”. Tên compo
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-09-24 | Thêm feature `returns`. | API-20260924-RETURN-EVIDENCE-IMAGES |
 | 1.0.0 | 2026-09-09 | Tạo bản đồ và quy tắc maintenance cho Admin features. | DOC-20260909-FEATURE-MAINTENANCE-NOTES |

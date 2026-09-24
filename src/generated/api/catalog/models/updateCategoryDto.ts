@@ -14,6 +14,8 @@ export interface UpdateCategoryDto {
   imageAssetId?: string;
   /** @minimum 0 */
   sortOrder?: number;
+  /** Cho phép trả hàng sản phẩm thuộc danh mục (D54) */
+  returnable?: boolean;
   /** @minimum 0 */
   expectedVersion: number;
 }

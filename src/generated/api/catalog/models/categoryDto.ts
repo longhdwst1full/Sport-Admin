@@ -21,6 +21,8 @@ export interface CategoryDto {
   /** @pattern ^[1-9][0-9]*$ */
   imageAssetId?: string;
   sortOrder: number;
+  /** Tắt thì sản phẩm thuộc danh mục không tạo được yêu cầu trả hàng (D54) */
+  returnable: boolean;
   status: CategoryDtoStatus;
   version: number;
 }

@@ -40,6 +40,19 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
       receiveAdminFulfillmentReturn: withOptions,
     };
   }
+  if (domain === 'returns') {
+    return {
+      createAdminReturn: withOptions,
+      approveAdminReturn: withOptions,
+      rejectAdminReturn: withOptions,
+      cancelAdminReturn: withOptions,
+      receiveAdminReturn: withOptions,
+      closeAdminReturn: withOptions,
+      requestAdminReturnRefund: withOptions,
+      confirmAdminReturnRefund: withOptions,
+      failAdminReturnRefund: withOptions,
+    };
+  }
   return {};
 }
 
@@ -77,6 +90,7 @@ export default defineConfig({
   orders: createDomainConfig('orders'),
   payments: createDomainConfig('payments'),
   fulfillments: createDomainConfig('fulfillments'),
+  returns: createDomainConfig('returns'),
   promotions: createDomainConfig('promotions'),
   reporting: createDomainConfig('reporting'),
   customers: createDomainConfig('customers'),

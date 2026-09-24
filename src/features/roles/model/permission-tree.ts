@@ -52,6 +52,8 @@ const FAMILY_LABELS: Record<string, string> = {
   fulfillment: 'Giao vận',
   customer: 'Khách hàng',
   return: 'Đổi trả',
+  'return.window': 'Nhận trả quá hạn',
+  'payment.refund': 'Hoàn tiền',
   'media.asset': 'Thư viện ảnh',
   'report.operation': 'Báo cáo vận hành',
   'report.revenue': 'Báo cáo doanh thu',
@@ -66,6 +68,9 @@ const FAMILY_TO_SCREEN_PERMISSION: Record<string, string> = {
   'inventory.transfer': 'inventory.stock.view',
   'iam.assignment': 'iam.user.view',
   'iam.role': 'iam.role.view',
+  // Hoàn tiền và nhận trả quá hạn đều thao tác trên màn Đổi trả, không có màn riêng.
+  'payment.refund': 'return.view',
+  'return.window': 'return.view',
 };
 
 export function permissionFamily(code: string): string {

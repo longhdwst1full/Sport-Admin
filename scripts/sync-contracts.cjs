@@ -18,6 +18,7 @@ const domains = [
   'orders',
   'payments',
   'fulfillments',
+  'returns',
   'promotions',
   'reporting',
   'shipping',
