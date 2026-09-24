@@ -122,8 +122,9 @@ export function AdminLayout() {
     .filter(Boolean) as MenuProps['items'];
 
   const user = auth.currentUser;
-  const displayName = user?.displayName ?? 'Hoàng Đình Long';
-  const employeeCode = user?.userId ? `NV${String(user.userId).padStart(6, '0')}` : 'NV004183';
+  // Chưa có hồ sơ (đang tải hoặc dev bypass) thì hiện nhãn trung tính, không mượn tên người thật.
+  const displayName = user?.displayName ?? 'Tài khoản quản trị';
+  const employeeCode = user?.userId ? `NV${String(user.userId).padStart(6, '0')}` : undefined;
   const initials = getInitials(displayName);
 
   return (
@@ -239,9 +240,11 @@ export function AdminLayout() {
                       <div className="truncate text-xs font-semibold text-slate-200">
                         {displayName}
                       </div>
-                      <div className="truncate text-[10.5px] text-slate-400 font-mono">
-                        {employeeCode}
-                      </div>
+                      {employeeCode && (
+                        <div className="truncate text-[10.5px] text-slate-400 font-mono">
+                          {employeeCode}
+                        </div>
+                      )}
                     </div>
                     {/* Direct Logout Button `[->` */}
                     <Tooltip title="Đăng xuất" placement="top">

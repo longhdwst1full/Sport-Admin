@@ -3,10 +3,12 @@ import {
   CloudUploadOutlined,
   DeleteOutlined,
   EditOutlined,
+  MoreOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Switch, Tag, Tooltip } from 'antd';
-import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
+import { Avatar, Button, Dropdown, Switch, Tag, Tooltip } from 'antd';
+import type { MenuProps } from 'antd';
+import { AdminTable, TableActions } from '@/foundation/table';
 import type { ReactNode } from 'react';
 import { StatusTag } from '@/foundation/management';
 import { PRODUCT_LIST_PAGE_SIZE_OPTIONS } from '../constants/product-list.constants';
@@ -176,36 +178,51 @@ export function ProductListTable({
             title: '',
             key: 'actions',
             align: 'right',
-            width: 140,
+            width: 56,
             fixed: 'right',
-            render: (_value, row) => (
-              <TableActions>
-                <TableActionButton
-                  label={`Xem sản phẩm ${row.name}`}
-                  icon={<EditOutlined />}
-                  className="!text-slate-500 hover:!bg-slate-100 hover:!text-admin-600"
-                  onClick={() => onOpen(row.slug)}
-                />
-                {canManage && row.status === 'DRAFT' && (
-                  <TableActionButton
-                    label={`Xuất bản sản phẩm ${row.name}`}
-                    icon={<CloudUploadOutlined />}
-                    className="!text-emerald-600 hover:!bg-emerald-50"
-                    loading={publishBusyId === row.id}
-                    onClick={() => onPublish(row)}
-                  />
-                )}
-                {canManage && row.status !== 'ARCHIVED' && (
-                  <TableActionButton
-                    label={`Lưu trữ sản phẩm ${row.name}`}
-                    danger
-                    icon={<DeleteOutlined />}
-                    loading={archiveBusyId === row.id}
-                    onClick={() => onArchive(row)}
-                  />
-                )}
-              </TableActions>
-            ),
+            render: (_value, row) => {
+              // Gom thao tác vào menu ba chấm để cột giữ hẹp khi thêm hành động. Xuất bản và Lưu trữ
+              // vẫn đi qua confirm ở page; mục chỉ hiện khi trạng thái hiện tại cho phép.
+              const items: NonNullable<MenuProps['items']> = [
+                { key: 'open', icon: <EditOutlined />, label: 'Xem / sửa' },
+              ];
+              if (canManage && row.status === 'DRAFT') {
+                items.push({ key: 'publish', icon: <CloudUploadOutlined />, label: 'Xuất bản' });
+              }
+              if (canManage && row.status !== 'ARCHIVED') {
+                items.push({ type: 'divider' });
+                items.push({ key: 'archive', icon: <DeleteOutlined />, label: 'Lưu trữ', danger: true });
+              }
+              const busy = publishBusyId === row.id || archiveBusyId === row.id;
+              return (
+                <TableActions>
+                  <Dropdown
+                    trigger={['click']}
+                    placement="bottomRight"
+                    disabled={busy}
+                    menu={{
+                      items,
+                      onClick: ({ key, domEvent }) => {
+                        domEvent.stopPropagation();
+                        if (key === 'open') onOpen(row.slug);
+                        if (key === 'publish') onPublish(row);
+                        if (key === 'archive') onArchive(row);
+                      },
+                    }}
+                  >
+                    {/* Button trực tiếp (không qua Tooltip) để Dropdown gắn được sự kiện click vào nó. */}
+                    <Button
+                      type="text"
+                      size="small"
+                      aria-label={`Thao tác với sản phẩm ${row.name}`}
+                      icon={<MoreOutlined />}
+                      loading={busy}
+                      className="!rounded-lg !text-slate-500 hover:!bg-slate-100"
+                    />
+                  </Dropdown>
+                </TableActions>
+              );
+            },
           },
         ]}
       />

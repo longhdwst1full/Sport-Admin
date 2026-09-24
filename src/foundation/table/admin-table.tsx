@@ -11,6 +11,7 @@ import {
   ADMIN_TABLE_PAGE_SIZE_OPTIONS,
   withFixedColumnWidths,
 } from './table-config';
+import { TABLE_DENSITY_SIZE, useTableDensity } from './table-density';
 
 export interface AdminTableProps<RecordType extends object>
   extends Omit<TableProps<RecordType>, 'columns'> {
@@ -42,9 +43,11 @@ export function AdminTable<RecordType extends object>({
   scroll,
   tableLayout = 'fixed',
   locale,
-  size = 'small',
+  size,
   ...props
 }: AdminTableProps<RecordType>) {
+  // `size` truyền tay vẫn thắng: vài bảng nhúng trong drawer cần cố định độ cao dòng.
+  const density = useTableDensity();
   const normalizedPagination =
     pagination === false
       ? false
@@ -81,7 +84,7 @@ export function AdminTable<RecordType extends object>({
   return (
     <div ref={containerRef} onDoubleClick={copyCellOnDoubleClick}>
       <Table<RecordType>
-        size={size}
+        size={size ?? TABLE_DENSITY_SIZE[density]}
         {...props}
         columns={withFixedColumnWidths(columns, defaultColumnWidth)}
         tableLayout={tableLayout}

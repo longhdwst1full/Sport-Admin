@@ -284,7 +284,9 @@ export function ProductFormDrawer({
             `Đã tạo sản phẩm nhưng chưa ghi được tồn đầu: ${getApiErrorMessage(openingStockError)}`,
             8,
           );
-        } else {
+        } else if (followUpErrors.length === 0) {
+          // Chỉ báo thành công khi mọi bước đều xong; có cảnh báo giá/ảnh ở trên thì không kèm
+          // thêm thông báo "đã tạo" mâu thuẫn.
           const stockMessage = hasOpeningStock ? ' và đã ghi tồn đầu' : '';
           void message.success(
             `Đã tạo sản phẩm cùng ${createdProduct.variants.length} biến thể${stockMessage}.`,
@@ -412,11 +414,20 @@ export function ProductFormDrawer({
                 Quay lại
               </Button>
             )}
-            {nextTab ? (
-              <Button type="primary" disabled={mutationPending} onClick={() => setActiveTab(nextTab)}>
+            {nextTab && (
+              <Button
+                type={isEdit ? 'default' : 'primary'}
+                disabled={mutationPending}
+                onClick={() => setActiveTab(nextTab)}
+              >
                 Tiếp tục
               </Button>
-            ) : (
+            )}
+            {/*
+              Sửa: nút Lưu có ở mọi tab vì mỗi tab đều là trường đã có giá trị, không cần đi hết các
+              bước. Tạo: chỉ ở tab cuối, sau bảng kiểm tra.
+            */}
+            {(isEdit || !nextTab) && (
               /*
                 Gọi thẳng `submitWithTabValidation()` thay vì nối nút với form bằng thuộc tính
                 `form="product-form"`. Nút nằm ở footer của Drawer, tức là ngoài thẻ <form>; cách

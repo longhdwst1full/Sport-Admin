@@ -20,6 +20,14 @@ export {
   type ColumnSettingsModalProps,
 } from './column-settings-modal';
 
+export {
+  DEFAULT_TABLE_DENSITY,
+  TABLE_DENSITY,
+  setTableDensity,
+  useTableDensity,
+  type TableDensity,
+} from './table-density';
+
 export { CursorPagination } from './cursor-pagination';
 
 export {

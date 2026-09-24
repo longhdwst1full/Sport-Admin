@@ -8,7 +8,7 @@ import {
 import type { TokenPairDto } from '@/generated/api/auth/models';
 import { expireAdminSession } from '@/core/auth/auth-session-expiry';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
 export class ApiError<T = unknown> extends Error {
   constructor(

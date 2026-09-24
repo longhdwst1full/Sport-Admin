@@ -1,68 +1,38 @@
-import { useState } from 'react';
+import { App, Button, Card, Descriptions, Modal, Tabs } from 'antd';
 import {
-  App,
-  Badge,
-  Button,
-  Card,
-  Descriptions,
-  Modal,
-  Select,
-  Switch,
-  Tabs,
-} from 'antd';
-import {
-  AppstoreOutlined,
-  BellOutlined,
-  DatabaseOutlined,
   DesktopOutlined,
   InfoCircleOutlined,
   ReloadOutlined,
   SettingOutlined,
-  SoundOutlined,
 } from '@ant-design/icons';
-import { createBrowserStore, LocalStorageKey } from '@/core/storage';
+import {
+  DEFAULT_TABLE_DENSITY,
+  setTableDensity,
+  useTableDensity,
+  type TableDensity,
+} from '@/foundation/table';
+import { API_URL } from '@/lib/api/fetcher';
 
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-interface UserPreferences {
-  tableDensity: 'compact' | 'middle' | 'comfortable';
-  defaultPageSize: number;
-  soundAlerts: boolean;
-  stockAlerts: boolean;
-  autoCloseTabs: boolean;
-}
-
-const DEFAULT_PREFERENCES: UserPreferences = {
-  tableDensity: 'middle',
-  defaultPageSize: 20,
-  soundAlerts: true,
-  stockAlerts: true,
-  autoCloseTabs: false,
-};
-
-const STORAGE_KEY = LocalStorageKey.PREFERENCES;
-
-const preferencesStore = createBrowserStore<UserPreferences>(STORAGE_KEY);
-
+/**
+ * Chỉ giữ thiết lập có component thật sự đọc để áp dụng (mật độ bảng → AdminTable). Page size,
+ * âm thanh, cảnh báo tồn và tự đóng tab đã bị gỡ vì chưa có tính năng nào đứng sau chúng.
+ */
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const { message } = App.useApp();
-  const [preferences, setPreferences] = useState<UserPreferences>(() => {
-    return preferencesStore.read() ?? DEFAULT_PREFERENCES;
-  });
+  const tableDensity = useTableDensity();
 
-  const updatePreference = <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
-    const updated = { ...preferences, [key]: value };
-    setPreferences(updated);
-    preferencesStore.write(updated);
+  const updateDensity = (density: TableDensity) => {
+    setTableDensity(density);
     void message.success('Đã lưu thiết lập');
   };
 
   const handleReset = () => {
-    setPreferences(DEFAULT_PREFERENCES);
-    preferencesStore.clear();
+    setTableDensity(DEFAULT_TABLE_DENSITY);
     void message.info('Đã khôi phục cài đặt gốc');
   };
 
@@ -88,7 +58,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           <div>
             <h2 className="text-lg font-bold text-slate-900 m-0">Cài đặt hệ thống</h2>
             <p className="text-xs text-slate-500 mt-0.5 m-0">
-              Tùy chỉnh giao diện, hiển thị dữ liệu và tùy chọn thông báo
+              Tùy chỉnh hiển thị bảng dữ liệu trên trình duyệt này
             </p>
           </div>
         </div>
@@ -121,9 +91,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                         </div>
                       </div>
                       <span className="text-[11px] font-semibold text-amber-800 bg-amber-100/70 border border-amber-300/80 rounded-full px-2.5 py-0.5">
-                        {preferences.tableDensity === 'compact'
+                        {tableDensity === 'compact'
                           ? 'Tinh gọn'
-                          : preferences.tableDensity === 'comfortable'
+                          : tableDensity === 'comfortable'
                           ? 'Rộng rãi'
                           : 'Tiêu chuẩn'}
                       </span>
@@ -150,14 +120,14 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                           lines: 2,
                         },
                       ].map((opt) => {
-                        const isSelected = preferences.tableDensity === opt.value;
+                        const isSelected = tableDensity === opt.value;
                         return (
                           <button
                             key={opt.value}
                             type="button"
                             role="radio"
                             aria-checked={isSelected}
-                            onClick={() => updatePreference('tableDensity', opt.value)}
+                            onClick={() => updateDensity(opt.value)}
                             className={`group relative flex flex-col items-center justify-center rounded-xl py-3.5 px-3 border text-center transition-all duration-200 cursor-pointer ${
                               isSelected
                                 ? 'bg-amber-50/90 border-amber-500 text-amber-950 shadow-xs ring-2 ring-amber-500/25 scale-[1.01]'
@@ -216,101 +186,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                     </div>
                   </Card>
 
-                  {/* Default page size */}
-                  <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-800">
-                          Số bản ghi hiển thị mỗi trang
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Áp dụng mặc định cho tất cả bảng danh sách (Đơn hàng, Khách hàng, SP...)
-                        </div>
-                      </div>
-                      <Select
-                        value={preferences.defaultPageSize}
-                        onChange={(val) => updatePreference('defaultPageSize', val)}
-                        options={[
-                          { value: 10, label: '10 dòng / trang' },
-                          { value: 20, label: '20 dòng / trang' },
-                          { value: 50, label: '50 dòng / trang' },
-                          { value: 100, label: '100 dòng / trang' },
-                        ]}
-                        className="w-36"
-                      />
-                    </div>
-                  </Card>
-                </div>
-              ),
-            },
-            {
-              key: 'notifications',
-              label: (
-                <span className="flex items-center gap-1.5 text-xs font-medium">
-                  <BellOutlined />
-                  Thông báo & Cảnh báo
-                </span>
-              ),
-              children: (
-                <div className="space-y-4">
-                  <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs divide-y divide-slate-100">
-                    <div className="flex items-center justify-between py-2.5">
-                      <div className="flex items-start gap-3">
-                        <SoundOutlined className="text-emerald-600 text-lg mt-0.5" />
-                        <div>
-                          <div className="text-sm font-semibold text-slate-800">
-                            Âm thanh thông báo đơn hàng mới
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Phát chuông thông báo khi có đơn đặt hàng trực tuyến mới từ khách hàng
-                          </div>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={preferences.soundAlerts}
-                        onChange={(val) => updatePreference('soundAlerts', val)}
-                        className="bg-slate-300"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between py-2.5">
-                      <div className="flex items-start gap-3">
-                        <BellOutlined className="text-amber-500 text-lg mt-0.5" />
-                        <div>
-                          <div className="text-sm font-semibold text-slate-800">
-                            Cảnh báo tồn kho dưới mức an toàn
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Hiển thị nhãn cảnh báo khi sản phẩm trong kho có số lượng khả dụng &lt; 10
-                          </div>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={preferences.stockAlerts}
-                        onChange={(val) => updatePreference('stockAlerts', val)}
-                        className="bg-slate-300"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between py-2.5">
-                      <div className="flex items-start gap-3">
-                        <AppstoreOutlined className="text-blue-500 text-lg mt-0.5" />
-                        <div>
-                          <div className="text-sm font-semibold text-slate-800">
-                            Tự động dọn dẹp các tab không hoạt động
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Giới hạn thanh điều hướng tối đa 8 tab đang mở để tăng hiệu năng
-                          </div>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={preferences.autoCloseTabs}
-                        onChange={(val) => updatePreference('autoCloseTabs', val)}
-                        className="bg-slate-300"
-                      />
-                    </div>
-                  </Card>
                 </div>
               ),
             },
@@ -332,27 +207,12 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                       <Descriptions.Item label={<span className="text-slate-500 text-xs">Ứng dụng</span>}>
                         <span className="font-semibold text-slate-900">Bảo An Sport Admin Portal</span>
                       </Descriptions.Item>
-                      <Descriptions.Item label={<span className="text-slate-500 text-xs">Phiên bản</span>}>
-                        <span className="font-mono text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                          v1.0.0 (Production Candidate)
-                        </span>
+                      <Descriptions.Item label={<span className="text-slate-500 text-xs">Môi trường</span>}>
+                        <span className="font-mono text-xs text-slate-700">{import.meta.env.MODE}</span>
                       </Descriptions.Item>
                       <Descriptions.Item label={<span className="text-slate-500 text-xs">Backend API</span>}>
-                        <div className="flex items-center gap-2">
-                          <Badge status="success" />
-                          <span className="font-mono text-xs text-slate-700">https://sport-api-doc.vercel.app/api/v1</span>
-                        </div>
-                      </Descriptions.Item>
-                      <Descriptions.Item label={<span className="text-slate-500 text-xs">Cơ sở dữ liệu</span>}>
-                        <div className="flex items-center gap-2">
-                          <DatabaseOutlined className="text-emerald-600" />
-                          <span className="text-xs text-slate-800 font-medium">
-                            PostgreSQL 16 (sport_db · 30 migrations active)
-                          </span>
-                        </div>
-                      </Descriptions.Item>
-                      <Descriptions.Item label={<span className="text-slate-500 text-xs">Cơ chế xác thực</span>}>
-                        <span className="text-xs text-slate-700">JWT TokenPair · Access (15m) / Refresh (30d)</span>
+                        {/* Đọc từ cấu hình build thay vì hard-code, để bản Preview/dev không hiển thị URL production. */}
+                        <span className="font-mono text-xs text-slate-700">{API_URL}</span>
                       </Descriptions.Item>
                     </Descriptions>
                   </Card>

@@ -94,7 +94,7 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     const shell = new AdminShellPage(page);
     const products = new ProductsPageObject(page);
     await shell.open('/products');
-    await products.openProduct('Giày chạy bộ E2E').click();
+    await products.openProduct('Giày chạy bộ E2E');
     await products.editProduct().click();
 
     const saveButton = products.saveProduct();
