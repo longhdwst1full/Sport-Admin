@@ -27,6 +27,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "6.0.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@fontsource/be-vietnam-pro": "^5.3.0",
     "@fontsource/noto-sans": "5.3.0",
     "@hookform/resolvers": "5.9.1",
     "@reduxjs/toolkit": "2.12.0",

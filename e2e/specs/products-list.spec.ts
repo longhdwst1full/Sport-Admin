@@ -32,7 +32,9 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     const shell = new AdminShellPage(page);
     await shell.open('/products');
 
-    await expect(page.getByText('Không có sản phẩm phù hợp bộ lọc.')).toBeVisible();
+    const empty = page.getByTestId('admin-table-empty');
+    await expect(empty).toBeVisible();
+    await expect(empty).toContainText('Chưa có sản phẩm nào');
   });
 
   test('PRD-03: API lỗi -> hiển thị thông báo lỗi, không trắng trang', async ({ page }) => {
@@ -116,6 +118,10 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     await shell.open('/products');
     await products.createProduct().click();
 
+    // Form tạo sản phẩm là wizard 4 tab; vận chuyển và tồn đầu nằm ở tab "Biến thể & giá",
+    // không hiển thị ngay khi mở drawer.
+    await page.getByRole('tab', { name: 'Biến thể & giá' }).click();
+
     await expect(page.getByText('Tồn đầu theo chi nhánh / kho')).toBeVisible();
     await expect(page.getByText('Khối lượng (g)', { exact: true })).toBeVisible();
     await expect(page.getByText('Dài (mm)', { exact: true })).toBeVisible();
@@ -124,6 +130,10 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     await expect(page.getByText('Chi nhánh nhập tồn đầu', { exact: true })).toBeVisible();
     await expect(page.getByText('Kho nhập tồn đầu', { exact: true })).toBeVisible();
     await expect(page.getByText('Số lượng tồn đầu', { exact: true })).toBeVisible();
+    // Nút tạo cố ý chỉ xuất hiện ở tab cuối, sau bảng kiểm tra (xem ProductFormDrawer):
+    // ở các tab trước, nút chính là "Tiếp tục".
+    await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
+    await page.getByRole('tab', { name: 'Kiểm tra & tạo' }).click();
     await expect(page.getByRole('button', { name: 'Tạo sản phẩm' })).toBeVisible();
   });
 });

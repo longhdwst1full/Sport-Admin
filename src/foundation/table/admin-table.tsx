@@ -29,6 +29,13 @@ export interface AdminTableProps<RecordType extends object>
    * nằm trong drawer/modal luôn là `embedded`. Chỉ truyền tay khi một bảng cần khác với chỗ nó đứng.
    */
   surface?: TableSurface;
+  /**
+   * Tên thực thể ở số nhiều, viết thường: "sản phẩm", "đơn hàng", "phiếu nhập".
+   *
+   * Màn hình trống là lúc người dùng cần biết làm gì tiếp, không phải lúc báo rằng mảng rỗng.
+   * Có tên thực thể thì câu trống mới nói đúng việc; bỏ trống sẽ rơi về câu chung.
+   */
+  emptyEntity?: string;
 }
 
 /**
@@ -39,6 +46,7 @@ export function AdminTable<RecordType extends object>({
   columns,
   defaultColumnWidth = ADMIN_TABLE_DEFAULT_COLUMN_WIDTH,
   surface,
+  emptyEntity,
   pagination,
   scroll,
   tableLayout = 'fixed',
@@ -99,13 +107,18 @@ export function AdminTable<RecordType extends object>({
         pagination={normalizedPagination}
         locale={{
           emptyText: (
-            <div className="py-8 text-center select-none">
-              <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-2">
+            <div
+              data-testid="admin-table-empty"
+              className="py-8 text-center select-none"
+            >
+              <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-ba-iron-100 text-ba-iron-400">
                 <InboxOutlined className="text-xl" />
               </div>
-              <div className="text-xs font-semibold text-slate-600">Không có dữ liệu</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Chưa có bản ghi nào hoặc không khớp với bộ lọc hiện tại.
+              <div className="text-xs font-semibold text-ba-iron-700">
+                {emptyEntity ? `Chưa có ${emptyEntity} nào` : 'Chưa có dữ liệu'}
+              </div>
+              <div className="mt-0.5 text-[11px] text-ba-iron-400">
+                Thêm mới, hoặc nới bộ lọc nếu bạn đang tìm thứ gì đó.
               </div>
             </div>
           ),

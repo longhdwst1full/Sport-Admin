@@ -34,7 +34,9 @@ test.describe('ADMIN UI TABLE — Standard Table UX & Styling', () => {
     const shell = new AdminShellPage(page);
     await shell.open('/products');
 
-    const statusTag = page.locator('.ant-table-tbody tr').first().locator('.rounded-full');
+    // `tr.ant-table-row` chứ không phải `tr`: bảng đặt `scroll.x` nên antd chèn thêm
+    // `tr.ant-table-measure-row` rỗng làm dòng đầu tiên của tbody.
+    const statusTag = page.locator('.ant-table-tbody tr.ant-table-row').first().locator('.rounded-full');
     await expect(statusTag).toBeVisible();
     await expect(statusTag).toContainText('Đang bán');
   });
@@ -46,7 +48,7 @@ test.describe('ADMIN UI TABLE — Standard Table UX & Styling', () => {
     await shell.open('/products');
 
     // Hàng đầu tiên trong bảng
-    const actionCell = page.locator('.ant-table-tbody tr').first().locator('td').last();
+    const actionCell = page.locator('.ant-table-tbody tr.ant-table-row').first().locator('td').last();
     // Nút icon chi tiết
     const editBtn = actionCell.locator('button').first();
     await expect(editBtn).toBeVisible();
@@ -111,7 +113,11 @@ test.describe('ADMIN UI TABLE — Standard Table UX & Styling', () => {
     const shell = new AdminShellPage(page);
     await shell.open('/products');
 
-    await expect(page.locator('.ant-empty')).toBeVisible();
+    // Bảng truyền `locale.emptyText` riêng, nên antd KHÔNG bọc `.ant-empty` quanh nó.
+    // Bám vào testid của trạng thái trống thật, đừng bám class nội bộ của thư viện.
+    const empty = page.getByTestId('admin-table-empty');
+    await expect(empty).toBeVisible();
+    await expect(empty).toContainText('Chưa có sản phẩm nào');
   });
 
   test('UI-TBL-09: Trạng thái lỗi API hiển thị alert thông báo lỗi không làm trắng trang', async ({ page }) => {

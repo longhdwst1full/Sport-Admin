@@ -66,6 +66,7 @@ export function ProductListTable({
     <>
       <AdminTable<ProductListRow>
         rowKey="id"
+        emptyEntity="sản phẩm"
         loading={loading}
         dataSource={rows}
         tableLayout="fixed"
@@ -74,7 +75,6 @@ export function ProductListTable({
           // Giữ header/pagination trong viewport; phần dữ liệu tự cuộn khi đủ 30 dòng.
           y: 'clamp(280px, calc(100vh - 500px), 640px)',
         }}
-        locale={{ emptyText: 'Không có sản phẩm phù hợp bộ lọc.' }}
         pagination={{
           current: page,
           pageSize,
