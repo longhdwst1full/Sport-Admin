@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListInventoryMovementsMovementType } from './listInventoryMovementsMovementType';
+import type { InventoryMovementType } from './inventoryMovementType';
 
 export type ListInventoryMovementsParams = {
   /**
@@ -25,7 +25,7 @@ export type ListInventoryMovementsParams = {
    * @maxLength 64
    */
   sku?: string;
-  movementType?: ListInventoryMovementsMovementType;
+  movementType?: InventoryMovementType;
   /**
    * @maxLength 64
    */

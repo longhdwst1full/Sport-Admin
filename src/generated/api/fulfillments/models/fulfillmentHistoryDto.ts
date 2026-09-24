@@ -5,13 +5,13 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { FulfillmentHistoryDtoToStatus } from './fulfillmentHistoryDtoToStatus';
+import type { FulfillmentStatus } from './fulfillmentStatus';
 
 export interface FulfillmentHistoryDto {
   sequenceNo: number;
   /** @nullable */
   fromStatus?: string | null;
-  toStatus: FulfillmentHistoryDtoToStatus;
+  toStatus: FulfillmentStatus;
   /** @nullable */
   reason?: string | null;
   createdAt: string;

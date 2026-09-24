@@ -5,14 +5,14 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateRefundDtoMethod } from './createRefundDtoMethod';
+import type { RefundMethod } from './refundMethod';
 
 export interface CreateRefundDto {
   /** @pattern ^\d+$ */
   expectedVersion: string;
   /** @maxLength 500 */
   note?: string;
-  method: CreateRefundDtoMethod;
+  method: RefundMethod;
   /** @pattern ^\d{1,17}(\.\d{1,2})?$ */
   amount: string;
 }

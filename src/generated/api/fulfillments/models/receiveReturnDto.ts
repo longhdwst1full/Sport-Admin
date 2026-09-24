@@ -5,14 +5,14 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ReceiveReturnDtoCondition } from './receiveReturnDtoCondition';
+import type { ReturnCondition } from './returnCondition';
 
 export interface ReceiveReturnDto {
   /** @pattern ^\d+$ */
   expectedVersion: string;
   /** @maxLength 500 */
   note?: string;
-  condition: ReceiveReturnDtoCondition;
+  condition: ReturnCondition;
   /**
    * @minLength 5
    * @maxLength 500

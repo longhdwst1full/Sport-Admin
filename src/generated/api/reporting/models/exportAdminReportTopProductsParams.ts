@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ExportAdminReportTopProductsFormat } from './exportAdminReportTopProductsFormat';
+import type { ReportExportFormat } from './reportExportFormat';
 
 export type ExportAdminReportTopProductsParams = {
   /**
@@ -21,5 +21,5 @@ export type ExportAdminReportTopProductsParams = {
    * @maximum 50
    */
   limit?: number;
-  format?: ExportAdminReportTopProductsFormat;
+  format?: ReportExportFormat;
 };

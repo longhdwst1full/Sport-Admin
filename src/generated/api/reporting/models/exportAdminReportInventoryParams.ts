@@ -5,8 +5,8 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ExportAdminReportInventoryFormat } from './exportAdminReportInventoryFormat';
+import type { ReportExportFormat } from './reportExportFormat';
 
 export type ExportAdminReportInventoryParams = {
-  format?: ExportAdminReportInventoryFormat;
+  format?: ReportExportFormat;
 };

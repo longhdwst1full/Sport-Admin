@@ -3,7 +3,7 @@ import { BankOutlined, ReloadOutlined, SafetyCertificateOutlined } from '@ant-de
 import { Alert, Button, Input, Select, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
 import { useListAdminPayments } from '@/generated/api/payments/payments';
-import type { ListAdminPaymentsMethod, ListAdminPaymentsStatus } from '@/generated/api/payments/models';
+import type { PaymentMethod, PaymentStatus } from '@/generated/api/payments/models';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { PaymentDetailDrawer } from '../components/payment-detail-drawer';
@@ -13,8 +13,8 @@ import { moneyFormatter, PAYMENT_PAGE_SIZE } from '../constants/payment.constant
 export function PaymentsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<ListAdminPaymentsStatus>();
-  const [method, setMethod] = useState<ListAdminPaymentsMethod>();
+  const [status, setStatus] = useState<PaymentStatus>();
+  const [method, setMethod] = useState<PaymentMethod>();
   const [selectedId, setSelectedId] = useState<string>();
   const [debouncedSearch] = useDebounce(search.trim(), 350);
   useEffect(() => setPage(1), [debouncedSearch, status, method]);

@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ProductVariantDtoStatus } from './productVariantDtoStatus';
+import type { ProductVariantStatus } from './productVariantStatus';
 import type { ProductVariantDtoBundle } from './productVariantDtoBundle';
 
 export interface ProductVariantDto {
@@ -31,7 +31,7 @@ export interface ProductVariantDto {
    * @nullable
    */
   heightMm?: number | null;
-  status: ProductVariantDtoStatus;
+  status: ProductVariantStatus;
   version: number;
   /** @nullable */
   effectivePrice?: string | null;

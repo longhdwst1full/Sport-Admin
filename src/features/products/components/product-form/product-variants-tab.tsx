@@ -3,7 +3,7 @@ import { Alert, Button, Card, Form, Input, InputNumber, Select, Tag } from 'antd
 import { BarcodeOutlined, InboxOutlined } from '@ant-design/icons';
 import { FormSection } from '@/foundation/layout/form-section';
 import { Controller, type UseFieldArrayReturn, type UseFormReturn } from 'react-hook-form';
-import { CreateProductDtoProductType } from '@/generated/api/catalog/models';
+import { ProductType } from '@/generated/api/catalog/models';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { emptyVariant, type ProductFormValues } from '../../model/product-form.mapper';
 import type { SearchOptionsQuery } from './types';
@@ -30,7 +30,7 @@ export function ProductVariantsTab({
 }: {
   form: UseFormReturn<ProductFormValues>;
   variantFields: UseFieldArrayReturn<ProductFormValues, 'variants'>;
-  productType: CreateProductDtoProductType;
+  productType: ProductType;
   canAdjustStock: boolean;
   initialBranchId?: string;
   hasOpeningStock: boolean;
@@ -57,7 +57,7 @@ export function ProductVariantsTab({
         message="Sản phẩm và toàn bộ biến thể được lưu cùng một lần"
         description="Nếu một biến thể không hợp lệ, hệ thống sẽ không tạo dữ liệu sản phẩm dở dang. Giá và ảnh có thể cấu hình sau khi lưu."
       />
-      {productType === CreateProductDtoProductType.STANDARD && canAdjustStock && (
+      {productType === ProductType.STANDARD && canAdjustStock && (
         <Card
           size="small"
           className="mb-4 !rounded-xl !border-slate-200"
@@ -136,7 +136,7 @@ export function ProductVariantsTab({
           </div>
         </Card>
       )}
-      {productType === CreateProductDtoProductType.STANDARD && !canAdjustStock && (
+      {productType === ProductType.STANDARD && !canAdjustStock && (
         <Alert
           className="mb-4"
           type="warning"
@@ -145,7 +145,7 @@ export function ProductVariantsTab({
           description="Sản phẩm và SKU vẫn được tạo. Người có quyền inventory.stock.adjust có thể nhập tồn tại màn Tồn kho."
         />
       )}
-      {productType === CreateProductDtoProductType.BUNDLE && (
+      {productType === ProductType.BUNDLE && (
         <Alert
           className="mb-4"
           type="info"
@@ -258,7 +258,7 @@ export function ProductVariantsTab({
                   />
                 </Form.Item>
               )}
-              {productType === CreateProductDtoProductType.STANDARD && canAdjustStock && (
+              {productType === ProductType.STANDARD && canAdjustStock && (
                 <Form.Item
                   label="Số lượng tồn đầu"
                   required

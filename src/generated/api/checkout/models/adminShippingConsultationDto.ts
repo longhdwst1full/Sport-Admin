@@ -5,23 +5,23 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { AdminShippingConsultationDtoStatus } from './adminShippingConsultationDtoStatus';
-import type { AdminShippingConsultationDtoPaymentMethod } from './adminShippingConsultationDtoPaymentMethod';
-import type { AdminShippingConsultationDtoShippingMethod } from './adminShippingConsultationDtoShippingMethod';
+import type { CheckoutQuoteStatus } from './checkoutQuoteStatus';
+import type { CheckoutQuotePaymentMethod } from './checkoutQuotePaymentMethod';
+import type { ShippingMethod } from './shippingMethod';
 import type { CheckoutQuoteItemDto } from './checkoutQuoteItemDto';
 import type { CheckoutRecipientDto } from './checkoutRecipientDto';
 
 export interface AdminShippingConsultationDto {
   /** Opaque token used to confirm this exact quote */
   checkoutToken: string;
-  status: AdminShippingConsultationDtoStatus;
+  status: CheckoutQuoteStatus;
   /** @pattern ^[1-9][0-9]*$ */
   branchId: string;
   /** @pattern ^[1-9][0-9]*$ */
   warehouseId: string;
   branchName: string;
-  paymentMethod: AdminShippingConsultationDtoPaymentMethod;
-  shippingMethod: AdminShippingConsultationDtoShippingMethod;
+  paymentMethod: CheckoutQuotePaymentMethod;
+  shippingMethod: ShippingMethod;
   /** @nullable */
   shippingProvider?: string | null;
   /** @nullable */

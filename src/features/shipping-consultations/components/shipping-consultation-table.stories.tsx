@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  AdminShippingConsultationDtoPaymentMethod,
-  AdminShippingConsultationDtoShippingMethod,
-  AdminShippingConsultationDtoStatus,
+  CheckoutQuotePaymentMethod,
+  ShippingMethod,
+  CheckoutQuoteStatus,
   type AdminShippingConsultationDto,
 } from '@/generated/api/checkout/models';
 import { ShippingConsultationTable } from './shipping-consultation-table';
@@ -10,12 +10,12 @@ import { ShippingConsultationTable } from './shipping-consultation-table';
 const demoRows: AdminShippingConsultationDto[] = [
   {
     checkoutToken: 'checkout_demo_01',
-    status: AdminShippingConsultationDtoStatus.AWAITING_SHIPPING_CONSULTATION,
+    status: CheckoutQuoteStatus.AWAITING_SHIPPING_CONSULTATION,
     branchId: '1',
     warehouseId: '1',
     branchName: 'Chi nhánh Quận 7',
-    paymentMethod: AdminShippingConsultationDtoPaymentMethod.COD,
-    shippingMethod: AdminShippingConsultationDtoShippingMethod.MANUAL_EXTERNAL,
+    paymentMethod: CheckoutQuotePaymentMethod.COD,
+    shippingMethod: ShippingMethod.MANUAL_EXTERNAL,
     shippingProvider: 'COACH_BUS',
     itemSubtotal: '18500000',
     shippingTotal: null,

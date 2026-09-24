@@ -7,18 +7,15 @@
  */
 
 export * from './adminShippingConsultationDto';
-export * from './adminShippingConsultationDtoPaymentMethod';
-export * from './adminShippingConsultationDtoShippingMethod';
-export * from './adminShippingConsultationDtoStatus';
 export * from './adminShippingConsultationListDto';
 export * from './checkoutQuoteDto';
-export * from './checkoutQuoteDtoPaymentMethod';
-export * from './checkoutQuoteDtoShippingMethod';
-export * from './checkoutQuoteDtoStatus';
 export * from './checkoutQuoteItemDto';
+export * from './checkoutQuotePaymentMethod';
+export * from './checkoutQuoteStatus';
 export * from './checkoutRecipientDto';
 export * from './errorDetailDto';
 export * from './errorResponseDto';
 export * from './listAdminShippingConsultationsParams';
 export * from './listAdminShippingConsultationsStatus';
+export * from './shippingMethod';
 export * from './updateManualShippingQuoteDto';

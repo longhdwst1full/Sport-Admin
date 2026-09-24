@@ -5,15 +5,15 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ReturnHistoryDtoAction } from './returnHistoryDtoAction';
-import type { ReturnHistoryDtoToStatus } from './returnHistoryDtoToStatus';
+import type { ReturnAction } from './returnAction';
+import type { ReturnStatus } from './returnStatus';
 
 export interface ReturnHistoryDto {
   sequenceNo: number;
-  action: ReturnHistoryDtoAction;
+  action: ReturnAction;
   /** @nullable */
   fromStatus?: string | null;
-  toStatus: ReturnHistoryDtoToStatus;
+  toStatus: ReturnStatus;
   /** @nullable */
   reason?: string | null;
   createdAt: string;

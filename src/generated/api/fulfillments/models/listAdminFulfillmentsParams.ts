@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminFulfillmentsStatus } from './listAdminFulfillmentsStatus';
+import type { FulfillmentStatus } from './fulfillmentStatus';
 
 export type ListAdminFulfillmentsParams = {
   /**
@@ -17,7 +17,7 @@ export type ListAdminFulfillmentsParams = {
    * @maximum 100
    */
   limit?: number;
-  status?: ListAdminFulfillmentsStatus;
+  status?: FulfillmentStatus;
   /**
    * Mã fulfillment, mã đơn, tracking, tên, SĐT hoặc email người nhận
    * @maxLength 100

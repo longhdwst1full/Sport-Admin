@@ -2,7 +2,7 @@ import { AppstoreOutlined, TagsOutlined } from '@ant-design/icons';
 import { Form, Input, Select, Typography } from 'antd';
 import { FormSection } from '@/foundation/layout/form-section';
 import { Controller, type UseFormReturn } from 'react-hook-form';
-import { CreateProductDtoProductType, type ProductDetailDto } from '@/generated/api/catalog/models';
+import { ProductType, type ProductDetailDto } from '@/generated/api/catalog/models';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 import type { SearchOptionsQuery } from './types';
 
@@ -52,12 +52,12 @@ export function ProductBasicInfoTab({
           {...field}
           disabled={Boolean(product?.variants.length)}
           options={[
-            { value: CreateProductDtoProductType.STANDARD, label: 'Sản phẩm thường' },
-            { value: CreateProductDtoProductType.BUNDLE, label: 'Combo cố định' },
+            { value: ProductType.STANDARD, label: 'Sản phẩm thường' },
+            { value: ProductType.BUNDLE, label: 'Combo cố định' },
           ]}
           onChange={(value) => {
             field.onChange(value);
-            if (value === CreateProductDtoProductType.BUNDLE) {
+            if (value === ProductType.BUNDLE) {
               // Combo không có tồn vật lý riêng: tồn bán được tính từ SKU thành phần.
               form.getValues('variants').forEach((_variant, index) => {
                 form.setValue(`variants.${index}.openingQuantity`, 0);

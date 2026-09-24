@@ -5,15 +5,15 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { InspectReturnItemDtoCondition } from './inspectReturnItemDtoCondition';
-import type { InspectReturnItemDtoDisposition } from './inspectReturnItemDtoDisposition';
+import type { ReturnCondition } from './returnCondition';
+import type { ReturnItemDisposition } from './returnItemDisposition';
 
 export interface InspectReturnItemDto {
   /** @pattern ^[1-9][0-9]*$ */
   returnItemId: string;
-  condition: InspectReturnItemDtoCondition;
+  condition: ReturnCondition;
   /** Bắt buộc với DAMAGED (HOLD hoặc WRITE_OFF); SELLABLE luôn RESTOCK, MISSING luôn WRITE_OFF */
-  disposition?: InspectReturnItemDtoDisposition;
+  disposition?: ReturnItemDisposition;
   /** @maxLength 500 */
   note?: string;
 }

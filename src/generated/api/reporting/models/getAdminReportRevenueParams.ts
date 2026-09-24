@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { GetAdminReportRevenueGranularity } from './getAdminReportRevenueGranularity';
+import type { ReportGranularity } from './reportGranularity';
 
 export type GetAdminReportRevenueParams = {
   /**
@@ -19,5 +19,5 @@ export type GetAdminReportRevenueParams = {
   /**
    * Gom biểu đồ theo ngày, tháng, quý hoặc năm.
    */
-  granularity?: GetAdminReportRevenueGranularity;
+  granularity?: ReportGranularity;
 };

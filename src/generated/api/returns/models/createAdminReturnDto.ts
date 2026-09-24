@@ -5,13 +5,13 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateAdminReturnDtoReasonCode } from './createAdminReturnDtoReasonCode';
+import type { ReturnReasonCode } from './returnReasonCode';
 import type { ReturnEvidenceInputDto } from './returnEvidenceInputDto';
 import type { ReturnLineInputDto } from './returnLineInputDto';
-import type { CreateAdminReturnDtoFault } from './createAdminReturnDtoFault';
+import type { ReturnFault } from './returnFault';
 
 export interface CreateAdminReturnDto {
-  reasonCode: CreateAdminReturnDtoReasonCode;
+  reasonCode: ReturnReasonCode;
   /** @maxLength 2000 */
   description?: string;
   /**
@@ -27,7 +27,7 @@ export interface CreateAdminReturnDto {
   /** @pattern ^[1-9][0-9]*$ */
   orderId: string;
   /** Bắt buộc khi người tạo có quyền return.decide: phiếu được duyệt ngay (D56) */
-  fault?: CreateAdminReturnDtoFault;
+  fault?: ReturnFault;
   /**
    * Lý do nhận trả khi đã quá hạn; cần quyền return.window.override
    * @minLength 5

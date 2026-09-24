@@ -6,13 +6,13 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { OrderStatusHistoryDtoFromStatus } from './orderStatusHistoryDtoFromStatus';
-import type { OrderStatusHistoryDtoToStatus } from './orderStatusHistoryDtoToStatus';
+import type { OrderStatus } from './orderStatus';
 
 export interface OrderStatusHistoryDto {
   sequenceNo: number;
   /** @nullable */
   fromStatus?: OrderStatusHistoryDtoFromStatus;
-  toStatus: OrderStatusHistoryDtoToStatus;
+  toStatus: OrderStatus;
   /** @nullable */
   reason?: string | null;
   actorType: string;

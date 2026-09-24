@@ -1,6 +1,6 @@
 import { Alert, Descriptions, Empty, Tag, Typography } from 'antd';
 import type { UseFormReturn } from 'react-hook-form';
-import { CreateProductDtoProductType } from '@/generated/api/catalog/models';
+import { ProductType } from '@/generated/api/catalog/models';
 import { AdminTable } from '@/foundation/table';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 
@@ -35,7 +35,7 @@ export function ProductReviewTab({
           {values.name?.trim() || <Typography.Text type="secondary">Chưa nhập</Typography.Text>}
         </Descriptions.Item>
         <Descriptions.Item label="Loại">
-          {values.productType === CreateProductDtoProductType.BUNDLE ? 'Combo cố định' : 'Sản phẩm thường'}
+          {values.productType === ProductType.BUNDLE ? 'Combo cố định' : 'Sản phẩm thường'}
         </Descriptions.Item>
         <Descriptions.Item label="Thương hiệu">
           {brandLabel ?? <Typography.Text type="secondary">Chưa chọn</Typography.Text>}

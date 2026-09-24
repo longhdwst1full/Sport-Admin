@@ -5,14 +5,14 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { UpdateRoleDtoStatus } from './updateRoleDtoStatus';
+import type { RoleStatus } from './roleStatus';
 
 export interface UpdateRoleDto {
   /** @maxLength 255 */
   name?: string;
   /** @maxLength 1000 */
   description?: string;
-  status?: UpdateRoleDtoStatus;
+  status?: RoleStatus;
   /** Danh sách quyền thay thế toàn bộ. Bỏ trống để giữ nguyên quyền hiện tại. */
   permissionCodes?: string[];
   /**

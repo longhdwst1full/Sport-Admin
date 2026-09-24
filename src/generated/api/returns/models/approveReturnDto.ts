@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ApproveReturnDtoFault } from './approveReturnDtoFault';
+import type { ReturnFault } from './returnFault';
 
 export interface ApproveReturnDto {
   /** @pattern ^\d+$ */
@@ -13,5 +13,5 @@ export interface ApproveReturnDto {
   /** @maxLength 500 */
   note?: string;
   /** SHOP thì hoàn thêm phí giao ban đầu (D57) */
-  fault: ApproveReturnDtoFault;
+  fault: ReturnFault;
 }

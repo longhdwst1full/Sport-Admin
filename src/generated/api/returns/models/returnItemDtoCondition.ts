@@ -5,17 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { ReturnCondition } from './returnCondition';
 
 /**
  * @nullable
  */
-export type ReturnItemDtoCondition =
-  | (typeof ReturnItemDtoCondition)[keyof typeof ReturnItemDtoCondition]
-  | null;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ReturnItemDtoCondition = {
-  SELLABLE: 'SELLABLE',
-  DAMAGED: 'DAMAGED',
-  MISSING: 'MISSING',
-} as const;
+export type ReturnItemDtoCondition = ReturnCondition | null;

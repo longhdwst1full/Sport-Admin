@@ -9,7 +9,7 @@ import {
   upsertAdminFlashSaleItem,
   useListAdminFlashSales,
 } from '@/generated/api/promotions/promotions';
-import type { ListAdminFlashSalesStatus } from '@/generated/api/promotions/models';
+import type { FlashSaleCampaignStatus } from '@/generated/api/promotions/models';
 import { useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
@@ -33,7 +33,7 @@ export function FlashSalesPage() {
   const canManage = useCan('catalog.flash_sale.manage');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<ListAdminFlashSalesStatus>();
+  const [status, setStatus] = useState<FlashSaleCampaignStatus>();
   const [selectedId, setSelectedId] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
   const [debouncedSearch] = useDebounce(search.trim(), 350);

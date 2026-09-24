@@ -5,12 +5,12 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ProductBundleDtoBundleType } from './productBundleDtoBundleType';
-import type { ProductBundleDtoStatus } from './productBundleDtoStatus';
+import type { ProductBundleType } from './productBundleType';
+import type { ProductBundleStatus } from './productBundleStatus';
 import type { BundleComponentDto } from './bundleComponentDto';
 
 export interface ProductBundleDto {
-  bundleType: ProductBundleDtoBundleType;
-  status: ProductBundleDtoStatus;
+  bundleType: ProductBundleType;
+  status: ProductBundleStatus;
   components: BundleComponentDto[];
 }

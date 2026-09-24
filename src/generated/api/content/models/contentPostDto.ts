@@ -5,13 +5,13 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ContentPostDtoPostType } from './contentPostDtoPostType';
-import type { ContentPostDtoStatus } from './contentPostDtoStatus';
+import type { ContentPostType } from './contentPostType';
+import type { ContentPostStatus } from './contentPostStatus';
 
 export interface ContentPostDto {
   id: string;
   slug: string;
-  postType: ContentPostDtoPostType;
+  postType: ContentPostType;
   /** Có hiển thị trên website hay không; tách khỏi status để ẩn tạm bài viết */
   isPublished: boolean;
   title: string;
@@ -20,7 +20,7 @@ export interface ContentPostDto {
   coverUrl: string;
   relatedProductSlugs: string[];
   publishedAt: string;
-  status: ContentPostDtoStatus;
+  status: ContentPostStatus;
   /** @minimum 0 */
   version: number;
   archivedAt?: string;

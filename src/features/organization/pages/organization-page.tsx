@@ -23,7 +23,7 @@ import {
   useListAdminBranches,
   useListAdminWarehouses,
 } from '@/generated/api/organization/organization';
-import type { BranchDto, BranchDtoStatus, WarehouseDto } from '@/generated/api/organization/models';
+import type { BranchDto, OrganizationStatus, WarehouseDto } from '@/generated/api/organization/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { OrganizationFormDrawer } from '../components/organization-form-drawer';
 
@@ -35,12 +35,12 @@ interface BranchWarehouseRow {
   warehouseName: string;
   address: string;
   region: string;
-  status: BranchDtoStatus;
+  status: OrganizationStatus;
   branch: BranchDto;
   warehouse?: WarehouseDto;
 }
 
-const organizationStatuses: Record<BranchDtoStatus, { color: string; label: string }> = {
+const organizationStatuses: Record<OrganizationStatus, { color: string; label: string }> = {
   ACTIVE: { color: 'green', label: 'Đang hoạt động' },
   INACTIVE: { color: 'default', label: 'Ngừng hoạt động' },
 };
@@ -199,7 +199,7 @@ export function OrganizationPage() {
             title: 'Trạng thái',
             dataIndex: 'status',
             width: 140,
-            render: (value: BranchDtoStatus) => (
+            render: (value: OrganizationStatus) => (
               <StatusTag status={value} presentations={organizationStatuses} />
             ),
           },

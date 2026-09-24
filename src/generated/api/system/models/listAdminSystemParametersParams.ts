@@ -5,9 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminSystemParametersGroupCode } from './listAdminSystemParametersGroupCode';
-import type { ListAdminSystemParametersStatus } from './listAdminSystemParametersStatus';
-import type { ListAdminSystemParametersSortBy } from './listAdminSystemParametersSortBy';
+import type { SystemParameterGroup } from './systemParameterGroup';
+import type { SystemParameterStatus } from './systemParameterStatus';
+import type { SystemParameterSortField } from './systemParameterSortField';
 import type { ListAdminSystemParametersSortDirection } from './listAdminSystemParametersSortDirection';
 
 export type ListAdminSystemParametersParams = {
@@ -20,13 +20,13 @@ export type ListAdminSystemParametersParams = {
    * @maximum 100
    */
   limit?: number;
-  groupCode?: ListAdminSystemParametersGroupCode;
+  groupCode?: SystemParameterGroup;
   /**
    * Tìm theo mã hoặc nhãn tham số
    * @maxLength 100
    */
   search?: string;
-  status?: ListAdminSystemParametersStatus;
+  status?: SystemParameterStatus;
   /**
    * Chỉ lấy tham số hệ thống hoặc tham số tuỳ biến
    */
@@ -34,6 +34,6 @@ export type ListAdminSystemParametersParams = {
   /**
    * Trường sắp xếp; kèm `sortDirection` để đổi chiều
    */
-  sortBy?: ListAdminSystemParametersSortBy;
+  sortBy?: SystemParameterSortField;
   sortDirection?: ListAdminSystemParametersSortDirection;
 };

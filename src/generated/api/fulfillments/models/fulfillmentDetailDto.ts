@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { FulfillmentDetailDtoStatus } from './fulfillmentDetailDtoStatus';
+import type { FulfillmentStatus } from './fulfillmentStatus';
 import type { FulfillmentHistoryDto } from './fulfillmentHistoryDto';
 
 export interface FulfillmentDetailDto {
@@ -18,7 +18,7 @@ export interface FulfillmentDetailDto {
   /** @pattern ^[1-9][0-9]*$ */
   warehouseId: string;
   warehouseName: string;
-  status: FulfillmentDetailDtoStatus;
+  status: FulfillmentStatus;
   /** @nullable */
   carrierCode?: string | null;
   /** @nullable */

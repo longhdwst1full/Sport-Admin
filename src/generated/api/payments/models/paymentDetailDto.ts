@@ -5,9 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { PaymentDetailDtoMethod } from './paymentDetailDtoMethod';
-import type { PaymentDetailDtoStatus } from './paymentDetailDtoStatus';
-import type { PaymentDetailDtoCurrencyCode } from './paymentDetailDtoCurrencyCode';
+import type { PaymentMethod } from './paymentMethod';
+import type { PaymentStatus } from './paymentStatus';
+import type { CurrencyCode } from './currencyCode';
 import type { PaymentInstructionDto } from './paymentInstructionDto';
 import type { PaymentEvidenceDto } from './paymentEvidenceDto';
 
@@ -20,11 +20,11 @@ export interface PaymentDetailDto {
   /** Trạng thái đơn hàng dùng để kiểm soát thời điểm thu COD */
   orderStatus: string;
   paymentRef: string;
-  method: PaymentDetailDtoMethod;
-  status: PaymentDetailDtoStatus;
+  method: PaymentMethod;
+  status: PaymentStatus;
   expectedAmount: string;
   receivedAmount: string;
-  currencyCode: PaymentDetailDtoCurrencyCode;
+  currencyCode: CurrencyCode;
   expiresAt?: string;
   confirmedAt?: string;
   failureReason?: string;

@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { BrandDtoStatus } from './brandDtoStatus';
+import type { CatalogMasterStatus } from './catalogMasterStatus';
 
 export interface BrandDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -16,6 +16,6 @@ export interface BrandDto {
   description?: string;
   /** @pattern ^[1-9][0-9]*$ */
   logoAssetId?: string;
-  status: BrandDtoStatus;
+  status: CatalogMasterStatus;
   version: number;
 }

@@ -5,22 +5,22 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CheckoutQuoteDtoStatus } from './checkoutQuoteDtoStatus';
-import type { CheckoutQuoteDtoPaymentMethod } from './checkoutQuoteDtoPaymentMethod';
-import type { CheckoutQuoteDtoShippingMethod } from './checkoutQuoteDtoShippingMethod';
+import type { CheckoutQuoteStatus } from './checkoutQuoteStatus';
+import type { CheckoutQuotePaymentMethod } from './checkoutQuotePaymentMethod';
+import type { ShippingMethod } from './shippingMethod';
 import type { CheckoutQuoteItemDto } from './checkoutQuoteItemDto';
 
 export interface CheckoutQuoteDto {
   /** Opaque token used to confirm this exact quote */
   checkoutToken: string;
-  status: CheckoutQuoteDtoStatus;
+  status: CheckoutQuoteStatus;
   /** @pattern ^[1-9][0-9]*$ */
   branchId: string;
   /** @pattern ^[1-9][0-9]*$ */
   warehouseId: string;
   branchName: string;
-  paymentMethod: CheckoutQuoteDtoPaymentMethod;
-  shippingMethod: CheckoutQuoteDtoShippingMethod;
+  paymentMethod: CheckoutQuotePaymentMethod;
+  shippingMethod: ShippingMethod;
   /** @nullable */
   shippingProvider?: string | null;
   /** @nullable */

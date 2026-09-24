@@ -7,12 +7,11 @@
  */
 
 export * from './createMediaUploadDto';
-export * from './createMediaUploadDtoContentType';
 export * from './errorDetailDto';
 export * from './errorResponseDto';
 export * from './finalizeMediaUploadDto';
+export * from './imageMimeType';
 export * from './mediaAssetDto';
-export * from './mediaAssetDtoProvider';
 export * from './mediaAssetDtoStatus';
+export * from './mediaProvider';
 export * from './signedMediaUploadDto';
-export * from './signedMediaUploadDtoProvider';

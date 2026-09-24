@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { RoleDtoStatus } from './roleDtoStatus';
+import type { RoleStatus } from './roleStatus';
 
 export interface RoleDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -13,7 +13,7 @@ export interface RoleDto {
   code: string;
   name: string;
   description?: string;
-  status: RoleDtoStatus;
+  status: RoleStatus;
   system: boolean;
   permissionCodes: string[];
   version: number;

@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ListAdminReturnsStatus } from './listAdminReturnsStatus';
+import type { ReturnStatus } from './returnStatus';
 
 export type ListAdminReturnsParams = {
   /**
@@ -17,7 +17,7 @@ export type ListAdminReturnsParams = {
    * @maximum 100
    */
   limit?: number;
-  status?: ListAdminReturnsStatus;
+  status?: ReturnStatus;
   /**
    * Mã phiếu trả, mã đơn hoặc tên/SĐT người nhận
    * @maxLength 100

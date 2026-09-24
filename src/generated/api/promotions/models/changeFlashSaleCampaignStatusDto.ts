@@ -5,10 +5,10 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { ChangeFlashSaleCampaignStatusDtoStatus } from './changeFlashSaleCampaignStatusDtoStatus';
+import type { FlashSaleCampaignStatus } from './flashSaleCampaignStatus';
 
 export interface ChangeFlashSaleCampaignStatusDto {
   /** @pattern ^\d+$ */
   expectedVersion: string;
-  status: ChangeFlashSaleCampaignStatusDtoStatus;
+  status: FlashSaleCampaignStatus;
 }

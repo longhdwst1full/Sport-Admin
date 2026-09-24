@@ -7,13 +7,13 @@
  */
 import type { PosCustomerDto } from './posCustomerDto';
 import type { PosOrderItemDto } from './posOrderItemDto';
-import type { CreatePosOrderDtoPaymentMethod } from './createPosOrderDtoPaymentMethod';
+import type { PosPaymentMethod } from './posPaymentMethod';
 import type { PosDeliveryAddressDto } from './posDeliveryAddressDto';
 
 export interface CreatePosOrderDto {
   customer: PosCustomerDto;
   items: PosOrderItemDto[];
-  paymentMethod: CreatePosOrderDtoPaymentMethod;
+  paymentMethod: PosPaymentMethod;
   /** Bỏ trống: khách nhận ngay tại quầy như cũ. Có giá trị: đơn đi giao hàng, tồn kho vẫn đặt chỗ như luồng checkout của khách. */
   delivery?: PosDeliveryAddressDto;
   /** Chạy luôn hết vòng giao hàng và đánh dấu đã giao. Mặc định bật cho đơn tại quầy và tắt cho đơn giao hàng; bật cho đơn giao hàng khi khách lấy ngay tại cửa hàng. */

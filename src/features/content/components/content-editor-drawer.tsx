@@ -8,9 +8,9 @@ import {
 } from '@/generated/api/content/content';
 import type { ContentPostDto } from '@/generated/api/content/models';
 import {
-  CreateContentPostDtoPostType,
-  type CreateContentPostDtoPostType as PostType,
-} from '@/generated/api/content/models/createContentPostDtoPostType';
+  ContentPostType,
+  type ContentPostType as PostType,
+} from '@/generated/api/content/models/contentPostType';
 import { ImageUploadField } from '@/features/media';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage } from '@/lib/api/error';
@@ -28,7 +28,7 @@ export function ContentEditorDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
-  const [postType, setPostType] = useState<PostType>(CreateContentPostDtoPostType.NEWS);
+  const [postType, setPostType] = useState<PostType>(ContentPostType.NEWS);
   const [excerpt, setExcerpt] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [relatedProducts, setRelatedProducts] = useState('');
@@ -37,7 +37,7 @@ export function ContentEditorDrawer({
   useEffect(() => {
     if (!open) return;
     setTitle(editing?.title ?? '');
-    setPostType((editing?.postType as PostType) ?? CreateContentPostDtoPostType.NEWS);
+    setPostType((editing?.postType as PostType) ?? ContentPostType.NEWS);
     setExcerpt(editing?.excerpt ?? '');
     setCoverUrl(editing?.coverUrl ?? '');
     setRelatedProducts((editing?.relatedProductSlugs ?? []).join(', '));
@@ -111,7 +111,7 @@ export function ContentEditorDrawer({
           <Select
             value={postType}
             onChange={setPostType}
-            options={Object.values(CreateContentPostDtoPostType).map((value) => ({
+            options={Object.values(ContentPostType).map((value) => ({
               value,
               label: value.replaceAll('_', ' '),
             }))}

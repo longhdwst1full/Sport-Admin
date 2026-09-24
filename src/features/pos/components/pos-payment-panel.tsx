@@ -1,6 +1,6 @@
 import { Alert, Descriptions, Form, Radio, Switch } from 'antd';
 import { MoneyInput } from '@/foundation/inputs/money-input';
-import { CreatePosOrderDtoPaymentMethod } from '@/generated/api/orders/models';
+import { PosPaymentMethod } from '@/generated/api/orders/models';
 import { changeFor, shortfallFor } from '../model/pos-cash';
 import {
   moneyFormatter,
@@ -24,13 +24,13 @@ export function PosPaymentPanel({
   onChange,
 }: {
   total: number;
-  method: CreatePosOrderDtoPaymentMethod;
+  method: PosPaymentMethod;
   isDelivery: boolean;
   handOverImmediately: boolean;
   cashReceived: number | null;
   disabled?: boolean;
   onChange: (patch: {
-    paymentMethod?: CreatePosOrderDtoPaymentMethod;
+    paymentMethod?: PosPaymentMethod;
     cashReceived?: number | null;
     handOverImmediately?: boolean;
   }) => void;
@@ -46,15 +46,15 @@ export function PosPaymentPanel({
           buttonStyle="solid"
           disabled={disabled}
           onChange={(event) =>
-            onChange({ paymentMethod: event.target.value as CreatePosOrderDtoPaymentMethod })
+            onChange({ paymentMethod: event.target.value as PosPaymentMethod })
           }
         >
-          {Object.values(CreatePosOrderDtoPaymentMethod).map((value) => (
+          {Object.values(PosPaymentMethod).map((value) => (
             <Radio.Button
               key={value}
               value={value}
               // Thu hộ khi giao không áp dụng cho khách cầm hàng về ngay tại quầy.
-              disabled={value === CreatePosOrderDtoPaymentMethod.COD && !isDelivery}
+              disabled={value === PosPaymentMethod.COD && !isDelivery}
             >
               {posPaymentMethodLabels[value]}
             </Radio.Button>
@@ -62,7 +62,7 @@ export function PosPaymentPanel({
         </Radio.Group>
       </Form.Item>
 
-      {method === CreatePosOrderDtoPaymentMethod.CASH && (
+      {method === PosPaymentMethod.CASH && (
         <div className="grid gap-3 sm:grid-cols-2">
           <Form.Item label="Tiền khách đưa" className="!mb-0">
             {/* Dùng MoneyInput thay cho formatter/parser viết tay: hai bản quy tắc phân cách
@@ -93,7 +93,7 @@ export function PosPaymentPanel({
         </div>
       )}
 
-      {method === CreatePosOrderDtoPaymentMethod.BANK_TRANSFER && (
+      {method === PosPaymentMethod.BANK_TRANSFER && (
         <Descriptions bordered size="small" column={1} className="mb-3">
           <Descriptions.Item label="Số tiền cần chuyển">
             <strong>{moneyFormatter.format(total)}</strong>

@@ -5,22 +5,9 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
+import type { OrderStatus } from './orderStatus';
 
 /**
  * @nullable
  */
-export type OrderStatusHistoryDtoFromStatus =
-  | (typeof OrderStatusHistoryDtoFromStatus)[keyof typeof OrderStatusHistoryDtoFromStatus]
-  | null;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrderStatusHistoryDtoFromStatus = {
-  PENDING_CONFIRMATION: 'PENDING_CONFIRMATION',
-  CONFIRMED: 'CONFIRMED',
-  PICKING: 'PICKING',
-  PACKED: 'PACKED',
-  SHIPPED: 'SHIPPED',
-  DELIVERED: 'DELIVERED',
-  COMPLETED: 'COMPLETED',
-  CANCELLED: 'CANCELLED',
-} as const;
+export type OrderStatusHistoryDtoFromStatus = OrderStatus | null;

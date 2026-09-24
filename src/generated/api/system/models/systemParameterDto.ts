@@ -5,19 +5,19 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { SystemParameterDtoGroupCode } from './systemParameterDtoGroupCode';
-import type { SystemParameterDtoValueType } from './systemParameterDtoValueType';
+import type { SystemParameterGroup } from './systemParameterGroup';
+import type { SystemParameterValueType } from './systemParameterValueType';
 
 export interface SystemParameterDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
   /** Mã ổn định dùng trong code; không đổi được từ giao diện */
   code: string;
-  groupCode: SystemParameterDtoGroupCode;
+  groupCode: SystemParameterGroup;
   label: string;
   /** @nullable */
   description?: string | null;
-  valueType: SystemParameterDtoValueType;
+  valueType: SystemParameterValueType;
   /** Giá trị đang áp dụng, luôn ở dạng chuỗi */
   value: string;
   /** Giá trị mặc định khi chưa cấu hình hoặc giá trị hỏng */

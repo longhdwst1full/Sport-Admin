@@ -1,6 +1,6 @@
 import type {
   CreateProductDto,
-  CreateProductDtoProductType,
+  ProductType,
   CreateVariantDto,
   ProductDetailDto,
   UpdateProductDto,
@@ -19,7 +19,7 @@ export interface ProductVariantFormValues {
 }
 
 export interface ProductFormValues {
-  productType: CreateProductDtoProductType;
+  productType: ProductType;
   name: string;
   brandId?: string;
   categoryIds: string[];

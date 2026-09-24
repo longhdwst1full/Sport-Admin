@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { FlashSaleItemDtoStatus } from './flashSaleItemDtoStatus';
+import type { FlashSaleItemStatus } from './flashSaleItemStatus';
 
 export interface FlashSaleItemDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -29,6 +29,6 @@ export interface FlashSaleItemDto {
   availableQuantity: number;
   /** @nullable */
   perCustomerLimit?: number | null;
-  status: FlashSaleItemDtoStatus;
+  status: FlashSaleItemStatus;
   version: string;
 }

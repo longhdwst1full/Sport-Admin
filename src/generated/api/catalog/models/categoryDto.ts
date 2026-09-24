@@ -5,7 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CategoryDtoStatus } from './categoryDtoStatus';
+import type { CatalogMasterStatus } from './catalogMasterStatus';
 
 export interface CategoryDto {
   /** @pattern ^[1-9][0-9]*$ */
@@ -23,6 +23,6 @@ export interface CategoryDto {
   sortOrder: number;
   /** Tắt thì sản phẩm thuộc danh mục không tạo được yêu cầu trả hàng (D54) */
   returnable: boolean;
-  status: CategoryDtoStatus;
+  status: CatalogMasterStatus;
   version: number;
 }

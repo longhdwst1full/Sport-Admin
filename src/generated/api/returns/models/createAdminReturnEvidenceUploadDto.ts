@@ -5,11 +5,11 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateAdminReturnEvidenceUploadDtoContentType } from './createAdminReturnEvidenceUploadDtoContentType';
+import type { ImageMimeType } from './imageMimeType';
 
 export interface CreateAdminReturnEvidenceUploadDto {
   fileName: string;
-  contentType: CreateAdminReturnEvidenceUploadDtoContentType;
+  contentType: ImageMimeType;
   /**
    * @minimum 1
    * @maximum 10485760

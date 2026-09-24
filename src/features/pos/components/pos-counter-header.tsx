@@ -4,7 +4,7 @@ import { Form, Select, Tag, Tooltip } from 'antd';
 import { LockOutlined, ShopOutlined, UserOutlined } from '@ant-design/icons';
 import { useListAdminBranches } from '@/generated/api/organization/organization';
 import { AuthScopeDtoType } from '@/generated/api/auth/models';
-import { BranchDtoStatus } from '@/generated/api/organization/models';
+import { OrganizationStatus } from '@/generated/api/organization/models';
 import { useAuth } from '@/core/auth/auth-context';
 
 /**
@@ -30,7 +30,7 @@ export function PosCounterHeader({
   // Chi nhánh đã ngừng vẫn tồn tại để đọc lại lịch sử, nhưng không phải nơi thu tiền hôm nay.
   const activeBranches = useMemo(
     () =>
-      (branches.data?.items ?? []).filter((branch) => branch.status === BranchDtoStatus.ACTIVE),
+      (branches.data?.items ?? []).filter((branch) => branch.status === OrganizationStatus.ACTIVE),
     [branches.data?.items],
   );
 
