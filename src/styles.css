@@ -3,66 +3,68 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────────
-   Bảo An Sport — design tokens
-   Nguồn chung với repo còn lại (admin ↔ client). Sửa một bên thì chép sang bên kia.
+   Bảo An Sport — design tokens (Admin)
 
-   Bảng màu lấy từ mã màu đĩa tạ IWF, vì đây là hệ màu có thật trong môn cử tạ
-   và là thứ khách hàng của cửa hàng đã quen mắt: 25kg đỏ, 20kg xanh, 15kg vàng.
-   Xanh lo hành động, vàng lo giá, đỏ ở lại với lỗi — không màu nào kiêm hai việc.
+   Cấu trúc token, thang chữ, bo góc và đổ bóng là của lượt chuẩn hoá mới.
+   GIÁ TRỊ MÀU thì giữ nguyên bảng màu Admin đang chạy: hổ phách #f59e0b làm
+   màu hành động, navy #0f172a cho thanh bên, xanh doanh nghiệp #2563eb cho
+   liên kết và tab. Đổi cấu trúc mà không đổi diện mạo.
+
+   `--ba-*` là nguồn duy nhất; các tên cũ (`--color-*`) bên dưới chỉ là bí danh.
    ───────────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
 
   /* ── Gang đúc: chữ và bề mặt tối ─────────────────────────────── */
-  --ba-iron-900: #14171b;
-  --ba-iron-800: #1b1f24;
-  --ba-iron-700: #2a2f36;
-  --ba-iron-600: #3d444d;
-  --ba-iron-500: #5a626c;
-  --ba-iron-400: #7c848f;
-  --ba-iron-300: #a6adb6;
-  --ba-iron-200: #cbd0d6;
-  --ba-iron-100: #e0e3e6;
-  --ba-iron-50: #eff1f2;
+  --ba-iron-900: #0f172a;
+  --ba-iron-800: #1e293b;
+  --ba-iron-700: #334155;
+  --ba-iron-600: #475569;
+  --ba-iron-500: #64748b;
+  --ba-iron-400: #94a3b8;
+  --ba-iron-300: #cbd5e1;
+  --ba-iron-200: #e2e8f0;
+  --ba-iron-100: #f1f5f9;
+  --ba-iron-50: #f8fafc;
 
   /* ── Bột magie: nền. Lạnh, không phải kem — kem + serif là dấu vết
         của trang sinh tự động. ─────────────────────────────────── */
-  --ba-chalk: #e9ebec;
+  --ba-chalk: #f8fafc;
   --ba-paper: #ffffff;
 
   /* ── Đĩa 20kg: hành động chính ───────────────────────────────── */
-  --ba-blue-50: #eef3fc;
-  --ba-blue-100: #d3e0f7;
-  --ba-blue-200: #a7c1ef;
-  --ba-blue-300: #6e99e2;
-  --ba-blue-400: #3c72d2;
-  --ba-blue-500: #1b54b8;
-  --ba-blue-600: #17469a;
-  --ba-blue-700: #12377a;
-  --ba-blue-800: #0e2a5c;
-  --ba-blue-900: #0a1e42;
+  --ba-blue-50: #eff6ff;
+  --ba-blue-100: #dbeafe;
+  --ba-blue-200: #bfdbfe;
+  --ba-blue-300: #93c5fd;
+  --ba-blue-400: #3b82f6;
+  --ba-blue-500: #2563eb;
+  --ba-blue-600: #1d4ed8;
+  --ba-blue-700: #1e40af;
+  --ba-blue-800: #1e3a8a;
+  --ba-blue-900: #172554;
 
   /* ── Đĩa 15kg: DÀNH RIÊNG cho giá và flash sale. Dùng vàng này cho
         việc khác là làm mất tín hiệu giá. ──────────────────────── */
-  --ba-yellow-50: #fff8e1;
-  --ba-yellow-100: #fdecb8;
-  --ba-yellow-200: #fadc80;
-  --ba-yellow-300: #f7ca47;
-  --ba-yellow-400: #f2b705;
-  --ba-yellow-500: #d39f03;
-  --ba-yellow-600: #a87e02;
+  --ba-yellow-50: #fffbeb;
+  --ba-yellow-100: #fef3c7;
+  --ba-yellow-200: #fde68a;
+  --ba-yellow-300: #fcd34d;
+  --ba-yellow-400: #f59e0b;
+  --ba-yellow-500: #d97706;
+  --ba-yellow-600: #b45309;
 
   /* ── Đĩa 25kg: lỗi và huỷ ────────────────────────────────────── */
-  --ba-red-100: #f9dcdc;
-  --ba-red-500: #c62828;
-  --ba-red-600: #a31f1f;
+  --ba-red-100: #fee2e2;
+  --ba-red-500: #ef4444;
+  --ba-red-600: #dc2626;
 
   /* ── Còn lại của hệ ngữ nghĩa ────────────────────────────────── */
-  --ba-green-100: #dcefe3;
-  --ba-green-500: #2e7d4f;
-  --ba-green-600: #226039;
-  --ba-amber-100: #fbe4c8;
-  --ba-amber-500: #e07b02;
+  --ba-green-100: #d1fae5;
+  --ba-green-500: #16a34a;
+  --ba-green-600: #15803d;
+  --ba-amber-100: #fef3c7;
+  --ba-amber-500: #f59e0b;
 
   /* ── Vai trò ─────────────────────────────────────────────────── */
   --ba-canvas: var(--ba-chalk);
@@ -72,12 +74,12 @@
   --ba-ink-secondary: var(--ba-iron-500);
   --ba-ink-tertiary: var(--ba-iron-400);
   --ba-ink-inverse: var(--ba-paper);
-  --ba-action: var(--ba-blue-500);
-  --ba-action-hover: var(--ba-blue-400);
+  --ba-action: var(--ba-yellow-400);
+  --ba-action-hover: var(--ba-yellow-300);
   --ba-price: var(--ba-yellow-400);
   --ba-danger: var(--ba-red-500);
   --ba-success: var(--ba-green-500);
-  --ba-warning: var(--ba-amber-500);
+  --ba-warning: var(--ba-yellow-500);
 
   /* ── Đường viền thay cho đổ bóng ─────────────────────────────────
         Thẻ dựng bằng viền chứ không bằng bóng: cùng một bóng xám mềm
@@ -159,9 +161,9 @@
 /* Tên biến cũ giữ lại làm bí danh: 825 dòng CSS bên dưới và các component đang
    dùng chúng. Xoá bí danh phải là một lượt dọn riêng, không gộp vào lượt đổi token. */
 :root {
-  --color-primary: var(--ba-action);
-  --color-primary-light: var(--ba-blue-400);
-  --color-primary-dark: var(--ba-blue-700);
+  --color-primary: #059669;
+  --color-primary-light: #10b981;
+  --color-primary-dark: #047857;
   --color-surface: var(--ba-surface);
   --color-surface-sunken: var(--ba-canvas);
   --color-surface-raised: var(--ba-surface);
@@ -173,14 +175,14 @@
 
   /* Thanh bên tối: gang đậm hơn nền, vạch hoạt động dùng xanh đĩa tạ thay cho
      hổ phách cũ — hổ phách quá gần vàng giá và làm loãng tín hiệu giá. */
-  --sidebar-bg: var(--ba-iron-900);
-  --sidebar-bg-lighter: var(--ba-iron-800);
-  --sidebar-text: var(--ba-iron-300);
+  --sidebar-bg: #151d2f;
+  --sidebar-bg-lighter: #1e293f;
+  --sidebar-text: #8e9eb5;
   --sidebar-text-hover: var(--ba-iron-50);
   --sidebar-text-active: var(--ba-paper);
-  --sidebar-active-bg: rgba(27, 84, 184, 0.18);
-  --sidebar-active-border: rgba(27, 84, 184, 0.55);
-  --sidebar-active-accent: var(--ba-blue-300);
+  --sidebar-active-bg: rgba(245, 158, 11, 0.12);
+  --sidebar-active-border: rgba(245, 158, 11, 0.5);
+  --sidebar-active-accent: var(--ba-yellow-400);
   --sidebar-border: rgba(255, 255, 255, 0.06);
   --sidebar-width: 250px;
   --sidebar-collapsed-width: 72px;
