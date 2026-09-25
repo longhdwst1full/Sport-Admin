@@ -16,6 +16,7 @@ const product = (overrides: Partial<ProductDetailDto> = {}): ProductDetailDto =>
   variants: [],
   media: [],
   categories: [],
+  specifications: [],
   ...overrides,
 });
 

@@ -28,6 +28,7 @@ import {
 import type { ProductVariantDto } from '@/generated/api/catalog/models';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { ProductMediaPanel } from './product-media-panel';
+import { ProductSpecificationsPanel } from './product-specifications-panel';
 import { ProductFormDrawer } from './product-form-drawer';
 import { VariantEditDrawer } from './variant-edit-drawer';
 import { ProductPricePanel } from './product-price-panel';
@@ -296,6 +297,8 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
             <Descriptions.Item label="Giá thấp nhất">{product.minPrice ? money.format(Number(product.minPrice)) : 'Chưa có'}</Descriptions.Item>
             <Descriptions.Item label="Slug">{product.slug}</Descriptions.Item>
           </Descriptions>
+
+          <ProductSpecificationsPanel product={product} onChanged={refresh} />
 
           {readiness && product.status === 'DRAFT' && readiness.blockingIssues.length > 0 && (
             <Alert
