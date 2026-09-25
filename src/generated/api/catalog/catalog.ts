@@ -43,6 +43,7 @@ import type {
   ProductListResponseDto,
   ProductMediaDto,
   ProductPriceTimelineDto,
+  ProductSetupStatusDto,
   ReorderProductMediaDto,
   ReplacePriceDto,
   SearchActiveAdminBrandsParams,
@@ -1836,6 +1837,133 @@ export function useGetAdminProduct<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetAdminProductQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Publish checklist: blocking issues and warnings, same policy as publish
+ */
+export const getAdminProductSetupStatus = (id: string, signal?: AbortSignal) => {
+  return apiFetcher<ProductSetupStatusDto>({
+    url: `/api/v1/admin/products/${id}/setup-status`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getGetAdminProductSetupStatusQueryKey = (id?: string) => {
+  return [`/api/v1/admin/products/${id}/setup-status`] as const;
+};
+
+export const getGetAdminProductSetupStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminProductSetupStatusQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminProductSetupStatus>>> = ({
+    signal,
+  }) => getAdminProductSetupStatus(id, signal);
+
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAdminProductSetupStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminProductSetupStatus>>
+>;
+export type GetAdminProductSetupStatusQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Publish checklist: blocking issues and warnings, same policy as publish
+ */
+
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAdminProductSetupStatusQueryOptions(id, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
