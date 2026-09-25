@@ -25,6 +25,8 @@ export * from './createBundleItemDto';
 export * from './createCategoryDto';
 export * from './createPriceDto';
 export * from './createProductDto';
+export * from './createProductMediaDto';
+export * from './createProductVariantDto';
 export * from './createVariantDto';
 export * from './currencyCode';
 export * from './errorDetailDto';

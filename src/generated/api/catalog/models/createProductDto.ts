@@ -6,7 +6,8 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ProductType } from './productType';
-import type { CreateVariantDto } from './createVariantDto';
+import type { CreateProductVariantDto } from './createProductVariantDto';
+import type { CreateProductMediaDto } from './createProductMediaDto';
 
 export interface CreateProductDto {
   productType?: ProductType;
@@ -23,5 +24,10 @@ export interface CreateProductDto {
    * @minItems 1
    * @maxItems 50
    */
-  variants: CreateVariantDto[];
+  variants: CreateProductVariantDto[];
+  /**
+   * Ảnh cấp sản phẩm (asset đã upload và ACTIVE) gắn cùng transaction; ảnh đầu tiên là ảnh chính
+   * @maxItems 20
+   */
+  media?: CreateProductMediaDto[];
 }

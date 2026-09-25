@@ -11,9 +11,7 @@ import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import {
   getGetAdminProductQueryKey,
   getListAdminProductsQueryKey,
-  useAttachAdminProductMedia,
   useCreateAdminProduct,
-  useCreateAdminProductPrice,
   useSearchActiveAdminBrands,
   useSearchActiveAdminCategories,
   useUpdateAdminProduct,
@@ -59,7 +57,6 @@ import {
   type ProductFormValues,
 } from '../model/product-form.mapper';
 import { toOpeningStockItems } from '../model/product-opening-stock.mapper';
-import { toInitialPriceCommands } from '../model/product-initial-setup';
 
 const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
   productType: yup
@@ -141,6 +138,7 @@ export function ProductFormDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canAdjustStock = useCan('inventory.stock.adjust');
+  const canManagePrice = useCan('catalog.price.manage');
   const [brandSearch, setBrandSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
   const [branchSearch, setBranchSearch] = useState('');
@@ -214,8 +212,6 @@ export function ProductFormDrawer({
   const openingStock = useCreateStockAdjustment({
     request: { headers: { 'Idempotency-Key': openingStockIdempotencyKey.current } },
   });
-  const createPrice = useCreateAdminProductPrice();
-  const attachMedia = useAttachAdminProductMedia();
   const createProduct = useCreateAdminProduct({
     request: { headers: { 'x-request-id': createProductRequestId.current } },
     mutation: {
@@ -240,60 +236,20 @@ export function ProductFormDrawer({
           openingStockError = error;
         }
 
-        // Giá và ảnh phải chạy SAU khi có sản phẩm: bản ghi giá gắn vào variantId, còn ảnh gắn
-        // vào productId — cả hai ID chỉ tồn tại sau bước tạo. Lỗi ở đây không được làm hỏng sản
-        // phẩm vừa tạo, nên gom lại báo cảnh báo thay vì ném ra ngoài.
-        const followUpErrors: string[] = [];
-        for (const command of toInitialPriceCommands(values.variants, createdProduct)) {
-          try {
-            await createPrice.mutateAsync({
-              variantId: command.variantId,
-              data: { amount: command.amount, startsAt: new Date().toISOString() },
-            });
-          } catch (error) {
-            followUpErrors.push(`giá SKU: ${getApiErrorMessage(error)}`);
-          }
-        }
-        // Ảnh gắn tuần tự vì mỗi lần gắn tăng version của Product; gắn song song thì lần thứ hai
-        // trở đi sẽ trượt expectedProductVersion và rụng mất ảnh.
-        // Mỗi lần gắn ảnh tăng version của Product đúng 1 (`claimProductVersion` ở Backend), nên
-        // version cho lần gắn thứ n suy được mà không cần đọc lại sản phẩm. Lỗi giữa chừng thì dừng
-        // hẳn: các lần sau chắc chắn trượt version và chỉ tạo thêm thông báo lỗi trùng lặp.
-        for (const [index, image] of values.images.entries()) {
-          try {
-            await attachMedia.mutateAsync({
-              id: createdProduct.id,
-              data: {
-                mediaAssetId: image.assetId,
-                isPrimary: index === 0,
-                expectedProductVersion: createdProduct.version + index,
-              },
-            });
-          } catch (error) {
-            followUpErrors.push(`ảnh ${index + 1}: ${getApiErrorMessage(error)}`);
-            break;
-          }
-        }
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
         ]);
-        if (followUpErrors.length > 0) {
-          void message.warning(
-            `Đã tạo sản phẩm nhưng chưa lưu được ${followUpErrors.join('; ')}`,
-            8,
-          );
-        }
+        // Giá và ảnh đã nằm trong cùng transaction tạo sản phẩm; chỉ còn tồn đầu (nghiệp vụ kho của
+        // từng chi nhánh) là bước riêng có thể lỗi sau khi sản phẩm đã tạo.
         if (openingStockError) {
           void message.warning(
             `Đã tạo sản phẩm nhưng chưa ghi được tồn đầu: ${getApiErrorMessage(openingStockError)}`,
             8,
           );
-        } else if (followUpErrors.length === 0) {
-          // Chỉ báo thành công khi mọi bước đều xong; có cảnh báo giá/ảnh ở trên thì không kèm
-          // thêm thông báo "đã tạo" mâu thuẫn.
+        } else {
           const stockMessage = hasOpeningStock ? ' và đã ghi tồn đầu' : '';
           void message.success(
             `Đã tạo sản phẩm cùng ${createdProduct.variants.length} biến thể${stockMessage}.`,
@@ -388,7 +344,7 @@ export function ProductFormDrawer({
         categoryIds: [...values.categoryIds],
         variants: values.variants.map((variant) => ({ ...variant })),
       };
-      createProduct.mutate({ data: toCreateProductDto(values) });
+      createProduct.mutate({ data: toCreateProductDto(values, { includePrices: canManagePrice }) });
     }
   });
 
@@ -489,6 +445,7 @@ export function ProductFormDrawer({
                   variantFields={variantFields}
                   productType={productType}
                   canAdjustStock={canAdjustStock}
+                  canManagePrice={canManagePrice}
                   initialBranchId={initialBranchId}
                   hasOpeningStock={hasOpeningStock}
                   branches={branches}

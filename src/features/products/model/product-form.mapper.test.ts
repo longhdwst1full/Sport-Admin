@@ -36,6 +36,30 @@ describe('product form mapper', () => {
     });
   });
 
+  it('sends initial prices and images with the create command, prices only with price permission', () => {
+    const values = {
+      productType: ProductType.STANDARD,
+      name: 'Trụ bóng chuyền TD-02',
+      categoryIds: ['3'],
+      primaryCategoryId: '3',
+      images: [{ assetId: '41', url: 'a' }, { assetId: '42', url: 'b' }],
+      variants: [
+        { ...emptyVariant(), name: 'TD-02', price: '7800000' },
+        { ...emptyVariant(), name: 'TD-02 Pro', price: '' },
+      ],
+    };
+
+    const withPrice = toCreateProductDto(values);
+    expect(withPrice.variants).toEqual([
+      { name: 'TD-02', weightGrams: 0, initialPriceAmount: '7800000' },
+      { name: 'TD-02 Pro', weightGrams: 0 },
+    ]);
+    expect(withPrice.media).toEqual([{ mediaAssetId: '41' }, { mediaAssetId: '42' }]);
+
+    const withoutPermission = toCreateProductDto(values, { includePrices: false });
+    expect(withoutPermission.variants.every((variant) => !('initialPriceAmount' in variant))).toBe(true);
+  });
+
   it('maps initial quantities to generated SKUs in identity order', () => {
     const createdProduct = {
       variants: [

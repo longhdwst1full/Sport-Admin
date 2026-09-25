@@ -1,45 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { ProductDetailDto } from '@/generated/api/catalog/models';
-import { toInitialPriceCommands } from './product-initial-setup';
-
-const created = (variantIds: string[]) =>
-  ({ variants: variantIds.map((id) => ({ id })) }) as ProductDetailDto;
+import { toInitialPriceAmount } from './product-initial-setup';
 
 describe('giá nhập ở màn tạo sản phẩm', () => {
-  it('ghép giá với SKU thật theo đúng thứ tự backend trả về', () => {
-    const commands = toInitialPriceCommands(
-      [
-        { name: 'Đen', openingQuantity: 0, price: '1890000' },
-        { name: 'Trắng', openingQuantity: 0, price: '2190000' },
-      ],
-      created(['11', '12']),
-    );
-
-    expect(commands).toEqual([
-      { variantId: '11', amount: '1890000' },
-      { variantId: '12', amount: '2190000' },
-    ]);
+  it('giữ phần nguyên của giá hợp lệ', () => {
+    expect(toInitialPriceAmount(' 1890000 ')).toBe('1890000');
+    expect(toInitialPriceAmount('2190000.75')).toBe('2190000');
   });
 
-  it('bỏ qua biến thể chưa chốt giá thay vì gửi lên rồi nhận lỗi', () => {
-    const commands = toInitialPriceCommands(
-      [
-        { name: 'Đen', openingQuantity: 0, price: '' },
-        { name: 'Trắng', openingQuantity: 0 },
-        { name: 'Xanh', openingQuantity: 0, price: '0' },
-      ],
-      created(['11', '12', '13']),
-    );
-
-    expect(commands).toEqual([]);
-  });
-
-  it('không tạo giá cho biến thể không có SKU tương ứng', () => {
-    const commands = toInitialPriceCommands(
-      [{ name: 'Đen', openingQuantity: 0, price: '1890000' }],
-      created([]),
-    );
-
-    expect(commands).toEqual([]);
+  it('bỏ qua giá trống, 0 hoặc không phải số thay vì gửi lên rồi nhận lỗi', () => {
+    expect(toInitialPriceAmount('')).toBeUndefined();
+    expect(toInitialPriceAmount(undefined)).toBeUndefined();
+    expect(toInitialPriceAmount('0')).toBeUndefined();
+    expect(toInitialPriceAmount('abc')).toBeUndefined();
   });
 });
