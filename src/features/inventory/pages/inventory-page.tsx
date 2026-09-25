@@ -1,11 +1,4 @@
-import {
-  AuditOutlined,
-  InboxOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  SwapOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+import { AuditOutlined, InboxOutlined, PlusOutlined, ReloadOutlined, SwapOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Tabs, Tooltip } from 'antd';
 import { useState } from 'react';
@@ -21,6 +14,7 @@ import {
 import type { InventoryBalanceDto } from '@/generated/api/inventory/models';
 import { InventoryBalancePanel } from '../components/inventory-balance-panel';
 import { InventoryMovementPanel } from '../components/inventory-movement-panel';
+import { OpeningStockImportDrawer } from '../components/opening-stock-import-drawer';
 import { StockAdjustmentDrawer } from '../components/stock-adjustment-drawer';
 import { StockAdjustmentPanel } from '../components/stock-adjustment-panel';
 import { StockTransferCreateDrawer } from '../components/stock-transfer-create-drawer';
@@ -29,6 +23,7 @@ import { StockTransferPanel } from '../components/stock-transfer-panel';
 export function InventoryPage() {
   const queryClient = useQueryClient();
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
+  const [openingImportOpen, setOpeningImportOpen] = useState(false);
   const [selectedBalance, setSelectedBalance] = useState<InventoryBalanceDto>();
   const [transferOpen, setTransferOpen] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState<string>();
@@ -76,6 +71,11 @@ export function InventoryPage() {
             <PermissionGate permission="inventory.stock.adjust">
               <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>
                 Tạo phiếu điều chỉnh
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission="inventory.stock.adjust">
+              <Button icon={<UploadOutlined />} onClick={() => setOpeningImportOpen(true)}>
+                Nhập tồn đầu từ file
               </Button>
             </PermissionGate>
             <PermissionGate permission="inventory.transfer.create">
@@ -151,6 +151,16 @@ export function InventoryPage() {
             onClose={() => {
               setAdjustmentOpen(false);
               setSelectedBalance(undefined);
+              void refresh();
+            }}
+          />
+        )}
+
+        {openingImportOpen && (
+          <OpeningStockImportDrawer
+            open
+            onClose={() => {
+              setOpeningImportOpen(false);
               void refresh();
             }}
           />
