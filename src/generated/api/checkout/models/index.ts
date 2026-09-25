@@ -7,12 +7,14 @@
  */
 
 export * from './adminShippingConsultationDto';
+export * from './adminShippingConsultationDtoConsultationReason';
 export * from './adminShippingConsultationListDto';
 export * from './checkoutQuoteDto';
 export * from './checkoutQuoteItemDto';
 export * from './checkoutQuotePaymentMethod';
 export * from './checkoutQuoteStatus';
 export * from './checkoutRecipientDto';
+export * from './checkoutStockShortageDto';
 export * from './errorDetailDto';
 export * from './errorResponseDto';
 export * from './listAdminShippingConsultationsParams';

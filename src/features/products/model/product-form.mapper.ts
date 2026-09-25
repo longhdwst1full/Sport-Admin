@@ -1,20 +1,23 @@
 import type {
   CreateProductDto,
   ProductType,
-  CreateVariantDto,
+  CreateProductVariantDto,
   ProductDetailDto,
   UpdateProductDto,
 } from '@/generated/api/catalog/models';
+import { toInitialPriceAmount } from './product-initial-setup';
 
 export interface ProductVariantFormValues {
   name: string;
+  /** Mã hàng của cửa hàng; bỏ trống thì API tự sinh. */
+  sku?: string;
   barcode?: string;
   weightGrams?: number;
   lengthMm?: number;
   widthMm?: number;
   heightMm?: number;
   openingQuantity: number;
-  /** Giá bán đã gồm VAT, nhập ngay ở màn tạo; tạo bản giá sau khi có SKU thật. */
+  /** Giá bán đã gồm VAT, nhập ngay ở màn tạo; gửi kèm lệnh tạo (cùng transaction với SKU). */
   price?: string;
 }
 
@@ -28,16 +31,14 @@ export interface ProductFormValues {
   description?: string;
   initialBranchId?: string;
   initialWarehouseCode?: string;
-  /**
-   * Ảnh tải lên ngay ở màn tạo; gắn vào sản phẩm sau khi tạo xong vì API gắn ảnh cần productId.
-   * Ảnh đầu danh sách là ảnh chính.
-   */
+  /** Ảnh tải lên ngay ở màn tạo; gửi kèm lệnh tạo, ảnh đầu danh sách là ảnh chính. */
   images: Array<{ assetId: string; url: string }>;
   variants: ProductVariantFormValues[];
 }
 
 export const emptyVariant = (): ProductVariantFormValues => ({
   name: '',
+  sku: '',
   barcode: '',
   weightGrams: 0,
   lengthMm: undefined,
@@ -49,16 +50,30 @@ export const emptyVariant = (): ProductVariantFormValues => ({
 
 const optionalText = (value?: string): string | undefined => value?.trim() || undefined;
 
-const toCreateVariantDto = (variant: ProductVariantFormValues): CreateVariantDto => ({
+const toCreateVariantDto = (
+  variant: ProductVariantFormValues,
+  includePrices: boolean,
+): CreateProductVariantDto => ({
   name: variant.name.trim(),
+  ...(optionalText(variant.sku) ? { sku: optionalText(variant.sku)?.toUpperCase() } : {}),
   ...(optionalText(variant.barcode) ? { barcode: optionalText(variant.barcode) } : {}),
   weightGrams: variant.weightGrams ?? 0,
   ...(variant.lengthMm === undefined ? {} : { lengthMm: variant.lengthMm }),
   ...(variant.widthMm === undefined ? {} : { widthMm: variant.widthMm }),
   ...(variant.heightMm === undefined ? {} : { heightMm: variant.heightMm }),
+  ...(includePrices && toInitialPriceAmount(variant.price)
+    ? { initialPriceAmount: toInitialPriceAmount(variant.price) }
+    : {}),
 });
 
-export const toCreateProductDto = (values: ProductFormValues): CreateProductDto => ({
+/**
+ * `includePrices` chỉ bật khi tài khoản có `catalog.price.manage`: API trả 403 cho CẢ lệnh tạo nếu gửi
+ * giá mà thiếu quyền, nên không có quyền thì tạo sản phẩm không kèm giá.
+ */
+export const toCreateProductDto = (
+  values: ProductFormValues,
+  { includePrices = true }: { includePrices?: boolean } = {},
+): CreateProductDto => ({
   productType: values.productType,
   name: values.name.trim(),
   ...(values.brandId ? { brandId: values.brandId } : {}),
@@ -68,7 +83,10 @@ export const toCreateProductDto = (values: ProductFormValues): CreateProductDto 
   ...(optionalText(values.description) ? { description: optionalText(values.description) } : {}),
   categoryIds: values.categoryIds,
   primaryCategoryId: values.primaryCategoryId,
-  variants: values.variants.map(toCreateVariantDto),
+  variants: values.variants.map((variant) => toCreateVariantDto(variant, includePrices)),
+  ...(values.images.length > 0
+    ? { media: values.images.map(({ assetId }) => ({ mediaAssetId: assetId })) }
+    : {}),
 });
 
 export const toUpdateProductDto = (

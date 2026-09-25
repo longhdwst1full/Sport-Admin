@@ -1,10 +1,10 @@
 # Catalog masters — maintenance note
 
-> **Document version:** 2.0.0
+> **Document version:** 2.1.0
 >
-> **Last updated:** 2026-09-21
+> **Last updated:** 2026-09-25
 >
-> **Change summary:** Tách Thương hiệu và Danh mục thành hai màn/menu riêng (`/brands`, `/categories`); dùng chung drawer, mapper và cột bảng.
+> **Change summary:** Thêm màn Thuộc tính sản phẩm (`/attributes`) cho thông số kỹ thuật theo decision D61.
 
 ## Phạm vi
 
@@ -45,6 +45,14 @@ Category sửa ở đây **hiển thị trực tiếp** trên `/category` và ra
 
 Storefront cache ISR 5 phút, nên thay đổi không xuất hiện tức thì.
 
+## Thuộc tính sản phẩm (`/attributes`)
+
+- `pages/attributes-page.tsx`, `components/attribute-form-drawer.tsx`, `model/attribute-form.ts`.
+- Mã và kiểu chỉ nhập khi tạo (API không cho đổi). Không có nút xoá — chỉ Ngừng/Dùng lại, vì thông số
+  sản phẩm tham chiếu theo mã. Đổi đơn vị (NUMBER) hay bỏ lựa chọn đang được dùng → API trả 409.
+- Quyền theo `catalog.product.view/manage`. Nhập thông số cho từng sản phẩm ở drawer sản phẩm
+  (`features/products/components/product-specifications-panel.tsx`).
+
 ## Checklist khi sửa
 
 - [ ] Đổi `slug` phải cân nhắc redirect; đây là URL công khai.
@@ -65,5 +73,6 @@ Storefront cache ISR 5 phút, nên thay đổi không xuất hiện tức thì.
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.1.0 | 2026-09-25 | Thêm màn Thuộc tính sản phẩm (D61). |
 | 2.0.0 | 2026-09-21 | Tách hai màn Thương hiệu / Danh mục, thêm redirect đường dẫn cũ. |
 | 1.0.0 | 2026-09-13 | Tạo note; ghi rõ ảnh hưởng Category ra Storefront. |

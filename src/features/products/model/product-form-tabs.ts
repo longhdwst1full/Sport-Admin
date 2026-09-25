@@ -15,9 +15,9 @@ export const PRODUCT_TAB_LABELS: Record<ProductFormTab, string> = {
  * Trường thuộc về tab nào.
  *
  * Form là **một khối liên tục** trải qua nhiều tab, không phải bốn form rời: chỉ có một
- * `useForm` và một lần submit. Backend chỉ tạo Product + category + SKU trong một transaction;
- * tồn đầu, giá và ảnh là các request gọi tiếp sau đó (xem `ProductFormDrawer`) nên có thể lỗi riêng
- * trong khi sản phẩm đã được tạo. Bảng này chỉ dùng để biết lỗi rơi vào tab nào mà nhảy tới — nếu không, người dùng bấm Tạo, form báo không hợp lệ, mà ô lỗi nằm ở tab họ
+ * `useForm` và một lần submit. Backend tạo Product + category + SKU + giá ban đầu + ảnh trong một
+ * transaction; chỉ tồn đầu (nghiệp vụ kho của chi nhánh) là request gọi tiếp sau đó (xem
+ * `ProductFormDrawer`) nên có thể lỗi riêng trong khi sản phẩm đã được tạo. Bảng này chỉ dùng để biết lỗi rơi vào tab nào mà nhảy tới — nếu không, người dùng bấm Tạo, form báo không hợp lệ, mà ô lỗi nằm ở tab họ
  * không nhìn thấy.
  */
 export const PRODUCT_TAB_FIELDS: Record<ProductFormTab, Array<FieldPath<ProductFormValues>>> = {

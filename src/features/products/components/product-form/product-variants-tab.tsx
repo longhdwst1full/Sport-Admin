@@ -20,6 +20,7 @@ export function ProductVariantsTab({
   variantFields,
   productType,
   canAdjustStock,
+  canManagePrice,
   initialBranchId,
   hasOpeningStock,
   branches,
@@ -32,6 +33,8 @@ export function ProductVariantsTab({
   variantFields: UseFieldArrayReturn<ProductFormValues, 'variants'>;
   productType: ProductType;
   canAdjustStock: boolean;
+  /** `catalog.price.manage`: giá ban đầu gửi kèm lệnh tạo sản phẩm. */
+  canManagePrice: boolean;
   initialBranchId?: string;
   hasOpeningStock: boolean;
   branches: SearchOptionsQuery;
@@ -195,6 +198,22 @@ export function ProductVariantsTab({
                   render={({ field }) => <Input {...field} placeholder="Ví dụ: Đen - Size 40" />}
                 />
               </Form.Item>
+              {!isEdit && (
+                <Form.Item
+                  label="SKU (mã hàng)"
+                  extra="Mã cửa hàng đang dùng, ví dụ TD-02. Bỏ trống để hệ thống tự sinh; không sửa được sau khi tạo."
+                  validateStatus={form.formState.errors.variants?.[index]?.sku ? 'error' : undefined}
+                  help={form.formState.errors.variants?.[index]?.sku?.message}
+                >
+                  <Controller
+                    name={`variants.${index}.sku`}
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input {...field} placeholder="Bỏ trống để tự sinh" onChange={(event) => field.onChange(event.target.value.toUpperCase())} />
+                    )}
+                  />
+                </Form.Item>
+              )}
               <Form.Item
                 label="Barcode"
                 validateStatus={form.formState.errors.variants?.[index]?.barcode ? 'error' : undefined}
@@ -237,7 +256,8 @@ export function ProductVariantsTab({
                   </Form.Item>
                 );
               })}
-              {!isEdit && (
+              {/* Chỉ người có quyền giá mới thấy ô này: gửi giá mà thiếu quyền thì API từ chối cả lệnh tạo. */}
+              {!isEdit && canManagePrice && (
                 <Form.Item
                   label="Giá bán (đã gồm VAT)"
                   extra="Bỏ trống nếu chưa chốt giá; sản phẩm chỉ xuất bản được khi SKU đã có giá."

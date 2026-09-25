@@ -24,6 +24,8 @@ import type {
 import type {
   ActiveLookupResponseDto,
   AttachProductMediaDto,
+  AttributeDto,
+  AttributeListDto,
   BrandDto,
   BrandListDto,
   CategoryDto,
@@ -31,6 +33,7 @@ import type {
   ChangeMasterStatusDto,
   ChangeProductMediaStatusDto,
   ChangeProductStatusDto,
+  CreateAttributeDto,
   CreateBrandDto,
   CreateBundleDto,
   CreateCategoryDto,
@@ -43,11 +46,14 @@ import type {
   ProductListResponseDto,
   ProductMediaDto,
   ProductPriceTimelineDto,
+  ProductSetupStatusDto,
   ReorderProductMediaDto,
   ReplacePriceDto,
+  ReplaceProductSpecificationsDto,
   SearchActiveAdminBrandsParams,
   SearchActiveAdminCategoriesParams,
   SearchActiveAdminProductVariantsParams,
+  UpdateAttributeDto,
   UpdateBrandDto,
   UpdateCategoryDto,
   UpdateProductDto,
@@ -1382,6 +1388,296 @@ export const useActivateAdminCategory = <
 };
 
 /**
+ * @summary List attribute definitions (active and inactive)
+ */
+export const listAdminAttributes = (signal?: AbortSignal) => {
+  return apiFetcher<AttributeListDto>({
+    url: `/api/v1/admin/catalog/attributes`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getListAdminAttributesQueryKey = () => {
+  return [`/api/v1/admin/catalog/attributes`] as const;
+};
+
+export const getListAdminAttributesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminAttributes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminAttributes>>, TError, TData>>;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAdminAttributesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminAttributes>>> = ({ signal }) =>
+    listAdminAttributes(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminAttributes>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAdminAttributesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminAttributes>>
+>;
+export type ListAdminAttributesQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
+
+export function useListAdminAttributes<
+  TData = Awaited<ReturnType<typeof listAdminAttributes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminAttributes>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminAttributes>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminAttributes>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminAttributes<
+  TData = Awaited<ReturnType<typeof listAdminAttributes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminAttributes>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminAttributes>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminAttributes>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminAttributes<
+  TData = Awaited<ReturnType<typeof listAdminAttributes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminAttributes>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List attribute definitions (active and inactive)
+ */
+
+export function useListAdminAttributes<
+  TData = Awaited<ReturnType<typeof listAdminAttributes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAdminAttributes>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAdminAttributesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Create an attribute definition; code is immutable
+ */
+export const createAdminAttribute = (
+  createAttributeDto: BodyType<CreateAttributeDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<AttributeDto>({
+    url: `/api/v1/admin/catalog/attributes`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: createAttributeDto,
+    signal,
+  });
+};
+
+export const getCreateAdminAttributeMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAdminAttribute>>,
+    TError,
+    { data: BodyType<CreateAttributeDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAdminAttribute>>,
+  TError,
+  { data: BodyType<CreateAttributeDto> },
+  TContext
+> => {
+  const mutationKey = ['createAdminAttribute'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAdminAttribute>>,
+    { data: BodyType<CreateAttributeDto> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAdminAttribute(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAdminAttributeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAdminAttribute>>
+>;
+export type CreateAdminAttributeMutationBody = BodyType<CreateAttributeDto>;
+export type CreateAdminAttributeMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Create an attribute definition; code is immutable
+ */
+export const useCreateAdminAttribute = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAdminAttribute>>,
+      TError,
+      { data: BodyType<CreateAttributeDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAdminAttribute>>,
+  TError,
+  { data: BodyType<CreateAttributeDto> },
+  TContext
+> => {
+  const mutationOptions = getCreateAdminAttributeMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Update name/unit/options/status; unit and used options are locked once products use them
+ */
+export const updateAdminAttribute = (
+  id: string,
+  updateAttributeDto: BodyType<UpdateAttributeDto>,
+) => {
+  return apiFetcher<AttributeDto>({
+    url: `/api/v1/admin/catalog/attributes/${id}`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateAttributeDto,
+  });
+};
+
+export const getUpdateAdminAttributeMutationOptions = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAdminAttribute>>,
+    TError,
+    { id: string; data: BodyType<UpdateAttributeDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAdminAttribute>>,
+  TError,
+  { id: string; data: BodyType<UpdateAttributeDto> },
+  TContext
+> => {
+  const mutationKey = ['updateAdminAttribute'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAdminAttribute>>,
+    { id: string; data: BodyType<UpdateAttributeDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateAdminAttribute(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAdminAttributeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAdminAttribute>>
+>;
+export type UpdateAdminAttributeMutationBody = BodyType<UpdateAttributeDto>;
+export type UpdateAdminAttributeMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Update name/unit/options/status; unit and used options are locked once products use them
+ */
+export const useUpdateAdminAttribute = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAdminAttribute>>,
+      TError,
+      { id: string; data: BodyType<UpdateAttributeDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAdminAttribute>>,
+  TError,
+  { id: string; data: BodyType<UpdateAttributeDto> },
+  TContext
+> => {
+  const mutationOptions = getUpdateAdminAttributeMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
  * @summary List products for admin
  */
 export const listAdminProducts = (params?: ListAdminProductsParams, signal?: AbortSignal) => {
@@ -1845,6 +2141,223 @@ export function useGetAdminProduct<
 
   return query;
 }
+
+/**
+ * @summary Publish checklist: blocking issues and warnings, same policy as publish
+ */
+export const getAdminProductSetupStatus = (id: string, signal?: AbortSignal) => {
+  return apiFetcher<ProductSetupStatusDto>({
+    url: `/api/v1/admin/products/${id}/setup-status`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getGetAdminProductSetupStatusQueryKey = (id?: string) => {
+  return [`/api/v1/admin/products/${id}/setup-status`] as const;
+};
+
+export const getGetAdminProductSetupStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminProductSetupStatusQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminProductSetupStatus>>> = ({
+    signal,
+  }) => getAdminProductSetupStatus(id, signal);
+
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAdminProductSetupStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminProductSetupStatus>>
+>;
+export type GetAdminProductSetupStatusQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminProductSetupStatus>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Publish checklist: blocking issues and warnings, same policy as publish
+ */
+
+export function useGetAdminProductSetupStatus<
+  TData = Awaited<ReturnType<typeof getAdminProductSetupStatus>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAdminProductSetupStatus>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAdminProductSetupStatusQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Replace product specifications; values are validated against attribute definitions
+ */
+export const replaceAdminProductSpecifications = (
+  id: string,
+  replaceProductSpecificationsDto: BodyType<ReplaceProductSpecificationsDto>,
+) => {
+  return apiFetcher<ProductDetailDto>({
+    url: `/api/v1/admin/products/${id}/specifications`,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    data: replaceProductSpecificationsDto,
+  });
+};
+
+export const getReplaceAdminProductSpecificationsMutationOptions = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof replaceAdminProductSpecifications>>,
+    TError,
+    { id: string; data: BodyType<ReplaceProductSpecificationsDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof replaceAdminProductSpecifications>>,
+  TError,
+  { id: string; data: BodyType<ReplaceProductSpecificationsDto> },
+  TContext
+> => {
+  const mutationKey = ['replaceAdminProductSpecifications'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof replaceAdminProductSpecifications>>,
+    { id: string; data: BodyType<ReplaceProductSpecificationsDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return replaceAdminProductSpecifications(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReplaceAdminProductSpecificationsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof replaceAdminProductSpecifications>>
+>;
+export type ReplaceAdminProductSpecificationsMutationBody =
+  BodyType<ReplaceProductSpecificationsDto>;
+export type ReplaceAdminProductSpecificationsMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Replace product specifications; values are validated against attribute definitions
+ */
+export const useReplaceAdminProductSpecifications = <
+  TError = ErrorType<
+    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof replaceAdminProductSpecifications>>,
+      TError,
+      { id: string; data: BodyType<ReplaceProductSpecificationsDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof replaceAdminProductSpecifications>>,
+  TError,
+  { id: string; data: BodyType<ReplaceProductSpecificationsDto> },
+  TContext
+> => {
+  const mutationOptions = getReplaceAdminProductSpecificationsMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 /**
  * @summary Update product
@@ -2328,55 +2841,59 @@ export const useDeleteAdminProductVariant = <
  */
 export const attachAdminProductMedia = (
   id: string,
-  attachProductMediaDto: BodyType<AttachProductMediaDto>,
+  attachProductMediaDto: AttachProductMediaDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
   signal?: AbortSignal,
 ) => {
-  return apiFetcher<ProductMediaDto[]>({
-    url: `/api/v1/admin/products/${id}/media`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: attachProductMediaDto,
-    signal,
-  });
+  return apiFetcherWithOptions<ProductMediaDto[]>(
+    {
+      url: `/api/v1/admin/products/${id}/media`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: attachProductMediaDto,
+      signal,
+    },
+    options,
+  );
 };
 
 export const getAttachAdminProductMediaMutationOptions = <
-  TError = ErrorType<
+  TError =
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
-    | ErrorResponseDto
-  >,
+    | ErrorResponseDto,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof attachAdminProductMedia>>,
     TError,
-    { id: string; data: BodyType<AttachProductMediaDto> },
+    { id: string; data: AttachProductMediaDto },
     TContext
   >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof attachAdminProductMedia>>,
   TError,
-  { id: string; data: BodyType<AttachProductMediaDto> },
+  { id: string; data: AttachProductMediaDto },
   TContext
 > => {
   const mutationKey = ['attachAdminProductMedia'];
-  const { mutation: mutationOptions } = options
+  const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
+    : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof attachAdminProductMedia>>,
-    { id: string; data: BodyType<AttachProductMediaDto> }
+    { id: string; data: AttachProductMediaDto }
   > = (props) => {
     const { id, data } = props ?? {};
 
-    return attachAdminProductMedia(id, data);
+    return attachAdminProductMedia(id, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -2385,43 +2902,42 @@ export const getAttachAdminProductMediaMutationOptions = <
 export type AttachAdminProductMediaMutationResult = NonNullable<
   Awaited<ReturnType<typeof attachAdminProductMedia>>
 >;
-export type AttachAdminProductMediaMutationBody = BodyType<AttachProductMediaDto>;
-export type AttachAdminProductMediaMutationError = ErrorType<
+export type AttachAdminProductMediaMutationBody = AttachProductMediaDto;
+export type AttachAdminProductMediaMutationError =
   | ErrorResponseDto
   | ErrorResponseDto
   | ErrorResponseDto
   | ErrorResponseDto
   | ErrorResponseDto
-  | ErrorResponseDto
->;
+  | ErrorResponseDto;
 
 /**
  * @summary Attach one finalized media asset to a product or SKU
  */
 export const useAttachAdminProductMedia = <
-  TError = ErrorType<
+  TError =
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
-    | ErrorResponseDto
-  >,
+    | ErrorResponseDto,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof attachAdminProductMedia>>,
       TError,
-      { id: string; data: BodyType<AttachProductMediaDto> },
+      { id: string; data: AttachProductMediaDto },
       TContext
     >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
   Awaited<ReturnType<typeof attachAdminProductMedia>>,
   TError,
-  { id: string; data: BodyType<AttachProductMediaDto> },
+  { id: string; data: AttachProductMediaDto },
   TContext
 > => {
   const mutationOptions = getAttachAdminProductMediaMutationOptions(options);
@@ -2858,50 +3374,58 @@ export const useArchiveAdminProductMedia = <
  */
 export const createAdminProductPrice = (
   variantId: string,
-  createPriceDto: BodyType<CreatePriceDto>,
+  createPriceDto: CreatePriceDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
   signal?: AbortSignal,
 ) => {
-  return apiFetcher<ProductDetailDto>({
-    url: `/api/v1/admin/products/variants/${variantId}/prices`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createPriceDto,
-    signal,
-  });
+  return apiFetcherWithOptions<ProductDetailDto>(
+    {
+      url: `/api/v1/admin/products/variants/${variantId}/prices`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createPriceDto,
+      signal,
+    },
+    options,
+  );
 };
 
 export const getCreateAdminProductPriceMutationOptions = <
-  TError = ErrorType<
-    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-  >,
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createAdminProductPrice>>,
     TError,
-    { variantId: string; data: BodyType<CreatePriceDto> },
+    { variantId: string; data: CreatePriceDto },
     TContext
   >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof createAdminProductPrice>>,
   TError,
-  { variantId: string; data: BodyType<CreatePriceDto> },
+  { variantId: string; data: CreatePriceDto },
   TContext
 > => {
   const mutationKey = ['createAdminProductPrice'];
-  const { mutation: mutationOptions } = options
+  const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
+    : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof createAdminProductPrice>>,
-    { variantId: string; data: BodyType<CreatePriceDto> }
+    { variantId: string; data: CreatePriceDto }
   > = (props) => {
     const { variantId, data } = props ?? {};
 
-    return createAdminProductPrice(variantId, data);
+    return createAdminProductPrice(variantId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -2910,33 +3434,40 @@ export const getCreateAdminProductPriceMutationOptions = <
 export type CreateAdminProductPriceMutationResult = NonNullable<
   Awaited<ReturnType<typeof createAdminProductPrice>>
 >;
-export type CreateAdminProductPriceMutationBody = BodyType<CreatePriceDto>;
-export type CreateAdminProductPriceMutationError = ErrorType<
-  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
->;
+export type CreateAdminProductPriceMutationBody = CreatePriceDto;
+export type CreateAdminProductPriceMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
 
 /**
  * @summary Create a global VAT-included price window
  */
 export const useCreateAdminProductPrice = <
-  TError = ErrorType<
-    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-  >,
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof createAdminProductPrice>>,
       TError,
-      { variantId: string; data: BodyType<CreatePriceDto> },
+      { variantId: string; data: CreatePriceDto },
       TContext
     >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
   Awaited<ReturnType<typeof createAdminProductPrice>>,
   TError,
-  { variantId: string; data: BodyType<CreatePriceDto> },
+  { variantId: string; data: CreatePriceDto },
   TContext
 > => {
   const mutationOptions = getCreateAdminProductPriceMutationOptions(options);

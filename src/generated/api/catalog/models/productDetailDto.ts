@@ -8,6 +8,7 @@
 import type { ProductType } from './productType';
 import type { ProductStatus } from './productStatus';
 import type { CurrencyCode } from './currencyCode';
+import type { ProductSpecificationDto } from './productSpecificationDto';
 import type { ProductVariantDto } from './productVariantDto';
 import type { ProductMediaDto } from './productMediaDto';
 import type { ProductCategoryDto } from './productCategoryDto';
@@ -41,6 +42,8 @@ export interface ProductDetailDto {
   currency: CurrencyCode;
   /** @nullable */
   imageUrl?: string | null;
+  /** Thông số kỹ thuật đã ghép nhãn/đơn vị từ từ điển thuộc tính; rỗng nếu chưa nhập */
+  specifications: ProductSpecificationDto[];
   /**
    * @nullable
    * @pattern ^[1-9][0-9]*$

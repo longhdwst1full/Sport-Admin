@@ -28,6 +28,11 @@ const BrandsPage = lazy(() =>
     default: module.BrandsPage,
   })),
 );
+const AttributesPage = lazy(() =>
+  import('@/features/catalog-masters').then((module) => ({
+    default: module.AttributesPage,
+  })),
+);
 const CategoriesPage = lazy(() =>
   import('@/features/catalog-masters').then((module) => ({
     default: module.CategoriesPage,
@@ -151,6 +156,14 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="catalog.category.view">
               <CategoriesPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="attributes"
+          element={
+            <PermissionRoute permission="catalog.product.view">
+              <AttributesPage />
             </PermissionRoute>
           }
         />

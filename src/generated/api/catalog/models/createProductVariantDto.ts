@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreateVariantDto {
+export interface CreateProductVariantDto {
   /**
    * Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
    * @maxLength 40
@@ -18,4 +18,6 @@ export interface CreateVariantDto {
   lengthMm?: number;
   widthMm?: number;
   heightMm?: number;
+  /** Giá bán ban đầu (VND, đã gồm VAT) có hiệu lực ngay; cần quyền catalog.price.manage */
+  initialPriceAmount?: string;
 }

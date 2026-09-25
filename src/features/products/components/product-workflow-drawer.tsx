@@ -6,17 +6,20 @@ import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
+import { PRODUCT_READINESS_LABEL, SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../constants/product-list.constants';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import { PermissionGate } from '@/core/auth/permissions';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import {
   getGetAdminProductQueryKey,
+  getGetAdminProductSetupStatusQueryKey,
   getListAdminProductsQueryKey,
   useArchiveAdminProduct,
   useArchiveAdminProductVariant,
   useCreateAdminProductBundle,
   useCreateAdminProductVariant,
   useGetAdminProduct,
+  useGetAdminProductSetupStatus,
   usePublishAdminProduct,
   useReactivateAdminProduct,
   useReactivateAdminProductVariant,
@@ -24,14 +27,16 @@ import {
 } from '@/generated/api/catalog/catalog';
 import type { ProductVariantDto } from '@/generated/api/catalog/models';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { isProductPublishReady } from '../model/product-workflow.policy';
 import { ProductMediaPanel } from './product-media-panel';
+import { ProductSpecificationsPanel } from './product-specifications-panel';
 import { ProductFormDrawer } from './product-form-drawer';
 import { VariantEditDrawer } from './variant-edit-drawer';
 import { ProductPricePanel } from './product-price-panel';
 
 interface VariantFormValues {
   name: string;
+  /** Mã hàng của cửa hàng; bỏ trống thì hệ thống tự sinh. */
+  sku?: string;
   barcode?: string;
 }
 
@@ -42,6 +47,7 @@ interface BundleFormValues {
 
 const variantSchema: yup.ObjectSchema<VariantFormValues> = yup.object({
   name: yup.string().trim().required('Nhập tên phiên bản').max(255, 'Tối đa 255 ký tự'),
+  sku: yup.string().trim().uppercase().test('sku-pattern', SKU_PATTERN_MESSAGE, (value) => !value || SKU_PATTERN.test(value)).optional(),
   barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
 });
 
@@ -69,9 +75,12 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
   const [editProductOpen, setEditProductOpen] = useState(false);
   const [debouncedComponentSearch] = useDebounce(componentSearch.trim(), 300);
   const detail = useGetAdminProduct(slug ?? '', { query: { enabled: Boolean(slug) } });
+  const setupStatus = useGetAdminProductSetupStatus(detail.data?.id ?? '', {
+    query: { enabled: Boolean(detail.data?.id) },
+  });
   const variantForm = useForm<VariantFormValues>({
     resolver: yupResolver(variantSchema),
-    defaultValues: { name: '', barcode: '' },
+    defaultValues: { name: '', sku: '', barcode: '' },
   });
   const bundleForm = useForm<BundleFormValues>({
     resolver: yupResolver(bundleSchema),
@@ -89,6 +98,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
   const refresh = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: getGetAdminProductQueryKey(slug) }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminProductSetupStatusQueryKey(detail.data?.id) }),
       queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
     ]);
   };
@@ -97,7 +107,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     mutation: {
       onSuccess: async () => {
         await refresh();
-        variantForm.reset({ name: '', barcode: '' });
+        variantForm.reset({ name: '', sku: '', barcode: '' });
         void message.success('Đã thêm SKU.');
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể thêm SKU.')),
@@ -169,13 +179,19 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
   });
 
   const product = detail.data;
-  const canPublish = product ? isProductPublishReady(product) : false;
+  // INVARIANT: điều kiện xuất bản lấy từ API (cùng policy với publish), không tự tính ở UI.
+  const readiness = setupStatus.data;
+  const canPublish = readiness?.canPublish ?? false;
 
   const submitVariant = variantForm.handleSubmit((values) => {
     if (!product) return;
     createVariant.mutate({
       id: product.id,
-      data: { name: values.name, ...(values.barcode ? { barcode: values.barcode } : {}) },
+      data: {
+        name: values.name,
+        ...(values.sku ? { sku: values.sku } : {}),
+        ...(values.barcode ? { barcode: values.barcode } : {}),
+      },
     });
   });
 
@@ -282,13 +298,25 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
             <Descriptions.Item label="Slug">{product.slug}</Descriptions.Item>
           </Descriptions>
 
-          {!canPublish && product.status === 'DRAFT' && (
+          <ProductSpecificationsPanel product={product} onChanged={refresh} />
+
+          {readiness && product.status === 'DRAFT' && readiness.blockingIssues.length > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              message="Chưa xuất bản được"
+              description={(
+                <ul className="m-0 pl-4">
+                  {readiness.blockingIssues.map(({ code }) => <li key={code}>{PRODUCT_READINESS_LABEL[code] ?? code}</li>)}
+                </ul>
+              )}
+            />
+          )}
+          {readiness && readiness.warnings.length > 0 && (
             <Alert
               type="info"
               showIcon
-              message={product.productType === 'BUNDLE'
-                ? 'Mọi SKU đang bán của combo phải có giá hiệu lực và thành phần hợp lệ trước khi xuất bản.'
-                : 'Cần ít nhất một SKU ACTIVE có giá hiệu lực trước khi publish.'}
+              message={readiness.warnings.map(({ code }) => PRODUCT_READINESS_LABEL[code] ?? code).join(' · ')}
             />
           )}
 
@@ -364,6 +392,9 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
                   </Form.Item>
                   <Form.Item label="Tên phiên bản" required validateStatus={variantForm.formState.errors.name ? 'error' : undefined} help={variantForm.formState.errors.name?.message}>
                     <Controller name="name" control={variantForm.control} render={({ field }) => <Input {...field} />} />
+                  </Form.Item>
+                  <Form.Item label="SKU" validateStatus={variantForm.formState.errors.sku ? 'error' : undefined} help={variantForm.formState.errors.sku?.message}>
+                    <Controller name="sku" control={variantForm.control} render={({ field }) => <Input {...field} placeholder="Bỏ trống để hệ thống tự sinh" />} />
                   </Form.Item>
                   <Form.Item label="Barcode" validateStatus={variantForm.formState.errors.barcode ? 'error' : undefined} help={variantForm.formState.errors.barcode?.message}>
                     <Controller name="barcode" control={variantForm.control} render={({ field }) => <Input {...field} />} />

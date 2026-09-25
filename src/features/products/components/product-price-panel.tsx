@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -66,8 +67,18 @@ export function ProductPricePanel({
     form.reset({ variantId, amount: '', startsAt: inputNow(), reason: '' });
     void message.success('Đã lưu lịch giá. Giá hiển thị đã bao gồm VAT.');
   };
+  // IDEMPOTENCY: cùng một x-request-id cho lần bấm lại sau khi mất response → API trả kết quả cũ thay vì
+  // tạo bản giá thứ hai; sinh id mới sau khi lưu xong.
+  const createPriceRequestId = useRef(crypto.randomUUID());
   const createPrice = useCreateAdminProductPrice({
-    mutation: { onSuccess: afterSaved, onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo giá.')) },
+    request: { headers: { 'x-request-id': createPriceRequestId.current } },
+    mutation: {
+      onSuccess: async () => {
+        createPriceRequestId.current = crypto.randomUUID();
+        await afterSaved();
+      },
+      onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo giá.')),
+    },
   });
   const replacePrice = useReplaceAdminProductPrice({
     mutation: { onSuccess: afterSaved, onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể thay giá.')) },

@@ -3,6 +3,7 @@ import { Tag, Typography } from 'antd';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { AdminShippingConsultationDto } from '@/generated/api/checkout/models';
 import {
+  consultationReasonLabel,
   moneyFormatter,
   SHIPPING_CONSULTATION_PAGE_SIZE,
   shippingConsultationStatus,
@@ -52,7 +53,21 @@ export function ShippingConsultationTable({
             </div>
           ),
         },
-        { title: 'Chi nhánh', dataIndex: 'branchName', width: 180 },
+        {
+          title: 'Chi nhánh',
+          key: 'branch',
+          width: 180,
+          render: (_, row) => (
+            <div>
+              <div>{row.branchName}</div>
+              {row.consultationReason && (
+                <Tag color={consultationReasonLabel[row.consultationReason].color} className="!mt-1">
+                  {consultationReasonLabel[row.consultationReason].label}
+                </Tag>
+              )}
+            </div>
+          ),
+        },
         {
           title: 'Sản phẩm',
           key: 'items',

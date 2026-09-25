@@ -10,6 +10,10 @@ import { ShippingConsultationTable } from './shipping-consultation-table';
 const demoRows: AdminShippingConsultationDto[] = [
   {
     checkoutToken: 'checkout_demo_01',
+    consultationReason: 'STOCK_SPLIT_ACROSS_BRANCHES',
+    stockShortages: [
+      { productVariantId: '7', sku: 'TD-02', name: 'Trụ bóng chuyền TD-02', requested: 2, availableAtBranch: 1 },
+    ],
     status: CheckoutQuoteStatus.AWAITING_SHIPPING_CONSULTATION,
     branchId: '1',
     warehouseId: '1',
