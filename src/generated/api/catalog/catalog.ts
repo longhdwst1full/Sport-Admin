@@ -2841,55 +2841,59 @@ export const useDeleteAdminProductVariant = <
  */
 export const attachAdminProductMedia = (
   id: string,
-  attachProductMediaDto: BodyType<AttachProductMediaDto>,
+  attachProductMediaDto: AttachProductMediaDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
   signal?: AbortSignal,
 ) => {
-  return apiFetcher<ProductMediaDto[]>({
-    url: `/api/v1/admin/products/${id}/media`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: attachProductMediaDto,
-    signal,
-  });
+  return apiFetcherWithOptions<ProductMediaDto[]>(
+    {
+      url: `/api/v1/admin/products/${id}/media`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: attachProductMediaDto,
+      signal,
+    },
+    options,
+  );
 };
 
 export const getAttachAdminProductMediaMutationOptions = <
-  TError = ErrorType<
+  TError =
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
-    | ErrorResponseDto
-  >,
+    | ErrorResponseDto,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof attachAdminProductMedia>>,
     TError,
-    { id: string; data: BodyType<AttachProductMediaDto> },
+    { id: string; data: AttachProductMediaDto },
     TContext
   >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof attachAdminProductMedia>>,
   TError,
-  { id: string; data: BodyType<AttachProductMediaDto> },
+  { id: string; data: AttachProductMediaDto },
   TContext
 > => {
   const mutationKey = ['attachAdminProductMedia'];
-  const { mutation: mutationOptions } = options
+  const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
+    : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof attachAdminProductMedia>>,
-    { id: string; data: BodyType<AttachProductMediaDto> }
+    { id: string; data: AttachProductMediaDto }
   > = (props) => {
     const { id, data } = props ?? {};
 
-    return attachAdminProductMedia(id, data);
+    return attachAdminProductMedia(id, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -2898,43 +2902,42 @@ export const getAttachAdminProductMediaMutationOptions = <
 export type AttachAdminProductMediaMutationResult = NonNullable<
   Awaited<ReturnType<typeof attachAdminProductMedia>>
 >;
-export type AttachAdminProductMediaMutationBody = BodyType<AttachProductMediaDto>;
-export type AttachAdminProductMediaMutationError = ErrorType<
+export type AttachAdminProductMediaMutationBody = AttachProductMediaDto;
+export type AttachAdminProductMediaMutationError =
   | ErrorResponseDto
   | ErrorResponseDto
   | ErrorResponseDto
   | ErrorResponseDto
   | ErrorResponseDto
-  | ErrorResponseDto
->;
+  | ErrorResponseDto;
 
 /**
  * @summary Attach one finalized media asset to a product or SKU
  */
 export const useAttachAdminProductMedia = <
-  TError = ErrorType<
+  TError =
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
     | ErrorResponseDto
-    | ErrorResponseDto
-  >,
+    | ErrorResponseDto,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof attachAdminProductMedia>>,
       TError,
-      { id: string; data: BodyType<AttachProductMediaDto> },
+      { id: string; data: AttachProductMediaDto },
       TContext
     >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
   Awaited<ReturnType<typeof attachAdminProductMedia>>,
   TError,
-  { id: string; data: BodyType<AttachProductMediaDto> },
+  { id: string; data: AttachProductMediaDto },
   TContext
 > => {
   const mutationOptions = getAttachAdminProductMediaMutationOptions(options);
@@ -3371,50 +3374,58 @@ export const useArchiveAdminProductMedia = <
  */
 export const createAdminProductPrice = (
   variantId: string,
-  createPriceDto: BodyType<CreatePriceDto>,
+  createPriceDto: CreatePriceDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
   signal?: AbortSignal,
 ) => {
-  return apiFetcher<ProductDetailDto>({
-    url: `/api/v1/admin/products/variants/${variantId}/prices`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createPriceDto,
-    signal,
-  });
+  return apiFetcherWithOptions<ProductDetailDto>(
+    {
+      url: `/api/v1/admin/products/variants/${variantId}/prices`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createPriceDto,
+      signal,
+    },
+    options,
+  );
 };
 
 export const getCreateAdminProductPriceMutationOptions = <
-  TError = ErrorType<
-    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-  >,
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createAdminProductPrice>>,
     TError,
-    { variantId: string; data: BodyType<CreatePriceDto> },
+    { variantId: string; data: CreatePriceDto },
     TContext
   >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof createAdminProductPrice>>,
   TError,
-  { variantId: string; data: BodyType<CreatePriceDto> },
+  { variantId: string; data: CreatePriceDto },
   TContext
 > => {
   const mutationKey = ['createAdminProductPrice'];
-  const { mutation: mutationOptions } = options
+  const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
+    : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof createAdminProductPrice>>,
-    { variantId: string; data: BodyType<CreatePriceDto> }
+    { variantId: string; data: CreatePriceDto }
   > = (props) => {
     const { variantId, data } = props ?? {};
 
-    return createAdminProductPrice(variantId, data);
+    return createAdminProductPrice(variantId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -3423,33 +3434,40 @@ export const getCreateAdminProductPriceMutationOptions = <
 export type CreateAdminProductPriceMutationResult = NonNullable<
   Awaited<ReturnType<typeof createAdminProductPrice>>
 >;
-export type CreateAdminProductPriceMutationBody = BodyType<CreatePriceDto>;
-export type CreateAdminProductPriceMutationError = ErrorType<
-  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
->;
+export type CreateAdminProductPriceMutationBody = CreatePriceDto;
+export type CreateAdminProductPriceMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
 
 /**
  * @summary Create a global VAT-included price window
  */
 export const useCreateAdminProductPrice = <
-  TError = ErrorType<
-    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-  >,
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof createAdminProductPrice>>,
       TError,
-      { variantId: string; data: BodyType<CreatePriceDto> },
+      { variantId: string; data: CreatePriceDto },
       TContext
     >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
   Awaited<ReturnType<typeof createAdminProductPrice>>,
   TError,
-  { variantId: string; data: BodyType<CreatePriceDto> },
+  { variantId: string; data: CreatePriceDto },
   TContext
 > => {
   const mutationOptions = getCreateAdminProductPriceMutationOptions(options);

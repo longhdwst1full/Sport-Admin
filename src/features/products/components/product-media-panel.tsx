@@ -1,6 +1,6 @@
 import { DeleteOutlined, DownOutlined, EditOutlined, StarOutlined, UpOutlined, UploadOutlined } from '@ant-design/icons';
 import { App, Button, Form, Image, Input, Modal, Select, Space, Tag, Upload } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   useAttachAdminProductMedia,
   useDeleteAdminProductMedia,
@@ -37,9 +37,16 @@ export function ProductMediaPanel({
     void message.success(text);
   };
 
+  // IDEMPOTENCY: gửi lại cùng x-request-id sau khi mất response → API trả danh sách ảnh hiện tại thay vì
+  // 409 vì version sản phẩm đã tăng ở lần đầu; sinh id mới sau mỗi lần gắn thành công.
+  const attachRequestId = useRef(crypto.randomUUID());
   const attach = useAttachAdminProductMedia({
+    request: { headers: { 'x-request-id': attachRequestId.current } },
     mutation: {
-      onSuccess: () => mutationSuccess('Đã gắn ảnh vào sản phẩm.'),
+      onSuccess: () => {
+        attachRequestId.current = crypto.randomUUID();
+        return mutationSuccess('Đã gắn ảnh vào sản phẩm.');
+      },
       onError: (error) => mutationError(error, 'Không thể gắn ảnh.'),
     },
   });
