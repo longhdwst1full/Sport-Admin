@@ -9,6 +9,11 @@
 export interface RevenuePointDto {
   /** Khoá kỳ theo mức gom: YYYY-MM-DD, YYYY-MM, YYYY-Qn hoặc YYYY. */
   date: string;
+  /** Doanh thu gộp của đơn hoàn tất trong kỳ */
   amount: string;
   orderCount: number;
+  /** Tiền đã hoàn thành công trong kỳ (theo mốc hoàn tiền) */
+  refundAmount: string;
+  /** amount - refundAmount */
+  netAmount: string;
 }

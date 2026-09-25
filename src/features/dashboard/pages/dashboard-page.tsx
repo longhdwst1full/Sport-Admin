@@ -154,10 +154,12 @@ export function DashboardPage() {
 
   const statCards = [
     {
-      label: 'Doanh thu đã hoàn tất (30 ngày)',
-      value: canSeeRevenue ? money.format(Number(revenue.data?.completedRevenue ?? 0)) : '—',
+      // Số chính là doanh thu thuần: hoàn tiền không đổi trạng thái đơn, nên con số gộp vẫn đếm cả
+      // đơn đã hoàn toàn bộ.
+      label: 'Doanh thu thuần (30 ngày)',
+      value: canSeeRevenue ? money.format(Number(revenue.data?.netRevenue ?? 0)) : '—',
       hint: canSeeRevenue
-        ? `${revenue.data?.completedOrderCount ?? 0} đơn đã hoàn tất`
+        ? `${revenue.data?.completedOrderCount ?? 0} đơn hoàn tất · đã hoàn ${money.format(Number(revenue.data?.refundedAmount ?? 0))}`
         : 'Cần quyền xem doanh thu',
       icon: <DollarOutlined />,
       tone: 'brand' as const,
@@ -208,7 +210,7 @@ export function DashboardPage() {
   const revenueSeries = (revenue.data?.series ?? []).map((point) => ({
     // Mức ngày cắt bớt năm cho đỡ chật trục; các mức còn lại giữ nguyên vì năm là thông tin thật.
     date: granularity === 'DAY' ? point.date.slice(5) : point.date,
-    amount: Number(point.amount),
+    amount: Number(point.netAmount),
     orders: point.orderCount,
   }));
 
@@ -239,7 +241,7 @@ export function DashboardPage() {
             </Typography.Title>
             <p className="mb-0 max-w-2xl text-sm leading-6 text-emerald-50/80">
               Theo dõi doanh thu, đơn hàng và tồn kho trong 30 ngày gần nhất. Doanh thu chỉ ghi nhận
-              khi đơn đã hoàn tất; đơn đã giao chờ hoàn tất được tính vào dự thu.
+              khi đơn đã hoàn tất và đã trừ tiền hoàn cho khách; đơn đã giao chờ hoàn tất được tính vào dự thu.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
@@ -292,8 +294,8 @@ export function DashboardPage() {
             className="h-full !rounded-2xl !border-slate-200/80 !shadow-card"
             title={
               <SectionTitle
-                title="Doanh thu theo kỳ hoàn tất"
-                description={`Chỉ ghi nhận đơn đã thu đủ tiền · ${PERIOD_DESCRIPTION[granularity]}`}
+                title="Doanh thu thuần theo kỳ"
+                description={`Đơn hoàn tất trừ tiền đã hoàn trong kỳ · ${PERIOD_DESCRIPTION[granularity]}`}
               />
             }
             extra={
@@ -347,7 +349,7 @@ export function DashboardPage() {
                   <Area
                     type="monotone"
                     dataKey="amount"
-                    name="Doanh thu"
+                    name="Doanh thu thuần"
                     stroke={REVENUE_COLOR}
                     strokeWidth={2}
                     fill="url(#revenueFill)"
@@ -456,6 +458,22 @@ export function DashboardPage() {
                 render: (value: string) => (
                   <span className="text-slate-500">{money.format(Number(value))}</span>
                 ),
+              },
+              {
+                title: 'Đã hoàn tiền',
+                dataIndex: 'refundedAmount',
+                align: 'right',
+                render: (value: string) => (
+                  <span className={Number(value) > 0 ? 'text-rose-600' : 'text-slate-400'}>
+                    {money.format(Number(value))}
+                  </span>
+                ),
+              },
+              {
+                title: 'Thuần',
+                dataIndex: 'netRevenue',
+                align: 'right',
+                render: (value: string) => <span className="font-semibold">{money.format(Number(value))}</span>,
               },
             ]}
           />

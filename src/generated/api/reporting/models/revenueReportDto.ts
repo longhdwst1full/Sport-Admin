@@ -22,7 +22,13 @@ export interface RevenueReportDto {
   expectedOrderCount: number;
   /** Đơn đang xử lý (đã xác nhận tới đang giao); chưa tính vào hai nhóm trên */
   inProgressRevenue: string;
-  /** Giá trị trung bình mỗi đơn đã hoàn tất */
+  /** Tiền đã hoàn thành công (refund SUCCEEDED) trong kỳ, cắt theo mốc hoàn tiền; gồm cả hoàn một phần */
+  refundedAmount: string;
+  /** Số lượt hoàn tiền thành công trong kỳ */
+  refundCount: number;
+  /** Doanh thu thuần = completedRevenue - refundedAmount */
+  netRevenue: string;
+  /** Giá trị trung bình mỗi đơn đã hoàn tất (gộp, trước hoàn tiền) */
   averageOrderValue: string;
   /** Mức gom đã áp dụng cho `series` */
   granularity: ReportGranularity;

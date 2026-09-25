@@ -11,4 +11,8 @@ export interface BranchRevenueDto {
   completedRevenue: string;
   completedOrderCount: number;
   expectedRevenue: string;
+  /** Tiền đã hoàn thành công trong kỳ của chi nhánh */
+  refundedAmount: string;
+  /** completedRevenue - refundedAmount */
+  netRevenue: string;
 }
