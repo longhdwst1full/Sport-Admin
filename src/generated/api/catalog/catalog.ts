@@ -57,6 +57,9 @@ import type {
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 export const listAdminBrands = (signal?: AbortSignal) => {
   return apiFetcher<BrandListDto>({ url: `/api/v1/admin/catalog/brands`, method: 'GET', signal });
 };
@@ -1497,50 +1500,58 @@ export function useListAdminProducts<
  * @summary Create product and its initial SKU variants atomically
  */
 export const createAdminProduct = (
-  createProductDto: BodyType<CreateProductDto>,
+  createProductDto: CreateProductDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
   signal?: AbortSignal,
 ) => {
-  return apiFetcher<ProductDetailDto>({
-    url: `/api/v1/admin/products`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createProductDto,
-    signal,
-  });
+  return apiFetcherWithOptions<ProductDetailDto>(
+    {
+      url: `/api/v1/admin/products`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createProductDto,
+      signal,
+    },
+    options,
+  );
 };
 
 export const getCreateAdminProductMutationOptions = <
-  TError = ErrorType<
-    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-  >,
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createAdminProduct>>,
     TError,
-    { data: BodyType<CreateProductDto> },
+    { data: CreateProductDto },
     TContext
   >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof createAdminProduct>>,
   TError,
-  { data: BodyType<CreateProductDto> },
+  { data: CreateProductDto },
   TContext
 > => {
   const mutationKey = ['createAdminProduct'];
-  const { mutation: mutationOptions } = options
+  const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
+    : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof createAdminProduct>>,
-    { data: BodyType<CreateProductDto> }
+    { data: CreateProductDto }
   > = (props) => {
     const { data } = props ?? {};
 
-    return createAdminProduct(data);
+    return createAdminProduct(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1549,33 +1560,40 @@ export const getCreateAdminProductMutationOptions = <
 export type CreateAdminProductMutationResult = NonNullable<
   Awaited<ReturnType<typeof createAdminProduct>>
 >;
-export type CreateAdminProductMutationBody = BodyType<CreateProductDto>;
-export type CreateAdminProductMutationError = ErrorType<
-  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
->;
+export type CreateAdminProductMutationBody = CreateProductDto;
+export type CreateAdminProductMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
 
 /**
  * @summary Create product and its initial SKU variants atomically
  */
 export const useCreateAdminProduct = <
-  TError = ErrorType<
-    ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-  >,
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof createAdminProduct>>,
       TError,
-      { data: BodyType<CreateProductDto> },
+      { data: CreateProductDto },
       TContext
     >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
   Awaited<ReturnType<typeof createAdminProduct>>,
   TError,
-  { data: BodyType<CreateProductDto> },
+  { data: CreateProductDto },
   TContext
 > => {
   const mutationOptions = getCreateAdminProductMutationOptions(options);

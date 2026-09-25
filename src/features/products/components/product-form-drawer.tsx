@@ -150,6 +150,12 @@ export function ProductFormDrawer({
   const [debouncedBranch] = useDebounce(branchSearch.trim(), 300);
   const [debouncedWarehouse] = useDebounce(warehouseSearch.trim(), 300);
   const openingStockIdempotencyKey = useRef(crypto.randomUUID());
+  /**
+   * IDEMPOTENCY: một id cho một lần mở form tạo. Bấm lại sau khi mất response (timeout, rớt mạng)
+   * gửi cùng id nên API trả lại sản phẩm đã tạo thay vì tạo bản thứ hai; sửa dữ liệu rồi gửi lại
+   * sau khi sản phẩm đã tạo thì API trả 409 để người dùng tải lại thay vì nhân đôi.
+   */
+  const createProductRequestId = useRef(crypto.randomUUID());
   const submittedCreateValues = useRef<ProductFormValues | undefined>(undefined);
   const form = useForm<ProductFormValues>({ resolver: yupResolver(schema), defaultValues: defaults });
   const variantFields = useFieldArray({ control: form.control, name: 'variants' });
@@ -211,6 +217,7 @@ export function ProductFormDrawer({
   const createPrice = useCreateAdminProductPrice();
   const attachMedia = useAttachAdminProductMedia();
   const createProduct = useCreateAdminProduct({
+    request: { headers: { 'x-request-id': createProductRequestId.current } },
     mutation: {
       onSuccess: async (createdProduct) => {
         // CONTRACT: dùng snapshot lúc submit để SKU/tồn đầu không lệch nếu response về chậm.
@@ -331,6 +338,7 @@ export function ProductFormDrawer({
   useEffect(() => {
     if (!open) return;
     openingStockIdempotencyKey.current = crypto.randomUUID();
+    createProductRequestId.current = crypto.randomUUID();
     submittedCreateValues.current = undefined;
     form.reset(product ? toProductFormValues(product) : defaults);
   }, [form, open, product]);

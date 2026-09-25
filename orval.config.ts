@@ -16,6 +16,10 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
       name: 'apiFetcherWithOptions',
     },
   };
+  if (domain === 'catalog') {
+    // IDEMPOTENCY: form tạo gửi x-request-id cố định cho một lần mở form (API replay/409 theo audit).
+    return { createAdminProduct: withOptions };
+  }
   if (domain === 'inventory') {
     return { createStockAdjustment: withOptions, createStockTransfer: withOptions };
   }
