@@ -60,6 +60,20 @@ describe('product form mapper', () => {
     expect(withoutPermission.variants.every((variant) => !('initialPriceAmount' in variant))).toBe(true);
   });
 
+  it('sends a manual SKU upper-cased and omits a blank one so the API generates it', () => {
+    const payload = toCreateProductDto({
+      productType: ProductType.STANDARD,
+      name: 'Trụ',
+      categoryIds: ['3'],
+      primaryCategoryId: '3',
+      images: [],
+      variants: [{ ...emptyVariant(), name: 'A', sku: ' td-02 ' }, { ...emptyVariant(), name: 'B', sku: '' }],
+    });
+
+    expect(payload.variants[0]).toMatchObject({ sku: 'TD-02' });
+    expect(payload.variants[1]).not.toHaveProperty('sku');
+  });
+
   it('maps initial quantities to generated SKUs in identity order', () => {
     const createdProduct = {
       variants: [

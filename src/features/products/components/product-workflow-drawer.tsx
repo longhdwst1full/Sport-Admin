@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
+import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../constants/product-list.constants';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import { PermissionGate } from '@/core/auth/permissions';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
@@ -32,6 +33,8 @@ import { ProductPricePanel } from './product-price-panel';
 
 interface VariantFormValues {
   name: string;
+  /** Mã hàng của cửa hàng; bỏ trống thì hệ thống tự sinh. */
+  sku?: string;
   barcode?: string;
 }
 
@@ -42,6 +45,7 @@ interface BundleFormValues {
 
 const variantSchema: yup.ObjectSchema<VariantFormValues> = yup.object({
   name: yup.string().trim().required('Nhập tên phiên bản').max(255, 'Tối đa 255 ký tự'),
+  sku: yup.string().trim().uppercase().test('sku-pattern', SKU_PATTERN_MESSAGE, (value) => !value || SKU_PATTERN.test(value)).optional(),
   barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
 });
 
@@ -71,7 +75,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
   const detail = useGetAdminProduct(slug ?? '', { query: { enabled: Boolean(slug) } });
   const variantForm = useForm<VariantFormValues>({
     resolver: yupResolver(variantSchema),
-    defaultValues: { name: '', barcode: '' },
+    defaultValues: { name: '', sku: '', barcode: '' },
   });
   const bundleForm = useForm<BundleFormValues>({
     resolver: yupResolver(bundleSchema),
@@ -97,7 +101,7 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     mutation: {
       onSuccess: async () => {
         await refresh();
-        variantForm.reset({ name: '', barcode: '' });
+        variantForm.reset({ name: '', sku: '', barcode: '' });
         void message.success('Đã thêm SKU.');
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể thêm SKU.')),
@@ -175,7 +179,11 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
     if (!product) return;
     createVariant.mutate({
       id: product.id,
-      data: { name: values.name, ...(values.barcode ? { barcode: values.barcode } : {}) },
+      data: {
+        name: values.name,
+        ...(values.sku ? { sku: values.sku } : {}),
+        ...(values.barcode ? { barcode: values.barcode } : {}),
+      },
     });
   });
 
@@ -364,6 +372,9 @@ export function ProductWorkflowDrawer({ slug, onClose }: { slug?: string; onClos
                   </Form.Item>
                   <Form.Item label="Tên phiên bản" required validateStatus={variantForm.formState.errors.name ? 'error' : undefined} help={variantForm.formState.errors.name?.message}>
                     <Controller name="name" control={variantForm.control} render={({ field }) => <Input {...field} />} />
+                  </Form.Item>
+                  <Form.Item label="SKU" validateStatus={variantForm.formState.errors.sku ? 'error' : undefined} help={variantForm.formState.errors.sku?.message}>
+                    <Controller name="sku" control={variantForm.control} render={({ field }) => <Input {...field} placeholder="Bỏ trống để hệ thống tự sinh" />} />
                   </Form.Item>
                   <Form.Item label="Barcode" validateStatus={variantForm.formState.errors.barcode ? 'error' : undefined} help={variantForm.formState.errors.barcode?.message}>
                     <Controller name="barcode" control={variantForm.control} render={({ field }) => <Input {...field} />} />

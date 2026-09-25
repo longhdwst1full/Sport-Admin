@@ -7,6 +7,11 @@
  */
 
 export interface CreateVariantDto {
+  /**
+   * Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
+   * @maxLength 40
+   */
+  sku?: string;
   barcode?: string;
   name: string;
   weightGrams?: number;

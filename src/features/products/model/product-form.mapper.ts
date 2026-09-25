@@ -9,6 +9,8 @@ import { toInitialPriceAmount } from './product-initial-setup';
 
 export interface ProductVariantFormValues {
   name: string;
+  /** Mã hàng của cửa hàng; bỏ trống thì API tự sinh. */
+  sku?: string;
   barcode?: string;
   weightGrams?: number;
   lengthMm?: number;
@@ -36,6 +38,7 @@ export interface ProductFormValues {
 
 export const emptyVariant = (): ProductVariantFormValues => ({
   name: '',
+  sku: '',
   barcode: '',
   weightGrams: 0,
   lengthMm: undefined,
@@ -52,6 +55,7 @@ const toCreateVariantDto = (
   includePrices: boolean,
 ): CreateProductVariantDto => ({
   name: variant.name.trim(),
+  ...(optionalText(variant.sku) ? { sku: optionalText(variant.sku)?.toUpperCase() } : {}),
   ...(optionalText(variant.barcode) ? { barcode: optionalText(variant.barcode) } : {}),
   weightGrams: variant.weightGrams ?? 0,
   ...(variant.lengthMm === undefined ? {} : { lengthMm: variant.lengthMm }),

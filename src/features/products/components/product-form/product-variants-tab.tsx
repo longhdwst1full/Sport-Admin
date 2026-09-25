@@ -198,6 +198,22 @@ export function ProductVariantsTab({
                   render={({ field }) => <Input {...field} placeholder="Ví dụ: Đen - Size 40" />}
                 />
               </Form.Item>
+              {!isEdit && (
+                <Form.Item
+                  label="SKU (mã hàng)"
+                  extra="Mã cửa hàng đang dùng, ví dụ TD-02. Bỏ trống để hệ thống tự sinh; không sửa được sau khi tạo."
+                  validateStatus={form.formState.errors.variants?.[index]?.sku ? 'error' : undefined}
+                  help={form.formState.errors.variants?.[index]?.sku?.message}
+                >
+                  <Controller
+                    name={`variants.${index}.sku`}
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input {...field} placeholder="Bỏ trống để tự sinh" onChange={(event) => field.onChange(event.target.value.toUpperCase())} />
+                    )}
+                  />
+                </Form.Item>
+              )}
               <Form.Item
                 label="Barcode"
                 validateStatus={form.formState.errors.variants?.[index]?.barcode ? 'error' : undefined}

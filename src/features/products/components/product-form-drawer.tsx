@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm, type FieldPath } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
+import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../constants/product-list.constants';
 import { useCan } from '@/core/auth/permissions';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import {
@@ -90,6 +91,7 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
     .array()
     .of(yup.object({
       name: yup.string().trim().required('Nhập tên biến thể').max(255, 'Tối đa 255 ký tự'),
+      sku: yup.string().trim().uppercase().test('sku-pattern', SKU_PATTERN_MESSAGE, (value) => !value || SKU_PATTERN.test(value)).optional(),
       barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
       weightGrams: yup.number().integer('Khối lượng phải là số nguyên').min(0, 'Tối thiểu 0').optional(),
       lengthMm: yup.number().integer('Chiều dài phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
