@@ -72,6 +72,24 @@ export function ShippingConsultationDrawer({
     >
       {consultation && (
         <Space direction="vertical" size="large" className="w-full">
+          {consultation.stockShortages.length > 0 && (
+            // Không chi nhánh nào đủ cả giỏ: API chặn chốt phí tới khi kho này nhận đủ hàng chuyển sang.
+            <Alert
+              type="warning"
+              showIcon
+              message={`Kho ${consultation.branchName} chưa đủ hàng — tạo phiếu chuyển kho trước khi chốt phí`}
+              description={
+                <ul className="m-0 pl-4">
+                  {consultation.stockShortages.map((shortage) => (
+                    <li key={shortage.productVariantId}>
+                      {shortage.name} ({shortage.sku}): cần {shortage.requested}, kho có {shortage.availableAtBranch} — thiếu{' '}
+                      {shortage.requested - shortage.availableAtBranch}
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
+          )}
           <Descriptions bordered size="small" column={1}>
             <Descriptions.Item label="Khách hàng">
               {consultation.recipient.recipient} · {consultation.recipient.phone}

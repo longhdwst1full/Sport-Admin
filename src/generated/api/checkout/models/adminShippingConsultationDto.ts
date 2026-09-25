@@ -9,6 +9,8 @@ import type { CheckoutQuoteStatus } from './checkoutQuoteStatus';
 import type { CheckoutQuotePaymentMethod } from './checkoutQuotePaymentMethod';
 import type { ShippingMethod } from './shippingMethod';
 import type { CheckoutQuoteItemDto } from './checkoutQuoteItemDto';
+import type { AdminShippingConsultationDtoConsultationReason } from './adminShippingConsultationDtoConsultationReason';
+import type { CheckoutStockShortageDto } from './checkoutStockShortageDto';
 import type { CheckoutRecipientDto } from './checkoutRecipientDto';
 
 export interface AdminShippingConsultationDto {
@@ -39,6 +41,13 @@ export interface AdminShippingConsultationDto {
   items: CheckoutQuoteItemDto[];
   expiresAt: string;
   version: number;
+  /**
+   * STOCK_SPLIT_ACROSS_BRANCHES: không chi nhánh nào đủ cả giỏ; phải chuyển kho phần thiếu trước khi báo giá
+   * @nullable
+   */
+  consultationReason: AdminShippingConsultationDtoConsultationReason;
+  /** Hàng còn thiếu tại kho đã chọn; rỗng nếu đủ */
+  stockShortages: CheckoutStockShortageDto[];
   recipient: CheckoutRecipientDto;
   /** @nullable */
   customerNote?: string | null;
