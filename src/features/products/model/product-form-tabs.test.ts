@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { UseFormReturn } from 'react-hook-form';
-import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import type { ProductFormValues } from './product-form.mapper';
-import { adjacentTab, productTabFields, validateProductTabs, visibleProductTabs } from './product-form-tabs';
+import { PRODUCT_FORM_TABS, PRODUCT_TAB_LABELS, adjacentTab, productTabFields, validateProductTabs } from './product-form-tabs';
 
 function formWithFailingFields(failing: string[], variantCount = 1): UseFormReturn<ProductFormValues> {
   return {
@@ -26,16 +25,37 @@ describe('validateProductTabs', () => {
     });
   });
 
-  it('quy lỗi tồn đầu về tab Tồn kho, không về tab SKU', async () => {
+  it('quy lỗi tồn đầu về tab SKU, giá & tồn kho', async () => {
     await expect(validateProductTabs(formWithFailingFields(['variants.1.openingQuantity'], 2))).resolves.toEqual({
       isValid: false,
-      errorTab: 'stock',
+      errorTab: 'variants',
+    });
+  });
+
+  it('quy lỗi kho nhập tồn đầu về tab SKU, giá & tồn kho', async () => {
+    await expect(validateProductTabs(formWithFailingFields(['initialWarehouseCode']))).resolves.toEqual({
+      isValid: false,
+      errorTab: 'variants',
+    });
+  });
+
+  it('quy lỗi thông số kỹ thuật về tab Thông tin', async () => {
+    await expect(validateProductTabs(formWithFailingFields(['specifications']))).resolves.toEqual({
+      isValid: false,
+      errorTab: 'info',
+    });
+  });
+
+  it('quy lỗi hình ảnh về tab Thông tin khi tạo', async () => {
+    await expect(validateProductTabs(formWithFailingFields(['images']))).resolves.toEqual({
+      isValid: false,
+      errorTab: 'info',
     });
   });
 
   it('ưu tiên tab đứng trước khi nhiều tab cùng lỗi', async () => {
     await expect(
-      validateProductTabs(formWithFailingFields(['name', 'specifications'])),
+      validateProductTabs(formWithFailingFields(['variants.0.sku', 'specifications'])),
     ).resolves.toEqual({ isValid: false, errorTab: 'info' });
   });
 
@@ -46,30 +66,51 @@ describe('validateProductTabs', () => {
     ).resolves.toEqual({ isValid: true });
   });
 
-  it('chỉ xét tab đang hiển thị', async () => {
+  /** Thông số vẫn là ô của form khi Sửa, nên vẫn chặn Lưu và nhảy về tab Thông tin. */
+  it('vẫn validate thông số kỹ thuật ở chế độ Sửa', async () => {
+    await expect(validateProductTabs(formWithFailingFields(['specifications']), 'edit')).resolves.toEqual({
+      isValid: false,
+      errorTab: 'info',
+    });
+  });
+
+  it('chỉ xét các tab được truyền vào', async () => {
     await expect(
-      validateProductTabs(formWithFailingFields(['specifications']), 'create', ['info', 'variants']),
+      validateProductTabs(formWithFailingFields(['specifications']), 'create', ['variants', 'review']),
     ).resolves.toEqual({ isValid: true });
   });
 });
 
-describe('tab theo loại sản phẩm', () => {
-  it('chỉ hiện tab Combo cho sản phẩm combo', () => {
-    expect(visibleProductTabs(ProductType.STANDARD)).not.toContain('bundle');
-    expect(visibleProductTabs(ProductType.BUNDLE)).toContain('bundle');
+describe('bộ tab', () => {
+  it('Tạo và Sửa dùng đúng ba tab gộp', () => {
+    expect(PRODUCT_FORM_TABS).toEqual(['info', 'variants', 'review']);
+    expect(PRODUCT_TAB_LABELS).toEqual({
+      info: 'Thông tin',
+      variants: 'SKU, giá & tồn kho',
+      review: 'Kiểm tra xuất bản',
+    });
   });
 
-  it('liệt kê từng ô của mọi biến thể ở tab SKU khi tạo', () => {
-    expect(productTabFields('variants', 'create', 2)).toContain('variants.1.price');
+  it('liệt kê từng ô của mọi biến thể và tồn đầu ở tab SKU khi tạo', () => {
+    const fields = productTabFields('variants', 'create', 2);
+    expect(fields).toContain('variants.1.price');
+    expect(fields).toContain('variants.1.openingQuantity');
+    expect(fields).toContain('initialBranchId');
     expect(productTabFields('variants', 'edit', 2)).toEqual([]);
+  });
+
+  it('tab Thông tin gồm thông tin cơ bản, ảnh (chỉ khi tạo) và thông số', () => {
+    expect(productTabFields('info', 'create', 1)).toEqual(expect.arrayContaining(['name', 'images', 'specifications']));
+    expect(productTabFields('info', 'edit', 1)).not.toContain('images');
+    expect(productTabFields('info', 'edit', 1)).toContain('specifications');
   });
 });
 
 describe('adjacentTab', () => {
-  it('đi tới và lùi lại theo thứ tự tab đang hiển thị', () => {
-    const tabs = visibleProductTabs(ProductType.STANDARD);
-    expect(adjacentTab('info', 1, tabs)).toBe('variants');
-    expect(adjacentTab('stock', 1, tabs)).toBe('review');
+  it('đi tới và lùi lại theo thứ tự tab', () => {
+    expect(adjacentTab('info', 1)).toBe('variants');
+    expect(adjacentTab('variants', 1)).toBe('review');
+    expect(adjacentTab('review', -1)).toBe('variants');
   });
 
   it('không có tab nào ngoài hai đầu', () => {

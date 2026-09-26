@@ -8,7 +8,7 @@ import type { ProductFormValues } from '../../model/product-form.mapper';
 import type { SearchOptionsQuery } from './types';
 
 /**
- * Tab Thông tin — định danh, phân loại và mô tả; lưu cùng nút chính ở cả Tạo và Sửa.
+ * Khối Thông tin cơ bản của tab Thông tin — định danh, phân loại và mô tả; lưu cùng nút chính ở cả Tạo và Sửa.
  *
  * Mã sản phẩm và slug đường dẫn do Backend sinh từ tên, nên không có ô nhập ở đây: hai nguồn sự
  * thật cho cùng một thứ sẽ lệch nhau ngay lần sửa tên đầu tiên.

@@ -7,7 +7,7 @@ import type { ProductFormValues } from '../../model/product-form.mapper';
 import type { SpecificationRow } from '../../model/product-specifications';
 
 /**
- * Tab 3 — thông số kỹ thuật (decision D61), cùng một ô của form ở cả Tạo và Sửa.
+ * Khối Thông số kỹ thuật của tab Thông tin (decision D61), cùng một ô của form ở cả Tạo và Sửa.
  *
  * Chọn thuộc tính từ từ điển dùng chung rồi nhập giá trị theo kiểu. Chuyển kiểu và kiểm theo từ điển
  * xảy ra lúc bấm Tạo/Lưu (`toSpecificationPayload`); lỗi được đưa lại đây qua `errors`. API vẫn là

@@ -34,7 +34,7 @@ const bundleSchema: yup.ObjectSchema<BundleFormValues> = yup.object({
 const emptyBundle: BundleFormValues = { bundleVariantId: '', items: [{ componentVariantId: '', quantity: 1 }] };
 
 /**
- * Tab Combo ở chế độ Sửa — thành phần cố định của từng SKU combo (`createAdminProductBundle`).
+ * Khối Combo (tab "SKU, giá & tồn kho", chỉ với sản phẩm BUNDLE) ở chế độ Sửa — thành phần cố định của từng SKU combo (`createAdminProductBundle`).
  *
  * Lưu ngay theo từng SKU; chỉ khai được khi sản phẩm còn DRAFT vì combo đã bán không được đổi thành phần.
  */

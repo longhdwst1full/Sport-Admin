@@ -108,7 +108,7 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     }).toBeLessThanOrEqual(720);
   });
 
-  test('PRD-07: tạo sản phẩm -> SKU & giá có vận chuyển, tồn đầu nằm ở tab Tồn kho', async ({ page }) => {
+  test('PRD-07: tạo sản phẩm -> tab SKU, giá & tồn kho có vận chuyển và tồn đầu', async ({ page }) => {
     await mockJson(page, '**/api/v1/admin/products?**', productListResponse());
     await mockJson(page, '**/api/v1/admin/catalog/brands/active*', { items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 1 } });
     await mockJson(page, '**/api/v1/admin/catalog/categories/active*', { items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 1 } });
@@ -120,7 +120,7 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     await shell.open('/products');
     await products.createProduct().click();
 
-    await products.tab('SKU & giá').click();
+    await products.tab('SKU, giá & tồn kho').click();
     await expect(page.getByText('Khối lượng (g)', { exact: true })).toBeVisible();
     await expect(page.getByText('Dài (mm)', { exact: true })).toBeVisible();
     await expect(page.getByText('Rộng (mm)', { exact: true })).toBeVisible();
@@ -129,7 +129,7 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     await expect(page.getByText('SKU (mã hàng)', { exact: true })).toHaveCount(1);
     await expect(page.locator('input[value="Tự động"]')).toHaveCount(0);
 
-    await products.tab('Tồn kho').click();
+    // Tồn kho là khối trong cùng tab với SKU & giá, không còn tab riêng.
     await expect(page.getByText('Tồn đầu theo chi nhánh / kho')).toBeVisible();
     await expect(page.getByText('Chi nhánh nhập tồn đầu', { exact: true })).toBeVisible();
     await expect(page.getByText('Kho nhập tồn đầu', { exact: true })).toBeVisible();
