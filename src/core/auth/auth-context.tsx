@@ -10,12 +10,14 @@ import {
 import type { CurrentUserDto, TokenPairDto } from '@/generated/api/auth/auth.schemas';
 import {
   clearAuthTokens,
+  getAccessTokenExpiresAt,
+  getAuthTokenVersion,
   readAuthTokens,
   subscribeAuthTokens,
   saveAuthTokens,
   usesAuthCookieTransport,
 } from './auth-token.store';
-import { AUTH_SESSION_EXPIRED_EVENT, expireAdminSession } from './auth-session-expiry';
+import { AUTH_SESSION_EXPIRED_EVENT } from './auth-session-expiry';
 import { rotateTokens } from '@/lib/api/fetcher';
 import { refreshDelayMs } from './access-token-expiry';
 
@@ -55,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => usesAuthCookieTransport() && window.location.pathname !== '/login',
   );
   const hasTokens = useSyncExternalStore(subscribeAuthTokens, hasStoredTokens, () => false);
+  const tokenVersion = useSyncExternalStore(subscribeAuthTokens, getAuthTokenVersion, () => 0);
   const developmentBypass =
     import.meta.env.DEV && (import.meta.env.VITE_DEV_BYPASS_PERMISSIONS ?? 'true') === 'true';
   const currentUserQuery = useGetAdminCurrentUser({
@@ -110,10 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void rotateTokens()
       .then(() => undefined)
       .catch(() => {
-        if (active) {
-          clearAuthTokens();
-          expireAdminSession();
-        }
+        // SECURITY: `rotateTokens` tự dọn token và phát tín hiệu hết phiên khi refresh bị từ chối
+        // (401). Lỗi mạng/5xx lúc tải trang không được coi là hết phiên: không có access token nên
+        // route guard vẫn đưa về /login, nhưng refresh cookie còn nguyên để đăng nhập lại/tải lại.
       })
       .finally(() => {
         if (active) setRestoringCookieSession(false);
@@ -132,17 +134,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * mất refresh token bằng hai lời gọi song song.
    */
   useEffect(() => {
-    if (!hasTokens && !usesAuthCookieTransport()) return;
-    const delay = refreshDelayMs(readAuthTokens()?.expiresIn);
+    const expiresAt = getAccessTokenExpiresAt();
+    if (expiresAt === undefined) return;
+    const delay = refreshDelayMs(Math.floor((expiresAt - Date.now()) / 1000));
     if (delay === undefined) return;
     const timer = setTimeout(() => {
       void rotateTokens().catch(() => {
-        // `rotateTokens` đã dọn token và phát tín hiệu hết phiên khi refresh hỏng thật.
+        // `rotateTokens` đã dọn token và phát tín hiệu hết phiên khi refresh bị từ chối thật;
+        // lỗi tạm thời giữ phiên, request kế tiếp gặp 401 sẽ xoay lại.
       });
     }, delay);
     return () => clearTimeout(timer);
-    // `hasTokens` đổi sau mỗi lần lưu token mới, nên hẹn giờ được đặt lại theo TTL mới nhất.
-  }, [hasTokens]);
+    // `tokenVersion` tăng sau MỖI lần lưu/xoá/đồng bộ token, nên hẹn giờ luôn được đặt lại theo
+    // access token mới nhất. Phụ thuộc boolean `hasTokens` thì sau lần xoay đầu tiên nó không
+    // đổi và vòng xoay chủ động chết lặng lẽ.
+  }, [tokenVersion]);
 
   const establishSession = async (
     tokens: TokenPairDto,

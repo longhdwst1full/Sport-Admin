@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { refreshDelayMs } from './access-token-expiry';
+import { jwtExpiresAtMs, refreshDelayMs } from './access-token-expiry';
 
 describe('refreshDelayMs', () => {
   it('xoay trước 60 giây với token 15 phút', () => {
@@ -18,5 +18,22 @@ describe('refreshDelayMs', () => {
   it('không hẹn giờ khi server không nói thời hạn', () => {
     expect(refreshDelayMs(0)).toBeUndefined();
     expect(refreshDelayMs(undefined)).toBeUndefined();
+  });
+});
+
+describe('jwtExpiresAtMs', () => {
+  const encode = (value: object) =>
+    btoa(JSON.stringify(value)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+  it('đọc claim exp của JWT (base64url)', () => {
+    const token = `${encode({ alg: 'HS256' })}.${encode({ sub: 'u-1', exp: 1_790_000_000 })}.sig`;
+    expect(jwtExpiresAtMs(token)).toBe(1_790_000_000_000);
+  });
+
+  it('trả undefined với token không phải JWT hoặc thiếu exp', () => {
+    expect(jwtExpiresAtMs('opaque-token')).toBeUndefined();
+    expect(jwtExpiresAtMs(`${encode({})}.${encode({ sub: 'x' })}.sig`)).toBeUndefined();
+    expect(jwtExpiresAtMs('a.%%%.c')).toBeUndefined();
+    expect(jwtExpiresAtMs(undefined)).toBeUndefined();
   });
 });
