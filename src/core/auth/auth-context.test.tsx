@@ -6,8 +6,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearAuthTokens, saveAuthTokens } from './auth-token.store';
 import { AuthProvider, useAuth } from './auth-context';
 
-const { getAdminCurrentUserMock, useGetAdminCurrentUserMock } = vi.hoisted(() => ({
+const { getAdminCurrentUserMock, rotateTokensMock, useGetAdminCurrentUserMock } = vi.hoisted(() => ({
   getAdminCurrentUserMock: vi.fn(),
+  rotateTokensMock: vi.fn(),
   useGetAdminCurrentUserMock: vi.fn(() => ({
     data: undefined,
     isPending: false,
@@ -21,6 +22,8 @@ vi.mock('@/generated/api/auth/auth', () => ({
   refreshAdminToken: vi.fn(),
   useGetAdminCurrentUser: useGetAdminCurrentUserMock,
 }));
+
+vi.mock('@/lib/api/fetcher', () => ({ rotateTokens: rotateTokensMock }));
 
 function AuthStateProbe() {
   const auth = useAuth();
@@ -143,5 +146,102 @@ describe('AuthProvider', () => {
 
     expect(view.getByText('anonymous')).toBeTruthy();
     view.unmount();
+  });
+
+  /**
+   * Hồi quy: hẹn giờ xoay chủ động phụ thuộc boolean `hasTokens`, boolean đó không đổi sau lần
+   * xoay đầu tiên nên hẹn giờ không bao giờ được đặt lại và tab mở lâu lại rơi về đường 401.
+   */
+  it('đặt lại hẹn giờ xoay chủ động sau mỗi lần xoay thành công', async () => {
+    vi.useFakeTimers();
+    try {
+      let generation = 0;
+      rotateTokensMock.mockImplementation(async () => {
+        generation += 1;
+        const tokens = {
+          accessToken: `access-${generation}`,
+          refreshToken: `refresh-${generation}`,
+          tokenType: 'Bearer',
+          expiresIn: 900,
+          mustChangePassword: false,
+        };
+        saveAuthTokens(tokens);
+        return tokens;
+      });
+      saveAuthTokens({
+        accessToken: 'access-0',
+        refreshToken: 'refresh-0',
+        tokenType: 'Bearer',
+        expiresIn: 900,
+        mustChangePassword: false,
+      });
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AuthStateProbe />
+          </AuthProvider>
+        </QueryClientProvider>,
+      );
+
+      // TTL 900 giây ⇒ xoay ở giây 840.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(839_000);
+      });
+      expect(rotateTokensMock).not.toHaveBeenCalled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+      expect(rotateTokensMock).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(840_000);
+      });
+      expect(rotateTokensMock).toHaveBeenCalledTimes(2);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(840_000);
+      });
+      expect(rotateTokensMock).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('hẹn giờ theo claim exp của JWT khi token dựng lại từ cookie có expiresIn = 0', async () => {
+    vi.useFakeTimers();
+    try {
+      rotateTokensMock.mockResolvedValue(undefined);
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const payload = btoa(JSON.stringify({ sub: 'u-1', exp: nowSeconds + 600 }))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+      saveAuthTokens({
+        accessToken: `header.${payload}.sig`,
+        refreshToken: 'refresh-0',
+        tokenType: 'Bearer',
+        expiresIn: 0,
+        mustChangePassword: false,
+      });
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AuthStateProbe />
+          </AuthProvider>
+        </QueryClientProvider>,
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(538_000);
+      });
+      expect(rotateTokensMock).not.toHaveBeenCalled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000);
+      });
+      expect(rotateTokensMock).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

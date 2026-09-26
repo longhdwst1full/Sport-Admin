@@ -21,3 +21,26 @@ export function refreshDelayMs(expiresInSeconds: number | undefined): number | u
   const lead = Math.min(REFRESH_LEAD_SECONDS, expiresInSeconds / 2);
   return Math.max(expiresInSeconds - lead, MINIMUM_DELAY_SECONDS) * 1000;
 }
+
+/**
+ * Mốc hết hạn (epoch ms) đọc từ claim `exp` của access token JWT, hoặc `undefined`.
+ *
+ * Cần cho BODY mode sau khi tải lại trang: token được dựng lại từ cookie nên mất `expiresIn`
+ * (bằng 0) và hẹn giờ xoay chủ động không đặt được.
+ *
+ * SECURITY: Chỉ dùng để HẸN GIỜ. Không xác minh chữ ký và không bao giờ dùng kết quả này để
+ * quyết định quyền hay tính hợp lệ của phiên — Backend vẫn là nơi kiểm token.
+ */
+export function jwtExpiresAtMs(token: string | undefined): number | undefined {
+  const payload = token?.split('.')[1];
+  if (!payload) return undefined;
+  try {
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const claims = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='))) as {
+      exp?: unknown;
+    };
+    return typeof claims.exp === 'number' && Number.isFinite(claims.exp) ? claims.exp * 1000 : undefined;
+  } catch {
+    return undefined;
+  }
+}

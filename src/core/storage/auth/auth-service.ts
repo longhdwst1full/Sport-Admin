@@ -61,6 +61,26 @@ export const AuthService = {
     }
   },
 
+  /**
+   * Đọc lại cookie, bỏ qua bản memory của tab này. Trả `true` khi token thay đổi.
+   *
+   * Cookie dùng chung giữa các tab còn memory thì không: tab khác vừa xoay token thì memory
+   * của tab này còn cầm refresh token ĐÃ BỊ TIÊU. Gửi nó lên sẽ bị Backend coi là reuse và
+   * thu hồi cả phiên, nên phải đồng bộ lại trước khi quyết định có cần refresh hay không.
+   */
+  resync(): boolean {
+    const accessToken = CookieManager.get(CookieKey.ACCESS_TOKEN) ?? '';
+    const refreshToken = CookieManager.get(CookieKey.REFRESH_TOKEN) || undefined;
+    if (!memoryTokens) {
+      if (!accessToken && !refreshToken) return false;
+    } else if (memoryTokens.accessToken === accessToken && memoryTokens.refreshToken === refreshToken) {
+      return false;
+    }
+    memoryTokens = undefined;
+    this.read();
+    return true;
+  },
+
   clear(): void {
     memoryTokens = undefined;
     CookieManager.remove(CookieKey.ACCESS_TOKEN, COOKIE_OPTS);

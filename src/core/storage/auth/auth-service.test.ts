@@ -55,4 +55,25 @@ describe('AuthService', () => {
     expect(AuthService.read()).toBeUndefined();
     expect(CookieManager.get(CookieKey.REFRESH_TOKEN)).toBe('');
   });
+
+  /**
+   * Tab khác xoay token thì cookie dùng chung đã đổi nhưng memory của tab này còn refresh token
+   * đã bị tiêu. `resync` phải lấy bản cookie để lần refresh kế tiếp không bị coi là reuse.
+   */
+  it('resync lấy token mới từ cookie khi tab khác đã xoay', () => {
+    AuthService.save(tokens);
+    CookieManager.set(CookieKey.ACCESS_TOKEN, 'access-2');
+    CookieManager.set(CookieKey.REFRESH_TOKEN, 'refresh-2');
+
+    expect(AuthService.resync()).toBe(true);
+    expect(AuthService.read()).toMatchObject({ accessToken: 'access-2', refreshToken: 'refresh-2' });
+    expect(AuthService.resync()).toBe(false);
+  });
+
+  it('resync giữ nguyên memory khi cookie không đổi', () => {
+    AuthService.save(tokens);
+
+    expect(AuthService.resync()).toBe(false);
+    expect(AuthService.read()?.expiresIn).toBe(900);
+  });
 });
