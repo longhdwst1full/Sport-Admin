@@ -16,6 +16,8 @@ export function customerSummary(
     orderCount: 0,
     lifetimeValue: '0',
     lastOrderAt: null,
+    avatarAssetId: null,
+    avatarUrl: null,
     createdAt: '2026-09-18T00:00:00.000Z',
     version: 1,
     ...overrides,

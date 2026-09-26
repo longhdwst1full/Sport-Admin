@@ -58,12 +58,14 @@ async function mockProductBackend(page: Page, { failFirstStock = false } = {}): 
       return json(route, { items: product ? [productSummary({ ...product })] : [], meta: { page: 1, limit: 30, total: product ? 1 : 0, totalPages: 1 } });
     }
     if (method === 'POST' && path === '') {
-      captured.create = request.postDataJSON();
+      const body = request.postDataJSON() as { name: string };
+      captured.create = body;
+      const template = productDetail() as unknown as { variants: Array<Record<string, unknown>> };
       product = productDetail({
-        id: '9', slug: 'ghe-tap-e2e', productNo: 'P-0009', name: captured.create.name, status: 'DRAFT', isPublished: false,
+        id: '9', slug: 'ghe-tap-e2e', productNo: 'P-0009', name: body.name, status: 'DRAFT', isPublished: false,
         version: 0, media: [],
         specifications: [{ code: 'MAX_LOAD', name: 'Tải trọng', dataType: 'NUMBER', unit: 'kg', values: [{ value: 120, label: '120 kg' }] }],
-        variants: [{ ...productDetail().variants[0], id: '91', sku: 'GHE-01', name: 'Đen' }],
+        variants: [{ ...template.variants[0], id: '91', sku: 'GHE-01', name: 'Đen' }],
       });
       return json(route, product, 201);
     }
