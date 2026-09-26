@@ -12,8 +12,9 @@
 có `slug` là Tạo, có `slug` là Sửa; tạo xong workspace chuyển tại chỗ sang Sửa của sản phẩm vừa tạo.
 Hợp nhất ở **bố cục**, không ở API: mỗi nghiệp vụ vẫn gọi operation riêng.
 
-Workspace có **3 tab**, giống nhau ở Tạo và Sửa; mỗi tab gộp nhiều khối xếp chồng, mỗi khối có tiêu đề
-(`Divider`) và giữ nguyên component riêng:
+Workspace có **3 tab**, giống nhau ở Tạo và Sửa; mỗi tab gộp nhiều khối xếp chồng và giữ nguyên component
+riêng. Mỗi khối chỉ có **một** tiêu đề nhìn thấy: khối đã có `FormSection` tự đặt tiêu đề thì không thêm gì;
+chỉ thông báo Combo lúc Tạo (không có tiêu đề riêng) được thêm `Divider` "Combo".
 
 | Tab | Khối | Khi Tạo (ô của form, gửi một lệnh) | Khi Sửa |
 | --- | --- | --- | --- |

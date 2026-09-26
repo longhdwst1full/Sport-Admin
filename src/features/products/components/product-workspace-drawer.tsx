@@ -477,19 +477,13 @@ export function ProductWorkspaceDrawer({
   };
 
   const isArchived = product?.status === 'ARCHIVED';
-  /** Tiêu đề khối trong một tab gộp; giữ nguyên component của từng khối, chỉ ghép chúng lại. */
-  const sectionHeading = (title: string) => (
-    <Divider orientation="left" orientationMargin={0}>
-      {title}
-    </Divider>
-  );
-
   const tabContent = (tab: ProductFormTab) => {
+    // Tab gộp chỉ ghép các component khối sẵn có. Khối nào đã tự có tiêu đề (FormSection) thì không thêm
+    // tiêu đề nữa, để mỗi khối chỉ có một tiêu đề nhìn thấy; chỉ khối không có tiêu đề riêng mới thêm Divider.
     switch (tab) {
       case 'info':
         return (
-          <>
-            {sectionHeading('Thông tin cơ bản')}
+          <div className="space-y-4">
             <ProductBasicInfoTab
               form={form}
               product={product}
@@ -498,22 +492,18 @@ export function ProductWorkspaceDrawer({
               onBrandSearch={setBrandSearch}
               onCategorySearch={setCategorySearch}
             />
-            {sectionHeading('Hình ảnh')}
             <ProductMediaTab form={form} product={product} disabled={mutationPending} onMediaChanged={refreshProduct} />
-            {sectionHeading('Thông số kỹ thuật')}
             <ProductSpecificationsTab form={form} attributes={attributes} loading={attributesQuery.isPending} errors={specificationErrors} />
-          </>
+          </div>
         );
       case 'variants':
         return (
-          <>
-            {sectionHeading('SKU & giá')}
+          <div className="space-y-4">
             {product ? (
               <ProductVariantsManager product={product} onChanged={refreshProduct} />
             ) : (
               <ProductVariantsTab form={form} variantFields={variantFields} productType={productType} canManagePrice={canManagePrice} />
             )}
-            {sectionHeading('Tồn kho')}
             {product ? (
               <ProductStockPanel
                 product={product}
@@ -534,22 +524,24 @@ export function ProductWorkspaceDrawer({
               />
             )}
             {/* Combo chỉ có nghĩa với sản phẩm BUNDLE; sản phẩm thường không hiện khối này ở cả Tạo lẫn Sửa. */}
-            {effectiveProductType === ProductType.BUNDLE && (
-              <>
-                {sectionHeading('Combo')}
-                {product ? (
-                  <ProductBundleManager product={product} onChanged={refreshProduct} />
-                ) : (
+            {effectiveProductType === ProductType.BUNDLE &&
+              (product ? (
+                <ProductBundleManager product={product} onChanged={refreshProduct} />
+              ) : (
+                // Thông báo lúc Tạo không có tiêu đề riêng nên thêm Divider; khi Sửa, ProductBundleManager đã có FormSection.
+                <div>
+                  <Divider orientation="left" orientationMargin={0}>
+                    Combo
+                  </Divider>
                   <Alert
                     type="info"
                     showIcon
                     message="Khai thành phần combo ngay sau khi tạo"
                     description="Thành phần gắn với SKU combo thật, nên cần tạo sản phẩm trước. Tạo xong, workspace chuyển sang chế độ sửa và mục này cho khai thành phần."
                   />
-                )}
-              </>
-            )}
-          </>
+                </div>
+              ))}
+          </div>
         );
       case 'review':
         return (
