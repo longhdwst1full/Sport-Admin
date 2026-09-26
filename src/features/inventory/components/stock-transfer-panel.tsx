@@ -5,7 +5,7 @@ import { useDebounce } from 'use-debounce';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { useListStockTransfers } from '@/generated/api/inventory/inventory';
-import { StockTransferStatus } from '@/generated/api/inventory/models';
+import { StockTransferStatus } from '@/generated/api/inventory/inventory.schemas';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { StockTransferDetailDrawer } from './stock-transfer-detail-drawer';
 

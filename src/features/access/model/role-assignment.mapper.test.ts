@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AssignableStaffRoleCode,
   AssignUserRoleDtoScopeType,
-} from '@/generated/api/iam/models';
+} from '@/generated/api/iam/iam.schemas';
 import { toAssignUserRoleDto } from './role-assignment.mapper';
 
 describe('toAssignUserRoleDto', () => {

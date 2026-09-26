@@ -38,10 +38,11 @@ import type {
   UserDto,
   UserListDto,
   UserRoleAssignmentDto,
-} from './models';
+} from './iam.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary List staff users with role scopes
  */

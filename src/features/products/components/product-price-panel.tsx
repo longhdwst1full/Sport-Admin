@@ -14,7 +14,7 @@ import {
   useGetAdminProductPriceTimeline,
   useReplaceAdminProductPrice,
 } from '@/generated/api/catalog/catalog';
-import type { ProductDetailDto, ProductPriceWindowDto } from '@/generated/api/catalog/models';
+import type { ProductDetailDto, ProductPriceWindowDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { useCan } from '@/core/auth/permissions';
 

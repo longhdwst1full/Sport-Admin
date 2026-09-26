@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Empty, Input, Tag, Tooltip, Tree, Typography } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import { LockOutlined } from '@ant-design/icons';
-import type { PermissionDto } from '@/generated/api/iam/models';
+import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
 import { permissionActionLabels } from '../constants/role.constants';
 import { buildPermissionTree } from '../model/permission-tree';
 

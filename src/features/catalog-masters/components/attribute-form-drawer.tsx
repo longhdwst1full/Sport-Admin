@@ -10,7 +10,7 @@ import {
   useCreateAdminAttribute,
   useUpdateAdminAttribute,
 } from '@/generated/api/catalog/catalog';
-import { AttributeDataType, type AttributeDto } from '@/generated/api/catalog/models';
+import { AttributeDataType, type AttributeDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { ATTRIBUTE_TYPE_LABEL, toAttributePayload, type AttributeFormValues } from '../model/attribute-form';
 

@@ -25,7 +25,7 @@ import {
   useListAdminReviews,
   useModerateAdminReview,
 } from '@/generated/api/reviews/reviews';
-import type { ProductReviewDto } from '@/generated/api/reviews/models';
+import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 import { ReviewDetailDrawer } from '../components/review-detail-drawer';
 import { getApiErrorMessage } from '@/lib/api/error';
 

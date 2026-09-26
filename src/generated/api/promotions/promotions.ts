@@ -31,10 +31,11 @@ import type {
   RemoveFlashSaleItemDto,
   UpdateFlashSaleCampaignDto,
   UpsertFlashSaleItemDto,
-} from './models';
+} from './promotions.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary Danh sách chiến dịch flash sale
  */

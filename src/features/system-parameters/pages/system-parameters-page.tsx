@@ -13,7 +13,7 @@ import {
 import type {
   SystemParameterStatus,
   SystemParameterDto,
-} from '@/generated/api/system/models';
+} from '@/generated/api/system/system.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';

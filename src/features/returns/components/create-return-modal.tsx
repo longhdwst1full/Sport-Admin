@@ -10,7 +10,7 @@ import {
   getGetAdminReturnQueueSummaryQueryKey,
   getListAdminReturnsQueryKey,
 } from '@/generated/api/returns/returns';
-import type { ReturnDetailDto, ReturnEligibilityDto, ReturnEligibilityLineDto } from '@/generated/api/returns/models';
+import type { ReturnDetailDto, ReturnEligibilityDto, ReturnEligibilityLineDto } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import type { UploadedSignedImage } from '@/lib/media/upload-signed-image';
 import { RETURN_PERMISSION, returnFaultLabels, returnReasonLabels } from '../constants/return.constants';

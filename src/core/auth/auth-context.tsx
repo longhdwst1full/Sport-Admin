@@ -7,7 +7,7 @@ import {
   logoutAdmin,
   useGetAdminCurrentUser,
 } from '@/generated/api/auth/auth';
-import type { CurrentUserDto, TokenPairDto } from '@/generated/api/auth/models';
+import type { CurrentUserDto, TokenPairDto } from '@/generated/api/auth/auth.schemas';
 import {
   clearAuthTokens,
   readAuthTokens,

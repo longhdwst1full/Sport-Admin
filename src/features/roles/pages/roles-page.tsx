@@ -10,7 +10,7 @@ import {
   useListAdminAllRoles,
   useListAdminPermissions,
 } from '@/generated/api/iam/iam';
-import type { RoleDto } from '@/generated/api/iam/models';
+import type { RoleDto } from '@/generated/api/iam/iam.schemas';
 import { useCan, usePermissions } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';

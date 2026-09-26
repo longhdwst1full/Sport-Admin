@@ -4,7 +4,7 @@ import {
   ShippingMethod,
   CheckoutQuoteStatus,
   type AdminShippingConsultationDto,
-} from '@/generated/api/checkout/models';
+} from '@/generated/api/checkout/checkout.schemas';
 import { ShippingConsultationTable } from './shipping-consultation-table';
 
 const demoRows: AdminShippingConsultationDto[] = [

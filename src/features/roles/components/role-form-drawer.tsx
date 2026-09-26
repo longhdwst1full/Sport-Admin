@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { canEditRolePermissions } from '../model/role-lifecycle.policy';
 import { Alert, Drawer, Form, Input, Select, Space, Button } from 'antd';
-import type { PermissionDto, RoleDto } from '@/generated/api/iam/models';
+import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
 import { ROOT_ROLE_CODE } from '../constants/role.constants';
 import { PermissionPicker } from './permission-picker';
 

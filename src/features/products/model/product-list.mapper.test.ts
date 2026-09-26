@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ProductSummaryDto } from '@/generated/api/catalog/models';
+import type { ProductSummaryDto } from '@/generated/api/catalog/catalog.schemas';
 import { toProductListRow } from './product-list.mapper';
 
 describe('toProductListRow', () => {

@@ -31,11 +31,12 @@ import type {
   ListAdminFulfillmentsParams,
   ReceiveReturnDto,
   ShipFulfillmentDto,
-} from './models';
+} from './fulfillments.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
 import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
+
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**

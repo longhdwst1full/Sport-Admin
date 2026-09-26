@@ -23,7 +23,7 @@ import {
   useDeleteAdminCategory,
   useListAdminCategories,
 } from '@/generated/api/catalog/catalog';
-import type { CategoryDto } from '@/generated/api/catalog/models';
+import type { CategoryDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { CategoryFormDrawer } from '../components/master-data-form-drawers';
 import { masterCodeColumn, masterStatusColumn } from '../components/master-columns';

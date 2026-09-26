@@ -28,10 +28,11 @@ import type {
   LoginDto,
   RefreshTokenDto,
   TokenPairDto,
-} from './models';
+} from './auth.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary Authenticate staff by email or phone
  */

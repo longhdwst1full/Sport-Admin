@@ -13,7 +13,7 @@ import {
 import {
   OrderStatusGroup,
   type OrderSummaryDto,
-} from '@/generated/api/orders/models';
+} from '@/generated/api/orders/orders.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 const money = new Intl.NumberFormat('vi-VN', {

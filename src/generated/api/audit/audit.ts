@@ -18,10 +18,11 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { AuditListDto, ErrorResponseDto, ListAdminAuditLogsParams } from './models';
+import type { AuditListDto, ErrorResponseDto, ListAdminAuditLogsParams } from './audit.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
+
 /**
  * @summary List immutable redacted audit logs for a global owner
  */

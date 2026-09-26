@@ -1,4 +1,4 @@
-import type { AdminCustomerSummaryDto } from '../../src/generated/api/customers/models';
+import type { AdminCustomerSummaryDto } from '../../src/generated/api/customers/customers.schemas';
 
 /** DTO của API thật; mỗi spec chỉ thay trường liên quan đến hành vi cần kiểm. */
 export function customerSummary(

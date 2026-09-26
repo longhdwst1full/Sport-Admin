@@ -30,7 +30,7 @@ import {
   getGetAdminCurrentUserQueryKey,
   useChangeAdminPassword,
 } from '@/generated/api/auth/auth';
-import type { ChangePasswordDto } from '@/generated/api/auth/models';
+import type { ChangePasswordDto } from '@/generated/api/auth/auth.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { getPasswordStrength } from '@/shared/utils';
 import { getInitials } from '@/shared/utils';

@@ -33,7 +33,7 @@ import {
   CreateStaffUserDtoRoleCode,
   type CreateStaffUserDtoRoleCode as StaffRoleCode,
   type PermissionDto,
-} from '@/generated/api/iam/models';
+} from '@/generated/api/iam/iam.schemas';
 import { useSearchActiveAdminBranches } from '@/generated/api/organization/organization';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import { type StaffFormValues, toCreateStaffUserDto } from '../model/staff-creation.mapper';

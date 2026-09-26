@@ -23,7 +23,7 @@ import {
   useListAdminBranches,
   useListAdminWarehouses,
 } from '@/generated/api/organization/organization';
-import type { BranchDto, OrganizationStatus, WarehouseDto } from '@/generated/api/organization/models';
+import type { BranchDto, OrganizationStatus, WarehouseDto } from '@/generated/api/organization/organization.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { OrganizationFormDrawer } from '../components/organization-form-drawer';
 

@@ -59,11 +59,12 @@ import type {
   UpdateProductDto,
   UpdateProductMediaDto,
   UpdateVariantDto,
-} from './models';
+} from './catalog.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
 import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
+
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export const listAdminBrands = (signal?: AbortSignal) => {

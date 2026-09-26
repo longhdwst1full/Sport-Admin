@@ -3,7 +3,7 @@ import { CarOutlined, InboxOutlined, ReloadOutlined, WarningOutlined } from '@an
 import { Alert, Button, Input, Select, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
 import { useListAdminFulfillments } from '@/generated/api/fulfillments/fulfillments';
-import type { FulfillmentStatus } from '@/generated/api/fulfillments/models';
+import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { OrderDetailDrawer } from '@/features/orders';

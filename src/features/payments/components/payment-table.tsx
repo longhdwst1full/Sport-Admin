@@ -1,7 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Button, Tag, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
-import type { AdminPaymentSummaryDto } from '@/generated/api/payments/models';
+import type { AdminPaymentSummaryDto } from '@/generated/api/payments/payments.schemas';
 import { moneyFormatter, PAYMENT_PAGE_SIZE, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
 
 export function PaymentTable({

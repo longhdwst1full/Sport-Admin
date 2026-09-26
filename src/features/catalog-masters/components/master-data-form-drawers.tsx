@@ -13,7 +13,7 @@ import {
   useUpdateAdminBrand,
   useUpdateAdminCategory,
 } from '@/generated/api/catalog/catalog';
-import type { BrandDto, CategoryDto } from '@/generated/api/catalog/models';
+import type { BrandDto, CategoryDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 interface BrandFormValues {

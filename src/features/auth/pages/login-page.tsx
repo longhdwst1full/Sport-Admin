@@ -6,7 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import { useLoginAdmin } from '@/generated/api/auth/auth';
-import type { LoginDto } from '@/generated/api/auth/models';
+import type { LoginDto } from '@/generated/api/auth/auth.schemas';
 import { useAuth } from '@/core/auth/auth-context';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { getApiErrorMessage } from '@/lib/api/error';

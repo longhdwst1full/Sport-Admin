@@ -1,4 +1,4 @@
-import type { ProductMediaDto } from '@/generated/api/catalog/models';
+import type { ProductMediaDto } from '@/generated/api/catalog/catalog.schemas';
 
 export const reorderProductMedia = (
   media: ProductMediaDto[],

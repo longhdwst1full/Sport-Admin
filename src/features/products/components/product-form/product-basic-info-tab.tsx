@@ -1,13 +1,14 @@
-import { AppstoreOutlined, TagsOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, FileTextOutlined, TagsOutlined } from '@ant-design/icons';
 import { Form, Input, Select, Typography } from 'antd';
 import { FormSection } from '@/foundation/layout/form-section';
 import { Controller, type UseFormReturn } from 'react-hook-form';
-import { ProductType, type ProductDetailDto } from '@/generated/api/catalog/models';
+import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
+import { ProductType, type ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 import type { SearchOptionsQuery } from './types';
 
 /**
- * Tab 1 — định danh sản phẩm.
+ * Tab Thông tin — định danh, phân loại và mô tả; lưu cùng nút chính ở cả Tạo và Sửa.
  *
  * Mã sản phẩm và slug đường dẫn do Backend sinh từ tên, nên không có ô nhập ở đây: hai nguồn sự
  * thật cho cùng một thứ sẽ lệch nhau ngay lần sửa tên đầu tiên.
@@ -152,6 +153,39 @@ export function ProductBasicInfoTab({
               ?? categoryId,
           }))}
           placeholder="Chọn trong danh mục đã gán"
+        />
+      )}
+    />
+  </Form.Item>
+      </FormSection>
+
+      <FormSection
+        title="Mô tả"
+        description="Mô tả ngắn hiện ở thẻ sản phẩm; mô tả chi tiết hiện trong trang sản phẩm."
+        icon={<FileTextOutlined />}
+      >
+        <Form.Item
+          label="Mô tả ngắn"
+          validateStatus={form.formState.errors.shortDescription ? 'error' : undefined}
+          help={form.formState.errors.shortDescription?.message}
+        >
+    <Controller
+      name="shortDescription"
+      control={form.control}
+      render={({ field }) => <Input.TextArea {...field} rows={2} maxLength={1000} showCount />}
+    />
+  </Form.Item>
+  <Form.Item
+    label="Mô tả chi tiết"
+  >
+    <Controller
+      name="description"
+      control={form.control}
+      render={({ field }) => (
+        <RichTextEditor
+          value={field.value}
+          onChange={field.onChange}
+          placeholder="Nhập mô tả, thông số và hướng dẫn sử dụng sản phẩm..."
         />
       )}
     />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CreateStaffUserDtoRoleCode } from '@/generated/api/iam/models';
+import { CreateStaffUserDtoRoleCode } from '@/generated/api/iam/iam.schemas';
 import { toCreateStaffUserDto } from './staff-creation.mapper';
 
 describe('toCreateStaffUserDto', () => {

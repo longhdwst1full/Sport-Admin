@@ -23,10 +23,11 @@ import type {
   ListShippingDistrictsParams,
   ListShippingWardsParams,
   ShippingAreaListDto,
-} from './models';
+} from './shipping.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
+
 /**
  * @summary Danh sách tỉnh/thành theo mã của hãng vận chuyển
  */

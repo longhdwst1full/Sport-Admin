@@ -29,7 +29,7 @@ import { useDebounce } from 'use-debounce';
 import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { useListAdminAuditLogs } from '@/generated/api/audit/audit';
-import type { AuditLogDto } from '@/generated/api/audit/models';
+import type { AuditLogDto } from '@/generated/api/audit/audit.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 const { RangePicker } = DatePicker;

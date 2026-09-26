@@ -20,7 +20,7 @@ import {
   shipAdminFulfillment,
   useGetAdminFulfillmentByOrder,
 } from '@/generated/api/fulfillments/fulfillments';
-import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/models';
+import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getApiErrorMessage } from '@/lib/api/error';
 

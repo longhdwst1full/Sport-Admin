@@ -5,7 +5,7 @@ import {
   readAuthTokens,
   saveAuthTokens,
 } from '@/core/auth/auth-token.store';
-import type { TokenPairDto } from '@/generated/api/auth/models';
+import type { TokenPairDto } from '@/generated/api/auth/auth.schemas';
 import { expireAdminSession } from '@/core/auth/auth-session-expiry';
 
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';

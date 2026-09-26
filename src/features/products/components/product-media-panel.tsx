@@ -7,7 +7,7 @@ import {
   useReorderAdminProductMedia,
   useUpdateAdminProductMedia,
 } from '@/generated/api/catalog/catalog';
-import type { ProductDetailDto, ProductMediaDto } from '@/generated/api/catalog/models';
+import type { ProductDetailDto, ProductMediaDto } from '@/generated/api/catalog/catalog.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { uploadImage } from '@/lib/media/upload-image';

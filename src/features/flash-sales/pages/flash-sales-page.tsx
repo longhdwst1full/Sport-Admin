@@ -9,7 +9,7 @@ import {
   upsertAdminFlashSaleItem,
   useListAdminFlashSales,
 } from '@/generated/api/promotions/promotions';
-import type { FlashSaleCampaignStatus } from '@/generated/api/promotions/models';
+import type { FlashSaleCampaignStatus } from '@/generated/api/promotions/promotions.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';

@@ -2,7 +2,7 @@ import { EyeOutlined } from '@ant-design/icons';
 import { Typography } from 'antd';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton } from '@/foundation/table';
-import type { ReturnSummaryDto } from '@/generated/api/returns/models';
+import type { ReturnSummaryDto } from '@/generated/api/returns/returns.schemas';
 import { RETURN_PAGE_SIZE, returnReasonLabels, returnStatusPresentation } from '../constants/return.constants';
 import { RETURN_LIST_TABLE_COLUMNS, type ReturnListColumnId } from '../constants/return-table-columns';
 import { buildTableColumns } from '../model/build-table-columns';

@@ -1,4 +1,4 @@
-import type { PosPaymentMethod } from '@/generated/api/orders/models';
+import type { PosPaymentMethod } from '@/generated/api/orders/orders.schemas';
 
 export interface PosDeliveryValues {
   recipient: string;

@@ -1,4 +1,4 @@
-import type { ProductVariantDto, UpdateVariantDto } from '@/generated/api/catalog/models';
+import type { ProductVariantDto, UpdateVariantDto } from '@/generated/api/catalog/catalog.schemas';
 
 export interface VariantEditValues {
   name: string;

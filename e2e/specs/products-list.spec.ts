@@ -83,7 +83,9 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
   test('PRD-06: sửa sản phẩm trên viewport hẹp -> nút Lưu luôn nhìn thấy', async ({ page }) => {
     await page.setViewportSize({ width: 720, height: 900 });
     await mockJson(page, '**/api/v1/admin/products?**', productListResponse());
-    await mockJson(page, '**/api/v1/admin/products/giay-chay-bo-e2e', productDetail());
+    await mockJson(page, '**/api/v1/admin/products/giay-chay-bo-e2e', productDetail({ specifications: [] }));
+    await mockJson(page, '**/api/v1/admin/products/1/setup-status', { canPublish: true, blockingIssues: [], warnings: [] });
+    await mockJson(page, '**/api/v1/admin/catalog/attributes', { items: [] });
     await mockJson(page, '**/api/v1/admin/catalog/brands/active*', {
       items: [{ id: '1', code: 'BAOAN', label: 'BaoAn' }],
       meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
@@ -97,7 +99,6 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     const products = new ProductsPageObject(page);
     await shell.open('/products');
     await products.openProduct('Giày chạy bộ E2E');
-    await products.editProduct().click();
 
     const saveButton = products.saveProduct();
     await expect(saveButton).toBeVisible();
@@ -107,10 +108,11 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     }).toBeLessThanOrEqual(720);
   });
 
-  test('PRD-07: tạo sản phẩm -> hiển thị đủ vận chuyển và tồn đầu theo kho', async ({ page }) => {
+  test('PRD-07: tạo sản phẩm -> SKU & giá có vận chuyển, tồn đầu nằm ở tab Tồn kho', async ({ page }) => {
     await mockJson(page, '**/api/v1/admin/products?**', productListResponse());
     await mockJson(page, '**/api/v1/admin/catalog/brands/active*', { items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 1 } });
     await mockJson(page, '**/api/v1/admin/catalog/categories/active*', { items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 1 } });
+    await mockJson(page, '**/api/v1/admin/catalog/attributes', { items: [] });
     await mockJson(page, '**/api/v1/admin/organization/branches/active*', { items: [], meta: { page: 1, limit: 50, total: 0, totalPages: 1 } });
 
     const shell = new AdminShellPage(page);
@@ -118,22 +120,23 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     await shell.open('/products');
     await products.createProduct().click();
 
-    // Form tạo sản phẩm là wizard 4 tab; vận chuyển và tồn đầu nằm ở tab "Biến thể & giá",
-    // không hiển thị ngay khi mở drawer.
-    await page.getByRole('tab', { name: 'Biến thể & giá' }).click();
-
-    await expect(page.getByText('Tồn đầu theo chi nhánh / kho')).toBeVisible();
+    await products.tab('SKU & giá').click();
     await expect(page.getByText('Khối lượng (g)', { exact: true })).toBeVisible();
     await expect(page.getByText('Dài (mm)', { exact: true })).toBeVisible();
     await expect(page.getByText('Rộng (mm)', { exact: true })).toBeVisible();
     await expect(page.getByText('Cao (mm)', { exact: true })).toBeVisible();
+    // Chỉ còn một ô SKU (nhập tay hoặc để trống), không còn ô "Tự động" bị trùng.
+    await expect(page.getByText('SKU (mã hàng)', { exact: true })).toHaveCount(1);
+    await expect(page.locator('input[value="Tự động"]')).toHaveCount(0);
+
+    await products.tab('Tồn kho').click();
+    await expect(page.getByText('Tồn đầu theo chi nhánh / kho')).toBeVisible();
     await expect(page.getByText('Chi nhánh nhập tồn đầu', { exact: true })).toBeVisible();
     await expect(page.getByText('Kho nhập tồn đầu', { exact: true })).toBeVisible();
     await expect(page.getByText('Số lượng tồn đầu', { exact: true })).toBeVisible();
-    // Nút tạo cố ý chỉ xuất hiện ở tab cuối, sau bảng kiểm tra (xem ProductFormDrawer):
-    // ở các tab trước, nút chính là "Tiếp tục".
+    // Nút tạo cố ý chỉ xuất hiện ở tab cuối, sau bảng kiểm tra; ở các tab trước là "Tiếp tục".
     await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
-    await page.getByRole('tab', { name: 'Kiểm tra & tạo' }).click();
-    await expect(page.getByRole('button', { name: 'Tạo sản phẩm' })).toBeVisible();
+    await products.tab('Kiểm tra xuất bản').click();
+    await expect(products.submitCreate()).toBeVisible();
   });
 });

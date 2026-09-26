@@ -1,7 +1,7 @@
 import {
   CustomerKind,
   CustomerStatus,
-} from '@/generated/api/customers/models';
+} from '@/generated/api/customers/customers.schemas';
 
 export const CUSTOMER_PAGE_SIZE = 20;
 

@@ -29,10 +29,11 @@ import type {
   ErrorResponseDto,
   ListAdminPostsParams,
   UpdateContentPostDto,
-} from './models';
+} from './content.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary List posts for administration
  */

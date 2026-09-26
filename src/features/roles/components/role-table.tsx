@@ -2,7 +2,7 @@ import { Tag, Tree, Typography } from 'antd';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { DeleteOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
-import type { PermissionDto, RoleDto } from '@/generated/api/iam/models';
+import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
 import { permissionActionLabels, ROOT_ROLE_CODE } from '../constants/role.constants';
 import { buildPermissionTree } from '../model/permission-tree';
 import { getRoleRemovalMode } from '../model/role-lifecycle.policy';

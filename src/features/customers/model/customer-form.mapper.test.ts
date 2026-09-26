@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AdminCustomerDetailDto } from '@/generated/api/customers/models';
+import type { AdminCustomerDetailDto } from '@/generated/api/customers/customers.schemas';
 import {
   toAddressPayload,
   toCustomerFormValues,

@@ -33,10 +33,11 @@ import type {
   RevenueReportDto,
   TopCustomerListDto,
   TopProductListDto,
-} from './models';
+} from './reporting.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
+
 /**
  * @summary Số liệu vận hành: đơn theo trạng thái, đơn chờ giao, sản phẩm, khách hàng
  */

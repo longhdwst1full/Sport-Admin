@@ -5,17 +5,16 @@ import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { ProductFormDrawer } from '../components/product-form-drawer';
 import { ProductListTable } from '../components/product-list-table';
 import { ProductListToolbar } from '../components/product-list-toolbar';
-import { ProductWorkflowDrawer } from '../components/product-workflow-drawer';
+import { ProductWorkspaceDrawer } from '../components/product-workspace-drawer';
 import { useProductFormPrefetch } from '../hooks/use-product-form-prefetch';
 import { useProductList } from '../hooks/use-product-list';
 import { useProductListActions } from '../hooks/use-product-list-actions';
 
 export function ProductsPage() {
-  const [createOpen, setCreateOpen] = useState(false);
-  const [selectedSlug, setSelectedSlug] = useState<string>();
+  // Một workspace cho cả Tạo (không slug) và Sửa (có slug).
+  const [workspace, setWorkspace] = useState<{ open: boolean; slug?: string }>({ open: false });
   const list = useProductList();
   const prefetchProductForm = useProductFormPrefetch();
   const actions = useProductListActions();
@@ -38,7 +37,7 @@ export function ProductsPage() {
               // dữ liệu thay vì để họ nhìn ô chọn quay vòng.
               onMouseEnter={prefetchProductForm}
               onFocus={prefetchProductForm}
-              onClick={() => setCreateOpen(true)}
+              onClick={() => setWorkspace({ open: true })}
             >
               Thêm sản phẩm
             </Button>
@@ -106,7 +105,7 @@ export function ProductsPage() {
           visibilityBusyId={actions.visibilityBusyId}
           archiveBusyId={actions.archiveBusyId}
           onPageChange={list.onPageChange}
-          onOpen={setSelectedSlug}
+          onOpen={(slug) => setWorkspace({ open: true, slug })}
           onToggleVisibility={actions.toggleVisibility}
           onArchive={actions.confirmArchive}
           onPublish={actions.confirmPublish}
@@ -115,12 +114,11 @@ export function ProductsPage() {
         />
       </ManagementPage>
 
-      <ProductFormDrawer
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onCreated={setSelectedSlug}
+      <ProductWorkspaceDrawer
+        open={workspace.open}
+        slug={workspace.slug}
+        onClose={() => setWorkspace({ open: false })}
       />
-      <ProductWorkflowDrawer slug={selectedSlug} onClose={() => setSelectedSlug(undefined)} />
     </>
   );
 }

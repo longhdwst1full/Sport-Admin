@@ -11,7 +11,7 @@ import {
   getListInventoryMovementsQueryKey,
   getListStockAdjustmentsQueryKey,
 } from '@/generated/api/inventory/inventory';
-import { StockAdjustmentReason, StockAdjustmentType } from '@/generated/api/inventory/models';
+import { StockAdjustmentReason, StockAdjustmentType } from '@/generated/api/inventory/inventory.schemas';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {

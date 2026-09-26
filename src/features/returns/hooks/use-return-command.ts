@@ -21,7 +21,7 @@ import type {
   ReturnCommandDto,
   ReturnDetailDto,
   ReturnReasonCommandDto,
-} from '@/generated/api/returns/models';
+} from '@/generated/api/returns/returns.schemas';
 import { getApiErrorPayload } from '@/lib/api/error';
 import { RETURN_VERSION_CONFLICT } from '../constants/return.constants';
 import { nextIdempotencyKey } from '../model/return-actions.policy';

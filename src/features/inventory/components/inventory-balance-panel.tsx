@@ -11,7 +11,7 @@ import {
   useListInventoryBalances,
   useSummarizeInventoryBalances,
 } from '@/generated/api/inventory/inventory';
-import type { InventoryBalanceDto } from '@/generated/api/inventory/models';
+import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 
 const INVENTORY_STATUSES = {

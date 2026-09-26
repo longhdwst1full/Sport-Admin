@@ -1,4 +1,4 @@
-import type { PosCatalogItemDto, PosOrderItemDto } from '@/generated/api/orders/models';
+import type { PosCatalogItemDto, PosOrderItemDto } from '@/generated/api/orders/orders.schemas';
 
 /**
  * Dòng hàng trên màn quầy. Giữ giá dưới dạng số để cộng tổng hiển thị, nhưng số tiền

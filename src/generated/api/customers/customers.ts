@@ -29,10 +29,11 @@ import type {
   ErrorResponseDto,
   ListAdminCustomersParams,
   UpdateAdminCustomerDto,
-} from './models';
+} from './customers.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary Danh sách khách hàng kèm số đơn, giá trị vòng đời và lần mua gần nhất
  */

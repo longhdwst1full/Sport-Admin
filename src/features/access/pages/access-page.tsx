@@ -20,7 +20,7 @@ import {
   useListAdminRoles,
   useListAdminUsers,
 } from '@/generated/api/iam/iam';
-import type { UserDto, UserDtoStatus, UserRoleAssignmentDto } from '@/generated/api/iam/models';
+import type { UserDto, UserDtoStatus, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
 import { RoleAssignmentDrawer } from '../components/role-assignment-drawer';
 import { RoleAssignmentRevokeModal } from '../components/role-assignment-revoke-modal';
 import { StaffCreationDrawer } from '../components/staff-creation-drawer';

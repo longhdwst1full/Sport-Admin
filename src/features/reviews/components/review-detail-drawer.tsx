@@ -1,5 +1,5 @@
 import { Descriptions, Drawer, Empty, Rate, Tag, Typography } from 'antd';
-import type { ProductReviewDto } from '@/generated/api/reviews/models';
+import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 
 const STATUS_PRESENTATION: Record<string, { color: string; label: string }> = {
   // Không còn bước chờ duyệt: đánh giá hiển thị ngay, Admin chỉ gỡ khi cần.

@@ -1,4 +1,4 @@
-import type { ReturnDetailDto } from '@/generated/api/returns/models';
+import type { ReturnDetailDto } from '@/generated/api/returns/returns.schemas';
 import { RETURN_PERMISSION } from '../constants/return.constants';
 
 export type ReturnAction =
