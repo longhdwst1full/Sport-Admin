@@ -148,7 +148,7 @@ export function ProductReviewTab({
           type="warning"
           showIcon
           message="Có biến thể chưa có giá"
-          description="Sản phẩm chỉ xuất bản được khi SKU đang bán đã có giá hiệu lực. Đặt giá ở tab Biến thể & giá."
+          description="Sản phẩm chỉ xuất bản được khi SKU đang bán đã có giá hiệu lực. Đặt giá ở tab SKU, giá & tồn kho."
         />
       )}
 

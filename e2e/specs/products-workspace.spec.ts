@@ -102,20 +102,26 @@ async function createProductThroughWorkspace(page: Page, products: ProductsPageO
   await products.pick('Danh mục', 'Giày');
   await products.pick('Danh mục chính', 'Giày');
 
-  await products.tab('SKU & giá').click();
+  await products.tab('SKU, giá & tồn kho').click();
   await products.field('Tên biến thể').locator('input').fill('Đen');
   await products.field('SKU (mã hàng)').locator('input').fill('ghe-01');
 
-  await products.tab('Thông số kỹ thuật').click();
-  await page.getByRole('button', { name: 'Thêm thông số' }).click();
-  await products.activePane().locator('.ant-select').filter({ hasText: 'Chọn thuộc tính' }).click();
+  // Thông số kỹ thuật là một khối của tab Thông tin; khoanh vào khối đó vì tab còn các ô chọn khác.
+  await products.tab('Thông tin').click();
+  const specsSection = products
+    .activePane()
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Thông số kỹ thuật', exact: true }) });
+  await specsSection.getByRole('button', { name: 'Thêm thông số' }).click();
+  await specsSection.locator('.ant-select').filter({ hasText: 'Chọn thuộc tính' }).click();
   await page.locator('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option', { hasText: 'Tải trọng' }).click();
-  const valueInput = products.activePane().locator('.ant-select-selection-search-input').nth(1);
+  const valueInput = specsSection.locator('.ant-select-selection-search-input').nth(1);
   await valueInput.fill('120');
   await valueInput.press('Enter');
 
   if (openingQuantity > 0) {
-    await products.tab('Tồn kho').click();
+    // Tồn đầu là khối Tồn kho của tab SKU, giá & tồn kho.
+    await products.tab('SKU, giá & tồn kho').click();
     await products.pick('Chi nhánh nhập tồn đầu', 'Hà Nội');
     await expect(products.field('Kho nhập tồn đầu')).toContainText('WH-HN');
     await products.field('Số lượng tồn đầu').locator('input').fill(String(openingQuantity));
@@ -156,11 +162,12 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
       specifications: [{ code: 'MAX_LOAD', values: [120] }],
     });
 
-    // Tạo xong, cùng workspace chuyển sang chế độ Sửa với đủ tab như lúc tạo.
+    // Tạo xong, cùng workspace chuyển sang chế độ Sửa với đúng ba tab như lúc tạo.
     await expect(products.saveProduct()).toBeVisible();
-    for (const tab of ['Thông tin', 'SKU & giá', 'Hình ảnh', 'Thông số kỹ thuật', 'Tồn kho', 'Kiểm tra xuất bản']) {
+    for (const tab of ['Thông tin', 'SKU, giá & tồn kho', 'Kiểm tra xuất bản']) {
       await expect(products.tab(tab)).toBeVisible();
     }
+    await expect(products.workspace().getByRole('tab')).toHaveCount(3);
     await expect(products.tab('Combo')).toHaveCount(0);
 
     // Sửa: không đụng thông số thì không gửi lại `specifications`.
@@ -171,8 +178,8 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
     expect(captured.update).toMatchObject({ name: 'Ghế tập E2E Pro', expectedVersion: 0 });
     expect(captured.update).not.toHaveProperty('specifications');
 
-    // SKU thật (lưu ngay) nằm ở tab SKU & giá, không còn drawer thứ hai.
-    await products.tab('SKU & giá').click();
+    // SKU thật (lưu ngay) nằm ở tab SKU, giá & tồn kho, không còn drawer thứ hai.
+    await products.tab('SKU, giá & tồn kho').click();
     await expect(products.activePane().getByRole('cell', { name: 'GHE-01' }).first()).toBeVisible();
     await expect(page.locator('.ant-drawer-content')).toHaveCount(1);
 
@@ -197,7 +204,7 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
     await createProductThroughWorkspace(page, products, { openingQuantity: 5 });
 
     await expect(page.getByText('Sản phẩm đã tạo nhưng chưa ghi được tồn đầu')).toBeVisible();
-    await expect(products.tab('Tồn kho')).toHaveAttribute('aria-selected', 'true');
+    await expect(products.tab('SKU, giá & tồn kho')).toHaveAttribute('aria-selected', 'true');
     await page.getByRole('button', { name: 'Thử ghi tồn đầu lại' }).click();
 
     await expect.poll(() => captured.stockAttempts.length).toBe(2);

@@ -1,10 +1,10 @@
 # Products — maintenance note
 
-> **Document version:** 2.0.0
+> **Document version:** 2.1.0
 >
 > **Last updated:** 2026-09-26
 >
-> **Change summary:** Một `ProductWorkspaceDrawer` duy nhất cho Tạo và Sửa với cùng bộ tab; thông số lưu cùng lệnh tạo/sửa; tồn đầu lỗi có nút ghi lại; bỏ `ProductWorkflowDrawer`/`ProductFormDrawer`.
+> **Change summary:** Gộp 7 tab của workspace thành 3 tab (Thông tin · SKU, giá & tồn kho · Kiểm tra xuất bản) cho cả Tạo và Sửa; Combo thành khối trong tab SKU, chỉ hiện với BUNDLE; bỏ `visibleProductTabs`.
 
 ## Workspace Tạo/Sửa
 
@@ -12,21 +12,25 @@
 có `slug` là Tạo, có `slug` là Sửa; tạo xong workspace chuyển tại chỗ sang Sửa của sản phẩm vừa tạo.
 Hợp nhất ở **bố cục**, không ở API: mỗi nghiệp vụ vẫn gọi operation riêng.
 
-| Tab | Khi Tạo (ô của form, gửi một lệnh) | Khi Sửa |
-| --- | --- | --- |
-| Thông tin | loại, tên, thương hiệu, danh mục, mô tả | cùng ô, lưu bằng **Lưu** (`updateAdminProduct`) |
-| SKU & giá | `product-variants-tab.tsx`: SKU (nhập tay/để trống), kích thước, giá ban đầu | `product-variants-manager.tsx`: bảng SKU, sửa/lưu trữ, thêm SKU, lịch giá — lưu ngay |
-| Hình ảnh | `ProductImagePicker`, gắn trong lệnh tạo | `ProductMediaPanel` — lưu ngay |
-| Thông số kỹ thuật | `product-specifications-tab.tsx`, gửi `specifications` trong lệnh tạo | cùng ô, gửi trong `updateAdminProduct` **chỉ khi đã sửa** |
-| Tồn kho | `product-opening-stock-tab.tsx`: chi nhánh/kho + tồn đầu từng SKU | `product-stock-panel.tsx`: xem tồn, nút **Thử ghi tồn đầu lại** |
-| Combo (chỉ BUNDLE) | thông báo: khai sau khi tạo (cần SKU thật) | `product-bundle-manager.tsx` — lưu ngay |
-| Kiểm tra xuất bản | tóm tắt từ `watch()` | tóm tắt + checklist `getAdminProductSetupStatus` |
+Workspace có **3 tab**, giống nhau ở Tạo và Sửa; mỗi tab gộp nhiều khối xếp chồng, mỗi khối có tiêu đề
+(`Divider`) và giữ nguyên component riêng:
+
+| Tab | Khối | Khi Tạo (ô của form, gửi một lệnh) | Khi Sửa |
+| --- | --- | --- | --- |
+| Thông tin | Thông tin cơ bản | `product-basic-info-tab.tsx`: loại, tên, thương hiệu, danh mục, mô tả | cùng ô, lưu bằng **Lưu** (`updateAdminProduct`) |
+| | Hình ảnh | `ProductImagePicker`, gắn trong lệnh tạo | `ProductMediaPanel` — lưu ngay |
+| | Thông số kỹ thuật | `product-specifications-tab.tsx`, gửi `specifications` trong lệnh tạo | cùng ô, gửi trong `updateAdminProduct` **chỉ khi đã sửa** |
+| SKU, giá & tồn kho | SKU & giá | `product-variants-tab.tsx`: SKU (nhập tay/để trống), kích thước, giá ban đầu | `product-variants-manager.tsx`: bảng SKU, sửa/lưu trữ, thêm SKU, lịch giá — lưu ngay |
+| | Tồn kho | `product-opening-stock-tab.tsx`: chi nhánh/kho + tồn đầu từng SKU | `product-stock-panel.tsx`: xem tồn, nút **Thử ghi tồn đầu lại** |
+| | Combo (chỉ BUNDLE) | thông báo: khai sau khi tạo (cần SKU thật) | `product-bundle-manager.tsx` — lưu ngay |
+| Kiểm tra xuất bản | — | tóm tắt từ `watch()` | tóm tắt + checklist `getAdminProductSetupStatus` |
 
 Xuất bản / Lưu trữ / Đưa về nháp nằm ở header workspace (và menu của danh sách).
 
-`model/product-form-tabs.ts` giữ bộ tab, `visibleProductTabs` (ẩn Combo cho sản phẩm thường),
-`productTabFields` (trường theo tab và chế độ) và `validateProductTabs` — chỉ xét **tab đang hiển thị**,
-nên không bao giờ nhảy sang tab bị ẩn. Khi Sửa không validate SKU/ảnh/tồn đầu vì đó là dữ liệu thật lưu riêng.
+`model/product-form-tabs.ts` giữ bộ 3 tab (`PRODUCT_FORM_TABS`), `productTabFields` (trường theo tab gộp
+và chế độ: thông tin/ảnh/thông số → `info`; SKU/giá/tồn đầu → `variants`) và `validateProductTabs` — nhảy
+tới tab gộp chứa lỗi đầu tiên. Combo không còn là tab nên không cần lọc tab theo loại sản phẩm; việc ẩn/hiện
+khối Combo nằm trong nội dung tab SKU. Khi Sửa không validate SKU/ảnh/tồn đầu vì đó là dữ liệu thật lưu riêng.
 
 ## Ghi chú bảo trì quan trọng
 
@@ -35,7 +39,7 @@ nên không bao giờ nhảy sang tab bị ẩn. Khi Sửa không validate SKU/�
 - Form chỉ reset khi mở workspace hoặc nạp sản phẩm **khác** (`productId`). SKU/giá/ảnh lưu ngay làm
   detail tải lại với version mới; reset theo mỗi lần đó sẽ xoá ô người dùng đang sửa dở.
 - Tồn đầu là phiếu `OPENING_BALANCE` của Inventory gửi sau lệnh tạo. Lỗi thì workspace giữ payload +
-  `Idempotency-Key` cũ (`PendingOpeningStock`), mở tab Tồn kho; bấm ghi lại dùng đúng khoá đó nên không
+  `Idempotency-Key` cũ (`PendingOpeningStock`), mở tab SKU, giá & tồn kho (khối Tồn kho); bấm ghi lại dùng đúng khoá đó nên không
   cộng tồn hai lần nếu lần đầu thực ra đã ghi. Trạng thái này chỉ sống trong phiên workspace.
 - Lỗi field từ API ánh xạ về đúng ô, kể cả `variants.N.sku` và `variants.N.initialPriceAmount` → ô giá.
 - Giá ban đầu kiểm bằng `INITIAL_PRICE_PATTERN` — cùng regex với API, không đi qua `Number`.
@@ -78,7 +82,7 @@ Các operation từ `src/generated/api/catalog/catalog.ts` (kiểu ở `catalog.
 - Tạo mới dùng `createAdminProduct` aggregate: thông tin Product và 1–50 initial variants
   nằm trong cùng form/request. Backend commit/rollback Product, category, SKU và audit atomic;
   FE không gọi tuần tự create Product rồi create Variant.
-- Update Product không nhúng sửa variants. Thêm/sửa/archive SKU sau create ở tab SKU & giá của
+- Update Product không nhúng sửa variants. Thêm/sửa/archive SKU sau create ở khối SKU & giá (tab SKU, giá & tồn kho) của
   workspace, bằng operation riêng để giữ lifecycle và optimistic version rõ ràng.
 - Product không thuộc riêng một branch. Form chỉ chọn branch/warehouse cho phiếu tồn đầu của từng
   SKU; V1 một branch có đúng một warehouse.
@@ -112,6 +116,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.1.0 | 2026-09-26 | Gộp 7 tab thành 3 tab (Thông tin · SKU, giá & tồn kho · Kiểm tra xuất bản); Combo là khối trong tab SKU chỉ với BUNDLE; validate map lỗi về tab gộp. |
 | 2.0.0 | 2026-09-26 | `ProductWorkspaceDrawer` hợp nhất Tạo/Sửa (7 tab), thông số trong create/update, retry tồn đầu, Playwright PRD-10..12. |
 | 1.8.0 | 2026-09-21 | Màn tạo chia bốn tab, validate theo tab. |
 | 1.6.0 | 2026-09-21 | Product Media DELETE xóa Cloudinary, refetch khi compensation và cảnh báo asset dùng chung. |

@@ -7,11 +7,11 @@ import type { ProductFormValues } from '../../model/product-form.mapper';
 import type { SearchOptionsQuery } from './types';
 
 /**
- * Tab Tồn kho ở chế độ Tạo — tồn đầu theo chi nhánh/kho, **tuỳ chọn**.
+ * Khối Tồn kho (tab "SKU, giá & tồn kho") ở chế độ Tạo — tồn đầu theo chi nhánh/kho, **tuỳ chọn**.
  *
  * Nhập kho là nghiệp vụ của Inventory nên không nằm trong transaction tạo sản phẩm: sau khi tạo xong,
  * workspace gửi một phiếu `OPENING_BALANCE` có `Idempotency-Key`. Phiếu lỗi thì sản phẩm vẫn còn và
- * tab Tồn kho của màn Sửa có nút ghi lại với cùng khoá.
+ * khối Tồn kho của màn Sửa có nút ghi lại với cùng khoá.
  */
 export function ProductOpeningStockTab({
   form,

@@ -1,40 +1,46 @@
 import type { FieldPath, UseFormReturn } from 'react-hook-form';
-import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import type { ProductFormValues } from './product-form.mapper';
 
 /**
- * Workspace sản phẩm: Tạo và Sửa dùng **cùng** bộ tab theo cùng thứ tự. Bố cục hợp nhất ở FE, còn API
- * vẫn tách theo nghiệp vụ: khi Tạo mọi thứ (trừ tồn đầu) đi một lệnh `createAdminProduct`; khi Sửa, SKU,
- * giá, ảnh, tồn kho, combo ghi ngay qua operation riêng, còn thông tin và thông số lưu bằng nút Lưu.
+ * Workspace sản phẩm: Tạo và Sửa dùng **cùng** ba tab theo cùng thứ tự. Mỗi tab gộp nhiều khối:
+ * - `info`: Thông tin cơ bản + Hình ảnh + Thông số kỹ thuật;
+ * - `variants`: SKU & giá + Tồn kho + Combo (khối Combo chỉ hiện với sản phẩm BUNDLE, ẩn ngay trong
+ *   nội dung tab chứ không ẩn tab);
+ * - `review`: Kiểm tra xuất bản.
+ *
+ * Bố cục hợp nhất ở FE, còn API vẫn tách theo nghiệp vụ: khi Tạo mọi thứ (trừ tồn đầu) đi một lệnh
+ * `createAdminProduct`; khi Sửa, SKU, giá, ảnh, tồn kho, combo ghi ngay qua operation riêng, còn thông
+ * tin và thông số lưu bằng nút Lưu.
  */
-export const PRODUCT_FORM_TABS = ['info', 'variants', 'media', 'specs', 'stock', 'bundle', 'review'] as const;
+export const PRODUCT_FORM_TABS = ['info', 'variants', 'review'] as const;
 export type ProductFormTab = (typeof PRODUCT_FORM_TABS)[number];
 export type ProductFormMode = 'create' | 'edit';
 
 export const PRODUCT_TAB_LABELS: Record<ProductFormTab, string> = {
   info: 'Thông tin',
-  variants: 'SKU & giá',
-  media: 'Hình ảnh',
-  specs: 'Thông số kỹ thuật',
-  stock: 'Tồn kho',
-  bundle: 'Combo',
+  variants: 'SKU, giá & tồn kho',
   review: 'Kiểm tra xuất bản',
 };
 
-/** Combo chỉ có nghĩa với sản phẩm BUNDLE; sản phẩm thường không hiện tab này ở cả Tạo lẫn Sửa. */
-export function visibleProductTabs(productType: ProductType): ProductFormTab[] {
-  return PRODUCT_FORM_TABS.filter((tab) => tab !== 'bundle' || productType === ProductType.BUNDLE);
-}
+const BASIC_INFO_FIELDS = [
+  'productType',
+  'name',
+  'brandId',
+  'categoryIds',
+  'primaryCategoryId',
+  'shortDescription',
+  'description',
+] as const satisfies ReadonlyArray<FieldPath<ProductFormValues>>;
 
 const VARIANT_FIELDS = ['name', 'sku', 'barcode', 'weightGrams', 'lengthMm', 'widthMm', 'heightMm', 'price'] as const;
 
 /**
  * Trường của form thuộc tab nào — chỉ để biết lỗi rơi vào tab nào mà nhảy tới.
  *
- * Tồn đầu (`openingQuantity`) nằm ở tab Tồn kho nhưng thuộc từng dòng biến thể, nên liệt kê theo đường
- * dẫn từng ô thay vì trigger cả mảng `variants` (trigger cả mảng sẽ quy lỗi tồn đầu về tab SKU).
+ * Tồn đầu (`openingQuantity`) thuộc từng dòng biến thể nên liệt kê theo đường dẫn từng ô thay vì
+ * trigger cả mảng `variants`; SKU và tồn kho nay cùng tab `variants` nên cả hai quy về tab đó.
  *
- * Khi Sửa, SKU/tồn kho là dữ liệu thật lưu riêng, không phải ô của form; dữ liệu giữ chỗ không được
+ * Khi Sửa, SKU/ảnh/tồn kho là dữ liệu thật lưu riêng, không phải ô của form; dữ liệu giữ chỗ không được
  * phép chặn nút Lưu.
  */
 export function productTabFields(
@@ -46,18 +52,15 @@ export function productTabFields(
     Array.from({ length: variantCount }, (_, index) =>
       fields.map((field) => `variants.${index}.${field}` as FieldPath<ProductFormValues>),
     ).flat();
+  const isCreate = mode === 'create';
   switch (tab) {
     case 'info':
-      return ['productType', 'name', 'brandId', 'categoryIds', 'primaryCategoryId', 'shortDescription', 'description'];
+      // Thứ tự theo khối hiển thị: thông tin cơ bản → hình ảnh → thông số kỹ thuật.
+      return [...BASIC_INFO_FIELDS, ...(isCreate ? (['images'] as const) : []), 'specifications'];
     case 'variants':
-      return mode === 'create' ? eachVariant(VARIANT_FIELDS) : [];
-    case 'media':
-      return mode === 'create' ? ['images'] : [];
-    case 'specs':
-      return ['specifications'];
-    case 'stock':
-      return mode === 'create' ? ['initialBranchId', 'initialWarehouseCode', ...eachVariant(['openingQuantity'])] : [];
-    case 'bundle':
+      return isCreate
+        ? [...eachVariant(VARIANT_FIELDS), 'initialBranchId', 'initialWarehouseCode', ...eachVariant(['openingQuantity'])]
+        : [];
     case 'review':
       return [];
   }
@@ -70,11 +73,11 @@ export interface TabValidationResult {
 }
 
 /**
- * Validate từng tab **đang hiển thị** theo thứ tự và trả về tab hỏng đầu tiên.
+ * Validate từng tab theo thứ tự hiển thị và trả về tab hỏng đầu tiên.
  *
  * Dùng `trigger` trên đúng nhóm trường của tab thay vì validate cả form một lượt: cần biết lỗi thuộc
- * tab nào để chuyển tab, và `formState.errors` không nói điều đó. Chỉ xét tab nhìn thấy được để không
- * bao giờ chuyển người dùng sang một tab bị ẩn.
+ * tab nào để chuyển tab, và `formState.errors` không nói điều đó. `tabs` cho phép giới hạn tập tab được
+ * xét; mặc định là cả ba tab.
  */
 export async function validateProductTabs(
   form: UseFormReturn<ProductFormValues>,
@@ -90,7 +93,7 @@ export async function validateProductTabs(
   return { isValid: true };
 }
 
-/** Tab kế tiếp/trước đó trong danh sách đang hiển thị; undefined khi đã ở đầu hoặc cuối. */
+/** Tab kế tiếp/trước đó trong danh sách tab; undefined khi đã ở đầu hoặc cuối. */
 export function adjacentTab(
   current: ProductFormTab,
   step: 1 | -1,

@@ -23,7 +23,7 @@ export interface PendingOpeningStock {
 }
 
 /**
- * Tab Tồn kho ở chế độ Sửa.
+ * Khối Tồn kho (tab "SKU, giá & tồn kho") ở chế độ Sửa.
  *
  * Chỉ xem tồn theo SKU; điều chỉnh/nhập thêm là nghiệp vụ của màn Tồn kho (phiếu có lý do và audit
  * riêng). Nếu phiếu tồn đầu lúc tạo bị lỗi, hiện nút ghi lại ở đây.

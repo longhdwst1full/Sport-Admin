@@ -1,7 +1,7 @@
 import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Drawer, Form, Skeleton, Space, Tabs, Tag } from 'antd';
+import { Alert, App, Button, Divider, Drawer, Form, Skeleton, Space, Tabs, Tag } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm, type FieldPath } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
@@ -50,10 +50,10 @@ import { ProductStockPanel, type PendingOpeningStock } from './product-form/prod
 import { ProductVariantsManager } from './product-form/product-variants-manager';
 import { ProductVariantsTab } from './product-form/product-variants-tab';
 import {
+  PRODUCT_FORM_TABS,
   PRODUCT_TAB_LABELS,
   adjacentTab,
   validateProductTabs,
-  visibleProductTabs,
   type ProductFormTab,
 } from '../model/product-form-tabs';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
@@ -149,7 +149,7 @@ const VARIANT_FORM_FIELD = /^(name|sku|barcode|weightGrams|lengthMm|widthMm|heig
 const STATUS_COLOR: Record<string, string> = { DRAFT: 'blue', PUBLISHED: 'green', ARCHIVED: 'default' };
 
 /**
- * Workspace sản phẩm — **một** drawer duy nhất cho Tạo và Sửa, cùng bộ tab (`visibleProductTabs`).
+ * Workspace sản phẩm — **một** drawer duy nhất cho Tạo và Sửa, cùng ba tab (`PRODUCT_FORM_TABS`).
  *
  * Hợp nhất ở bố cục, không ở API:
  * - Tạo: một lệnh `createAdminProduct` (sản phẩm, SKU, giá, ảnh, thông số trong một transaction), rồi phiếu
@@ -201,7 +201,8 @@ export function ProductWorkspaceDrawer({
   const isEdit = Boolean(activeSlug);
   const mode = isEdit ? 'edit' : 'create';
   const productType = form.watch('productType');
-  const tabs = visibleProductTabs(product?.productType ?? productType);
+  const tabs = PRODUCT_FORM_TABS;
+  const effectiveProductType = product?.productType ?? productType;
   const previousTab = adjacentTab(activeTab, -1, tabs);
   const nextTab = adjacentTab(activeTab, 1, tabs);
   const initialBranchId = form.watch('initialBranchId');
@@ -304,13 +305,13 @@ export function ProductWorkspaceDrawer({
         submittedCreateValues.current = undefined;
         setPendingOpeningStock(pending);
         if (pending) {
-          void message.warning('Đã tạo sản phẩm nhưng chưa ghi được tồn đầu. Bấm “Thử ghi tồn đầu lại” ở tab Tồn kho.', 8);
+          void message.warning(`Đã tạo sản phẩm nhưng chưa ghi được tồn đầu. Bấm “Thử ghi tồn đầu lại” ở mục Tồn kho, tab "${PRODUCT_TAB_LABELS.variants}".`, 8);
         } else {
           const stockMessage = stockData ? ' và đã ghi tồn đầu' : '';
           void message.success(`Đã tạo sản phẩm cùng ${createdProduct.variants.length} biến thể${stockMessage}.`);
         }
         // Chuyển tại chỗ sang chế độ Sửa: cùng workspace, người dùng làm tiếp combo/giá/xuất bản.
-        tabAfterLoad.current = pending ? 'stock' : 'review';
+        tabAfterLoad.current = pending ? 'variants' : 'review';
         setActiveSlug(createdProduct.slug);
       },
       onError: (error) => {
@@ -399,13 +400,8 @@ export function ProductWorkspaceDrawer({
     }
   }, [form, initialBranchId, isEdit, open, warehouses.data?.items]);
 
-  // Đổi loại sản phẩm làm ẩn tab Combo; không để người dùng đứng ở tab không còn hiển thị.
-  useEffect(() => {
-    if (!tabs.includes(activeTab)) setActiveTab('info');
-  }, [activeTab, tabs]);
-
   /**
-   * Validate theo từng tab đang hiển thị trước khi submit.
+   * Validate theo từng tab trước khi submit.
    *
    * `handleSubmit` chỉ báo form không hợp lệ; nó không nói lỗi nằm ở tab nào. Không nhảy tới tab đó
    * thì người dùng bấm Lưu, không có gì xảy ra, và ô lỗi nằm ở tab họ không nhìn thấy.
@@ -424,8 +420,9 @@ export function ProductWorkspaceDrawer({
     const specificationResult = toSpecificationPayload(values.specifications, attributes);
     setSpecificationErrors(specificationResult.errors);
     if (specificationResult.errors.length > 0) {
-      setActiveTab('specs');
-      void message.error(`Kiểm tra lại tab "${PRODUCT_TAB_LABELS.specs}".`);
+      // Thông số kỹ thuật là một khối của tab Thông tin.
+      setActiveTab('info');
+      void message.error(`Kiểm tra lại mục Thông số kỹ thuật ở tab "${PRODUCT_TAB_LABELS.info}".`);
       return;
     }
     if (product) {
@@ -480,61 +477,79 @@ export function ProductWorkspaceDrawer({
   };
 
   const isArchived = product?.status === 'ARCHIVED';
+  /** Tiêu đề khối trong một tab gộp; giữ nguyên component của từng khối, chỉ ghép chúng lại. */
+  const sectionHeading = (title: string) => (
+    <Divider orientation="left" orientationMargin={0}>
+      {title}
+    </Divider>
+  );
+
   const tabContent = (tab: ProductFormTab) => {
     switch (tab) {
       case 'info':
         return (
-          <ProductBasicInfoTab
-            form={form}
-            product={product}
-            brands={brands}
-            categories={categories}
-            onBrandSearch={setBrandSearch}
-            onCategorySearch={setCategorySearch}
-          />
+          <>
+            {sectionHeading('Thông tin cơ bản')}
+            <ProductBasicInfoTab
+              form={form}
+              product={product}
+              brands={brands}
+              categories={categories}
+              onBrandSearch={setBrandSearch}
+              onCategorySearch={setCategorySearch}
+            />
+            {sectionHeading('Hình ảnh')}
+            <ProductMediaTab form={form} product={product} disabled={mutationPending} onMediaChanged={refreshProduct} />
+            {sectionHeading('Thông số kỹ thuật')}
+            <ProductSpecificationsTab form={form} attributes={attributes} loading={attributesQuery.isPending} errors={specificationErrors} />
+          </>
         );
       case 'variants':
-        return product ? (
-          <ProductVariantsManager product={product} onChanged={refreshProduct} />
-        ) : (
-          <ProductVariantsTab form={form} variantFields={variantFields} productType={productType} canManagePrice={canManagePrice} />
-        );
-      case 'media':
-        return <ProductMediaTab form={form} product={product} disabled={mutationPending} onMediaChanged={refreshProduct} />;
-      case 'specs':
         return (
-          <ProductSpecificationsTab form={form} attributes={attributes} loading={attributesQuery.isPending} errors={specificationErrors} />
-        );
-      case 'stock':
-        return product ? (
-          <ProductStockPanel
-            product={product}
-            pendingOpeningStock={pendingOpeningStock}
-            onOpeningStockRecorded={() => setPendingOpeningStock(undefined)}
-          />
-        ) : (
-          <ProductOpeningStockTab
-            form={form}
-            productType={productType}
-            canAdjustStock={canAdjustStock}
-            initialBranchId={initialBranchId}
-            hasOpeningStock={hasOpeningStock}
-            branches={branches}
-            warehouses={warehouses}
-            onBranchSearch={setBranchSearch}
-            onWarehouseSearch={setWarehouseSearch}
-          />
-        );
-      case 'bundle':
-        return product ? (
-          <ProductBundleManager product={product} onChanged={refreshProduct} />
-        ) : (
-          <Alert
-            type="info"
-            showIcon
-            message="Khai thành phần combo ngay sau khi tạo"
-            description="Thành phần gắn với SKU combo thật, nên cần tạo sản phẩm trước. Tạo xong, workspace chuyển sang chế độ sửa và tab này cho khai thành phần."
-          />
+          <>
+            {sectionHeading('SKU & giá')}
+            {product ? (
+              <ProductVariantsManager product={product} onChanged={refreshProduct} />
+            ) : (
+              <ProductVariantsTab form={form} variantFields={variantFields} productType={productType} canManagePrice={canManagePrice} />
+            )}
+            {sectionHeading('Tồn kho')}
+            {product ? (
+              <ProductStockPanel
+                product={product}
+                pendingOpeningStock={pendingOpeningStock}
+                onOpeningStockRecorded={() => setPendingOpeningStock(undefined)}
+              />
+            ) : (
+              <ProductOpeningStockTab
+                form={form}
+                productType={productType}
+                canAdjustStock={canAdjustStock}
+                initialBranchId={initialBranchId}
+                hasOpeningStock={hasOpeningStock}
+                branches={branches}
+                warehouses={warehouses}
+                onBranchSearch={setBranchSearch}
+                onWarehouseSearch={setWarehouseSearch}
+              />
+            )}
+            {/* Combo chỉ có nghĩa với sản phẩm BUNDLE; sản phẩm thường không hiện khối này ở cả Tạo lẫn Sửa. */}
+            {effectiveProductType === ProductType.BUNDLE && (
+              <>
+                {sectionHeading('Combo')}
+                {product ? (
+                  <ProductBundleManager product={product} onChanged={refreshProduct} />
+                ) : (
+                  <Alert
+                    type="info"
+                    showIcon
+                    message="Khai thành phần combo ngay sau khi tạo"
+                    description="Thành phần gắn với SKU combo thật, nên cần tạo sản phẩm trước. Tạo xong, workspace chuyển sang chế độ sửa và mục này cho khai thành phần."
+                  />
+                )}
+              </>
+            )}
+          </>
         );
       case 'review':
         return (

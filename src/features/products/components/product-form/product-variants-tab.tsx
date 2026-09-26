@@ -8,7 +8,7 @@ import { MoneyInput } from '@/foundation/inputs/money-input';
 import { emptyVariant, type ProductFormValues } from '../../model/product-form.mapper';
 
 /**
- * Tab SKU & giá ở chế độ Tạo. Chế độ Sửa dùng `ProductVariantsManager` (SKU thật, lưu ngay).
+ * Khối SKU & giá (tab "SKU, giá & tồn kho") ở chế độ Tạo. Chế độ Sửa dùng `ProductVariantsManager` (SKU thật, lưu ngay).
  *
  * SKU nhập tay hoặc để Backend sinh; người nhập khai tên biến thể, kích thước và giá. Tồn đầu nằm ở tab
  * Tồn kho.
@@ -46,7 +46,7 @@ export function ProductVariantsTab({
           type="info"
           showIcon
           message="Combo không có tồn vật lý riêng"
-          description="Sau khi tạo, khai báo thành phần cho từng SKU combo ở tab Combo; combo chỉ xuất bản được khi đã có thành phần."
+          description="Sau khi tạo, khai báo thành phần cho từng SKU combo ở mục Combo cùng tab; combo chỉ xuất bản được khi đã có thành phần."
         />
       )}
       <div className="space-y-4">

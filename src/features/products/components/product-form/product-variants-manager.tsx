@@ -50,7 +50,7 @@ const DIMENSIONS = [
 ] as const;
 
 /**
- * Tab SKU & giá ở chế độ Sửa — SKU thật của sản phẩm và lịch giá. Thành phần combo ở tab Combo.
+ * Khối SKU & giá (tab "SKU, giá & tồn kho") ở chế độ Sửa — SKU thật của sản phẩm và lịch giá. Thành phần combo ở khối Combo cùng tab.
  *
  * Mỗi thao tác ở đây ghi ngay qua operation riêng (có `expectedVersion` của SKU/giá), không đi qua nút
  * Lưu của form: SKU có vòng đời riêng và giá là lịch bất biến, không thể "sửa nháp rồi lưu một lần".
