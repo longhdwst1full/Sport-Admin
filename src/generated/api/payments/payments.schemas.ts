@@ -5,8 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-export type PaymentStatus = typeof PaymentStatus[keyof typeof PaymentStatus];
-
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PaymentStatus = {
@@ -19,8 +18,7 @@ export const PaymentStatus = {
   REFUNDED: 'REFUNDED',
 } as const;
 
-export type PaymentMethod = typeof PaymentMethod[keyof typeof PaymentMethod];
-
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PaymentMethod = {
@@ -111,8 +109,7 @@ export interface ErrorDetailDto {
   message: string;
 }
 
-export type CurrencyCode = typeof CurrencyCode[keyof typeof CurrencyCode];
-
+export type CurrencyCode = (typeof CurrencyCode)[keyof typeof CurrencyCode];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CurrencyCode = {
@@ -144,8 +141,8 @@ export interface PaymentEvidenceDto {
   reviewedAt?: string;
 }
 
-export type PaymentEvidenceStatus = typeof PaymentEvidenceStatus[keyof typeof PaymentEvidenceStatus];
-
+export type PaymentEvidenceStatus =
+  (typeof PaymentEvidenceStatus)[keyof typeof PaymentEvidenceStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PaymentEvidenceStatus = {
@@ -156,20 +153,19 @@ export const PaymentEvidenceStatus = {
 } as const;
 
 export type ListAdminPaymentsParams = {
-/**
- * @minimum 1
- */
-page?: number;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-status?: PaymentStatus;
-method?: PaymentMethod;
-/**
- * Mã thanh toán, mã đơn, tên hoặc SĐT người nhận
- */
-search?: string;
+  /**
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  status?: PaymentStatus;
+  method?: PaymentMethod;
+  /**
+   * Mã thanh toán, mã đơn, tên hoặc SĐT người nhận
+   */
+  search?: string;
 };
-

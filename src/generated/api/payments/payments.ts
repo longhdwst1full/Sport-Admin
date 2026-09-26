@@ -5,10 +5,7 @@
  * Contract for storefront and admin applications
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,7 +18,7 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
 import type {
@@ -30,332 +27,452 @@ import type {
   ErrorResponseDto,
   ListAdminPaymentsParams,
   PaymentDetailDto,
-  RejectPaymentDto
+  RejectPaymentDto,
 } from './payments.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType } from '../../../lib/api/fetcher';
 import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 /**
  * @summary Danh sách thanh toán theo trạng thái, phương thức, tìm kiếm và phạm vi chi nhánh
  */
-export const listAdminPayments = (
-    params?: ListAdminPaymentsParams,
- signal?: AbortSignal
+export const listAdminPayments = (params?: ListAdminPaymentsParams, signal?: AbortSignal) => {
+  return apiFetcher<AdminPaymentListDto>({
+    url: `/api/v1/admin/payments`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getListAdminPaymentsQueryKey = (params?: ListAdminPaymentsParams) => {
+  return [`/api/v1/admin/payments`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAdminPaymentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminPayments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminPaymentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>>;
+  },
 ) => {
-      
-      
-      return apiFetcher<AdminPaymentListDto>(
-      {url: `/api/v1/admin/payments`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-  
+  const { query: queryOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getListAdminPaymentsQueryKey(params);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminPayments>>> = ({ signal }) =>
+    listAdminPayments(params, signal);
 
-export const getListAdminPaymentsQueryKey = (params?: ListAdminPaymentsParams,) => {
-    return [
-    `/api/v1/admin/payments`, ...(params ? [params]: [])
-    ] as const;
-    }
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminPayments>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-    
-export const getListAdminPaymentsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminPayments>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto>>(params?: ListAdminPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>>, }
-) => {
+export type ListAdminPaymentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminPayments>>
+>;
+export type ListAdminPaymentsQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
 
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListAdminPaymentsQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminPayments>>> = ({ signal }) => listAdminPayments(params, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListAdminPaymentsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminPayments>>>
-export type ListAdminPaymentsQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto>
-
-
-export function useListAdminPayments<TData = Awaited<ReturnType<typeof listAdminPayments>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto>>(
- params: undefined |  ListAdminPaymentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>> & Pick<
+export function useListAdminPayments<
+  TData = Awaited<ReturnType<typeof listAdminPayments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ListAdminPaymentsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listAdminPayments>>,
           TError,
           Awaited<ReturnType<typeof listAdminPayments>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListAdminPayments<TData = Awaited<ReturnType<typeof listAdminPayments>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto>>(
- params?: ListAdminPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>> & Pick<
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminPayments<
+  TData = Awaited<ReturnType<typeof listAdminPayments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminPaymentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listAdminPayments>>,
           TError,
           Awaited<ReturnType<typeof listAdminPayments>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListAdminPayments<TData = Awaited<ReturnType<typeof listAdminPayments>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto>>(
- params?: ListAdminPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAdminPayments<
+  TData = Awaited<ReturnType<typeof listAdminPayments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminPaymentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
  * @summary Danh sách thanh toán theo trạng thái, phương thức, tìm kiếm và phạm vi chi nhánh
  */
 
-export function useListAdminPayments<TData = Awaited<ReturnType<typeof listAdminPayments>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto>>(
- params?: ListAdminPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useListAdminPayments<
+  TData = Awaited<ReturnType<typeof listAdminPayments>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListAdminPaymentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminPayments>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAdminPaymentsQueryOptions(params, options);
 
-  const queryOptions = getListAdminPaymentsQueryOptions(params,options)
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
 
-
-
-
 /**
  * @summary Chi tiết thanh toán và bằng chứng trong phạm vi chi nhánh
  */
-export const getAdminPayment = (
-    id: string,
- signal?: AbortSignal
+export const getAdminPayment = (id: string, signal?: AbortSignal) => {
+  return apiFetcher<PaymentDetailDto>({
+    url: `/api/v1/admin/payments/${id}`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getGetAdminPaymentQueryKey = (id?: string) => {
+  return [`/api/v1/admin/payments/${id}`] as const;
+};
+
+export const getGetAdminPaymentQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminPayment>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>>;
+  },
 ) => {
-      
-      
-      return apiFetcher<PaymentDetailDto>(
-      {url: `/api/v1/admin/payments/${id}`, method: 'GET', signal
-    },
-      );
-    }
-  
+  const { query: queryOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getGetAdminPaymentQueryKey(id);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminPayment>>> = ({ signal }) =>
+    getAdminPayment(id, signal);
 
-export const getGetAdminPaymentQueryKey = (id?: string,) => {
-    return [
-    `/api/v1/admin/payments/${id}`
-    ] as const;
-    }
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminPayment>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-    
-export const getGetAdminPaymentQueryOptions = <TData = Awaited<ReturnType<typeof getAdminPayment>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>>, }
-) => {
+export type GetAdminPaymentQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminPayment>>>;
+export type GetAdminPaymentQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
 
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetAdminPaymentQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminPayment>>> = ({ signal }) => getAdminPayment(id, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetAdminPaymentQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminPayment>>>
-export type GetAdminPaymentQueryError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>
-
-
-export function useGetAdminPayment<TData = Awaited<ReturnType<typeof getAdminPayment>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>> & Pick<
+export function useGetAdminPayment<
+  TData = Awaited<ReturnType<typeof getAdminPayment>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAdminPayment>>,
           TError,
           Awaited<ReturnType<typeof getAdminPayment>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAdminPayment<TData = Awaited<ReturnType<typeof getAdminPayment>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>> & Pick<
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminPayment<
+  TData = Awaited<ReturnType<typeof getAdminPayment>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAdminPayment>>,
           TError,
           Awaited<ReturnType<typeof getAdminPayment>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAdminPayment<TData = Awaited<ReturnType<typeof getAdminPayment>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminPayment<
+  TData = Awaited<ReturnType<typeof getAdminPayment>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
  * @summary Chi tiết thanh toán và bằng chứng trong phạm vi chi nhánh
  */
 
-export function useGetAdminPayment<TData = Awaited<ReturnType<typeof getAdminPayment>>, TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetAdminPayment<
+  TData = Awaited<ReturnType<typeof getAdminPayment>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminPayment>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAdminPaymentQueryOptions(id, options);
 
-  const queryOptions = getGetAdminPaymentQueryOptions(id,options)
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
-
 
 /**
  * @summary Xác nhận chuyển khoản đủ tiền hoặc thu COD sau giao hàng
  */
 export const confirmAdminPayment = (
-    id: string,
-    confirmPaymentDto: ConfirmPaymentDto,
- options?: SecondParameter<typeof apiFetcherWithOptions>,signal?: AbortSignal
+  id: string,
+  confirmPaymentDto: ConfirmPaymentDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
+  signal?: AbortSignal,
 ) => {
-      
-      
-      return apiFetcherWithOptions<PaymentDetailDto>(
-      {url: `/api/v1/admin/payments/${id}/confirm`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: confirmPaymentDto, signal
+  return apiFetcherWithOptions<PaymentDetailDto>(
+    {
+      url: `/api/v1/admin/payments/${id}/confirm`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: confirmPaymentDto,
+      signal,
     },
-      options);
-    }
-  
+    options,
+  );
+};
 
+export const getConfirmAdminPaymentMutationOptions = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmAdminPayment>>,
+    TError,
+    { id: string; data: ConfirmPaymentDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmAdminPayment>>,
+  TError,
+  { id: string; data: ConfirmPaymentDto },
+  TContext
+> => {
+  const mutationKey = ['confirmAdminPayment'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-export const getConfirmAdminPaymentMutationOptions = <TError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmAdminPayment>>, TError,{id: string;data: ConfirmPaymentDto}, TContext>, request?: SecondParameter<typeof apiFetcherWithOptions>}
-): UseMutationOptions<Awaited<ReturnType<typeof confirmAdminPayment>>, TError,{id: string;data: ConfirmPaymentDto}, TContext> => {
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmAdminPayment>>,
+    { id: string; data: ConfirmPaymentDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
 
-const mutationKey = ['confirmAdminPayment'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+    return confirmAdminPayment(id, data, requestOptions);
+  };
 
-      
+  return { mutationFn, ...mutationOptions };
+};
 
+export type ConfirmAdminPaymentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof confirmAdminPayment>>
+>;
+export type ConfirmAdminPaymentMutationBody = ConfirmPaymentDto;
+export type ConfirmAdminPaymentMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmAdminPayment>>, {id: string;data: ConfirmPaymentDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  confirmAdminPayment(id,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ConfirmAdminPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof confirmAdminPayment>>>
-    export type ConfirmAdminPaymentMutationBody = ConfirmPaymentDto
-    export type ConfirmAdminPaymentMutationError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-
-    /**
+/**
  * @summary Xác nhận chuyển khoản đủ tiền hoặc thu COD sau giao hàng
  */
-export const useConfirmAdminPayment = <TError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmAdminPayment>>, TError,{id: string;data: ConfirmPaymentDto}, TContext>, request?: SecondParameter<typeof apiFetcherWithOptions>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof confirmAdminPayment>>,
-        TError,
-        {id: string;data: ConfirmPaymentDto},
-        TContext
-      > => {
+export const useConfirmAdminPayment = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof confirmAdminPayment>>,
+      TError,
+      { id: string; data: ConfirmPaymentDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof confirmAdminPayment>>,
+  TError,
+  { id: string; data: ConfirmPaymentDto },
+  TContext
+> => {
+  const mutationOptions = getConfirmAdminPaymentMutationOptions(options);
 
-      const mutationOptions = getConfirmAdminPaymentMutationOptions(options);
+  return useMutation(mutationOptions, queryClient);
+};
 
-      return useMutation(mutationOptions, queryClient);
-    }
-    
 /**
  * @summary Từ chối bằng chứng thanh toán và lưu lý do/audit
  */
 export const rejectAdminPayment = (
-    id: string,
-    rejectPaymentDto: RejectPaymentDto,
- options?: SecondParameter<typeof apiFetcherWithOptions>,signal?: AbortSignal
+  id: string,
+  rejectPaymentDto: RejectPaymentDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
+  signal?: AbortSignal,
 ) => {
-      
-      
-      return apiFetcherWithOptions<PaymentDetailDto>(
-      {url: `/api/v1/admin/payments/${id}/reject`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: rejectPaymentDto, signal
+  return apiFetcherWithOptions<PaymentDetailDto>(
+    {
+      url: `/api/v1/admin/payments/${id}/reject`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: rejectPaymentDto,
+      signal,
     },
-      options);
-    }
-  
+    options,
+  );
+};
 
+export const getRejectAdminPaymentMutationOptions = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rejectAdminPayment>>,
+    TError,
+    { id: string; data: RejectPaymentDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof rejectAdminPayment>>,
+  TError,
+  { id: string; data: RejectPaymentDto },
+  TContext
+> => {
+  const mutationKey = ['rejectAdminPayment'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-export const getRejectAdminPaymentMutationOptions = <TError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectAdminPayment>>, TError,{id: string;data: RejectPaymentDto}, TContext>, request?: SecondParameter<typeof apiFetcherWithOptions>}
-): UseMutationOptions<Awaited<ReturnType<typeof rejectAdminPayment>>, TError,{id: string;data: RejectPaymentDto}, TContext> => {
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof rejectAdminPayment>>,
+    { id: string; data: RejectPaymentDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
 
-const mutationKey = ['rejectAdminPayment'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+    return rejectAdminPayment(id, data, requestOptions);
+  };
 
-      
+  return { mutationFn, ...mutationOptions };
+};
 
+export type RejectAdminPaymentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof rejectAdminPayment>>
+>;
+export type RejectAdminPaymentMutationBody = RejectPaymentDto;
+export type RejectAdminPaymentMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectAdminPayment>>, {id: string;data: RejectPaymentDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  rejectAdminPayment(id,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RejectAdminPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof rejectAdminPayment>>>
-    export type RejectAdminPaymentMutationBody = RejectPaymentDto
-    export type RejectAdminPaymentMutationError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
-
-    /**
+/**
  * @summary Từ chối bằng chứng thanh toán và lưu lý do/audit
  */
-export const useRejectAdminPayment = <TError = ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectAdminPayment>>, TError,{id: string;data: RejectPaymentDto}, TContext>, request?: SecondParameter<typeof apiFetcherWithOptions>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof rejectAdminPayment>>,
-        TError,
-        {id: string;data: RejectPaymentDto},
-        TContext
-      > => {
+export const useRejectAdminPayment = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof rejectAdminPayment>>,
+      TError,
+      { id: string; data: RejectPaymentDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof rejectAdminPayment>>,
+  TError,
+  { id: string; data: RejectPaymentDto },
+  TContext
+> => {
+  const mutationOptions = getRejectAdminPaymentMutationOptions(options);
 
-      const mutationOptions = getRejectAdminPaymentMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
+  return useMutation(mutationOptions, queryClient);
+};
