@@ -1,7 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
 import { AdminTable, TableActionButton } from '@/foundation/table';
-import type { FulfillmentSummaryDto } from '@/generated/api/fulfillments/models';
+import type { FulfillmentSummaryDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { FULFILLMENT_PAGE_SIZE, fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
 
 export function FulfillmentTable({

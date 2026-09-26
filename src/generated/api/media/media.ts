@@ -19,10 +19,11 @@ import type {
   FinalizeMediaUploadDto,
   MediaAssetDto,
   SignedMediaUploadDto,
-} from './models';
+} from './media.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary Create a short-lived signed Cloudinary image upload
  */

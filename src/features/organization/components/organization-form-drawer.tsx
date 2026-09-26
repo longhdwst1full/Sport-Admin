@@ -10,7 +10,7 @@ import {
   useCreateAdminBranchWithWarehouse,
   useUpdateAdminBranchWithWarehouse,
 } from '@/generated/api/organization/organization';
-import type { BranchDto, WarehouseDto } from '@/generated/api/organization/models';
+import type { BranchDto, WarehouseDto } from '@/generated/api/organization/organization.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 interface OrganizationFormValues {

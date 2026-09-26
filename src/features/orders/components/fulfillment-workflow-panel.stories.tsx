@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getGetAdminFulfillmentByOrderQueryKey } from '@/generated/api/fulfillments/fulfillments';
-import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/models';
+import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
 
 const fulfillment: FulfillmentDetailDto = {

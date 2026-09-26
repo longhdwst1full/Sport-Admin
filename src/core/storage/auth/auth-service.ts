@@ -1,4 +1,4 @@
-import type { TokenPairDto } from '@/generated/api/auth/models';
+import type { TokenPairDto } from '@/generated/api/auth/auth.schemas';
 import { CookieKey } from '../constants';
 import { CookieManager } from '../manager/cookie.manager';
 

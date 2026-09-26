@@ -3,9 +3,11 @@ import type {
   ProductType,
   CreateProductVariantDto,
   ProductDetailDto,
+  ProductSpecificationInputDto,
   UpdateProductDto,
-} from '@/generated/api/catalog/models';
+} from '@/generated/api/catalog/catalog.schemas';
 import { toInitialPriceAmount } from './product-initial-setup';
+import { toSpecificationRows, type SpecificationRow } from './product-specifications';
 
 export interface ProductVariantFormValues {
   name: string;
@@ -33,6 +35,11 @@ export interface ProductFormValues {
   initialWarehouseCode?: string;
   /** Ảnh tải lên ngay ở màn tạo; gửi kèm lệnh tạo, ảnh đầu danh sách là ảnh chính. */
   images: Array<{ assetId: string; url: string }>;
+  /**
+   * Thông số kỹ thuật dạng dòng đang sửa; chuyển kiểu theo từ điển thuộc tính lúc gửi
+   * (`toSpecificationPayload`). Tạo và Sửa đều lưu cùng nút chính.
+   */
+  specifications: SpecificationRow[];
   variants: ProductVariantFormValues[];
 }
 
@@ -72,7 +79,10 @@ const toCreateVariantDto = (
  */
 export const toCreateProductDto = (
   values: ProductFormValues,
-  { includePrices = true }: { includePrices?: boolean } = {},
+  {
+    includePrices = true,
+    specifications = [],
+  }: { includePrices?: boolean; specifications?: ProductSpecificationInputDto[] } = {},
 ): CreateProductDto => ({
   productType: values.productType,
   name: values.name.trim(),
@@ -87,11 +97,17 @@ export const toCreateProductDto = (
   ...(values.images.length > 0
     ? { media: values.images.map(({ assetId }) => ({ mediaAssetId: assetId })) }
     : {}),
+  ...(specifications.length > 0 ? { specifications } : {}),
 });
 
+/**
+ * `specifications` chỉ truyền khi người dùng đã sửa thông số: API ghi đè cả bộ khi có trường này, còn
+ * bỏ trống thì giữ nguyên — không gửi lại bộ cũ chỉ vì form có sẵn nó.
+ */
 export const toUpdateProductDto = (
   values: ProductFormValues,
   product: ProductDetailDto,
+  specifications?: ProductSpecificationInputDto[],
 ): UpdateProductDto => ({
   productType: values.productType,
   name: values.name.trim(),
@@ -100,6 +116,7 @@ export const toUpdateProductDto = (
   description: optionalText(values.description) ?? null,
   categoryIds: values.categoryIds,
   primaryCategoryId: values.primaryCategoryId,
+  ...(specifications ? { specifications } : {}),
   expectedVersion: product.version,
 });
 
@@ -127,6 +144,7 @@ export const toProductFormValues = (
     initialWarehouseCode: undefined,
     // Ở chế độ sửa, ảnh do `ProductMediaPanel` quản lý trực tiếp qua API media, không đi qua form.
     images: [],
+    specifications: toSpecificationRows(product.specifications),
     // Edit metadata không gửi variants. Placeholder chỉ giúp record cũ chưa có SKU vẫn qua
     // validation của form dùng chung; không tạo SKU ngầm trong update payload.
     variants: variants.length > 0 ? variants : [emptyVariant()],

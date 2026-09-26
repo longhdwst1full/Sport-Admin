@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PosCatalogItemDto } from '@/generated/api/orders/models';
+import type { PosCatalogItemDto } from '@/generated/api/orders/orders.schemas';
 import {
   addLine,
   dropFlashPrice,

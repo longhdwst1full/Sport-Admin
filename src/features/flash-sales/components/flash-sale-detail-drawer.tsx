@@ -38,7 +38,7 @@ import {
   upsertAdminFlashSaleItem,
   useGetAdminFlashSale,
 } from '@/generated/api/promotions/promotions';
-import type { FlashSaleCampaignDetailDto } from '@/generated/api/promotions/models';
+import type { FlashSaleCampaignDetailDto } from '@/generated/api/promotions/promotions.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {

@@ -11,7 +11,7 @@ import {
   getListStockAdjustmentsQueryKey,
   getListStockTransfersQueryKey,
 } from '@/generated/api/inventory/inventory';
-import type { InventoryBalanceDto } from '@/generated/api/inventory/models';
+import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
 import { InventoryBalancePanel } from '../components/inventory-balance-panel';
 import { InventoryMovementPanel } from '../components/inventory-movement-panel';
 import { OpeningStockImportDrawer } from '../components/opening-stock-import-drawer';

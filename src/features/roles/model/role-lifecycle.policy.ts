@@ -1,4 +1,4 @@
-import type { RoleDto } from '@/generated/api/iam/models';
+import type { RoleDto } from '@/generated/api/iam/iam.schemas';
 import { ROOT_ROLE_CODE } from '../constants/role.constants';
 
 export type RoleRemovalMode = 'BLOCKED' | 'DEACTIVATE' | 'DELETE';

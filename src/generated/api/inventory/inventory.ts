@@ -40,11 +40,12 @@ import type {
   StockTransferListDto,
   StockTransferTransitionDto,
   SummarizeInventoryBalancesParams,
-} from './models';
+} from './inventory.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
 import { apiFetcherWithOptions } from '../../../lib/api/api-fetcher-with-options';
+
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**

@@ -13,7 +13,7 @@ import {
   ListAdminShippingConsultationsStatus,
   type AdminShippingConsultationDto,
   type CheckoutQuoteDto,
-} from '@/generated/api/checkout/models';
+} from '@/generated/api/checkout/checkout.schemas';
 import { ManagementPage } from '@/foundation/management';
 import { ShippingConsultationDrawer } from '../components/shipping-consultation-drawer';
 import { ShippingConsultationTable } from '../components/shipping-consultation-table';

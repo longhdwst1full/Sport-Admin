@@ -2,7 +2,7 @@ import {
   AssignUserRoleDtoScopeType,
   type AssignableStaffRoleCode,
   type AssignUserRoleDto,
-} from '@/generated/api/iam/models';
+} from '@/generated/api/iam/iam.schemas';
 
 export interface AssignmentFormValues {
   roleCode: AssignableStaffRoleCode | '';

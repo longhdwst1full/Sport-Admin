@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useDebounce } from 'use-debounce';
 import { ManagementPage } from '@/foundation/management';
 import { useGetAdminReturnQueueSummary, useListAdminReturns } from '@/generated/api/returns/returns';
-import { ReturnStatus } from '@/generated/api/returns/models';
+import { ReturnStatus } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { ReturnDetailDrawer } from '../components/return-detail-drawer';
 import { ReturnTable } from '../components/return-table';

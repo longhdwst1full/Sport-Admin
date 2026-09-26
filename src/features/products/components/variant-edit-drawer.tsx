@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { useUpdateAdminProductVariant } from '@/generated/api/catalog/catalog';
-import type { ProductVariantDto } from '@/generated/api/catalog/models';
+import type { ProductVariantDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import { toUpdateVariantDto, toVariantEditValues, type VariantEditValues } from '../model/variant-edit.mapper';
 

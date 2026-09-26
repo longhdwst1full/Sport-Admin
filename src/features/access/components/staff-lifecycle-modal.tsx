@@ -7,7 +7,7 @@ import {
   useLockAdminStaffUser,
   useUnlockAdminStaffUser,
 } from '@/generated/api/iam/iam';
-import type { UserDto } from '@/generated/api/iam/models';
+import type { UserDto } from '@/generated/api/iam/iam.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 export type StaffLifecycleAction = 'LOCK' | 'UNLOCK' | 'DELETE';

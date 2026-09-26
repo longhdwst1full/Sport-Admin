@@ -5,7 +5,7 @@ import { useDebounce } from 'use-debounce';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { AdminTable , CursorPagination } from '@/foundation/table';
 import { useListInventoryMovements } from '@/generated/api/inventory/inventory';
-import { InventoryMovementType } from '@/generated/api/inventory/models';
+import { InventoryMovementType } from '@/generated/api/inventory/inventory.schemas';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 
 // Khai theo enum sinh từ contract: backend thêm loại movement mà quên nhãn thì compile báo lỗi.

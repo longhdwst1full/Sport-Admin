@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Alert, Form, Input, InputNumber, Modal, Select, Switch, Typography } from 'antd';
-import type { SystemParameterDto } from '@/generated/api/system/models';
+import type { SystemParameterDto } from '@/generated/api/system/system.schemas';
 import {
   parameterGroupLabels,
   parameterValueTypeLabels,

@@ -4,7 +4,7 @@ import {
   PaymentStatus,
   OrderStatus,
   type OrderSummaryDto,
-} from '@/generated/api/orders/models';
+} from '@/generated/api/orders/orders.schemas';
 import { OrderTable } from './order-table';
 
 const demoRows: OrderSummaryDto[] = [

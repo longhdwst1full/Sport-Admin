@@ -27,10 +27,11 @@ import type {
   ErrorResponseDto,
   ListAdminShippingConsultationsParams,
   UpdateManualShippingQuoteDto,
-} from './models';
+} from './checkout.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary List manual shipping quotes visible in the assigned branch scope
  */

@@ -32,10 +32,11 @@ import type {
   SearchActiveAdminWarehousesParams,
   UpdateBranchWithWarehouseDto,
   WarehouseListDto,
-} from './models';
+} from './organization.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary List sales branches
  */

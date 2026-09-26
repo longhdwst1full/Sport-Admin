@@ -1,7 +1,7 @@
 import { CheckCircleFilled, PrinterOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Modal, Table, Tag } from 'antd';
 import { AdminTable } from '@/foundation/table';
-import type { OrderDetailDto } from '@/generated/api/orders/models';
+import type { OrderDetailDto } from '@/generated/api/orders/orders.schemas';
 import { moneyFormatter, posPaymentMethodLabels } from '../constants/pos.constants';
 
 /**

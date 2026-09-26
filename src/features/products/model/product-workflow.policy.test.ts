@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ProductDetailDto } from '@/generated/api/catalog/models';
+import type { ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
 import { buildPriceCommand } from './product-workflow.policy';
 
 const product = (overrides: Partial<ProductDetailDto> = {}): ProductDetailDto => ({

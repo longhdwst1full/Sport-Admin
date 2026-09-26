@@ -3,8 +3,8 @@ import { useEffect, useMemo } from 'react';
 import { Form, Select, Tag, Tooltip } from 'antd';
 import { LockOutlined, ShopOutlined, UserOutlined } from '@ant-design/icons';
 import { useListAdminBranches } from '@/generated/api/organization/organization';
-import { AuthScopeDtoType } from '@/generated/api/auth/models';
-import { OrganizationStatus } from '@/generated/api/organization/models';
+import { AuthScopeDtoType } from '@/generated/api/auth/auth.schemas';
+import { OrganizationStatus } from '@/generated/api/organization/organization.schemas';
 import { useAuth } from '@/core/auth/auth-context';
 
 /**

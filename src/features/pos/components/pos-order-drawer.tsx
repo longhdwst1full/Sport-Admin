@@ -9,7 +9,7 @@ import {
   PosPaymentMethod,
   type OrderDetailDto,
   type PosCatalogItemDto,
-} from '@/generated/api/orders/models';
+} from '@/generated/api/orders/orders.schemas';
 import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { PosCartTable } from './pos-cart-table';
 import type { PosCheckoutValues } from '../model/pos-checkout';

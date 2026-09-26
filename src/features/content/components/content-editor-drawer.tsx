@@ -6,11 +6,11 @@ import {
   getListAdminPostsQueryKey,
   updateAdminPost,
 } from '@/generated/api/content/content';
-import type { ContentPostDto } from '@/generated/api/content/models';
+import type { ContentPostDto } from '@/generated/api/content/content.schemas';
 import {
   ContentPostType,
   type ContentPostType as PostType,
-} from '@/generated/api/content/models/contentPostType';
+} from '@/generated/api/content/content.schemas';
 import { ImageUploadField } from '@/features/media';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage } from '@/lib/api/error';

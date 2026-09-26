@@ -1,4 +1,4 @@
-import { AttributeDataType, type AttributeDto, type ProductSpecificationDto, type ProductSpecificationInputDto } from '@/generated/api/catalog/models';
+import { AttributeDataType, type AttributeDto, type ProductSpecificationDto, type ProductSpecificationInputDto } from '@/generated/api/catalog/catalog.schemas';
 
 /** Một dòng đang sửa: giá trị giữ dạng chuỗi cho ô nhập, chuyển kiểu khi gửi. */
 export interface SpecificationRow {

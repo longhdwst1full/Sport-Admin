@@ -3,7 +3,7 @@ import type {
   AdminCustomerAddressInputDto,
   CreateAdminCustomerDto,
   UpdateAdminCustomerDto,
-} from '@/generated/api/customers/models';
+} from '@/generated/api/customers/customers.schemas';
 
 export interface CustomerAddressFormValues {
   /** Có id là địa chỉ đang có trong sổ; bỏ trống là địa chỉ mới. */

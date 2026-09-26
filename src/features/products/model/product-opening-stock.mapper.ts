@@ -1,5 +1,5 @@
-import type { ProductDetailDto } from '@/generated/api/catalog/models';
-import type { StockAdjustmentItemInputDto } from '@/generated/api/inventory/models';
+import type { ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
+import type { StockAdjustmentItemInputDto } from '@/generated/api/inventory/inventory.schemas';
 import type { ProductVariantFormValues } from './product-form.mapper';
 
 const compareEntityIds = (left: string, right: string): number => {

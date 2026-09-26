@@ -64,9 +64,10 @@ function createDomainConfig(domain: string) {
   return {
     input: { target: `${CONTRACT_BASE}/${domain}.yaml` },
     output: {
+      // split: mỗi domain chỉ sinh `<domain>.ts` (hooks) + `<domain>.schemas.ts` (types).
+      // Không dùng `schemas` folder vì Orval tách mỗi schema thành một file (hàng trăm file khó review).
       target: `${OUTPUT_BASE}/${domain}/${domain}.ts`,
-      schemas: `${OUTPUT_BASE}/${domain}/models`,
-      mode: 'single' as const,
+      mode: 'split' as const,
       client: 'react-query' as const,
       clean: true,
       prettier: true,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AttributeDto } from '@/generated/api/catalog/models';
+import type { AttributeDto } from '@/generated/api/catalog/catalog.schemas';
 import { toSpecificationPayload, toSpecificationRows } from './product-specifications';
 
 const attribute = (overrides: Partial<AttributeDto>): AttributeDto => ({

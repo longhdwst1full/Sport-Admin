@@ -16,7 +16,7 @@ import {
   StockAdjustmentType,
   StockAdjustmentReason,
   type InventoryBalanceDto,
-} from '@/generated/api/inventory/models';
+} from '@/generated/api/inventory/inventory.schemas';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { getApiErrorMessage } from '@/lib/api/error';
 

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetAdminCurrentUserQueryKey, useChangeAdminPassword } from '@/generated/api/auth/auth';
-import type { ChangePasswordDto } from '@/generated/api/auth/models';
+import type { ChangePasswordDto } from '@/generated/api/auth/auth.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { getPasswordStrength } from '@/shared/utils';
 

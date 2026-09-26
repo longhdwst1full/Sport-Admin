@@ -1,4 +1,4 @@
-import type { OrderStatusGroup } from '@/generated/api/orders/models';
+import type { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
 
 export const ORDER_PAGE_SIZE = 20;
 

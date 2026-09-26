@@ -4,7 +4,7 @@ import { usePermissions } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { useGetAdminReturn } from '@/generated/api/returns/returns';
-import type { RefundDto, ReturnDetailDto, ReturnItemDto } from '@/generated/api/returns/models';
+import type { RefundDto, ReturnDetailDto, ReturnItemDto } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {
   inspectionConditionLabels,

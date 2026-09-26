@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PermissionDto } from '@/generated/api/iam/models';
+import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
 import {
   UNMAPPED_GROUP_KEY,
   buildPermissionTree,

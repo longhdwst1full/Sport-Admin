@@ -1,13 +1,17 @@
 /**
+ * Cùng regex với `CreateProductVariantDto.initialPriceAmount` của API: số thập phân ≤ 2 chữ số lẻ và
+ * lớn hơn 0. Không đi qua `Number` — `0.5` từng bị cắt thành `"0"`, còn số lớn thành `1e+21`, và API
+ * từ chối cả lệnh tạo.
+ */
+export const INITIAL_PRICE_PATTERN = /^(?=.*[1-9])\d+(?:\.\d{1,2})?$/;
+
+/**
  * Chuẩn hoá giá nhập ở màn tạo để gửi kèm lệnh tạo sản phẩm (`variants[].initialPriceAmount`).
  *
- * API tạo sản phẩm, SKU, giá và ảnh trong một transaction, nên không còn phải ghép giá với SKU thật
- * sau khi tạo. Ô giá không bắt buộc: trống, 0 hoặc không phải số thì bỏ qua thay vì gửi lên để nhận lỗi.
+ * Ô giá không bắt buộc: trống thì bỏ qua. Giá sai định dạng đã bị form chặn bằng
+ * `INITIAL_PRICE_PATTERN`; hàm này chỉ không gửi giá trị mà API chắc chắn từ chối.
  */
 export function toInitialPriceAmount(price?: string): string | undefined {
   const amount = price?.trim();
-  if (!amount) return undefined;
-  const parsed = Number(amount);
-  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
-  return String(Math.trunc(parsed));
+  return amount && INITIAL_PRICE_PATTERN.test(amount) ? amount : undefined;
 }

@@ -28,7 +28,7 @@ import {
 import {
   AssignableStaffRoleCode,
   type UserDto,
-} from '@/generated/api/iam/models';
+} from '@/generated/api/iam/iam.schemas';
 import {
   useSearchActiveAdminBranches,
 } from '@/generated/api/organization/organization';

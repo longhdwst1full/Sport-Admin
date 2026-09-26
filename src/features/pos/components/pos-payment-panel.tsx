@@ -1,6 +1,6 @@
 import { Alert, Descriptions, Form, Radio, Switch } from 'antd';
 import { MoneyInput } from '@/foundation/inputs/money-input';
-import { PosPaymentMethod } from '@/generated/api/orders/models';
+import { PosPaymentMethod } from '@/generated/api/orders/orders.schemas';
 import { changeFor, shortfallFor } from '../model/pos-cash';
 import {
   moneyFormatter,

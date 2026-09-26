@@ -1,4 +1,4 @@
-import { AttributeDataType, type CreateAttributeDto } from '@/generated/api/catalog/models';
+import { AttributeDataType, type CreateAttributeDto } from '@/generated/api/catalog/catalog.schemas';
 
 export const ATTRIBUTE_TYPE_LABEL: Record<AttributeDataType, string> = {
   [AttributeDataType.TEXT]: 'Chữ',

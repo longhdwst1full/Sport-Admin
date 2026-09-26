@@ -1,5 +1,5 @@
 import { NAVIGATION_GROUP_LABELS, NAVIGATION_ITEMS } from '@/app/navigation/navigation.config';
-import type { PermissionDto } from '@/generated/api/iam/models';
+import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
 
 export interface PermissionTreeLeaf {
   code: string;

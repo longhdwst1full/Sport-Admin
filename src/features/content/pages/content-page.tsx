@@ -21,7 +21,7 @@ import {
   useDeleteAdminPost,
   useListAdminPosts,
 } from '@/generated/api/content/content';
-import type { ContentPostDto } from '@/generated/api/content/models';
+import type { ContentPostDto } from '@/generated/api/content/content.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 const ContentEditorDrawer = lazy(() =>

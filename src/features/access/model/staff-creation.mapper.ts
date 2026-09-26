@@ -1,7 +1,7 @@
 import type {
   CreateStaffUserDto,
   CreateStaffUserDtoRoleCode,
-} from '@/generated/api/iam/models';
+} from '@/generated/api/iam/iam.schemas';
 
 export interface StaffFormValues {
   displayName: string;

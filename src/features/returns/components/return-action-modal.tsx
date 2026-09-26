@@ -7,7 +7,7 @@ import type {
   RefundMethod,
   ReturnDetailDto,
   ReturnItemDto,
-} from '@/generated/api/returns/models';
+} from '@/generated/api/returns/returns.schemas';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { getApiErrorMessage } from '@/lib/api/error';

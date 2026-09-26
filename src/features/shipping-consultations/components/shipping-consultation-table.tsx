@@ -1,7 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
 import { AdminTable, TableActionButton } from '@/foundation/table';
-import type { AdminShippingConsultationDto } from '@/generated/api/checkout/models';
+import type { AdminShippingConsultationDto } from '@/generated/api/checkout/checkout.schemas';
 import {
   consultationReasonLabel,
   moneyFormatter,

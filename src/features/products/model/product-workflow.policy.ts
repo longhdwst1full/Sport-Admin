@@ -2,7 +2,7 @@ import type {
   CreatePriceDto,
   ProductDetailDto,
   ReplacePriceDto,
-} from '@/generated/api/catalog/models';
+} from '@/generated/api/catalog/catalog.schemas';
 
 export interface PriceFormInput {
   variantId: string;

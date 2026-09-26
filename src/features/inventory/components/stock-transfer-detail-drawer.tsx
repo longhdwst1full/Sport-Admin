@@ -17,7 +17,7 @@ import {
   useShipStockTransfer,
   useSubmitStockTransfer,
 } from '@/generated/api/inventory/inventory';
-import type { StockTransferDetailDto } from '@/generated/api/inventory/models';
+import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 interface ReceiveLineValues {

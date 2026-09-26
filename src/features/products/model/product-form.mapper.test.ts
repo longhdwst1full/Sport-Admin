@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ProductType } from '@/generated/api/catalog/models';
-import type { ProductDetailDto } from '@/generated/api/catalog/models';
+import { ProductType } from '@/generated/api/catalog/catalog.schemas';
+import type { ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
 import { toOpeningStockItems } from './product-opening-stock.mapper';
-import { emptyVariant, toCreateProductDto } from './product-form.mapper';
+import { emptyVariant, toCreateProductDto, toUpdateProductDto } from './product-form.mapper';
 
 describe('product form mapper', () => {
   it('maps product and multiple initial variants into the generated create contract', () => {
@@ -15,6 +15,7 @@ describe('product form mapper', () => {
       shortDescription: '  Mô tả ngắn  ',
       description: '  <p>Chi tiết</p>  ',
       images: [],
+      specifications: [],
       variants: [
         { ...emptyVariant(), name: ' Đen - 40 ', barcode: ' BAR-40 ', weightGrams: 850, openingQuantity: 8 },
         { ...emptyVariant(), name: 'Đen - 41', lengthMm: 300 },
@@ -43,6 +44,7 @@ describe('product form mapper', () => {
       categoryIds: ['3'],
       primaryCategoryId: '3',
       images: [{ assetId: '41', url: 'a' }, { assetId: '42', url: 'b' }],
+      specifications: [],
       variants: [
         { ...emptyVariant(), name: 'TD-02', price: '7800000' },
         { ...emptyVariant(), name: 'TD-02 Pro', price: '' },
@@ -67,11 +69,32 @@ describe('product form mapper', () => {
       categoryIds: ['3'],
       primaryCategoryId: '3',
       images: [],
+      specifications: [],
       variants: [{ ...emptyVariant(), name: 'A', sku: ' td-02 ' }, { ...emptyVariant(), name: 'B', sku: '' }],
     });
 
     expect(payload.variants[0]).toMatchObject({ sku: 'TD-02' });
     expect(payload.variants[1]).not.toHaveProperty('sku');
+  });
+
+  it('sends specifications with create, and with update only when they were edited', () => {
+    const values = {
+      productType: ProductType.STANDARD,
+      name: 'Ghế tập',
+      categoryIds: ['3'],
+      primaryCategoryId: '3',
+      images: [],
+      specifications: [{ code: 'MAX_LOAD', values: ['120'] }],
+      variants: [{ ...emptyVariant(), name: 'Đen' }],
+    };
+    const specifications = [{ code: 'MAX_LOAD', values: [120] }];
+
+    expect(toCreateProductDto(values, { specifications }).specifications).toEqual(specifications);
+    expect(toCreateProductDto(values)).not.toHaveProperty('specifications');
+
+    const product = { version: 4 } as ProductDetailDto;
+    expect(toUpdateProductDto(values, product, specifications)).toMatchObject({ specifications, expectedVersion: 4 });
+    expect(toUpdateProductDto(values, product)).not.toHaveProperty('specifications');
   });
 
   it('maps initial quantities to generated SKUs in identity order', () => {

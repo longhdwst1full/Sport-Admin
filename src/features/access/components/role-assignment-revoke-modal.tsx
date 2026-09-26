@@ -5,7 +5,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import * as yup from 'yup';
 import { getListAdminUsersQueryKey, useRevokeAdminUserRoleAssignment } from '@/generated/api/iam/iam';
-import type { UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/models';
+import type { UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 
 interface RevokeValues { reason: string }

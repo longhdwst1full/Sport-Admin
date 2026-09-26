@@ -1,4 +1,4 @@
-import type { ProductSummaryDto } from '@/generated/api/catalog/models';
+import type { ProductSummaryDto } from '@/generated/api/catalog/catalog.schemas';
 
 const moneyFormatter = new Intl.NumberFormat('vi-VN', {
   style: 'currency',

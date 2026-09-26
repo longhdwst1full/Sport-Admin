@@ -1,7 +1,7 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { Empty, Space, Tag, Tooltip } from 'antd';
 import { searchPosCatalog } from '@/generated/api/orders/orders';
-import type { PosCatalogItemDto } from '@/generated/api/orders/models';
+import type { PosCatalogItemDto } from '@/generated/api/orders/orders.schemas';
 import { AsyncPagedSelect } from '@/foundation/inputs/async-paged-select';
 import { moneyFormatter, POS_SEARCH_LIMIT } from '../constants/pos.constants';
 

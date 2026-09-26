@@ -23,7 +23,7 @@ import {
   useDeactivateAdminBrand,
   useListAdminBrands,
 } from '@/generated/api/catalog/catalog';
-import type { BrandDto } from '@/generated/api/catalog/models';
+import type { BrandDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { BrandFormDrawer } from '../components/master-data-form-drawers';
 import { masterCodeColumn, masterStatusColumn } from '../components/master-columns';

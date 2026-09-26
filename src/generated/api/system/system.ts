@@ -30,10 +30,11 @@ import type {
   SystemParameterDto,
   SystemParameterListDto,
   UpdateSystemParameterDto,
-} from './models';
+} from './system.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary List V1 business modules and models
  */

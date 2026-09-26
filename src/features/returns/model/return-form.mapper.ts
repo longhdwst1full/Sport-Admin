@@ -7,8 +7,8 @@ import type {
   ReturnEligibilityLineDto,
   ReturnEvidenceInputDto,
   ReturnItemDto,
-} from '@/generated/api/returns/models';
-import type { CreateAdminReturnDto } from '@/generated/api/returns/models';
+} from '@/generated/api/returns/returns.schemas';
+import type { CreateAdminReturnDto } from '@/generated/api/returns/returns.schemas';
 import type { UploadedSignedImage } from '@/lib/media/upload-signed-image';
 
 /** Một dòng form kiểm hàng, cùng thứ tự với `detail.items`. */

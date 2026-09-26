@@ -1,7 +1,7 @@
 import type {
   AdminCustomerDetailDto,
   AdminCustomerSummaryDto,
-} from '@/generated/api/customers/models';
+} from '@/generated/api/customers/customers.schemas';
 import { moneyFormatter } from '../constants/customer.constants';
 
 const dateFormatter = new Intl.DateTimeFormat('vi-VN', {

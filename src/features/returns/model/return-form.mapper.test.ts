@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ReturnEligibilityLineDto, ReturnItemDto } from '@/generated/api/returns/models';
+import type { ReturnEligibilityLineDto, ReturnItemDto } from '@/generated/api/returns/returns.schemas';
 import { estimateSelection, toCreateReturnPayload, toInspectionPayload, toProofImages } from './return-form.mapper';
 
 const line = (overrides: Partial<ReturnEligibilityLineDto>): ReturnEligibilityLineDto => ({

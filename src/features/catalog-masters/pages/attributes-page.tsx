@@ -12,7 +12,7 @@ import {
   useListAdminAttributes,
   useUpdateAdminAttribute,
 } from '@/generated/api/catalog/catalog';
-import { AttributeStatus, type AttributeDto } from '@/generated/api/catalog/models';
+import { AttributeStatus, type AttributeDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { AttributeFormDrawer } from '../components/attribute-form-drawer';
 import { ATTRIBUTE_TYPE_LABEL } from '../model/attribute-form';

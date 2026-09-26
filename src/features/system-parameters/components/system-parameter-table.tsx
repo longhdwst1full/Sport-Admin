@@ -1,7 +1,7 @@
 import { DeleteOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
 import { Space, Tag, Tooltip, Typography } from 'antd';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
-import type { SystemParameterDto } from '@/generated/api/system/models';
+import type { SystemParameterDto } from '@/generated/api/system/system.schemas';
 import {
   SYSTEM_PARAMETER_PAGE_SIZE,
   parameterGroupLabels,

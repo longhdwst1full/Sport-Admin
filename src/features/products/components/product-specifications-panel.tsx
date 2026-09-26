@@ -3,7 +3,7 @@ import { Alert, App, Button, Descriptions, Select, Space, Switch, Typography } f
 import { useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useListAdminAttributes, useReplaceAdminProductSpecifications } from '@/generated/api/catalog/catalog';
-import { AttributeDataType, AttributeStatus, type ProductDetailDto } from '@/generated/api/catalog/models';
+import { AttributeDataType, AttributeStatus, type ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { toSpecificationPayload, toSpecificationRows, type SpecificationRow } from '../model/product-specifications';
 

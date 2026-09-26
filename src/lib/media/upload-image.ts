@@ -3,8 +3,8 @@ import {
   createAdminMediaUpload,
   finalizeAdminMediaUpload,
 } from '@/generated/api/media/media';
-import type { ImageMimeType } from '@/generated/api/media/models/imageMimeType';
-import type { MediaAssetDto } from '@/generated/api/media/models/mediaAssetDto';
+import type { ImageMimeType } from '@/generated/api/media/media.schemas';
+import type { MediaAssetDto } from '@/generated/api/media/media.schemas';
 
 const allowedTypes = new Set<ImageMimeType>([
   'image/jpeg',

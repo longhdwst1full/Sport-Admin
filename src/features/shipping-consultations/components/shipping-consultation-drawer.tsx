@@ -6,7 +6,7 @@ import {
   ListAdminShippingConsultationsStatus,
   type AdminShippingConsultationDto,
   type CheckoutQuoteDto,
-} from '@/generated/api/checkout/models';
+} from '@/generated/api/checkout/checkout.schemas';
 import {
   moneyFormatter,
   shippingProviderOptions,

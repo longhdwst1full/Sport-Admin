@@ -1,4 +1,4 @@
-import { PosPaymentMethod } from '@/generated/api/orders/models';
+import { PosPaymentMethod } from '@/generated/api/orders/orders.schemas';
 
 export const POS_PERMISSION = 'order.manage';
 

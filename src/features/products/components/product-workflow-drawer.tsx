@@ -25,7 +25,7 @@ import {
   useReactivateAdminProductVariant,
   useSearchActiveAdminProductVariants,
 } from '@/generated/api/catalog/catalog';
-import type { ProductVariantDto } from '@/generated/api/catalog/models';
+import type { ProductVariantDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { ProductMediaPanel } from './product-media-panel';
 import { ProductSpecificationsPanel } from './product-specifications-panel';

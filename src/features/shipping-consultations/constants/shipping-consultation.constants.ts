@@ -1,7 +1,7 @@
 import {
   AdminShippingConsultationDtoConsultationReason,
   ListAdminShippingConsultationsStatus,
-} from '@/generated/api/checkout/models';
+} from '@/generated/api/checkout/checkout.schemas';
 
 export const SHIPPING_CONSULTATION_PAGE_SIZE = 10;
 

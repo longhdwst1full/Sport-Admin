@@ -1,6 +1,6 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
-import type { OrderSummaryDto } from '@/generated/api/orders/models';
+import type { OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';

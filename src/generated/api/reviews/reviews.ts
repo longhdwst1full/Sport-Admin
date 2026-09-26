@@ -27,10 +27,11 @@ import type {
   ModerateReviewDto,
   ProductReviewDto,
   ProductReviewListDto,
-} from './models';
+} from './reviews.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
 import type { ErrorType, BodyType } from '../../../lib/api/fetcher';
+
 /**
  * @summary List reviews for moderation
  */

@@ -3,7 +3,7 @@ import type {
   ReturnEligibilityLineDto,
   ReturnItemDto,
   ReturnSummaryDto,
-} from '@/generated/api/returns/models';
+} from '@/generated/api/returns/returns.schemas';
 
 /**
  * Cấu hình cột của các bảng trong feature Đổi trả, theo khuôn `*-table-columns.ts` của admin-client:

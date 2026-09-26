@@ -9,7 +9,7 @@ import type {
   ReturnStatus,
   ReturnIneligibleReason,
   ReturnAction,
-} from '@/generated/api/returns/models';
+} from '@/generated/api/returns/returns.schemas';
 
 export const RETURN_PAGE_SIZE = 20;
 
