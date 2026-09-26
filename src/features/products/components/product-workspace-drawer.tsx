@@ -1,29 +1,30 @@
 import { CACHE_POLICY } from '@/app/config/query-cache-policy';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Tabs } from 'antd';
+import { Alert, App, Button, Drawer, Form, Skeleton, Space, Tabs, Tag } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm, type FieldPath } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
 import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../constants/product-list.constants';
-import { useCan } from '@/core/auth/permissions';
+import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import {
   getGetAdminProductQueryKey,
   getGetAdminProductSetupStatusQueryKey,
   getListAdminProductsQueryKey,
+  useArchiveAdminProduct,
   useCreateAdminProduct,
+  useGetAdminProduct,
   useGetAdminProductSetupStatus,
   useListAdminAttributes,
+  usePublishAdminProduct,
+  useReactivateAdminProduct,
   useSearchActiveAdminBrands,
   useSearchActiveAdminCategories,
   useUpdateAdminProduct,
 } from '@/generated/api/catalog/catalog';
-import {
-  ProductType,
-  type ProductDetailDto,
-} from '@/generated/api/catalog/catalog.schemas';
+import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import {
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
@@ -33,22 +34,26 @@ import {
 import {
   StockAdjustmentType,
   StockAdjustmentReason,
+  type CreateStockAdjustmentDto,
 } from '@/generated/api/inventory/inventory.schemas';
 import {
   useSearchActiveAdminBranches,
   useSearchActiveAdminWarehouses,
 } from '@/generated/api/organization/organization';
 import { ProductBasicInfoTab } from './product-form/product-basic-info-tab';
+import { ProductBundleManager } from './product-form/product-bundle-manager';
 import { ProductMediaTab } from './product-form/product-media-tab';
+import { ProductOpeningStockTab } from './product-form/product-opening-stock-tab';
 import { ProductReviewTab } from './product-form/product-review-tab';
 import { ProductSpecificationsTab } from './product-form/product-specifications-tab';
+import { ProductStockPanel, type PendingOpeningStock } from './product-form/product-stock-panel';
 import { ProductVariantsManager } from './product-form/product-variants-manager';
 import { ProductVariantsTab } from './product-form/product-variants-tab';
 import {
-  PRODUCT_FORM_TABS,
   PRODUCT_TAB_LABELS,
   adjacentTab,
   validateProductTabs,
+  visibleProductTabs,
   type ProductFormTab,
 } from '../model/product-form-tabs';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
@@ -94,8 +99,8 @@ const schema: yup.ObjectSchema<ProductFormValues> = yup.object({
   // Kiểu giá trị theo từng thuộc tính cần từ điển nên kiểm ở `toSpecificationPayload` lúc submit.
   specifications: yup
     .array()
-    .of(yup.object({ code: yup.string().defined(), values: yup.array().of(yup.string().defined()).defined() }))
-    .default([]),
+    .of(yup.object({ code: yup.string().defined(), values: yup.array().of(yup.string().required()).required() }))
+    .required(),
   variants: yup
     .array()
     .of(yup.object({
@@ -141,31 +146,32 @@ const defaults: ProductFormValues = {
 /** Tên trường lỗi của API → ô của form (khác tên ở đúng một chỗ). */
 const API_VARIANT_FIELD: Record<string, string> = { initialPriceAmount: 'price' };
 const VARIANT_FORM_FIELD = /^(name|sku|barcode|weightGrams|lengthMm|widthMm|heightMm|openingQuantity|price)$/;
+const STATUS_COLOR: Record<string, string> = { DRAFT: 'blue', PUBLISHED: 'green', ARCHIVED: 'default' };
 
 /**
- * Màn Tạo và màn Sửa sản phẩm — **cùng** năm tab, cùng bố cục (xem `PRODUCT_FORM_TABS`).
+ * Workspace sản phẩm — **một** drawer duy nhất cho Tạo và Sửa, cùng bộ tab (`visibleProductTabs`).
  *
- * Khác nhau chỉ ở cách lưu:
- * - Tạo: một lệnh `createAdminProduct` (sản phẩm, SKU, giá, ảnh, thông số trong một transaction), rồi
- *   phiếu tồn đầu.
- * - Sửa: nút Lưu gửi `updateAdminProduct` (thông tin, mô tả, thông số trong một lần tăng version); ảnh,
- *   biến thể và giá ghi ngay qua operation riêng của chúng.
+ * Hợp nhất ở bố cục, không ở API:
+ * - Tạo: một lệnh `createAdminProduct` (sản phẩm, SKU, giá, ảnh, thông số trong một transaction), rồi phiếu
+ *   tồn đầu của Inventory. Tạo xong, workspace chuyển tại chỗ sang chế độ Sửa của sản phẩm vừa tạo.
+ * - Sửa: nút Lưu gửi `updateAdminProduct` (thông tin + thông số); SKU, giá, ảnh, combo ghi ngay qua
+ *   operation riêng; xuất bản/lưu trữ là lệnh vòng đời ở header.
  */
-export function ProductFormDrawer({
+export function ProductWorkspaceDrawer({
   open,
+  slug,
   onClose,
-  onCreated,
-  product,
 }: {
   open: boolean;
+  /** Có thì mở ở chế độ Sửa. */
+  slug?: string;
   onClose: () => void;
-  onCreated?: (slug: string) => void;
-  product?: ProductDetailDto;
 }) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const canAdjustStock = useCan('inventory.stock.adjust');
   const canManagePrice = useCan('catalog.price.manage');
+  const [activeSlug, setActiveSlug] = useState(slug);
   const [brandSearch, setBrandSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
   const [branchSearch, setBranchSearch] = useState('');
@@ -175,6 +181,7 @@ export function ProductFormDrawer({
   const [debouncedBranch] = useDebounce(branchSearch.trim(), 300);
   const [debouncedWarehouse] = useDebounce(warehouseSearch.trim(), 300);
   const [specificationErrors, setSpecificationErrors] = useState<string[]>([]);
+  const [pendingOpeningStock, setPendingOpeningStock] = useState<PendingOpeningStock>();
   const openingStockIdempotencyKey = useRef(crypto.randomUUID());
   /**
    * IDEMPOTENCY: một id cho một lần mở form tạo. Bấm lại sau khi mất response (timeout, rớt mạng)
@@ -183,14 +190,20 @@ export function ProductFormDrawer({
    */
   const createProductRequestId = useRef(crypto.randomUUID());
   const submittedCreateValues = useRef<ProductFormValues | undefined>(undefined);
+  /** Tab mở sau khi sản phẩm vừa tạo được tải về (mặc định reset về `info`). */
+  const tabAfterLoad = useRef<ProductFormTab | undefined>(undefined);
   const form = useForm<ProductFormValues>({ resolver: yupResolver(schema), defaultValues: defaults });
   const variantFields = useFieldArray({ control: form.control, name: 'variants' });
-  const isEdit = Boolean(product);
+  const [activeTab, setActiveTab] = useState<ProductFormTab>('info');
+
+  const detail = useGetAdminProduct(activeSlug ?? '', { query: { enabled: open && Boolean(activeSlug) } });
+  const product = detail.data;
+  const isEdit = Boolean(activeSlug);
   const mode = isEdit ? 'edit' : 'create';
-  const [activeTab, setActiveTab] = useState<ProductFormTab>('basic');
-  const previousTab = adjacentTab(activeTab, -1);
-  const nextTab = adjacentTab(activeTab, 1);
   const productType = form.watch('productType');
+  const tabs = visibleProductTabs(product?.productType ?? productType);
+  const previousTab = adjacentTab(activeTab, -1, tabs);
+  const nextTab = adjacentTab(activeTab, 1, tabs);
   const initialBranchId = form.watch('initialBranchId');
   const variants = form.watch('variants');
   const hasOpeningStock = variants.some(({ openingQuantity }) => openingQuantity > 0);
@@ -208,6 +221,7 @@ export function ProductFormDrawer({
   const setupStatus = useGetAdminProductSetupStatus(product?.id ?? '', {
     query: { enabled: open && Boolean(product?.id) },
   });
+  const canPublish = setupStatus.data?.canPublish ?? false;
   const branches = useSearchActiveAdminBranches(
     { search: debouncedBranch || undefined, page: 1, limit: 50 },
     { query: { ...CACHE_POLICY.REFERENCE, enabled: open && !isEdit && canAdjustStock } },
@@ -235,6 +249,15 @@ export function ProductFormDrawer({
   );
   const branchLabel = branches.data?.items.find((item) => item.id === initialBranchId)?.label;
 
+  /** SKU, giá, ảnh, combo, thông tin đổi version; đọc lại để lần gửi sau không dùng version cũ. */
+  async function refreshProduct() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminProductQueryKey(activeSlug) }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminProductSetupStatusQueryKey(product?.id) }),
+    ]);
+  }
+
   const openingStock = useCreateStockAdjustment({
     request: { headers: { 'Idempotency-Key': openingStockIdempotencyKey.current } },
   });
@@ -244,22 +267,32 @@ export function ProductFormDrawer({
       onSuccess: async (createdProduct) => {
         // CONTRACT: dùng snapshot lúc submit để SKU/tồn đầu không lệch nếu response về chậm.
         const values = submittedCreateValues.current ?? form.getValues();
-        let openingStockError: unknown;
+        let pending: PendingOpeningStock | undefined;
+        let stockData: CreateStockAdjustmentDto | undefined;
         try {
           const items = toOpeningStockItems(values.variants, createdProduct);
           if (items.length > 0 && values.initialWarehouseCode) {
-            await openingStock.mutateAsync({
-              data: {
-                warehouseCode: values.initialWarehouseCode,
-                adjustmentType: StockAdjustmentType.OPENING_BALANCE,
-                reasonCode: StockAdjustmentReason.INITIAL_STOCK,
-                reason: `Khởi tạo tồn đầu khi tạo sản phẩm ${createdProduct.productNo}`,
-                items,
-              },
-            });
+            stockData = {
+              warehouseCode: values.initialWarehouseCode,
+              adjustmentType: StockAdjustmentType.OPENING_BALANCE,
+              reasonCode: StockAdjustmentReason.INITIAL_STOCK,
+              reason: `Khởi tạo tồn đầu khi tạo sản phẩm ${createdProduct.productNo}`,
+              items,
+            };
+            await openingStock.mutateAsync({ data: stockData });
           }
         } catch (error) {
-          openingStockError = error;
+          // Giá, ảnh và thông số đã nằm trong transaction tạo sản phẩm; chỉ tồn đầu (nghiệp vụ kho của
+          // chi nhánh) là bước riêng có thể lỗi sau khi sản phẩm đã tạo. Giữ payload + khoá để ghi lại.
+          if (stockData) {
+            pending = {
+              idempotencyKey: openingStockIdempotencyKey.current,
+              data: stockData,
+              error: getApiErrorMessage(error),
+            };
+          } else {
+            void message.error(getApiErrorMessage(error));
+          }
         }
 
         await Promise.all([
@@ -268,23 +301,17 @@ export function ProductFormDrawer({
           queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
         ]);
-        // Giá, ảnh và thông số đã nằm trong cùng transaction tạo sản phẩm; chỉ còn tồn đầu (nghiệp vụ
-        // kho của từng chi nhánh) là bước riêng có thể lỗi sau khi sản phẩm đã tạo.
-        if (openingStockError) {
-          void message.warning(
-            `Đã tạo sản phẩm nhưng chưa ghi được tồn đầu: ${getApiErrorMessage(openingStockError)}`,
-            8,
-          );
-        } else {
-          const stockMessage = hasOpeningStock ? ' và đã ghi tồn đầu' : '';
-          void message.success(
-            `Đã tạo sản phẩm cùng ${createdProduct.variants.length} biến thể${stockMessage}.`,
-          );
-        }
-        form.reset(defaults);
         submittedCreateValues.current = undefined;
-        onClose();
-        onCreated?.(createdProduct.slug);
+        setPendingOpeningStock(pending);
+        if (pending) {
+          void message.warning('Đã tạo sản phẩm nhưng chưa ghi được tồn đầu. Bấm “Thử ghi tồn đầu lại” ở tab Tồn kho.', 8);
+        } else {
+          const stockMessage = stockData ? ' và đã ghi tồn đầu' : '';
+          void message.success(`Đã tạo sản phẩm cùng ${createdProduct.variants.length} biến thể${stockMessage}.`);
+        }
+        // Chuyển tại chỗ sang chế độ Sửa: cùng workspace, người dùng làm tiếp combo/giá/xuất bản.
+        tabAfterLoad.current = pending ? 'stock' : 'review';
+        setActiveSlug(createdProduct.slug);
       },
       onError: (error) => {
         submittedCreateValues.current = undefined;
@@ -296,14 +323,25 @@ export function ProductFormDrawer({
     mutation: {
       onSuccess: async (updated) => {
         await refreshProduct();
-        // Giữ form mở như các thao tác lưu ngay khác; đặt lại mốc "chưa sửa" theo dữ liệu vừa lưu.
+        // Đặt lại mốc "chưa sửa" theo dữ liệu vừa lưu; workspace vẫn mở như các thao tác lưu ngay khác.
         form.reset(toProductFormValues(updated));
         void message.success('Đã lưu thông tin sản phẩm.');
-        onCreated?.(updated.slug);
       },
       onError: (error) => handleError(error, 'Không thể cập nhật sản phẩm.'),
     },
   });
+  const lifecycleMutation = (success: string, failure: string) => ({
+    mutation: {
+      onSuccess: async () => {
+        await refreshProduct();
+        void message.success(success);
+      },
+      onError: (error: unknown) => void message.error(getApiErrorMessage(error, failure)),
+    },
+  });
+  const publish = usePublishAdminProduct(lifecycleMutation('Đã xuất bản sản phẩm lên website.', 'Không xuất bản được sản phẩm.'));
+  const archiveProduct = useArchiveAdminProduct(lifecycleMutation('Đã lưu trữ; sản phẩm không còn hiển thị trên website.', 'Không lưu trữ được sản phẩm.'));
+  const reactivateProduct = useReactivateAdminProduct(lifecycleMutation('Đã đưa sản phẩm về bản nháp để kiểm tra trước khi xuất bản lại.', 'Không thể khôi phục sản phẩm.'));
   const mutationPending = createProduct.isPending || updateProduct.isPending || openingStock.isPending;
 
   function handleError(error: unknown, fallback: string) {
@@ -323,19 +361,33 @@ export function ProductFormDrawer({
     void message.error(getApiErrorMessage(error, fallback));
   }
 
-  // Chỉ reset khi mở form hoặc đổi sang sản phẩm khác. Ảnh/biến thể/giá lưu ngay làm `product` được
-  // tải lại (version mới); reset theo mỗi lần đó sẽ xoá những ô người dùng đang sửa dở.
+  // Mở workspace: về đúng sản phẩm được chọn (hoặc form tạo trống) với khoá idempotency mới.
+  useEffect(() => {
+    if (!open) return;
+    setActiveSlug(slug);
+    setPendingOpeningStock(undefined);
+    openingStockIdempotencyKey.current = crypto.randomUUID();
+    createProductRequestId.current = crypto.randomUUID();
+    submittedCreateValues.current = undefined;
+    tabAfterLoad.current = undefined;
+    if (!slug) {
+      form.reset(defaults);
+      setSpecificationErrors([]);
+      setActiveTab('info');
+    }
+  }, [form, open, slug]);
+
+  // Chỉ reset form khi sản phẩm khác được nạp. SKU/giá/ảnh lưu ngay làm `product` tải lại (version mới);
+  // reset theo mỗi lần đó sẽ xoá những ô người dùng đang sửa dở.
   const latestProduct = useRef(product);
   latestProduct.current = product;
   const productId = product?.id;
   useEffect(() => {
-    if (!open) return;
-    openingStockIdempotencyKey.current = crypto.randomUUID();
-    createProductRequestId.current = crypto.randomUUID();
-    submittedCreateValues.current = undefined;
+    if (!open || !latestProduct.current) return;
+    form.reset(toProductFormValues(latestProduct.current));
     setSpecificationErrors([]);
-    setActiveTab('basic');
-    form.reset(latestProduct.current ? toProductFormValues(latestProduct.current) : defaults);
+    setActiveTab(tabAfterLoad.current ?? 'info');
+    tabAfterLoad.current = undefined;
   }, [form, open, productId]);
 
   useEffect(() => {
@@ -347,23 +399,19 @@ export function ProductFormDrawer({
     }
   }, [form, initialBranchId, isEdit, open, warehouses.data?.items]);
 
-  /** Ảnh, biến thể, giá và thông tin đổi version; đọc lại để lần gửi sau không dùng version cũ. */
-  async function refreshProduct() {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
-      queryClient.invalidateQueries({ queryKey: getGetAdminProductQueryKey(product?.slug) }),
-      queryClient.invalidateQueries({ queryKey: getGetAdminProductSetupStatusQueryKey(product?.id) }),
-    ]);
-  }
+  // Đổi loại sản phẩm làm ẩn tab Combo; không để người dùng đứng ở tab không còn hiển thị.
+  useEffect(() => {
+    if (!tabs.includes(activeTab)) setActiveTab('info');
+  }, [activeTab, tabs]);
 
   /**
-   * Validate theo từng tab trước khi submit.
+   * Validate theo từng tab đang hiển thị trước khi submit.
    *
    * `handleSubmit` chỉ báo form không hợp lệ; nó không nói lỗi nằm ở tab nào. Không nhảy tới tab đó
    * thì người dùng bấm Lưu, không có gì xảy ra, và ô lỗi nằm ở tab họ không nhìn thấy.
    */
   const submitWithTabValidation = async () => {
-    const result = await validateProductTabs(form, mode);
+    const result = await validateProductTabs(form, mode, tabs);
     if (!result.isValid && result.errorTab) {
       setActiveTab(result.errorTab);
       void message.error(`Kiểm tra lại tab "${PRODUCT_TAB_LABELS[result.errorTab]}".`);
@@ -402,12 +450,131 @@ export function ProductFormDrawer({
     }
   });
 
+  const confirmPublish = () => {
+    if (!product) return;
+    modal.confirm({
+      title: `Xuất bản “${product.name}”?`,
+      content: 'Sản phẩm sẽ hiển thị công khai với giá đã bao gồm VAT. Version hiện tại được kiểm tra để không ghi đè thay đổi của người khác.',
+      okText: 'Xuất bản',
+      cancelText: 'Hủy',
+      onOk: () => publish.mutateAsync({ id: product.id, data: { expectedVersion: product.version } }),
+    });
+  };
+  const confirmLifecycle = () => {
+    if (!product) return;
+    const isArchived = product.status === 'ARCHIVED';
+    modal.confirm({
+      title: isArchived
+        ? `Đưa “${product.name}” về bản nháp?`
+        : `Lưu trữ ${product.productType === ProductType.BUNDLE ? 'combo' : 'sản phẩm'} “${product.name}”?`,
+      content: isArchived
+        ? 'Sản phẩm chưa hiển thị lại ngay. Cần kiểm tra SKU, giá rồi xuất bản lại.'
+        : 'Sản phẩm sẽ ẩn ngay khỏi website và chặn giao dịch mới. Đơn hàng lịch sử không bị thay đổi.',
+      okText: isArchived ? 'Đưa về bản nháp' : 'Lưu trữ',
+      okButtonProps: { danger: !isArchived },
+      cancelText: 'Hủy',
+      onOk: () => isArchived
+        ? reactivateProduct.mutateAsync({ id: product.id, data: { expectedVersion: product.version } })
+        : archiveProduct.mutateAsync({ id: product.id, data: { expectedVersion: product.version } }),
+    });
+  };
+
+  const isArchived = product?.status === 'ARCHIVED';
+  const tabContent = (tab: ProductFormTab) => {
+    switch (tab) {
+      case 'info':
+        return (
+          <ProductBasicInfoTab
+            form={form}
+            product={product}
+            brands={brands}
+            categories={categories}
+            onBrandSearch={setBrandSearch}
+            onCategorySearch={setCategorySearch}
+          />
+        );
+      case 'variants':
+        return product ? (
+          <ProductVariantsManager product={product} onChanged={refreshProduct} />
+        ) : (
+          <ProductVariantsTab form={form} variantFields={variantFields} productType={productType} canManagePrice={canManagePrice} />
+        );
+      case 'media':
+        return <ProductMediaTab form={form} product={product} disabled={mutationPending} onMediaChanged={refreshProduct} />;
+      case 'specs':
+        return (
+          <ProductSpecificationsTab form={form} attributes={attributes} loading={attributesQuery.isPending} errors={specificationErrors} />
+        );
+      case 'stock':
+        return product ? (
+          <ProductStockPanel
+            product={product}
+            pendingOpeningStock={pendingOpeningStock}
+            onOpeningStockRecorded={() => setPendingOpeningStock(undefined)}
+          />
+        ) : (
+          <ProductOpeningStockTab
+            form={form}
+            productType={productType}
+            canAdjustStock={canAdjustStock}
+            initialBranchId={initialBranchId}
+            hasOpeningStock={hasOpeningStock}
+            branches={branches}
+            warehouses={warehouses}
+            onBranchSearch={setBranchSearch}
+            onWarehouseSearch={setWarehouseSearch}
+          />
+        );
+      case 'bundle':
+        return product ? (
+          <ProductBundleManager product={product} onChanged={refreshProduct} />
+        ) : (
+          <Alert
+            type="info"
+            showIcon
+            message="Khai thành phần combo ngay sau khi tạo"
+            description="Thành phần gắn với SKU combo thật, nên cần tạo sản phẩm trước. Tạo xong, workspace chuyển sang chế độ sửa và tab này cho khai thành phần."
+          />
+        );
+      case 'review':
+        return (
+          <ProductReviewTab
+            form={form}
+            brandLabel={brandLabel}
+            categoryLabels={categoryLabels}
+            branchLabel={branchLabel}
+            product={product}
+            readiness={setupStatus.data}
+          />
+        );
+    }
+  };
+
   return (
     <Drawer
-      title={isEdit ? `Sửa sản phẩm${product ? ` — ${product.productNo}` : ''}` : 'Tạo sản phẩm'}
+      title={isEdit ? (product ? `${product.name} · ${product.productNo}` : 'Sản phẩm') : 'Tạo sản phẩm'}
+      extra={product && (
+        <Space wrap>
+          <Tag color={STATUS_COLOR[product.status]}>{product.status}</Tag>
+          <PermissionGate permission="catalog.product.publish">
+            {product.status === 'DRAFT' && (
+              <Button type="primary" disabled={!canPublish} loading={publish.isPending} onClick={confirmPublish}>
+                Xuất bản
+              </Button>
+            )}
+            <Button
+              danger={!isArchived}
+              loading={archiveProduct.isPending || reactivateProduct.isPending}
+              onClick={confirmLifecycle}
+            >
+              {isArchived ? 'Đưa về bản nháp' : 'Lưu trữ'}
+            </Button>
+          </PermissionGate>
+        </Space>
+      )}
       width="100%"
-      // Nền chìm để các khối trắng của form nổi lên thành từng nhóm rõ ràng. Cùng độ rộng cho Tạo và Sửa.
-      styles={{ wrapper: { maxWidth: 960 }, body: { background: 'var(--color-surface-sunken)' } }}
+      // Một độ rộng cho Tạo và Sửa: đủ cho bảng SKU và lịch giá cạnh nhau.
+      styles={{ wrapper: { maxWidth: 1040 }, body: { background: 'var(--color-surface-sunken)' } }}
       push={false}
       open={open}
       onClose={() => { if (!mutationPending) onClose(); }}
@@ -418,8 +585,8 @@ export function ProductFormDrawer({
       footer={(
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs text-slate-500">
-            {`Bước ${PRODUCT_FORM_TABS.indexOf(activeTab) + 1}/${PRODUCT_FORM_TABS.length} · ${PRODUCT_TAB_LABELS[activeTab]}`}
-            {isEdit && ' · Ảnh, biến thể và giá lưu ngay khi thao tác; nút Lưu lưu thông tin, mô tả và thông số.'}
+            {`Bước ${tabs.indexOf(activeTab) + 1}/${tabs.length} · ${PRODUCT_TAB_LABELS[activeTab]}`}
+            {isEdit && ' · SKU, giá, ảnh, combo lưu ngay khi thao tác; nút Lưu lưu thông tin và thông số.'}
           </span>
           <div className="flex gap-2">
             <Button disabled={mutationPending} onClick={onClose}>
@@ -431,100 +598,51 @@ export function ProductFormDrawer({
               </Button>
             )}
             {nextTab && (
-              <Button
-                type={isEdit ? 'default' : 'primary'}
-                disabled={mutationPending}
-                onClick={() => setActiveTab(nextTab)}
-              >
+              <Button type={isEdit ? 'default' : 'primary'} disabled={mutationPending} onClick={() => setActiveTab(nextTab)}>
                 Tiếp tục
               </Button>
             )}
-            {/*
-              Sửa: nút Lưu có ở mọi tab vì mọi trường đã có giá trị, không cần đi hết các bước.
-              Tạo: chỉ ở tab cuối, sau bảng kiểm tra.
-            */}
+            {/* Sửa: Lưu ở mọi tab vì mọi trường đã có giá trị. Tạo: chỉ ở tab cuối, sau bảng kiểm tra. */}
             {(isEdit || !nextTab) && (
-              /*
-                Gọi thẳng `submitWithTabValidation()`: nút nằm ở footer của Drawer, tức là ngoài vùng
-                form, và Form bên dưới không render thẻ <form> (xem `component={false}`).
-              */
-              <Button
-                type="primary"
-                loading={mutationPending}
-                onClick={() => void submitWithTabValidation()}
-              >
-                {isEdit ? 'Lưu thay đổi' : 'Tạo sản phẩm'}
-              </Button>
+              <PermissionGate permission="catalog.product.manage">
+                <Button
+                  type="primary"
+                  loading={mutationPending}
+                  disabled={isArchived || (isEdit && !product)}
+                  onClick={() => void submitWithTabValidation()}
+                >
+                  {isEdit ? 'Lưu thay đổi' : 'Tạo sản phẩm'}
+                </Button>
+              </PermissionGate>
             )}
           </div>
         </div>
       )}
     >
-      {/*
-        `component={false}`: Form chỉ cấp layout, không render <form>. Các khối lưu ngay (thêm SKU, combo,
-        lịch giá) có <form> riêng; lồng <form> trong <form> làm Enter ở ô con submit nhầm cả sản phẩm.
-      */}
-      <Form component={false} layout="vertical" disabled={mutationPending}>
-        {/*
-          Một form duy nhất trải qua nhiều tab, không phải năm form rời: một `useForm`, một lần
-          submit. Tab chỉ chia nhỏ phần nhìn — đổi tab không lưu gì cả.
-        */}
-        <Tabs
-          activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as ProductFormTab)}
-          items={PRODUCT_FORM_TABS.map((tab) => ({
-            key: tab,
-            label: PRODUCT_TAB_LABELS[tab],
-            children:
-              tab === 'basic' ? (
-                <ProductBasicInfoTab
-                  form={form}
-                  product={product}
-                  brands={brands}
-                  categories={categories}
-                  onBrandSearch={setBrandSearch}
-                  onCategorySearch={setCategorySearch}
-                />
-              ) : tab === 'media' ? (
-                <ProductMediaTab form={form} product={product} disabled={mutationPending} onMediaChanged={refreshProduct} />
-              ) : tab === 'specs' ? (
-                <ProductSpecificationsTab
-                  form={form}
-                  attributes={attributes}
-                  loading={attributesQuery.isPending}
-                  errors={specificationErrors}
-                />
-              ) : tab === 'variants' ? (
-                product ? (
-                  <ProductVariantsManager product={product} onChanged={refreshProduct} />
-                ) : (
-                  <ProductVariantsTab
-                    form={form}
-                    variantFields={variantFields}
-                    productType={productType}
-                    canAdjustStock={canAdjustStock}
-                    canManagePrice={canManagePrice}
-                    initialBranchId={initialBranchId}
-                    hasOpeningStock={hasOpeningStock}
-                    branches={branches}
-                    warehouses={warehouses}
-                    onBranchSearch={setBranchSearch}
-                    onWarehouseSearch={setWarehouseSearch}
-                  />
-                )
-              ) : (
-                <ProductReviewTab
-                  form={form}
-                  brandLabel={brandLabel}
-                  categoryLabels={categoryLabels}
-                  branchLabel={branchLabel}
-                  product={product}
-                  readiness={setupStatus.data}
-                />
-              ),
-          }))}
+      {isEdit && detail.isPending ? (
+        <Skeleton active />
+      ) : isEdit && detail.isError ? (
+        <Alert
+          type="error"
+          showIcon
+          message="Không tải được sản phẩm"
+          description={getApiErrorMessage(detail.error, 'Vui lòng thử lại.')}
+          action={<Button onClick={() => void detail.refetch()}>Thử lại</Button>}
         />
-      </Form>
+      ) : (
+        /*
+          `component={false}`: Form chỉ cấp layout, không render <form>. Các khối lưu ngay (thêm SKU, combo,
+          lịch giá) có <form> riêng; lồng <form> trong <form> làm Enter ở ô con submit nhầm cả sản phẩm.
+          Một `useForm` duy nhất trải qua các tab — đổi tab không lưu gì cả.
+        */
+        <Form component={false} layout="vertical" disabled={mutationPending || isArchived}>
+          <Tabs
+            activeKey={activeTab}
+            onChange={(key) => setActiveTab(key as ProductFormTab)}
+            items={tabs.map((tab) => ({ key: tab, label: PRODUCT_TAB_LABELS[tab], children: tabContent(tab) }))}
+          />
+        </Form>
+      )}
     </Drawer>
   );
 }
