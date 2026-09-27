@@ -3,6 +3,7 @@ import { Tag, Typography } from 'antd';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { FulfillmentSummaryDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { FULFILLMENT_PAGE_SIZE, fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
+import { CarrierShipmentStatusTag } from './carrier-shipment-status-tag';
 
 export function FulfillmentTable({
   rows,
@@ -70,17 +71,23 @@ export function FulfillmentTable({
           title: 'Vận chuyển',
           key: 'carrier',
           width: 190,
-          render: (_, row) =>
-            row.carrierCode || row.trackingNo ? (
-              <div>
-                <div>{row.carrierCode ?? '—'}</div>
-                {row.trackingNo ? (
-                  <Typography.Text className="text-xs">{row.trackingNo}</Typography.Text>
-                ) : null}
+          render: (_, row) => (
+            <div>
+              {row.carrierCode || row.trackingNo ? (
+                <>
+                  <div>{row.carrierCode ?? '—'}</div>
+                  {row.trackingNo ? (
+                    <Typography.Text className="text-xs">{row.trackingNo}</Typography.Text>
+                  ) : null}
+                </>
+              ) : (
+                <span className="text-slate-400">Chưa bàn giao</span>
+              )}
+              <div className="mt-1">
+                <CarrierShipmentStatusTag status={row.carrierShipmentStatus} error={row.carrierShipmentError} />
               </div>
-            ) : (
-              <span className="text-slate-400">Chưa bàn giao</span>
-            ),
+            </div>
+          ),
         },
         {
           title: 'Trạng thái',

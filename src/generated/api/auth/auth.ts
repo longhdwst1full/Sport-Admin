@@ -126,7 +126,7 @@ export const refreshAdminToken = (
 };
 
 export const getRefreshAdminTokenMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -164,12 +164,15 @@ export type RefreshAdminTokenMutationResult = NonNullable<
   Awaited<ReturnType<typeof refreshAdminToken>>
 >;
 export type RefreshAdminTokenMutationBody = BodyType<RefreshTokenDto>;
-export type RefreshAdminTokenMutationError = ErrorType<void>;
+export type RefreshAdminTokenMutationError = ErrorType<ErrorResponseDto | ErrorResponseDto>;
 
 /**
  * @summary Rotate a refresh token
  */
-export const useRefreshAdminToken = <TError = ErrorType<void>, TContext = unknown>(
+export const useRefreshAdminToken = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof refreshAdminToken>>,

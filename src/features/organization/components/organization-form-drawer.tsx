@@ -21,6 +21,11 @@ interface OrganizationFormValues {
   addressLine: string;
   district: string;
   province: string;
+  provinceCode?: string;
+  districtCode?: string;
+  wardCode?: string;
+  latitude?: string;
+  longitude?: string;
   warehouseCode: string;
   warehouseName: string;
 }
@@ -33,6 +38,12 @@ const schema: yup.ObjectSchema<OrganizationFormValues> = yup.object({
   addressLine: yup.string().trim().required('Nhập địa chỉ'),
   district: yup.string().trim().required('Nhập quận/huyện'),
   province: yup.string().trim().required('Nhập tỉnh/thành phố'),
+  provinceCode: yup.string().trim().optional(),
+  // GHN dùng DistrictID dạng số và WardCode dạng chuỗi (có thể có chữ, ví dụ 1B2729).
+  districtCode: yup.string().trim().matches(/^\d*$/, 'Mã quận GHN là số').optional(),
+  wardCode: yup.string().trim().matches(/^[A-Za-z0-9]*$/, 'Mã phường GHN không hợp lệ').optional(),
+  latitude: yup.string().trim().test('lat', 'Vĩ độ từ -90 đến 90', (v) => isCoordinate(v, 90)).optional(),
+  longitude: yup.string().trim().test('lng', 'Kinh độ từ -180 đến 180', (v) => isCoordinate(v, 180)).optional(),
   warehouseCode: yup.string().trim().matches(/^[A-Z0-9-]+$/, 'Mã kho không hợp lệ').required('Nhập mã kho'),
   warehouseName: yup.string().trim().required('Nhập tên kho'),
 });
@@ -45,6 +56,11 @@ const defaults: OrganizationFormValues = {
   addressLine: '',
   district: '',
   province: '',
+  provinceCode: '',
+  districtCode: '',
+  wardCode: '',
+  latitude: '',
+  longitude: '',
   warehouseCode: '',
   warehouseName: '',
 };
@@ -96,6 +112,11 @@ export function OrganizationFormDrawer({
             addressLine: branch.address.addressLine,
             district: branch.address.district,
             province: branch.address.province,
+            provinceCode: branch.address.provinceCode ?? '',
+            districtCode: branch.address.districtCode ?? '',
+            wardCode: branch.address.wardCode ?? '',
+            latitude: branch.address.latitude?.toString() ?? '',
+            longitude: branch.address.longitude?.toString() ?? '',
             warehouseCode: warehouse.code,
             warehouseName: warehouse.name,
           }
@@ -104,10 +125,18 @@ export function OrganizationFormDrawer({
   }, [branch, form, open, warehouse]);
 
   const submit = form.handleSubmit((values) => {
+    // CONTRACT: API ghi đè toàn bộ address; gửi đủ mã GHN và toạ độ để lần sửa tên/địa chỉ không xoá
+    // mất dữ liệu mà phí GHN (from_district_id) và bán kính giao miễn phí cần.
+    const optional = (value?: string) => (value?.trim() ? value.trim() : undefined);
     const address = {
       addressLine: values.addressLine,
       district: values.district,
       province: values.province,
+      provinceCode: optional(values.provinceCode),
+      districtCode: optional(values.districtCode),
+      wardCode: optional(values.wardCode),
+      latitude: optional(values.latitude) === undefined ? undefined : Number(values.latitude),
+      longitude: optional(values.longitude) === undefined ? undefined : Number(values.longitude),
     };
     if (branch && warehouse) {
       update.mutate({
@@ -172,6 +201,15 @@ export function OrganizationFormDrawer({
           {field('district', 'Quận/Huyện', { required: true })}
           {field('province', 'Tỉnh/Thành phố', { required: true })}
         </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {field('provinceCode', 'Mã tỉnh GHN')}
+          {field('districtCode', 'Mã quận GHN (DistrictID)')}
+          {field('wardCode', 'Mã phường GHN (WardCode)')}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {field('latitude', 'Vĩ độ kho')}
+          {field('longitude', 'Kinh độ kho')}
+        </div>
         <TypographyTitle />
         <div className="grid gap-4 sm:grid-cols-2">
           {field('warehouseCode', 'Mã kho', { disabled: Boolean(branch), required: true })}
@@ -180,6 +218,12 @@ export function OrganizationFormDrawer({
       </Form>
     </Drawer>
   );
+}
+
+function isCoordinate(value: string | undefined, limit: number) {
+  if (!value?.trim()) return true;
+  const number = Number(value);
+  return Number.isFinite(number) && Math.abs(number) <= limit;
 }
 
 function TypographyTitle() {

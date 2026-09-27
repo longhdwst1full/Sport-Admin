@@ -135,6 +135,7 @@ export const StockTransferStatus = {
   SUBMITTED: 'SUBMITTED',
   SHIPPED: 'SHIPPED',
   RECEIVED: 'RECEIVED',
+  CANCELLED: 'CANCELLED',
 } as const;
 
 export interface StockTransferListDto {
@@ -170,11 +171,45 @@ export interface StockTransferDetailDto {
   shippedAt?: string | null;
   /** @nullable */
   receivedAt?: string | null;
+  /** @nullable */
+  cancelledAt?: string | null;
+  /** @nullable */
+  cancelReason?: string | null;
   items: StockTransferItemDto[];
   /** @nullable */
   shippedByDisplayName?: string | null;
   /** @nullable */
   receivedByDisplayName?: string | null;
+  /** @nullable */
+  cancelledByDisplayName?: string | null;
+}
+
+export interface UpdateStockTransferDto {
+  /**
+   * Current optimistic-lock version
+   * @pattern ^[1-9][0-9]*$
+   */
+  version: string;
+  /**
+   * @minLength 3
+   * @maxLength 1000
+   */
+  reason?: string;
+  /** Khi gửi thì thay toàn bộ danh sách hàng của phiếu */
+  items?: CreateStockTransferItemDto[];
+}
+
+export interface CancelStockTransferDto {
+  /**
+   * Current optimistic-lock version
+   * @pattern ^[1-9][0-9]*$
+   */
+  version: string;
+  /**
+   * @minLength 3
+   * @maxLength 1000
+   */
+  reason: string;
 }
 
 export interface StockTransferTransitionDto {
@@ -316,6 +351,10 @@ export interface StockTransferSummaryDto {
   shippedAt?: string | null;
   /** @nullable */
   receivedAt?: string | null;
+  /** @nullable */
+  cancelledAt?: string | null;
+  /** @nullable */
+  cancelReason?: string | null;
 }
 
 export interface CreateStockTransferItemDto {

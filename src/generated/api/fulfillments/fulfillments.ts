@@ -687,6 +687,88 @@ export const useShipAdminFulfillment = <
 };
 
 /**
+ * Chỉ áp cho carrierShipmentStatus = CREATE_FAILED; chạy ngay một lượt và trả giao vận mới. 409 FULFILLMENT_CARRIER_SHIPMENT_NOT_RETRYABLE khi không ở trạng thái lỗi hoặc đang có lượt khác chạy.
+ * @summary Tạo lại vận đơn GHN tự động đang ở trạng thái tạo lỗi
+ */
+export const retryAdminFulfillmentCarrierShipment = (id: string, signal?: AbortSignal) => {
+  return apiFetcher<FulfillmentDetailDto>({
+    url: `/api/v1/admin/fulfillments/${id}/carrier-shipment/retry`,
+    method: 'POST',
+    signal,
+  });
+};
+
+export const getRetryAdminFulfillmentCarrierShipmentMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retryAdminFulfillmentCarrierShipment>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retryAdminFulfillmentCarrierShipment>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ['retryAdminFulfillmentCarrierShipment'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retryAdminFulfillmentCarrierShipment>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return retryAdminFulfillmentCarrierShipment(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetryAdminFulfillmentCarrierShipmentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof retryAdminFulfillmentCarrierShipment>>
+>;
+
+export type RetryAdminFulfillmentCarrierShipmentMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Tạo lại vận đơn GHN tự động đang ở trạng thái tạo lỗi
+ */
+export const useRetryAdminFulfillmentCarrierShipment = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retryAdminFulfillmentCarrierShipment>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retryAdminFulfillmentCarrierShipment>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getRetryAdminFulfillmentCarrierShipmentMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
  * @summary Lấy URL in phiếu giao từ hãng vận chuyển
  */
 export const createAdminFulfillmentLabel = (id: string, signal?: AbortSignal) => {

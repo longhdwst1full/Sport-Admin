@@ -22,12 +22,13 @@
 
 ## Generated operation
 
-`useListInventoryBalances`, `useListInventoryMovements`, `useListStockAdjustments`, `useGetStockAdjustment`, `useCreateStockAdjustment`, `useListStockTransfers`, `useGetStockTransfer`, `useCreateStockTransfer`, `useSubmitStockTransfer`, `useShipStockTransfer`, `useReceiveStockTransfer`, `useSearchActiveAdminWarehouses`, `useSearchActiveAdminProductVariants`.
+`useListInventoryBalances`, `useListInventoryMovements`, `useListStockAdjustments`, `useGetStockAdjustment`, `useCreateStockAdjustment`, `useListStockTransfers`, `useGetStockTransfer`, `useCreateStockTransfer`, `useSubmitStockTransfer`, `useShipStockTransfer`, `useReceiveStockTransfer`, `useUpdateStockTransfer`, `useCancelStockTransfer`, `useSearchActiveAdminWarehouses`, `useSearchActiveAdminProductVariants`.
 
 ## Bất biến nghiệp vụ
 
 - Movement là append-only: không sửa, không xoá. Sai sót được sửa bằng bút toán điều chỉnh mới.
 - Chuyển kho theo trạng thái `DRAFT → SUBMITTED → SHIPPED → RECEIVED`; không nhảy bước ở FE.
+- Sửa lý do/danh sách SKU chỉ khi `DRAFT` (kho xuất/nhận cố định); huỷ khi `DRAFT`/`SUBMITTED` kèm lý do, sau `SHIPPED` thì không huỷ. Nút hiển thị theo `model/stock-transfer-actions.policy.ts`; API vẫn kiểm quyền, branch scope và version.
 - `reserved` không bao giờ vượt `on_hand`; con số hiển thị lấy nguyên từ API, không tự tính lại.
 
 ## Nhập tồn đầu từ file

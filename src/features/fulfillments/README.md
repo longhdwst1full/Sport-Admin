@@ -46,3 +46,9 @@ Route gác bằng `fulfillment.view` (scope `GLOBAL;BRANCH;WAREHOUSE;OWN`). Back
 | Version | Date | Change summary |
 | --- | --- | --- |
 | 1.0.0 | 2026-09-13 | Tạo feature, lấp khoảng trống `listAdminFulfillments` chưa được dùng. |
+
+## Vận đơn GHN tự tạo (D14)
+
+- `carrierShipmentStatus` (`PENDING`/`CREATING`/`CREATED`/`CREATE_FAILED`, `null` = không áp dụng) hiện bằng `CarrierShipmentStatusTag` ở danh sách và panel giao vận của đơn; lỗi gần nhất lấy từ `carrierShipmentError`.
+- Nút "Tạo lại vận đơn" chỉ hiện khi `CREATE_FAILED` và có quyền `fulfillment.ship`; gọi `retryAdminFulfillmentCarrierShipment`, API trả 409 nếu không còn ở trạng thái lỗi.
+- Khi vận đơn đã `CREATED`, bước bàn giao không hỏi mã vận đơn và không tạo vận đơn thứ hai.

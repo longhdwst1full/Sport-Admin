@@ -44,6 +44,7 @@ import {
 import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
 import { OrderReturnPanel } from '@/features/returns';
 import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
+import { fulfillmentStatusPresentation } from '@/features/fulfillments';
 
 interface OrderDetailDrawerProps {
   orderId?: string;
@@ -321,6 +322,41 @@ export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) 
                       {order.paymentMethod === 'COD' ? 'Tiền mặt khi nhận (COD)' : 'Chuyển khoản trực tuyến'}
                     </span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Thanh toán lúc:</span>
+                    <span className="text-slate-700">{order.paidAt ? new Date(order.paidAt).toLocaleString('vi-VN') : 'Chưa thanh toán'}</span>
+                  </div>
+                  {order.shipment && (
+                    <>
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+                        <span className="text-slate-500">Giao vận:</span>
+                        <Tag color={fulfillmentStatusPresentation[order.shipment.status]?.color ?? 'default'} className="m-0 font-medium text-[11px]">
+                          {fulfillmentStatusPresentation[order.shipment.status]?.label ?? order.shipment.status}
+                        </Tag>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-slate-500">Vận đơn:</span>
+                        <span className="text-right font-medium text-slate-700">
+                          {order.shipment.carrierCode ? `${order.shipment.carrierCode} · ` : ''}
+                          {order.shipment.trackingNo && /^https?:\/\//.test(order.shipment.trackingUrl ?? '') ? (
+                            <a href={order.shipment.trackingUrl ?? undefined} target="_blank" rel="noopener noreferrer">{order.shipment.trackingNo}</a>
+                          ) : (order.shipment.trackingNo ?? 'Chưa có')}
+                        </span>
+                      </div>
+                      {order.shipment.shippedAt && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Bàn giao lúc:</span>
+                          <span className="text-slate-700">{new Date(order.shipment.shippedAt).toLocaleString('vi-VN')}</span>
+                        </div>
+                      )}
+                      {order.shipment.deliveredAt && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Giao thành công:</span>
+                          <span className="text-slate-700">{new Date(order.shipment.deliveredAt).toLocaleString('vi-VN')}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div className="flex items-center justify-between border-t border-slate-100 pt-2">
                     <span className="text-slate-500">Chi nhánh xuất:</span>
                     <span className="font-medium text-slate-800">{order.branchName}</span>

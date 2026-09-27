@@ -14,6 +14,7 @@ const statusMeta = {
   SUBMITTED: { label: 'Chờ xuất', color: 'blue' },
   SHIPPED: { label: 'Đang vận chuyển', color: 'orange' },
   RECEIVED: { label: 'Đã nhận', color: 'green' },
+  CANCELLED: { label: 'Đã huỷ', color: 'red' },
 } as const;
 
 const formatTime = (value?: string | null) => value

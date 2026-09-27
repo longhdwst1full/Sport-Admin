@@ -2,15 +2,18 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Drawer, Form, Input, InputNumber, Select } from 'antd';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import {
+  getGetStockTransferQueryKey,
   getListStockTransfersQueryKey,
   useCreateStockTransfer,
+  useUpdateStockTransfer,
 } from '@/generated/api/inventory/inventory';
+import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory.schemas';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { getApiErrorMessage } from '@/lib/api/error';
 
@@ -45,15 +48,26 @@ const schema: yup.ObjectSchema<StockTransferValues> = yup.object({
     .required(),
 });
 
+const emptyValues: StockTransferValues = {
+  fromWarehouseCode: '',
+  toWarehouseCode: '',
+  reason: '',
+  items: [{ sku: '', requestedQuantity: 1 }],
+};
+
+/** Tạo phiếu nháp, hoặc sửa lý do/danh sách SKU của phiếu DRAFT khi truyền `transfer`. */
 export function StockTransferCreateDrawer({
   open,
+  transfer,
   onClose,
   onCreated,
 }: {
   open: boolean;
+  transfer?: StockTransferDetailDto;
   onClose: () => void;
   onCreated?: (id: string) => void;
 }) {
+  const editing = Boolean(transfer);
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const idempotencyKey = useRef(crypto.randomUUID());
@@ -63,13 +77,17 @@ export function StockTransferCreateDrawer({
   const [debouncedSkuSearch] = useDebounce(skuSearch.trim(), 300);
   const form = useForm<StockTransferValues>({
     resolver: yupResolver(schema),
-    defaultValues: {
-      fromWarehouseCode: '',
-      toWarehouseCode: '',
-      reason: '',
-      items: [{ sku: '', requestedQuantity: 1 }],
-    },
+    defaultValues: emptyValues,
   });
+  useEffect(() => {
+    if (!open) return;
+    form.reset(transfer ? {
+      fromWarehouseCode: transfer.fromWarehouseCode,
+      toWarehouseCode: transfer.toWarehouseCode,
+      reason: transfer.reason,
+      items: transfer.items.map((item) => ({ sku: item.sku, requestedQuantity: item.requestedQuantity })),
+    } : emptyValues);
+  }, [form, open, transfer]);
   const lines = useFieldArray({ control: form.control, name: 'items' });
   const warehouses = useSearchActiveAdminWarehouses({
     search: debouncedWarehouseSearch || undefined,
@@ -101,34 +119,61 @@ export function StockTransferCreateDrawer({
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo phiếu chuyển kho.')),
     },
   });
-  const submit = form.handleSubmit((values) => mutation.mutate({ data: values }));
+  const update = useUpdateStockTransfer({
+    mutation: {
+      onSuccess: async (result) => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() }),
+          queryClient.invalidateQueries({ queryKey: getGetStockTransferQueryKey(result.id) }),
+        ]);
+        void message.success(`Đã cập nhật phiếu ${result.transferNo}.`);
+        onClose();
+      },
+      onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể cập nhật phiếu chuyển kho.')),
+    },
+  });
+  const submit = form.handleSubmit((values) => {
+    if (!transfer) {
+      mutation.mutate({ data: values });
+      return;
+    }
+    // CONTRACT: API chỉ cho sửa lý do và danh sách SKU của phiếu DRAFT; kho xuất/nhận cố định sau khi tạo.
+    // version cũ trả 409 STOCK_TRANSFER_VERSION_STALE để không ghi đè thay đổi của người khác.
+    update.mutate({
+      id: transfer.id,
+      data: { version: transfer.version, reason: values.reason, items: values.items },
+    });
+  });
+  const pending = mutation.isPending || update.isPending;
 
   return (
     <Drawer
-      title="Tạo phiếu chuyển kho"
+      title={transfer ? `Sửa phiếu ${transfer.transferNo}` : 'Tạo phiếu chuyển kho'}
       width={720}
       open={open}
       onClose={onClose}
       destroyOnHidden
-      extra={<Button type="primary" loading={mutation.isPending} onClick={() => void submit()}>Lưu bản nháp</Button>}
+      extra={<Button type="primary" loading={pending} onClick={() => void submit()}>Lưu bản nháp</Button>}
     >
       <Alert
         className="mb-5"
         type="info"
         showIcon
-        message="Phiếu mới được lưu ở trạng thái Nháp"
-        description="Tồn kho chỉ giảm khi xác nhận xuất. V1 xuất toàn bộ số lượng đã yêu cầu, không tách nhiều đợt."
+        message={editing ? 'Chỉ sửa được khi phiếu còn Nháp' : 'Phiếu mới được lưu ở trạng thái Nháp'}
+        description={editing
+          ? 'Kho xuất và kho nhận không đổi được; danh sách SKU gửi lên sẽ thay toàn bộ danh sách cũ.'
+          : 'Tồn kho chỉ giảm khi xác nhận xuất. V1 xuất toàn bộ số lượng đã yêu cầu, không tách nhiều đợt.'}
       />
       <Form layout="vertical" onFinish={() => void submit()}>
         <div className="grid gap-4 md:grid-cols-2">
           <Form.Item label="Kho xuất" required validateStatus={form.formState.errors.fromWarehouseCode ? 'error' : undefined} help={form.formState.errors.fromWarehouseCode?.message}>
             <Controller name="fromWarehouseCode" control={form.control} render={({ field }) => (
-              <Select {...field} showSearch filterOption={false} onSearch={setWarehouseSearch} loading={warehouses.isFetching} options={warehouseOptions} placeholder="Chọn kho xuất" />
+              <Select {...field} disabled={editing} showSearch filterOption={false} onSearch={setWarehouseSearch} loading={warehouses.isFetching} options={warehouseOptions} placeholder="Chọn kho xuất" />
             )} />
           </Form.Item>
           <Form.Item label="Kho nhận" required validateStatus={form.formState.errors.toWarehouseCode ? 'error' : undefined} help={form.formState.errors.toWarehouseCode?.message}>
             <Controller name="toWarehouseCode" control={form.control} render={({ field }) => (
-              <Select {...field} showSearch filterOption={false} onSearch={setWarehouseSearch} loading={warehouses.isFetching} options={warehouseOptions} placeholder="Chọn kho nhận" />
+              <Select {...field} disabled={editing} showSearch filterOption={false} onSearch={setWarehouseSearch} loading={warehouses.isFetching} options={warehouseOptions} placeholder="Chọn kho nhận" />
             )} />
           </Form.Item>
         </div>

@@ -38,6 +38,12 @@ export interface ErrorResponseDto {
   requestId?: string;
 }
 
+/**
+ * Vận đơn GHN tự tạo sau thanh toán/xác nhận COD. null = không áp dụng (tạo vận đơn lúc ship như trước).
+ * @nullable
+ */
+export type FulfillmentDetailDtoCarrierShipmentStatus = CarrierShipmentStatus | null;
+
 export interface FulfillmentDetailDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
@@ -53,6 +59,16 @@ export interface FulfillmentDetailDto {
   carrierCode?: string | null;
   /** @nullable */
   trackingNo?: string | null;
+  /**
+   * Vận đơn GHN tự tạo sau thanh toán/xác nhận COD. null = không áp dụng (tạo vận đơn lúc ship như trước).
+   * @nullable
+   */
+  carrierShipmentStatus?: FulfillmentDetailDtoCarrierShipmentStatus;
+  /**
+   * Lý do lần tạo vận đơn gần nhất thất bại
+   * @nullable
+   */
+  carrierShipmentError?: string | null;
   recipientName: string;
   recipientPhone: string;
   /** @nullable */
@@ -133,6 +149,12 @@ export interface ReceiveReturnDto {
   reason: string;
 }
 
+/**
+ * Vận đơn GHN tự tạo sau thanh toán/xác nhận COD. null = không áp dụng (tạo vận đơn lúc ship như trước).
+ * @nullable
+ */
+export type FulfillmentSummaryDtoCarrierShipmentStatus = CarrierShipmentStatus | null;
+
 export interface FulfillmentSummaryDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
@@ -148,6 +170,16 @@ export interface FulfillmentSummaryDto {
   carrierCode?: string | null;
   /** @nullable */
   trackingNo?: string | null;
+  /**
+   * Vận đơn GHN tự tạo sau thanh toán/xác nhận COD. null = không áp dụng (tạo vận đơn lúc ship như trước).
+   * @nullable
+   */
+  carrierShipmentStatus?: FulfillmentSummaryDtoCarrierShipmentStatus;
+  /**
+   * Lý do lần tạo vận đơn gần nhất thất bại
+   * @nullable
+   */
+  carrierShipmentError?: string | null;
   recipientName: string;
   recipientPhone: string;
   /** @nullable */
@@ -161,6 +193,20 @@ export interface ErrorDetailDto {
   code: string;
   message: string;
 }
+
+/**
+ * Vận đơn GHN tự tạo sau thanh toán/xác nhận COD. null = không áp dụng (tạo vận đơn lúc ship như trước).
+ */
+export type CarrierShipmentStatus =
+  (typeof CarrierShipmentStatus)[keyof typeof CarrierShipmentStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CarrierShipmentStatus = {
+  PENDING: 'PENDING',
+  CREATING: 'CREATING',
+  CREATED: 'CREATED',
+  CREATE_FAILED: 'CREATE_FAILED',
+} as const;
 
 export interface FulfillmentHistoryDto {
   sequenceNo: number;

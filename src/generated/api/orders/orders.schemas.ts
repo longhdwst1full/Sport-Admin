@@ -49,6 +49,12 @@ export interface CreatePosOrderDto {
   branchId?: string;
 }
 
+/**
+ * Null khi đơn chưa có fulfillment
+ * @nullable
+ */
+export type OrderDetailDtoShipment = OrderShipmentDto | null;
+
 export interface OrderDetailDto {
   /** @pattern ^[1-9][0-9]*$ */
   id: string;
@@ -77,6 +83,16 @@ export interface OrderDetailDto {
   customerNote?: string | null;
   items: OrderItemDto[];
   statusHistory: OrderStatusHistoryDto[];
+  /**
+   * Lúc thanh toán được xác nhận thành công
+   * @nullable
+   */
+  paidAt?: string | null;
+  /**
+   * Null khi đơn chưa có fulfillment
+   * @nullable
+   */
+  shipment?: OrderDetailDtoShipment;
 }
 
 export type OrderStatusGroup = (typeof OrderStatusGroup)[keyof typeof OrderStatusGroup];
@@ -303,6 +319,21 @@ export interface OrderStatusHistoryDto {
   reason?: string | null;
   actorType: string;
   createdAt: string;
+}
+
+export interface OrderShipmentDto {
+  /** Trạng thái fulfillment: PENDING, PICKING, PACKED, SHIPPED, DELIVERED, DELIVERY_FAILED, RETURNED… */
+  status: string;
+  /** @nullable */
+  carrierCode?: string | null;
+  /** @nullable */
+  trackingNo?: string | null;
+  /** @nullable */
+  trackingUrl?: string | null;
+  /** @nullable */
+  shippedAt?: string | null;
+  /** @nullable */
+  deliveredAt?: string | null;
 }
 
 export interface OrderSummaryDto {

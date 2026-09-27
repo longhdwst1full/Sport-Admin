@@ -22,6 +22,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CancelStockTransferDto,
   CreateStockAdjustmentDto,
   CreateStockTransferDto,
   ErrorResponseDto,
@@ -40,6 +41,7 @@ import type {
   StockTransferListDto,
   StockTransferTransitionDto,
   SummarizeInventoryBalancesParams,
+  UpdateStockTransferDto,
 } from './inventory.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
@@ -1138,6 +1140,218 @@ export function useGetStockTransfer<
 
   return query;
 }
+
+/**
+ * Chỉ phiếu DRAFT; phiếu đã gửi duyệt phải huỷ rồi tạo lại. 409 STOCK_TRANSFER_INVALID_STATUS khi không phải DRAFT, STOCK_TRANSFER_VERSION_STALE khi version cũ.
+ * @summary Sửa lý do và/hoặc thay toàn bộ danh sách hàng của phiếu DRAFT
+ */
+export const updateStockTransfer = (
+  id: string,
+  updateStockTransferDto: BodyType<UpdateStockTransferDto>,
+) => {
+  return apiFetcher<StockTransferDetailDto>({
+    url: `/api/v1/admin/inventory/transfers/${id}`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateStockTransferDto,
+  });
+};
+
+export const getUpdateStockTransferMutationOptions = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateStockTransfer>>,
+    TError,
+    { id: string; data: BodyType<UpdateStockTransferDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateStockTransfer>>,
+  TError,
+  { id: string; data: BodyType<UpdateStockTransferDto> },
+  TContext
+> => {
+  const mutationKey = ['updateStockTransfer'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateStockTransfer>>,
+    { id: string; data: BodyType<UpdateStockTransferDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateStockTransfer(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateStockTransferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateStockTransfer>>
+>;
+export type UpdateStockTransferMutationBody = BodyType<UpdateStockTransferDto>;
+export type UpdateStockTransferMutationError = ErrorType<
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+>;
+
+/**
+ * @summary Sửa lý do và/hoặc thay toàn bộ danh sách hàng của phiếu DRAFT
+ */
+export const useUpdateStockTransfer = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateStockTransfer>>,
+      TError,
+      { id: string; data: BodyType<UpdateStockTransferDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateStockTransfer>>,
+  TError,
+  { id: string; data: BodyType<UpdateStockTransferDto> },
+  TContext
+> => {
+  const mutationOptions = getUpdateStockTransferMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Không phát sinh movement vì chưa xuất kho. Phiếu đã SHIPPED/RECEIVED trả 409 STOCK_TRANSFER_CANCEL_AFTER_SHIPPED; phiếu đã CANCELLED trả lại trạng thái hiện tại.
+ * @summary Huỷ phiếu DRAFT hoặc từ chối phiếu SUBMITTED
+ */
+export const cancelStockTransfer = (
+  id: string,
+  cancelStockTransferDto: BodyType<CancelStockTransferDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<StockTransferDetailDto>({
+    url: `/api/v1/admin/inventory/transfers/${id}/cancel`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: cancelStockTransferDto,
+    signal,
+  });
+};
+
+export const getCancelStockTransferMutationOptions = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelStockTransfer>>,
+    TError,
+    { id: string; data: BodyType<CancelStockTransferDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelStockTransfer>>,
+  TError,
+  { id: string; data: BodyType<CancelStockTransferDto> },
+  TContext
+> => {
+  const mutationKey = ['cancelStockTransfer'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelStockTransfer>>,
+    { id: string; data: BodyType<CancelStockTransferDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return cancelStockTransfer(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelStockTransferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelStockTransfer>>
+>;
+export type CancelStockTransferMutationBody = BodyType<CancelStockTransferDto>;
+export type CancelStockTransferMutationError = ErrorType<
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+>;
+
+/**
+ * @summary Huỷ phiếu DRAFT hoặc từ chối phiếu SUBMITTED
+ */
+export const useCancelStockTransfer = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelStockTransfer>>,
+      TError,
+      { id: string; data: BodyType<CancelStockTransferDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelStockTransfer>>,
+  TError,
+  { id: string; data: BodyType<CancelStockTransferDto> },
+  TContext
+> => {
+  const mutationOptions = getCancelStockTransferMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 /**
  * @summary Submit a DRAFT transfer

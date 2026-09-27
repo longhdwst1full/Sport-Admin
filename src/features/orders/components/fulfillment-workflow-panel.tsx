@@ -17,12 +17,14 @@ import {
   packAdminFulfillment,
   pickAdminFulfillment,
   receiveAdminFulfillmentReturn,
+  retryAdminFulfillmentCarrierShipment,
   shipAdminFulfillment,
   useGetAdminFulfillmentByOrder,
 } from '@/generated/api/fulfillments/fulfillments';
 import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { CarrierShipmentStatusTag } from '@/features/fulfillments';
 
 type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive';
 
@@ -78,6 +80,35 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
     return [] as FulfillmentAction[];
   }, [canPack, canPick, canShip, canUpdateDelivery, fulfillment]);
 
+  // CACHE: fulfillment transition đồng thời thay đổi Order, Inventory hoặc Payment report projection.
+  const applyUpdated = async (updated: FulfillmentDetailDto) => {
+    queryClient.setQueryData(getGetAdminFulfillmentByOrderQueryKey(orderId), updated);
+    queryClient.setQueryData(getGetAdminFulfillmentQueryKey(updated.id), updated);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: getListAdminFulfillmentsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminOrderQueryKey(orderId) }),
+      queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() }),
+    ]);
+  };
+
+  // Chỉ áp cho CREATE_FAILED; API chạy ngay một lượt tạo vận đơn và trả 409 nếu không còn ở trạng thái lỗi.
+  const retryCarrier = useMutation<FulfillmentDetailDto, unknown, string>({
+    mutationFn: (fulfillmentId) => retryAdminFulfillmentCarrierShipment(fulfillmentId),
+    retry: false,
+    onSuccess: async (updated) => {
+      await applyUpdated(updated);
+      if (updated.carrierShipmentStatus === 'CREATE_FAILED') {
+        void message.error(updated.carrierShipmentError || 'GHN vẫn từ chối tạo vận đơn.');
+      } else {
+        void message.success('Đã tạo lại vận đơn GHN');
+      }
+    },
+    onError: async (error) => {
+      await fulfillmentQuery.refetch();
+      void message.error(getApiErrorMessage(error, 'Không thể tạo lại vận đơn.'));
+    },
+  });
+
   const mutation = useMutation<FulfillmentDetailDto, unknown>({
     mutationFn: async () => {
       if (!fulfillment || !action) throw new Error('Thiếu thông tin thao tác giao vận');
@@ -113,14 +144,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
     },
     retry: false,
     onSuccess: async (updated) => {
-      // CACHE: fulfillment transition đồng thời thay đổi Order, Inventory hoặc Payment report projection.
-      queryClient.setQueryData(getGetAdminFulfillmentByOrderQueryKey(orderId), updated);
-      queryClient.setQueryData(getGetAdminFulfillmentQueryKey(updated.id), updated);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: getListAdminFulfillmentsQueryKey() }),
-        queryClient.invalidateQueries({ queryKey: getGetAdminOrderQueryKey(orderId) }),
-        queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() }),
-      ]);
+      await applyUpdated(updated);
       void message.success('Đã cập nhật trạng thái giao vận');
       closeModal();
     },
@@ -171,7 +195,26 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
         <Descriptions.Item label="Đơn vị vận chuyển">{fulfillment.carrierCode || 'Nhân viên / thỏa thuận'}</Descriptions.Item>
         <Descriptions.Item label="Mã vận đơn">{fulfillment.trackingNo || 'Chưa có'}</Descriptions.Item>
         <Descriptions.Item label="Phiên bản">{fulfillment.version}</Descriptions.Item>
+        {fulfillment.carrierShipmentStatus && (
+          <Descriptions.Item label="Vận đơn GHN tự tạo">
+            <CarrierShipmentStatusTag status={fulfillment.carrierShipmentStatus} />
+          </Descriptions.Item>
+        )}
       </Descriptions>
+      {fulfillment.carrierShipmentStatus === 'CREATE_FAILED' && (
+        <Alert
+          className="mt-4"
+          type="error"
+          showIcon
+          message="Tạo vận đơn GHN thất bại"
+          description={fulfillment.carrierShipmentError || 'GHN không trả lý do cụ thể.'}
+          action={canShip ? (
+            <Button danger loading={retryCarrier.isPending} onClick={() => retryCarrier.mutate(fulfillment.id)}>
+              Tạo lại vận đơn
+            </Button>
+          ) : undefined}
+        />
+      )}
       <Timeline
         className="mt-5"
         items={fulfillment.history.map((item) => ({
@@ -208,7 +251,10 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       >
         {action && <Typography.Paragraph type="secondary">{actionPresentation[action].note}</Typography.Paragraph>}
         <Space direction="vertical" size="middle" className="w-full">
-          {action === 'ship' && (
+          {action === 'ship' && fulfillment.carrierShipmentStatus === 'CREATED' && (
+            <Alert type="info" showIcon message={`Đã có vận đơn GHN ${fulfillment.trackingNo ?? ''}`.trim()} description="Bàn giao chỉ ghi nhận xuất kho, không tạo vận đơn thứ hai." />
+          )}
+          {action === 'ship' && fulfillment.carrierShipmentStatus !== 'CREATED' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block font-medium" htmlFor="carrier-code">Đơn vị vận chuyển</label>
