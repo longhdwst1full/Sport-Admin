@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   CheckoutQuotePaymentMethod,
+  CheckoutShippingArrangement,
   ShippingMethod,
   CheckoutQuoteStatus,
   type AdminShippingConsultationDto,
@@ -20,6 +21,9 @@ const demoRows: AdminShippingConsultationDto[] = [
     branchName: 'Chi nhánh Quận 7',
     paymentMethod: CheckoutQuotePaymentMethod.COD,
     shippingMethod: ShippingMethod.MANUAL_EXTERNAL,
+    shippingArrangement: CheckoutShippingArrangement.STANDARD,
+    shippingFeePending: false,
+    freeDeliveryReason: null,
     shippingProvider: 'COACH_BUS',
     itemSubtotal: '18500000',
     shippingTotal: null,

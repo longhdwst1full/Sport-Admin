@@ -35,6 +35,20 @@ export interface UpdateManualShippingQuoteDto {
   expectedVersion: number;
 }
 
+/**
+ * Chỉ có khi shippingMethod = BRANCH_FREE.
+ * @nullable
+ */
+export type CheckoutQuoteDtoFreeDeliveryReason =
+  | (typeof CheckoutQuoteDtoFreeDeliveryReason)[keyof typeof CheckoutQuoteDtoFreeDeliveryReason]
+  | null;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CheckoutQuoteDtoFreeDeliveryReason = {
+  BRANCH_DISTRICT: 'BRANCH_DISTRICT',
+  WITHIN_RADIUS: 'WITHIN_RADIUS',
+} as const;
+
 export interface CheckoutQuoteDto {
   /** Opaque token used to confirm this exact quote */
   checkoutToken: string;
@@ -44,8 +58,17 @@ export interface CheckoutQuoteDto {
   /** @pattern ^[1-9][0-9]*$ */
   warehouseId: string;
   branchName: string;
+  /** Checkout mới từ Storefront chỉ có COD/VNPAY; BANK_TRANSFER chỉ xuất hiện ở báo giá cũ. */
   paymentMethod: CheckoutQuotePaymentMethod;
   shippingMethod: ShippingMethod;
+  shippingArrangement: CheckoutShippingArrangement;
+  /** true khi phí vận chuyển do shop báo và thu riêng ngoài hệ thống (SHOP_ARRANGED); shippingTotal khi đó là 0.00 và grandTotal chỉ gồm tiền hàng. */
+  shippingFeePending: boolean;
+  /**
+   * Chỉ có khi shippingMethod = BRANCH_FREE.
+   * @nullable
+   */
+  freeDeliveryReason: CheckoutQuoteDtoFreeDeliveryReason;
   /** @nullable */
   shippingProvider?: string | null;
   /** @nullable */
@@ -63,6 +86,20 @@ export interface CheckoutQuoteDto {
   items: CheckoutQuoteItemDto[];
   expiresAt: string;
 }
+
+/**
+ * Chỉ có khi shippingMethod = BRANCH_FREE.
+ * @nullable
+ */
+export type AdminShippingConsultationDtoFreeDeliveryReason =
+  | (typeof AdminShippingConsultationDtoFreeDeliveryReason)[keyof typeof AdminShippingConsultationDtoFreeDeliveryReason]
+  | null;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminShippingConsultationDtoFreeDeliveryReason = {
+  BRANCH_DISTRICT: 'BRANCH_DISTRICT',
+  WITHIN_RADIUS: 'WITHIN_RADIUS',
+} as const;
 
 /**
  * STOCK_SPLIT_ACROSS_BRANCHES: không chi nhánh nào đủ cả giỏ; phải chuyển kho phần thiếu trước khi báo giá
@@ -88,8 +125,17 @@ export interface AdminShippingConsultationDto {
   /** @pattern ^[1-9][0-9]*$ */
   warehouseId: string;
   branchName: string;
+  /** Checkout mới từ Storefront chỉ có COD/VNPAY; BANK_TRANSFER chỉ xuất hiện ở báo giá cũ. */
   paymentMethod: CheckoutQuotePaymentMethod;
   shippingMethod: ShippingMethod;
+  shippingArrangement: CheckoutShippingArrangement;
+  /** true khi phí vận chuyển do shop báo và thu riêng ngoài hệ thống (SHOP_ARRANGED); shippingTotal khi đó là 0.00 và grandTotal chỉ gồm tiền hàng. */
+  shippingFeePending: boolean;
+  /**
+   * Chỉ có khi shippingMethod = BRANCH_FREE.
+   * @nullable
+   */
+  freeDeliveryReason: AdminShippingConsultationDtoFreeDeliveryReason;
   /** @nullable */
   shippingProvider?: string | null;
   /** @nullable */
@@ -134,6 +180,9 @@ export const CheckoutQuoteStatus = {
   AWAITING_SHIPPING_CONSULTATION: 'AWAITING_SHIPPING_CONSULTATION',
 } as const;
 
+/**
+ * Checkout mới từ Storefront chỉ có COD/VNPAY; BANK_TRANSFER chỉ xuất hiện ở báo giá cũ.
+ */
 export type CheckoutQuotePaymentMethod =
   (typeof CheckoutQuotePaymentMethod)[keyof typeof CheckoutQuotePaymentMethod];
 
@@ -141,6 +190,7 @@ export type CheckoutQuotePaymentMethod =
 export const CheckoutQuotePaymentMethod = {
   BANK_TRANSFER: 'BANK_TRANSFER',
   COD: 'COD',
+  VNPAY: 'VNPAY',
 } as const;
 
 export type ShippingMethod = (typeof ShippingMethod)[keyof typeof ShippingMethod];
@@ -151,6 +201,16 @@ export const ShippingMethod = {
   STANDARD_DELIVERY: 'STANDARD_DELIVERY',
   THIRD_PARTY: 'THIRD_PARTY',
   MANUAL_EXTERNAL: 'MANUAL_EXTERNAL',
+  SHOP_ARRANGED: 'SHOP_ARRANGED',
+} as const;
+
+export type CheckoutShippingArrangement =
+  (typeof CheckoutShippingArrangement)[keyof typeof CheckoutShippingArrangement];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CheckoutShippingArrangement = {
+  STANDARD: 'STANDARD',
+  SHOP_ARRANGED: 'SHOP_ARRANGED',
 } as const;
 
 export interface CheckoutQuoteItemDto {

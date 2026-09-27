@@ -1,9 +1,14 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Input } from 'antd';
-import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { App, Button, Drawer, Form, Input, Select } from 'antd';
+import { useEffect, useState } from 'react';
+import { Controller, useController, useForm, type Control } from 'react-hook-form';
 import * as yup from 'yup';
+import { CACHE_POLICY } from '@/app/config/query-cache-policy';
+import {
+  useListShippingDistricts,
+  useListShippingProvinces,
+} from '@/generated/api/shipping/shipping';
 import {
   getListAdminBranchesQueryKey,
   getListAdminWarehousesQueryKey,
@@ -26,6 +31,7 @@ interface OrganizationFormValues {
   wardCode?: string;
   latitude?: string;
   longitude?: string;
+  freeDeliveryDistrictCodes: string[];
   warehouseCode: string;
   warehouseName: string;
 }
@@ -44,6 +50,14 @@ const schema: yup.ObjectSchema<OrganizationFormValues> = yup.object({
   wardCode: yup.string().trim().matches(/^[A-Za-z0-9]*$/, 'Mã phường GHN không hợp lệ').optional(),
   latitude: yup.string().trim().test('lat', 'Vĩ độ từ -90 đến 90', (v) => isCoordinate(v, 90)).optional(),
   longitude: yup.string().trim().test('lng', 'Kinh độ từ -180 đến 180', (v) => isCoordinate(v, 180)).optional(),
+  // CONTRACT: server nhận tối đa 100 GHN DistrictID dạng chuỗi số; ràng buộc ở đây phải khớp để
+  // admin thấy lỗi ngay thay vì nhận 400 từ API.
+  freeDeliveryDistrictCodes: yup
+    .array()
+    .of(yup.string().trim().matches(/^\d{1,32}$/, 'Mã quận GHN là số').required())
+    .max(100, 'Tối đa 100 quận/huyện')
+    .default([])
+    .required(),
   warehouseCode: yup.string().trim().matches(/^[A-Z0-9-]+$/, 'Mã kho không hợp lệ').required('Nhập mã kho'),
   warehouseName: yup.string().trim().required('Nhập tên kho'),
 });
@@ -61,6 +75,7 @@ const defaults: OrganizationFormValues = {
   wardCode: '',
   latitude: '',
   longitude: '',
+  freeDeliveryDistrictCodes: [],
   warehouseCode: '',
   warehouseName: '',
 };
@@ -117,6 +132,7 @@ export function OrganizationFormDrawer({
             wardCode: branch.address.wardCode ?? '',
             latitude: branch.address.latitude?.toString() ?? '',
             longitude: branch.address.longitude?.toString() ?? '',
+            freeDeliveryDistrictCodes: branch.freeDeliveryDistrictCodes ?? [],
             warehouseCode: warehouse.code,
             warehouseName: warehouse.name,
           }
@@ -138,11 +154,15 @@ export function OrganizationFormDrawer({
       latitude: optional(values.latitude) === undefined ? undefined : Number(values.latitude),
       longitude: optional(values.longitude) === undefined ? undefined : Number(values.longitude),
     };
+    // CONTRACT: bỏ trống field này khi update nghĩa là "giữ nguyên danh sách cũ", nên luôn gửi mảng
+    // tường minh — kể cả mảng rỗng — để admin có thể xoá hết quận/huyện giao miễn phí.
+    const freeDeliveryDistrictCodes = values.freeDeliveryDistrictCodes ?? [];
     if (branch && warehouse) {
       update.mutate({
         id: branch.id,
         data: {
           name: values.branchName,
+          freeDeliveryDistrictCodes,
           ...(values.phone ? { phone: values.phone } : {}),
           ...(values.email ? { email: values.email } : {}),
           address,
@@ -157,6 +177,7 @@ export function OrganizationFormDrawer({
       data: {
         code: values.branchCode,
         name: values.branchName,
+        freeDeliveryDistrictCodes,
         ...(values.phone ? { phone: values.phone } : {}),
         ...(values.email ? { email: values.email } : {}),
         address,
@@ -164,9 +185,10 @@ export function OrganizationFormDrawer({
       },
     });
   });
+  const branchProvinceCode = form.watch('provinceCode');
   const pending = create.isPending || update.isPending;
   const field = (
-    name: keyof OrganizationFormValues,
+    name: Exclude<keyof OrganizationFormValues, 'freeDeliveryDistrictCodes'>,
     label: string,
     options: { disabled?: boolean; required?: boolean } = {},
   ) => (
@@ -210,6 +232,7 @@ export function OrganizationFormDrawer({
           {field('latitude', 'Vĩ độ kho')}
           {field('longitude', 'Kinh độ kho')}
         </div>
+        <FreeDeliveryDistrictsField control={form.control} branchProvinceCode={branchProvinceCode} />
         <TypographyTitle />
         <div className="grid gap-4 sm:grid-cols-2">
           {field('warehouseCode', 'Mã kho', { disabled: Boolean(branch), required: true })}
@@ -217,6 +240,74 @@ export function OrganizationFormDrawer({
         </div>
       </Form>
     </Drawer>
+  );
+}
+
+/**
+ * Multi-select quận/huyện đích được chi nhánh giao miễn phí (D62).
+ *
+ * Khác với `districtCode` ở trên — đó là quận/huyện của chính địa chỉ chi nhánh. Ở đây là danh sách
+ * quận/huyện của KHÁCH. Danh mục quận/huyện lấy từ đúng endpoint GHN mà sổ địa chỉ khách đang dùng
+ * (`useListShippingDistricts`) để không có hai cách chọn quận song song.
+ */
+function FreeDeliveryDistrictsField({
+  control,
+  branchProvinceCode,
+}: {
+  control: Control<OrganizationFormValues>;
+  branchProvinceCode?: string;
+}) {
+  const { field, fieldState } = useController({ control, name: 'freeDeliveryDistrictCodes' });
+  const [picked, setPicked] = useState<string | undefined>();
+  const provinceCode = picked ?? (branchProvinceCode?.trim() || undefined);
+  const provinces = useListShippingProvinces({ query: { ...CACHE_POLICY.REFERENCE } });
+  const districts = useListShippingDistricts(
+    { provinceCode: provinceCode ?? '' },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(provinceCode) } },
+  );
+  const selected = field.value ?? [];
+  const options = (districts.data?.items ?? []).map((item) => ({ value: item.code, label: item.name }));
+  // Danh sách đã lưu có thể chứa quận thuộc tỉnh khác tỉnh đang lọc; giữ chúng làm option thô để
+  // đổi bộ lọc tỉnh không âm thầm xoá lựa chọn cũ.
+  const extras = selected
+    .filter((code) => !options.some((option) => option.value === code))
+    .map((code) => ({ value: code, label: code }));
+
+  return (
+    <Form.Item
+      label="Quận/huyện giao miễn phí"
+      validateStatus={fieldState.error ? 'error' : undefined}
+      help={
+        fieldState.error?.message ??
+        'Đơn giao tới các quận/huyện này được miễn phí vận chuyển, không gọi hãng. Đây là quận/huyện của khách nhận hàng, khác với quận/huyện địa chỉ chi nhánh ở trên. Tối đa 100 quận/huyện.'
+      }
+    >
+      <div className="grid gap-2 sm:grid-cols-[220px_1fr]">
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          loading={provinces.isPending}
+          placeholder="Lọc theo tỉnh/thành"
+          value={provinceCode}
+          options={(provinces.data?.items ?? []).map((item) => ({ value: item.code, label: item.name }))}
+          onChange={(code?: string) => setPicked(code)}
+        />
+        <Select
+          mode="multiple"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          disabled={!provinceCode && selected.length === 0}
+          loading={districts.isFetching}
+          placeholder={provinceCode ? 'Chọn quận/huyện giao miễn phí' : 'Chọn tỉnh/thành trước'}
+          value={selected}
+          options={[...options, ...extras]}
+          onChange={(codes: string[]) => field.onChange(codes)}
+          onBlur={field.onBlur}
+        />
+      </div>
+    </Form.Item>
   );
 }
 

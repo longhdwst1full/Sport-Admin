@@ -27,6 +27,11 @@ export interface CreateBranchDto {
   phone?: string;
   email?: string;
   address: AddressDto;
+  /**
+   * GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
+   * @maxItems 100
+   */
+  freeDeliveryDistrictCodes?: string[];
   warehouse: CreateWarehouseInputDto;
 }
 
@@ -50,6 +55,11 @@ export interface UpdateBranchWithWarehouseDto {
   phone?: string;
   email?: string;
   address: AddressDto;
+  /**
+   * GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
+   * @maxItems 100
+   */
+  freeDeliveryDistrictCodes?: string[];
   warehouse: UpdateWarehouseDto;
   /** @minimum 0 */
   expectedVersion: number;
@@ -74,6 +84,8 @@ export interface BranchDto {
   email?: string;
   address: AddressDto;
   timezone: string;
+  /** D62: GHN DistrictID chi nhánh tự giao miễn phí (≈ nội thành dưới 10 km). */
+  freeDeliveryDistrictCodes: string[];
   version: number;
 }
 

@@ -212,11 +212,25 @@ components:
         branchName:
           type: string
         paymentMethod:
+          description: Checkout mới từ Storefront chỉ có COD/VNPAY; BANK_TRANSFER chỉ xuất hiện ở báo giá cũ.
           allOf:
             - $ref: "#/components/schemas/CheckoutQuotePaymentMethod"
         shippingMethod:
           allOf:
             - $ref: "#/components/schemas/ShippingMethod"
+        shippingArrangement:
+          allOf:
+            - $ref: "#/components/schemas/CheckoutShippingArrangement"
+        shippingFeePending:
+          type: boolean
+          description: true khi phí vận chuyển do shop báo và thu riêng ngoài hệ thống (SHOP_ARRANGED); shippingTotal khi đó là 0.00 và grandTotal chỉ gồm tiền hàng.
+        freeDeliveryReason:
+          type: string
+          enum:
+            - BRANCH_DISTRICT
+            - WITHIN_RADIUS
+          nullable: true
+          description: Chỉ có khi shippingMethod = BRANCH_FREE.
         shippingProvider:
           type: string
           nullable: true
@@ -254,6 +268,9 @@ components:
         - branchName
         - paymentMethod
         - shippingMethod
+        - shippingArrangement
+        - shippingFeePending
+        - freeDeliveryReason
         - itemSubtotal
         - requiresShippingConsultation
         - items
@@ -278,11 +295,25 @@ components:
         branchName:
           type: string
         paymentMethod:
+          description: Checkout mới từ Storefront chỉ có COD/VNPAY; BANK_TRANSFER chỉ xuất hiện ở báo giá cũ.
           allOf:
             - $ref: "#/components/schemas/CheckoutQuotePaymentMethod"
         shippingMethod:
           allOf:
             - $ref: "#/components/schemas/ShippingMethod"
+        shippingArrangement:
+          allOf:
+            - $ref: "#/components/schemas/CheckoutShippingArrangement"
+        shippingFeePending:
+          type: boolean
+          description: true khi phí vận chuyển do shop báo và thu riêng ngoài hệ thống (SHOP_ARRANGED); shippingTotal khi đó là 0.00 và grandTotal chỉ gồm tiền hàng.
+        freeDeliveryReason:
+          type: string
+          enum:
+            - BRANCH_DISTRICT
+            - WITHIN_RADIUS
+          nullable: true
+          description: Chỉ có khi shippingMethod = BRANCH_FREE.
         shippingProvider:
           type: string
           nullable: true
@@ -344,6 +375,9 @@ components:
         - branchName
         - paymentMethod
         - shippingMethod
+        - shippingArrangement
+        - shippingFeePending
+        - freeDeliveryReason
         - itemSubtotal
         - requiresShippingConsultation
         - items
@@ -378,6 +412,8 @@ components:
       enum:
         - BANK_TRANSFER
         - COD
+        - VNPAY
+      description: Checkout mới từ Storefront chỉ có COD/VNPAY; BANK_TRANSFER chỉ xuất hiện ở báo giá cũ.
     ShippingMethod:
       type: string
       enum:
@@ -385,6 +421,12 @@ components:
         - STANDARD_DELIVERY
         - THIRD_PARTY
         - MANUAL_EXTERNAL
+        - SHOP_ARRANGED
+    CheckoutShippingArrangement:
+      type: string
+      enum:
+        - STANDARD
+        - SHOP_ARRANGED
     CheckoutQuoteItemDto:
       type: object
       properties:

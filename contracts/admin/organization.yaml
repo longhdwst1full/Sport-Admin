@@ -522,6 +522,15 @@ components:
           example: danang@dctd.vn
         address:
           $ref: "#/components/schemas/AddressDto"
+        freeDeliveryDistrictCodes:
+          maxItems: 100
+          example:
+            - "1454"
+            - "1442"
+          description: GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
+          type: array
+          items:
+            type: string
         warehouse:
           $ref: "#/components/schemas/CreateWarehouseInputDto"
       required:
@@ -578,6 +587,15 @@ components:
           example: danang@dctd.vn
         address:
           $ref: "#/components/schemas/AddressDto"
+        freeDeliveryDistrictCodes:
+          maxItems: 100
+          example:
+            - "1454"
+            - "1442"
+          description: GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
+          type: array
+          items:
+            type: string
         warehouse:
           $ref: "#/components/schemas/UpdateWarehouseDto"
         expectedVersion:
@@ -631,6 +649,14 @@ components:
         timezone:
           type: string
           example: Asia/Ho_Chi_Minh
+        freeDeliveryDistrictCodes:
+          example:
+            - "1454"
+            - "1442"
+          description: "D62: GHN DistrictID chi nhánh tự giao miễn phí (≈ nội thành dưới 10 km)."
+          type: array
+          items:
+            type: string
         version:
           type: number
           example: 0
@@ -641,6 +667,7 @@ components:
         - status
         - address
         - timezone
+        - freeDeliveryDistrictCodes
         - version
     ErrorDetailDto:
       type: object
