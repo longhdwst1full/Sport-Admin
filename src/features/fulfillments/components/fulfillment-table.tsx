@@ -1,7 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
 import { AdminTable, TableActionButton } from '@/foundation/table';
-import type { FulfillmentSummaryDto } from '@/generated/api/fulfillments/fulfillments.schemas';
+import type { FulfillmentStatus, FulfillmentSummaryDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { FULFILLMENT_PAGE_SIZE, fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
 import { CarrierShipmentStatusTag } from './carrier-shipment-status-tag';
 
@@ -93,7 +93,7 @@ export function FulfillmentTable({
           title: 'Trạng thái',
           dataIndex: 'status',
           width: 160,
-          render: (value: string) => {
+          render: (value: FulfillmentStatus) => {
             const presentation = fulfillmentStatusPresentation[value];
             return <Tag color={presentation?.color ?? 'default'}>{presentation?.label ?? value}</Tag>;
           },

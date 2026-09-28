@@ -24,21 +24,12 @@ import {
 import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { CarrierShipmentStatusTag } from '@/features/fulfillments';
+import { CarrierShipmentStatusTag, fulfillmentStatusPresentation } from '@/features/fulfillments';
 
 type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive';
 
-const statusPresentation: Record<string, { label: string; color: string }> = {
-  PENDING: { label: 'Chờ lấy hàng', color: 'default' },
-  PICKING: { label: 'Đang lấy hàng', color: 'processing' },
-  PACKED: { label: 'Đã đóng gói', color: 'cyan' },
-  SHIPPED: { label: 'Đang vận chuyển', color: 'blue' },
-  DELIVERED: { label: 'Đã giao', color: 'green' },
-  DELIVERY_FAILED: { label: 'Giao thất bại', color: 'red' },
-  RETURNING_TO_WAREHOUSE: { label: 'Đang về kho', color: 'orange' },
-  RETURNED_TO_WAREHOUSE: { label: 'Đã về kho', color: 'gold' },
-  CANCELLED: { label: 'Đã hủy', color: 'default' },
-};
+// Nhãn trạng thái vận đơn dùng chung với feature fulfillments (rule 08) — không định nghĩa lại ở đây.
+const statusPresentation = fulfillmentStatusPresentation;
 
 const actionPresentation: Record<FulfillmentAction, { title: string; okText: string; note: string }> = {
   pick: { title: 'Bắt đầu lấy hàng', okText: 'Bắt đầu lấy', note: 'Đơn phải được xác nhận trước khi nhân viên bắt đầu lấy hàng.' },

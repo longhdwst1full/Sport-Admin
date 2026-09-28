@@ -1,10 +1,15 @@
+import type {
+  CarrierShipmentStatus,
+  FulfillmentStatus,
+} from '@/generated/api/fulfillments/fulfillments.schemas';
+
 export const FULFILLMENT_PAGE_SIZE = 20;
 
 /**
  * Nhãn tiếng Việt map tách khỏi mã trạng thái (`08-enums-constants.md`):
  * đổi chữ hiển thị không được làm đổi phép so sánh nghiệp vụ.
  */
-export const fulfillmentStatusPresentation: Record<string, { label: string; color: string }> = {
+export const fulfillmentStatusPresentation: Record<FulfillmentStatus, { label: string; color: string }> = {
   PENDING: { label: 'Chờ xử lý', color: 'default' },
   PICKING: { label: 'Đang lấy hàng', color: 'processing' },
   PACKED: { label: 'Đã đóng gói', color: 'cyan' },
@@ -23,7 +28,7 @@ export const ACTIONABLE_FULFILLMENT_STATUSES = ['PENDING', 'PICKING', 'PACKED'] 
  * Trạng thái vận đơn GHN tự tạo (D14) sau khi đơn trả trước đã thanh toán hoặc COD được xác nhận.
  * `null` nghĩa là đơn không đi luồng tự tạo — vận đơn nhập tay lúc bàn giao như trước.
  */
-export const carrierShipmentStatusPresentation: Record<string, { label: string; color: string }> = {
+export const carrierShipmentStatusPresentation: Record<CarrierShipmentStatus, { label: string; color: string }> = {
   PENDING: { label: 'Chờ tạo vận đơn', color: 'default' },
   CREATING: { label: 'Đang tạo vận đơn', color: 'processing' },
   CREATED: { label: 'Đã tạo vận đơn', color: 'success' },

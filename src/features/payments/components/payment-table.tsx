@@ -1,7 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Button, Tag, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
-import type { AdminPaymentSummaryDto } from '@/generated/api/payments/payments.schemas';
+import type { AdminPaymentSummaryDto, PaymentStatus } from '@/generated/api/payments/payments.schemas';
 import { moneyFormatter, PAYMENT_PAGE_SIZE, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
 
 export function PaymentTable({
@@ -42,7 +42,7 @@ export function PaymentTable({
         { title: 'Phương thức', dataIndex: 'method', width: 130, render: (value) => paymentMethodLabels[value] ?? value },
         { title: 'Phải thu', dataIndex: 'expectedAmount', align: 'right', width: 150, render: (value) => <strong>{moneyFormatter.format(Number(value))}</strong> },
         { title: 'Đã nhận', dataIndex: 'receivedAmount', align: 'right', width: 150, render: (value) => moneyFormatter.format(Number(value)) },
-        { title: 'Trạng thái', dataIndex: 'status', width: 150, render: (value) => { const item = paymentStatusPresentation[value] ?? { label: value, color: 'default' }; return <Tag color={item.color}>{item.label}</Tag>; } },
+        { title: 'Trạng thái', dataIndex: 'status', width: 150, render: (value: PaymentStatus) => { const item = paymentStatusPresentation[value] ?? { label: value, color: 'default' }; return <Tag color={item.color}>{item.label}</Tag>; } },
         { title: '', key: 'actions', fixed: 'right', width: 64, render: (_, row) => <Button type="text" aria-label={`Xem thanh toán ${row.paymentRef}`} icon={<EyeOutlined />} onClick={() => onOpen(row.id)} /> },
       ]}
     />

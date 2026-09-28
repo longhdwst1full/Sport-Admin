@@ -47,7 +47,8 @@ import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
 // Trỏ thẳng vào module hằng số thay vì barrel `@/features/fulfillments`: barrel đó kéo theo
 // `fulfillments-page`, mà trang này lại import ngược `OrderDetailDrawer` qua barrel `@/features/orders`
 // → vòng phụ thuộc giữa hai chunk, Rollup cảnh báo sai thứ tự khởi tạo.
-import { fulfillmentStatusPresentation } from '@/features/fulfillments/constants/fulfillment.constants';
+import { fulfillmentStatusPresentation } from '@/features/fulfillments';
+import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
 
 interface OrderDetailDrawerProps {
   orderId?: string;
@@ -333,8 +334,9 @@ export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) 
                     <>
                       <div className="flex items-center justify-between border-t border-slate-100 pt-2">
                         <span className="text-slate-500">Giao vận:</span>
-                        <Tag color={fulfillmentStatusPresentation[order.shipment.status]?.color ?? 'default'} className="m-0 font-medium text-[11px]">
-                          {fulfillmentStatusPresentation[order.shipment.status]?.label ?? order.shipment.status}
+                        {/* CONTRACT: OrderShipmentDto.status là string thô ở domain orders; giá trị thực luôn thuộc FulfillmentStatus của domain fulfillments. */}
+                        <Tag color={fulfillmentStatusPresentation[order.shipment.status as FulfillmentStatus]?.color ?? 'default'} className="m-0 font-medium text-[11px]">
+                          {fulfillmentStatusPresentation[order.shipment.status as FulfillmentStatus]?.label ?? order.shipment.status}
                         </Tag>
                       </div>
                       <div className="flex items-center justify-between gap-2">

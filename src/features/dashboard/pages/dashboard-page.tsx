@@ -20,6 +20,8 @@ import {
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { AdminTable } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { orderStatusPresentation } from '@/features/orders';
+import type { OrderStatus } from '@/generated/api/orders/orders.schemas';
 import { DashboardStatCard } from '../components/dashboard-stat-card';
 import { JobHealthCard } from '../components/job-health-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
@@ -68,17 +70,6 @@ const money = new Intl.NumberFormat('vi-VN', {
   currency: 'VND',
   maximumFractionDigits: 0,
 });
-
-const ORDER_STATUS_LABELS: Record<string, string> = {
-  PENDING_CONFIRMATION: 'Chờ xác nhận',
-  CONFIRMED: 'Đã xác nhận',
-  PICKING: 'Đang lấy hàng',
-  PACKED: 'Đã đóng gói',
-  SHIPPED: 'Đang giao',
-  DELIVERED: 'Đã giao',
-  COMPLETED: 'Hoàn tất',
-  CANCELLED: 'Đã huỷ',
-};
 
 const todayLabel = new Intl.DateTimeFormat('vi-VN', {
   weekday: 'long',
@@ -200,7 +191,8 @@ export function DashboardPage() {
   }));
 
   const statusPie = (overview.data?.ordersByStatus ?? []).map((row) => ({
-    name: ORDER_STATUS_LABELS[row.status] ?? row.status,
+    // CONTRACT: OrderStatusCountDto.status là string thô ở domain reporting; giá trị thực luôn thuộc OrderStatus.
+    name: orderStatusPresentation[row.status as OrderStatus]?.label ?? row.status,
     value: row.count,
   }));
 
