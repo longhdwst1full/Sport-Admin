@@ -1,8 +1,8 @@
 import { DeleteOutlined, StarFilled, UploadOutlined } from '@ant-design/icons';
 import { App, Button, Image, Upload } from 'antd';
-import { useState } from 'react';
 import { useCan } from '@/core/auth/permissions';
 import { uploadImage } from '@/lib/media/upload-image';
+import { useImageUpload } from '@/shared/hooks/use-image-upload';
 
 export interface PendingProductImage {
   assetId: string;
@@ -28,7 +28,7 @@ export function ProductImagePicker({
   onChange: (next: PendingProductImage[]) => void;
 }) {
   const { message } = App.useApp();
-  const [uploading, setUploading] = useState(false);
+  const { uploading, customRequest } = useImageUpload(uploadImage);
   // SECURITY: upload đi qua endpoint media yêu cầu media.asset.upload.
   const canUpload = useCan('media.asset.upload');
 
@@ -79,24 +79,12 @@ export function ProductImagePicker({
         accept="image/jpeg,image/png,image/webp,image/avif"
         showUploadList={false}
         disabled={disabled || uploading || !canUpload}
-        customRequest={({ file, onError, onSuccess }) => {
-          if (!(file instanceof File)) {
-            onError?.(new Error('Tệp tải lên không hợp lệ.'));
-            return;
-          }
-          setUploading(true);
-          void uploadImage(file)
-            .then((asset) => {
-              onChange([...value, { assetId: asset.id, url: asset.secureUrl }]);
-              onSuccess?.(asset);
-            })
-            .catch((error: unknown) => {
-              const uploadError = error instanceof Error ? error : new Error('Upload ảnh thất bại.');
-              onError?.(uploadError);
-              void message.error(uploadError.message);
-            })
-            .finally(() => setUploading(false));
-        }}
+        customRequest={(options) =>
+          customRequest(options, {
+            onSuccess: (asset) => onChange([...value, { assetId: asset.id, url: asset.secureUrl }]),
+            onError: (error) => void message.error(error.message),
+          })
+        }
       >
         <Button icon={<UploadOutlined />} loading={uploading} disabled={disabled || !canUpload}>
           Tải ảnh lên

@@ -1,5 +1,7 @@
 import type { ReturnDetailDto } from '@/generated/api/returns/returns.schemas';
 import { RETURN_PERMISSION } from '../constants/return.constants';
+// Dùng lại helper chung thay vì định nghĩa riêng ở đây — payment/order/fulfillment cũng cần nó.
+export { nextIdempotencyKey } from '@/shared/utils/idempotency';
 
 export type ReturnAction =
   | 'approve'
@@ -42,16 +44,4 @@ export function availableReturnActions(
     actions.push('close');
   }
   return actions;
-}
-
-/**
- * Khoá idempotency theo nội dung lệnh: bấm lại (hoặc retry sau lỗi mạng) với cùng nội dung thì dùng
- * lại key cũ để API trả kết quả cũ; đổi nội dung thì sinh key mới, tránh bị API coi là xung đột.
- */
-export function nextIdempotencyKey(
-  previous: { signature: string; key: string } | undefined,
-  signature: string,
-  generate: () => string = () => crypto.randomUUID(),
-): { signature: string; key: string } {
-  return previous?.signature === signature ? previous : { signature, key: generate() };
 }

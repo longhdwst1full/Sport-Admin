@@ -1,8 +1,8 @@
 import { UploadOutlined } from '@ant-design/icons';
 import { App, Button, Image, Input, Space, Upload } from 'antd';
-import { useState } from 'react';
 import { useCan } from '@/core/auth/permissions';
 import { uploadImage } from '@/lib/media/upload-image';
+import { useImageUpload } from '@/shared/hooks/use-image-upload';
 
 interface ImageUploadFieldProps {
   value: string;
@@ -13,7 +13,7 @@ interface ImageUploadFieldProps {
 
 export function ImageUploadField({ value, onChange, disabled }: ImageUploadFieldProps) {
   const { message } = App.useApp();
-  const [uploading, setUploading] = useState(false);
+  const { uploading, customRequest } = useImageUpload(uploadImage);
   // SECURITY: upload đi qua endpoint media yêu cầu media.asset.upload; nhập URL thủ công thì không.
   const canUpload = useCan('media.asset.upload');
 
@@ -30,25 +30,15 @@ export function ImageUploadField({ value, onChange, disabled }: ImageUploadField
         accept="image/jpeg,image/png,image/webp,image/avif"
         showUploadList={false}
         disabled={disabled || uploading || !canUpload}
-        customRequest={({ file, onError, onSuccess }) => {
-          if (!(file instanceof File)) {
-            onError?.(new Error('Tệp tải lên không hợp lệ.'));
-            return;
-          }
-          setUploading(true);
-          void uploadImage(file)
-            .then((asset) => {
+        customRequest={(options) =>
+          customRequest(options, {
+            onSuccess: (asset) => {
               onChange(asset.secureUrl, asset.id);
-              onSuccess?.(asset);
               void message.success('Đã tải ảnh lên Cloudinary');
-            })
-            .catch((error: unknown) => {
-              const uploadError = error instanceof Error ? error : new Error('Upload ảnh thất bại.');
-              onError?.(uploadError);
-              void message.error(uploadError.message);
-            })
-            .finally(() => setUploading(false));
-        }}
+            },
+            onError: (error) => void message.error(error.message),
+          })
+        }
       >
         <Button icon={<UploadOutlined />} loading={uploading} disabled={disabled || !canUpload}>
           Upload

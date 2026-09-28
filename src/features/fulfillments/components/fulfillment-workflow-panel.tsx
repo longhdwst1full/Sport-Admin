@@ -26,6 +26,7 @@ import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generate
 import { getApiErrorMessage } from '@/lib/api/error';
 import { CarrierShipmentStatusTag } from './carrier-shipment-status-tag';
 import { fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
+import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 
 type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive';
 
@@ -106,9 +107,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       if (!fulfillment || !action) throw new Error('Thiếu thông tin thao tác giao vận');
       const normalizedNote = note.trim();
       const signature = [action, fulfillment.id, fulfillment.version, normalizedNote, carrierCode, trackingNo, reasonCode, condition].join(':');
-      if (idempotencyRef.current?.signature !== signature) {
-        idempotencyRef.current = { signature, key: crypto.randomUUID() };
-      }
+      idempotencyRef.current = nextIdempotencyKey(idempotencyRef.current, signature);
       const request = { headers: { 'Idempotency-Key': idempotencyRef.current.key } };
       const transition = { expectedVersion: fulfillment.version, note: normalizedNote || undefined };
       if (action === 'pick') return pickAdminFulfillment(fulfillment.id, transition, request);

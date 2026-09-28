@@ -2,10 +2,7 @@ import type { OrderStatus, OrderStatusGroup } from '@/generated/api/orders/order
 
 export const ORDER_PAGE_SIZE = 20;
 
-export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
+export { moneyFormatter } from '@/lib/format/money';
 
 export const orderTabs: Array<{
   key: 'ALL' | OrderStatusGroup;

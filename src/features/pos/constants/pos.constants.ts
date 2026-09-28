@@ -5,10 +5,7 @@ export const POS_PERMISSION = 'order.manage';
 /** Số kết quả mỗi lần tìm sản phẩm; nhân viên quầy gõ SKU nên không cần danh sách dài. */
 export const POS_SEARCH_LIMIT = 20;
 
-export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
+export { moneyFormatter } from '@/lib/format/money';
 
 /**
  * Nhãn tiếng Việt tách khỏi mã nghiệp vụ: đổi chữ hiển thị không được làm đổi giá trị

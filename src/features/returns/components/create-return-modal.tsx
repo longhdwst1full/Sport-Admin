@@ -16,7 +16,7 @@ import type { UploadedSignedImage } from '@/lib/media/upload-signed-image';
 import { RETURN_PERMISSION, returnFaultLabels, returnReasonLabels } from '../constants/return.constants';
 import { CREATE_RETURN_TABLE_COLUMNS, type CreateReturnColumnId } from '../constants/return-table-columns';
 import { buildTableColumns } from '../model/build-table-columns';
-import { nextIdempotencyKey } from '../model/return-actions.policy';
+import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 import { estimateSelection, toCreateReturnPayload, type CreateReturnFormValues } from '../model/return-form.mapper';
 import { EvidenceImageUpload } from './evidence-image-upload';
 

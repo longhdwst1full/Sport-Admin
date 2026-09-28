@@ -46,6 +46,7 @@ import { OrderReturnPanel } from '@/features/returns';
 // Nhãn trạng thái vận đơn sống ở shared (không phải trong `features/fulfillments`) vì đây chỉ
 // đọc `OrderShipmentDto.status`, không phải use case của fulfillments — xem comment tại nguồn.
 import { fulfillmentStatusPresentation } from '@/shared/constants/fulfillment-status-presentation';
+import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
 import type { ReactNode } from 'react';
 
@@ -103,9 +104,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
       if (!order || !action) throw new Error('Thiếu thông tin thao tác đơn hàng');
       const normalizedReason = reason.trim();
       const signature = `${action}:${order.id}:${order.version}:${normalizedReason}`;
-      if (idempotencyRef.current?.signature !== signature) {
-        idempotencyRef.current = { signature, key: crypto.randomUUID() };
-      }
+      idempotencyRef.current = nextIdempotencyKey(idempotencyRef.current, signature);
       const request = { headers: { 'Idempotency-Key': idempotencyRef.current.key } };
       if (action === 'cancel') {
         return cancelAdminOrder(order.id, { expectedVersion: order.version, reason: normalizedReason }, request);

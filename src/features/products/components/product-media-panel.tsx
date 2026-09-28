@@ -1,6 +1,7 @@
 import { DeleteOutlined, DownOutlined, EditOutlined, StarOutlined, UpOutlined, UploadOutlined } from '@ant-design/icons';
 import { App, Button, Form, Image, Input, Modal, Select, Space, Tag, Upload } from 'antd';
 import { useEffect, useState, useRef } from 'react';
+import { useImageUpload } from '@/shared/hooks/use-image-upload';
 import {
   useAttachAdminProductMedia,
   useDeleteAdminProductMedia,
@@ -23,7 +24,6 @@ export function ProductMediaPanel({
 }) {
   const { message, modal } = App.useApp();
   const [targetVariantId, setTargetVariantId] = useState<string>();
-  const [uploading, setUploading] = useState(false);
   // SECURITY: thêm ảnh sản phẩm ghi qua media API, cần media.asset.upload ngoài quyền sửa sản phẩm.
   const canUpload = useCan('media.asset.upload');
   const [editing, setEditing] = useState<ProductMediaDto>();
@@ -50,6 +50,23 @@ export function ProductMediaPanel({
       onError: (error) => mutationError(error, 'Không thể gắn ảnh.'),
     },
   });
+  // Upload ảnh rồi gắn luôn vào sản phẩm là một thao tác từ góc nhìn người dùng: chỉ báo
+  // "đã upload xong" (onSuccess) sau khi cả hai bước cùng thành công.
+  const { uploading, customRequest } = useImageUpload((file) =>
+    uploadImage(file).then(async (asset) => {
+      await attach.mutateAsync({
+        id: product.id,
+        data: {
+          mediaAssetId: asset.id,
+          variantId: targetVariantId,
+          altText: product.name,
+          isPrimary: product.media.length === 0,
+          expectedProductVersion: product.version,
+        },
+      });
+      return asset;
+    }),
+  );
   const update = useUpdateAdminProductMedia({
     mutation: {
       onSuccess: async () => {
@@ -105,26 +122,7 @@ export function ProductMediaPanel({
           accept="image/jpeg,image/png,image/webp,image/avif"
           showUploadList={false}
           disabled={pending || uploading || !canUpload || product.status === 'ARCHIVED'}
-          customRequest={({ file, onError, onSuccess }) => {
-            if (!(file instanceof File)) return onError?.(new Error('Tệp không hợp lệ'));
-            setUploading(true);
-            void uploadImage(file)
-              .then(async (asset) => {
-                await attach.mutateAsync({
-                  id: product.id,
-                  data: {
-                    mediaAssetId: asset.id,
-                    variantId: targetVariantId,
-                    altText: product.name,
-                    isPrimary: product.media.length === 0,
-                    expectedProductVersion: product.version,
-                  },
-                });
-                onSuccess?.(asset);
-              })
-              .catch((error: unknown) => onError?.(error instanceof Error ? error : new Error('Upload thất bại')))
-              .finally(() => setUploading(false));
-          }}
+          customRequest={customRequest}
         >
           <Button type="primary" icon={<UploadOutlined />} loading={uploading || attach.isPending}>
             Upload và gắn ảnh

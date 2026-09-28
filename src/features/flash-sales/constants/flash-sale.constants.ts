@@ -21,11 +21,7 @@ export const FLASH_SALE_TRANSITIONS: Record<string, readonly string[]> = {
   CANCELLED: [],
 };
 
-export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-  maximumFractionDigits: 0,
-});
+export { moneyFormatter } from '@/lib/format/money';
 
 export type PricingMode = 'PERCENT_LIST' | 'PER_ITEM';
 

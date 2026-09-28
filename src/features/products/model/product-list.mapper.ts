@@ -1,9 +1,6 @@
 import type { ProductSummaryDto } from '@/generated/api/catalog/catalog.schemas';
 
-const moneyFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
+import { moneyFormatter } from '@/lib/format/money';
 
 export interface ProductListRow {
   id: string;

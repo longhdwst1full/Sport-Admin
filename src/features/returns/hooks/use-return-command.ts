@@ -24,7 +24,7 @@ import type {
 } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorPayload } from '@/lib/api/error';
 import { RETURN_VERSION_CONFLICT } from '../constants/return.constants';
-import { nextIdempotencyKey } from '../model/return-actions.policy';
+import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 
 export type ReturnCommand =
   | { action: 'approve'; body: ApproveReturnDto }

@@ -5,10 +5,7 @@ import {
 
 export const CUSTOMER_PAGE_SIZE = 20;
 
-export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
+export { moneyFormatter } from '@/lib/format/money';
 
 /** Nhãn tiếng Việt tách khỏi mã nghiệp vụ: đổi chữ không được làm đổi bộ lọc. */
 export const customerKindPresentation: Record<string, { label: string; color: string }> = {

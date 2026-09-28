@@ -17,9 +17,5 @@ export const paymentMethodLabels: Record<string, string> = {
   COD: 'COD',
 };
 
-export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-  maximumFractionDigits: 0,
-});
+export { moneyFormatter } from '@/lib/format/money';
 

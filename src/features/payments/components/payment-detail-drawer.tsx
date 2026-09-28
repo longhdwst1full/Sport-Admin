@@ -13,6 +13,7 @@ import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { moneyFormatter, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
+import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 
 type Action = 'confirm' | 'reject';
 
@@ -41,9 +42,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       const signature = action === 'confirm'
         ? `${action}:${payment.id}:${payment.version}:${receivedAmount}:${values.reference.trim()}:${values.note?.trim() ?? ''}`
         : `${action}:${payment.id}:${payment.version}:${values.reason?.trim() ?? ''}`;
-      if (idempotencyRef.current?.signature !== signature) {
-        idempotencyRef.current = { signature, key: crypto.randomUUID() };
-      }
+      idempotencyRef.current = nextIdempotencyKey(idempotencyRef.current, signature);
       const options = { headers: { 'idempotency-key': idempotencyRef.current.key } };
       return action === 'confirm'
         ? confirmAdminPayment(payment.id, { expectedVersion: payment.version, receivedAmount, reference: values.reference, note: values.note }, options)
