@@ -13,6 +13,7 @@ const domains = [
   'reviews',
   'media',
   'system',
+  'notifications',
   'checkout',
   'customers',
   'orders',

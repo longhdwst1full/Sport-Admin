@@ -91,6 +91,7 @@ export default defineConfig({
   reviews: createDomainConfig('reviews'),
   media: createDomainConfig('media'),
   system: createDomainConfig('system'),
+  notifications: createDomainConfig('notifications'),
   checkout: createDomainConfig('checkout'),
   orders: createDomainConfig('orders'),
   payments: createDomainConfig('payments'),

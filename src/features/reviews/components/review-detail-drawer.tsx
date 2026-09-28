@@ -1,11 +1,10 @@
-import { Descriptions, Drawer, Empty, Rate, Tag, Typography } from 'antd';
+import { useState } from 'react';
+import { App, Button, Descriptions, Drawer, Empty, Image, Input, Rate, Tag, Typography } from 'antd';
+import { useCan } from '@/core/auth/permissions';
+import { useReplyAdminReview } from '@/generated/api/reviews/reviews';
 import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
-
-const STATUS_PRESENTATION: Record<string, { color: string; label: string }> = {
-  // Không còn bước chờ duyệt: đánh giá hiển thị ngay, Admin chỉ gỡ khi cần.
-  APPROVED: { color: 'green', label: 'Đang hiển thị' },
-  REJECTED: { color: 'red', label: 'Đã ẩn' },
-};
+import { getApiErrorMessage } from '@/lib/api/error';
+import { canReplyToReview, REVIEW_STATUS_PRESENTATION } from '../model/review-moderation.policy';
 
 const AUTHOR_TYPE_LABELS: Record<string, string> = {
   CUSTOMER: 'Khách hàng',
@@ -19,18 +18,47 @@ function formatDateTime(value?: string): string {
 export function ReviewDetailDrawer({
   review,
   onClose,
+  onReviewUpdated,
 }: {
   review?: ProductReviewDto;
   onClose: () => void;
+  onReviewUpdated: (review: ProductReviewDto) => void;
 }) {
-  const status = review ? STATUS_PRESENTATION[review.status] : undefined;
+  const { message } = App.useApp();
+  const canReply = useCan('catalog.review.reply');
+  const [replyContent, setReplyContent] = useState('');
+  const status = review ? REVIEW_STATUS_PRESENTATION[review.status] : undefined;
+  const reply = useReplyAdminReview({
+    mutation: {
+      onSuccess: (updated) => {
+        setReplyContent('');
+        onReviewUpdated(updated);
+        void message.success('Đã gửi phản hồi đến khách hàng.');
+      },
+      onError: (error) =>
+        void message.error(getApiErrorMessage(error, 'Không thể gửi phản hồi đánh giá.')),
+    },
+  });
+
+  function closeDrawer() {
+    if (reply.isPending) return;
+    setReplyContent('');
+    onClose();
+  }
+
+  function submitReply() {
+    const content = replyContent.trim();
+    if (!review || content.length < 3) return;
+    // CONCURRENCY: version trong drawer ngăn phản hồi ghi lên bản review vừa được người khác kiểm duyệt.
+    reply.mutate({ id: review.id, data: { content, expectedVersion: review.version } });
+  }
 
   return (
     <Drawer
       open={Boolean(review)}
-      onClose={onClose}
+      onClose={closeDrawer}
       width={680}
-      destroyOnClose
+      destroyOnHidden
       title={review ? `Đánh giá #${review.id}` : 'Chi tiết đánh giá'}
     >
       {review && (
@@ -73,6 +101,28 @@ export function ReviewDetailDrawer({
             </Typography.Paragraph>
           </section>
 
+          {review.media.length > 0 && (
+            <section className="mt-6">
+              <Typography.Text strong className="text-sm">
+                Ảnh từ khách hàng ({review.media.length})
+              </Typography.Text>
+              <Image.PreviewGroup>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {review.media.map((media) => (
+                    <Image
+                      key={media.id}
+                      width={104}
+                      height={104}
+                      src={media.thumbnailUrl}
+                      preview={{ src: media.url }}
+                      className="rounded-xl object-cover"
+                    />
+                  ))}
+                </div>
+              </Image.PreviewGroup>
+            </section>
+          )}
+
           <section className="mt-6">
             <Typography.Text strong className="text-sm">
               Phản hồi ({review.comments.length})
@@ -103,6 +153,34 @@ export function ReviewDetailDrawer({
                   </li>
                 ))}
               </ul>
+            )}
+
+            {canReplyToReview(review.status, canReply) && (
+              <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                <Typography.Text strong className="text-sm text-slate-800">
+                  Phản hồi với tư cách cửa hàng
+                </Typography.Text>
+                <Input.TextArea
+                  className="mt-2"
+                  value={replyContent}
+                  onChange={(event) => setReplyContent(event.target.value)}
+                  maxLength={2000}
+                  showCount
+                  autoSize={{ minRows: 3, maxRows: 7 }}
+                  placeholder="Nhập nội dung phản hồi (tối thiểu 3 ký tự)"
+                  disabled={reply.isPending}
+                />
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    type="primary"
+                    loading={reply.isPending}
+                    disabled={replyContent.trim().length < 3}
+                    onClick={submitReply}
+                  >
+                    Gửi phản hồi
+                  </Button>
+                </div>
+              </div>
             )}
           </section>
         </>

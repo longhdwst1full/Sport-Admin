@@ -80,6 +80,59 @@ paths:
         - Admin Reviews
       x-required-permissions:
         - catalog.review.moderate
+  /api/v1/admin/reviews/{id}/replies:
+    post:
+      operationId: replyAdminReview
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyReviewDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductReviewDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Nhân viên phản hồi một đánh giá đã được duyệt
+      tags:
+        - Admin Reviews
+      x-required-permissions:
+        - catalog.review.reply
   /api/v1/admin/reviews/{id}:
     delete:
       operationId: deleteAdminReview
@@ -195,7 +248,7 @@ components:
       properties:
         status:
           allOf:
-            - $ref: "#/components/schemas/ReviewModerationStatus"
+            - $ref: "#/components/schemas/ReviewModerationDecision"
         reason:
           type: string
         expectedVersion:
@@ -203,6 +256,7 @@ components:
           minimum: 0
       required:
         - status
+        - expectedVersion
     ProductReviewDto:
       type: object
       properties:
@@ -223,7 +277,7 @@ components:
         verifiedPurchase:
           type: boolean
         status:
-          description: Đánh giá hiển thị ngay khi gửi; REJECTED là đã bị Admin gỡ khỏi website
+          description: Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai
           allOf:
             - $ref: "#/components/schemas/ReviewModerationStatus"
         version:
@@ -238,6 +292,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ReviewCommentDto"
+        media:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewMediaDto"
         createdAt:
           type: string
           format: date-time
@@ -252,7 +310,21 @@ components:
         - status
         - version
         - comments
+        - media
         - createdAt
+    ReplyReviewDto:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 3
+          maxLength: 2000
+        expectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - content
+        - expectedVersion
     DeleteReviewDto:
       type: object
       properties:
@@ -282,12 +354,18 @@ components:
       required:
         - code
         - message
-    ReviewModerationStatus:
+    ReviewModerationDecision:
       type: string
       enum:
         - APPROVED
         - REJECTED
-      description: Đánh giá hiển thị ngay khi gửi; REJECTED là đã bị Admin gỡ khỏi website
+    ReviewModerationStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+      description: Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai
     ReviewCommentDto:
       type: object
       properties:
@@ -311,6 +389,31 @@ components:
         - authorName
         - content
         - createdAt
+    ReviewMediaDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        mediaAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        url:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        sortOrder:
+          type: number
+      required:
+        - id
+        - mediaAssetId
+        - url
+        - thumbnailUrl
+        - sortOrder
   securitySchemes:
     bearer:
       scheme: bearer

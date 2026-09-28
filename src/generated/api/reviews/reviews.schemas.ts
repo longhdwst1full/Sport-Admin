@@ -23,10 +23,10 @@ export interface ErrorResponseDto {
 }
 
 export interface ModerateReviewDto {
-  status: ReviewModerationStatus;
+  status: ReviewModerationDecision;
   reason?: string;
   /** @minimum 0 */
-  expectedVersion?: number;
+  expectedVersion: number;
 }
 
 export interface ProductReviewDto {
@@ -41,14 +41,25 @@ export interface ProductReviewDto {
   title: string;
   content: string;
   verifiedPurchase: boolean;
-  /** Đánh giá hiển thị ngay khi gửi; REJECTED là đã bị Admin gỡ khỏi website */
+  /** Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai */
   status: ReviewModerationStatus;
   /** @minimum 0 */
   version: number;
   moderationReason?: string;
   moderatedAt?: string;
   comments: ReviewCommentDto[];
+  media: ReviewMediaDto[];
   createdAt: string;
+}
+
+export interface ReplyReviewDto {
+  /**
+   * @minLength 3
+   * @maxLength 2000
+   */
+  content: string;
+  /** @minimum 0 */
+  expectedVersion: number;
 }
 
 export interface DeleteReviewDto {
@@ -67,14 +78,24 @@ export interface ErrorDetailDto {
   message: string;
 }
 
+export type ReviewModerationDecision =
+  (typeof ReviewModerationDecision)[keyof typeof ReviewModerationDecision];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReviewModerationDecision = {
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+
 /**
- * Đánh giá hiển thị ngay khi gửi; REJECTED là đã bị Admin gỡ khỏi website
+ * Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai
  */
 export type ReviewModerationStatus =
   (typeof ReviewModerationStatus)[keyof typeof ReviewModerationStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ReviewModerationStatus = {
+  PENDING: 'PENDING',
   APPROVED: 'APPROVED',
   REJECTED: 'REJECTED',
 } as const;
@@ -94,4 +115,14 @@ export interface ReviewCommentDto {
   authorName: string;
   content: string;
   createdAt: string;
+}
+
+export interface ReviewMediaDto {
+  /** @pattern ^[1-9][0-9]*$ */
+  id: string;
+  /** @pattern ^[1-9][0-9]*$ */
+  mediaAssetId: string;
+  url: string;
+  thumbnailUrl: string;
+  sortOrder: number;
 }

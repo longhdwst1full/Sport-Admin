@@ -1,0 +1,274 @@
+# Generated from NestJS decorators. Do not edit by hand.
+openapi: 3.0.0
+info:
+  title: DCTD-UTC Commerce API
+  description: Contract for storefront and admin applications
+  version: 1.0.0
+  contact: {}
+servers:
+  - url: http://localhost:4000
+    description: Local
+paths:
+  /api/v1/admin/notifications:
+    get:
+      operationId: listAdminNotifications
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 30
+            type: number
+        - name: search
+          required: false
+          in: query
+          description: Event type, aggregate type hoặc aggregate ID
+          schema:
+            maxLength: 100
+            type: string
+        - name: status
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - PROCESSING
+              - DONE
+              - DEAD
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminNotificationListDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Danh sách trạng thái outbox và email đã che dữ liệu nhạy cảm
+      tags:
+        - Admin Notifications
+      x-required-permissions:
+        - system.parameter.view
+  /api/v1/admin/notifications/{id}/requeue:
+    post:
+      operationId: requeueAdminNotification
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequeueAdminNotificationDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Đưa một dead-letter về hàng đợi sau khi đã sửa nguyên nhân
+      tags:
+        - Admin Notifications
+      x-required-permissions:
+        - system.parameter.manage
+components:
+  schemas:
+    AdminNotificationListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminNotificationDto"
+        page:
+          type: number
+        limit:
+          type: number
+        total:
+          type: number
+      required:
+        - items
+        - page
+        - limit
+        - total
+    ErrorResponseDto:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 400
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Dữ liệu gửi lên không hợp lệ.
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorDetailDto"
+        path:
+          type: string
+          example: /api/v1/catalog/products
+        method:
+          type: string
+          example: POST
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+      required:
+        - statusCode
+        - code
+        - message
+        - path
+        - method
+        - timestamp
+    RequeueAdminNotificationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        requeued:
+          type: boolean
+          example: true
+      required:
+        - id
+        - requeued
+    AdminNotificationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        aggregateType:
+          type: string
+        aggregateId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        eventType:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - PROCESSING
+            - DONE
+            - DEAD
+        attempts:
+          type: number
+        availableAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastError:
+          type: string
+          nullable: true
+        recipientMasked:
+          type: string
+          nullable: true
+        deliveryStatus:
+          type: string
+          nullable: true
+        deliveryAttempts:
+          type: number
+          nullable: true
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        providerMessageId:
+          type: string
+          nullable: true
+        errorCode:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - aggregateType
+        - aggregateId
+        - eventType
+        - status
+        - attempts
+        - availableAt
+        - createdAt
+    ErrorDetailDto:
+      type: object
+      properties:
+        field:
+          type: string
+          example: name
+        code:
+          type: string
+          example: INVALID_VALUE
+        message:
+          type: string
+          example: 'Trường "name": Trường này không được để trống.'
+      required:
+        - code
+        - message
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http

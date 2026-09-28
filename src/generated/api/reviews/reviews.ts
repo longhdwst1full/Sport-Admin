@@ -27,6 +27,7 @@ import type {
   ModerateReviewDto,
   ProductReviewDto,
   ProductReviewListDto,
+  ReplyReviewDto,
 } from './reviews.schemas';
 
 import { apiFetcher } from '../../../lib/api/fetcher';
@@ -209,6 +210,93 @@ export const useModerateAdminReview = <
   TContext
 > => {
   const mutationOptions = getModerateAdminReviewMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Nhân viên phản hồi một đánh giá đã được duyệt
+ */
+export const replyAdminReview = (
+  id: string,
+  replyReviewDto: BodyType<ReplyReviewDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<ProductReviewDto>({
+    url: `/api/v1/admin/reviews/${id}/replies`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: replyReviewDto,
+    signal,
+  });
+};
+
+export const getReplyAdminReviewMutationOptions = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof replyAdminReview>>,
+    TError,
+    { id: string; data: BodyType<ReplyReviewDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof replyAdminReview>>,
+  TError,
+  { id: string; data: BodyType<ReplyReviewDto> },
+  TContext
+> => {
+  const mutationKey = ['replyAdminReview'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof replyAdminReview>>,
+    { id: string; data: BodyType<ReplyReviewDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return replyAdminReview(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReplyAdminReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof replyAdminReview>>
+>;
+export type ReplyAdminReviewMutationBody = BodyType<ReplyReviewDto>;
+export type ReplyAdminReviewMutationError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+/**
+ * @summary Nhân viên phản hồi một đánh giá đã được duyệt
+ */
+export const useReplyAdminReview = <
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof replyAdminReview>>,
+      TError,
+      { id: string; data: BodyType<ReplyReviewDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof replyAdminReview>>,
+  TError,
+  { id: string; data: BodyType<ReplyReviewDto> },
+  TContext
+> => {
+  const mutationOptions = getReplyAdminReviewMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

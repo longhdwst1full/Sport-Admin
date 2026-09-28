@@ -27,13 +27,8 @@ import {
 } from '@/generated/api/reviews/reviews';
 import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 import { ReviewDetailDrawer } from '../components/review-detail-drawer';
+import { getReviewMetrics, REVIEW_STATUS_PRESENTATION } from '../model/review-moderation.policy';
 import { getApiErrorMessage } from '@/lib/api/error';
-
-const REVIEW_STATUSES = {
-  // Không còn bước chờ duyệt: đánh giá hiển thị ngay, Admin chỉ gỡ khi cần.
-  APPROVED: { color: 'green', label: 'Đang hiển thị' },
-  REJECTED: { color: 'red', label: 'Đã ẩn' },
-};
 
 const REVIEW_COLUMNS: ColumnItem[] = [
   { id: 'customer', label: 'Khách hàng', fixed: true },
@@ -60,23 +55,13 @@ export function ReviewsPage() {
 
   const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
-  const metrics = useMemo(() => {
-    const total = items.length;
-    const approved = items.filter((i) => i.status === 'APPROVED').length;
-    // Không còn hàng chờ duyệt; số cần theo dõi là số đánh giá đã bị gỡ khỏi website.
-    const hidden = items.filter((i) => i.status === 'REJECTED').length;
-    const avg =
-      total > 0
-        ? (items.reduce((sum, i) => sum + (i.rating || 0), 0) / total).toFixed(1)
-        : '5.0';
-    return { total, approved, hidden, avg };
-  }, [items]);
+  const metrics = useMemo(() => getReviewMetrics(items), [items]);
 
   const moderate = useModerateAdminReview({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: getListAdminReviewsQueryKey() });
-        void message.success('Đã cập nhật hiển thị của đánh giá.');
+        void message.success('Đã cập nhật trạng thái kiểm duyệt.');
       },
       onError: (error) =>
         void message.error(getApiErrorMessage(error, 'Không thể kiểm duyệt đánh giá.')),
@@ -109,7 +94,10 @@ export function ReviewsPage() {
     for (const row of targets) {
       try {
         if (action === 'APPROVE') {
-          await moderate.mutateAsync({ id: row.id, data: { status: 'APPROVED' } });
+          await moderate.mutateAsync({
+            id: row.id,
+            data: { status: 'APPROVED', expectedVersion: row.version },
+          });
         } else {
           await deleteReview.mutateAsync({
             id: row.id,
@@ -124,7 +112,7 @@ export function ReviewsPage() {
     }
     if (done > 0) {
       void message.success(
-        `${action === 'APPROVE' ? 'Đã hiện lại' : 'Đã ẩn'} ${done}/${targets.length} đánh giá.`,
+        `${action === 'APPROVE' ? 'Đã duyệt' : 'Đã từ chối'} ${done}/${targets.length} đánh giá.`,
       );
     }
     setSelectedIds([]);
@@ -207,7 +195,7 @@ export function ReviewsPage() {
             render: (value: string) => (
               <StatusTag
                 status={value}
-                presentations={REVIEW_STATUSES as Record<string, { label: string; color: string }>}
+                presentations={REVIEW_STATUS_PRESENTATION}
               />
             ),
           },
@@ -258,16 +246,16 @@ export function ReviewsPage() {
             tone: 'green',
           },
           {
-            key: 'hidden',
-            label: 'Đã ẩn',
-            value: metrics.hidden,
+            key: 'pending',
+            label: 'Chờ duyệt',
+            value: metrics.pending,
             icon: <ClockCircleOutlined />,
             tone: 'orange',
           },
           {
             key: 'rating',
             label: 'Điểm trung bình',
-            value: `${metrics.avg} / 5`,
+            value: `${metrics.averageRating} / 5`,
             icon: <StarOutlined />,
             tone: 'green',
           },
@@ -311,12 +299,12 @@ export function ReviewsPage() {
                   disabled={approvable.length === 0 || working}
                   loading={moderate.isPending}
                 >
-                  Hiện lại{approvable.length > 0 ? ` (${approvable.length})` : ''}
+                  Duyệt{approvable.length > 0 ? ` (${approvable.length})` : ''}
                 </Button>
               </Popconfirm>
               <Popconfirm
-                title={`Ẩn ${hideable.length} đánh giá?`}
-                description="Đánh giá vẫn lưu trong hệ thống nhưng bị ẩn khỏi website."
+                title={`Từ chối ${hideable.length} đánh giá?`}
+                description="Đánh giá vẫn được lưu để truy vết nhưng không hiển thị trên website."
                 disabled={hideable.length === 0 || working}
                 onConfirm={() => void runBulk('HIDE')}
               >
@@ -326,7 +314,7 @@ export function ReviewsPage() {
                   disabled={hideable.length === 0 || working}
                   loading={deleteReview.isPending}
                 >
-                  Ẩn{hideable.length > 0 ? ` (${hideable.length})` : ''}
+                  Từ chối{hideable.length > 0 ? ` (${hideable.length})` : ''}
                 </Button>
               </Popconfirm>
               {selectedIds.length > 0 && (
@@ -369,7 +357,15 @@ export function ReviewsPage() {
         />
       </ManagementPage>
 
-      <ReviewDetailDrawer review={detail} onClose={() => setDetail(undefined)} />
+      <ReviewDetailDrawer
+        review={detail}
+        onClose={() => setDetail(undefined)}
+        onReviewUpdated={(updated) => {
+          setDetail(updated);
+          // CACHE: phản hồi làm thay đổi số comment trên list và version dùng cho lệnh kế tiếp.
+          void queryClient.invalidateQueries({ queryKey: getListAdminReviewsQueryKey() });
+        }}
+      />
     </PageTransition>
   );
 }

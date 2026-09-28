@@ -10,6 +10,7 @@ import {
   FileTextOutlined,
   InboxOutlined,
   KeyOutlined,
+  MailOutlined,
   PartitionOutlined,
   ProfileOutlined,
   RollbackOutlined,
@@ -166,6 +167,13 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: 'Tham số hệ thống',
     group: 'system',
     icon: <ControlOutlined />,
+    permission: 'system.parameter.view',
+  },
+  {
+    path: '/notifications',
+    label: 'Thông báo email',
+    group: 'system',
+    icon: <MailOutlined />,
     permission: 'system.parameter.view',
   },
   {
