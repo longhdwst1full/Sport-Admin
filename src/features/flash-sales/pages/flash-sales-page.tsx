@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { PlusOutlined, ReloadOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -31,14 +32,12 @@ export function FlashSalesPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('catalog.flash_sale.manage');
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<FlashSaleCampaignStatus>();
   const [selectedId, setSelectedId] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
   const [debouncedSearch] = useDebounce(search.trim(), 350);
-
-  useEffect(() => setPage(1), [debouncedSearch, status]);
+  const [page, setPage] = useListPageReset([debouncedSearch, status]);
 
   const campaigns = useListAdminFlashSales({
     page,

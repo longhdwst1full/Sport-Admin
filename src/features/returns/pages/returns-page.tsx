@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { ClockCircleOutlined, DollarOutlined, InboxOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons';
 import { Alert, Button, Input, Select, Tooltip } from 'antd';
 import { useSearchParams } from 'react-router-dom';
@@ -25,11 +26,9 @@ export function ReturnsPage() {
   const [params, setParams] = useSearchParams();
   const status = parseStatus(params.get('status'));
   const openId = params.get('id') ?? undefined;
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search.trim(), 350);
-
-  useEffect(() => setPage(1), [debouncedSearch, status]);
+  const [page, setPage] = useListPageReset([debouncedSearch, status]);
 
   const updateParam = (key: string, value?: string) => {
     const next = new URLSearchParams(params);

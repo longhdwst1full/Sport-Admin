@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { CarOutlined, InboxOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons';
 import { Alert, Button, Input, Select, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
@@ -23,13 +24,11 @@ const statusOptions = Object.entries(fulfillmentStatusPresentation).map(([value,
 }));
 
 export function FulfillmentsPage() {
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<FulfillmentStatus>();
   const [selectedOrderId, setSelectedOrderId] = useState<string>();
   const [debouncedSearch] = useDebounce(search.trim(), 350);
-
-  useEffect(() => setPage(1), [debouncedSearch, status]);
+  const [page, setPage] = useListPageReset([debouncedSearch, status]);
 
   const fulfillments = useListAdminFulfillments({
     page,

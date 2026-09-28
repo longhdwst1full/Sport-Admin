@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { ControlOutlined, GlobalOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -31,15 +32,13 @@ export function SystemParametersPage() {
   const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('system.parameter.manage');
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [groupCode, setGroupCode] = useState<string>();
   const [status, setStatus] = useState<SystemParameterStatus>();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SystemParameterDto>();
   const [debouncedSearch] = useDebounce(search.trim(), 350);
-
-  useEffect(() => setPage(1), [debouncedSearch, groupCode, status]);
+  const [page, setPage] = useListPageReset([debouncedSearch, groupCode, status]);
 
   const parameters = useListAdminSystemParameters({
     page,

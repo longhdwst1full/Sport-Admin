@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { BankOutlined, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Alert, Button, Input, Select, Tooltip } from 'antd';
 import { useDebounce } from 'use-debounce';
@@ -11,13 +12,12 @@ import { PaymentTable } from '../components/payment-table';
 import { moneyFormatter, PAYMENT_PAGE_SIZE } from '../constants/payment.constants';
 
 export function PaymentsPage() {
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<PaymentStatus>();
   const [method, setMethod] = useState<PaymentMethod>();
   const [selectedId, setSelectedId] = useState<string>();
   const [debouncedSearch] = useDebounce(search.trim(), 350);
-  useEffect(() => setPage(1), [debouncedSearch, status, method]);
+  const [page, setPage] = useListPageReset([debouncedSearch, status, method]);
   const payments = useListAdminPayments({ page, limit: PAYMENT_PAGE_SIZE, search: debouncedSearch || undefined, status, method });
   const rows = payments.data?.items ?? [];
 

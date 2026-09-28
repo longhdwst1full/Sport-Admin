@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -31,14 +32,12 @@ export function NotificationsPage() {
   const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const canRequeue = useCan('system.parameter.manage');
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(NOTIFICATION_DEFAULT_PAGE_SIZE);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<ListAdminNotificationsStatus>();
   const [requeueingId, setRequeueingId] = useState<string>();
   const [debouncedSearch] = useDebounce(search.trim(), 350);
-
-  useEffect(() => setPage(1), [debouncedSearch, status, pageSize]);
+  const [page, setPage] = useListPageReset([debouncedSearch, status, pageSize]);
 
   const notifications = useListAdminNotifications({
     page,

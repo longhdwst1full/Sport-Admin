@@ -24,7 +24,8 @@ import {
   Typography,
 } from 'antd';
 import { AdminTable } from '@/foundation/table';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { useDebounce } from 'use-debounce';
 import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
@@ -73,14 +74,12 @@ export function AuditPage() {
   const [range, setRange] = useState<[string, string]>();
   const [selected, setSelected] = useState<AuditLogDto>();
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
-  const [page, setPage] = useState(0);
   const [debouncedAction] = useDebounce(action.trim(), 350);
   const [debouncedRequestId] = useDebounce(requestId.trim(), 350);
-
-  useEffect(() => {
-    setCursorHistory([undefined]);
-    setPage(0);
-  }, [debouncedAction, debouncedRequestId, entityType, range]);
+  const [page, setPage] = useListPageReset([debouncedAction, debouncedRequestId, entityType, range], {
+    initialPage: 0,
+    onReset: () => setCursorHistory([undefined]),
+  });
 
   const query = useListAdminAuditLogs({
     limit: PAGE_SIZE,
