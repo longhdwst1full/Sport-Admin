@@ -7,22 +7,7 @@ import {
   TruckOutlined,
 } from '@ant-design/icons';
 import { Alert, Card, Col, Empty, Row, Segmented, Skeleton, Typography } from 'antd';
-import { useMemo, useState } from 'react';
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { useCan } from '@/core/auth/permissions';
 import { useAuth } from '@/core/auth/auth-context';
 import {
@@ -39,16 +24,14 @@ import { DashboardStatCard } from '../components/dashboard-stat-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
 import { ReportExportButton } from '../components/report-export-button';
 
-/**
- * Bảng màu phân loại, thứ tự cố định — không bao giờ xoay vòng sang màu thứ 7.
- *
- * Bảng cũ (`#059669,#0ea5e9,#8b5cf6,#f59e0b,#ef4444,#ec4899`) trượt kiểm tra: cặp hồng/đỏ cạnh nhau
- * chỉ cách ΔE 11.4 với mắt thường (ngưỡng 15), và hai màu xanh/cam dưới 3:1 tương phản với nền.
- * Bảng hiện tại đạt cả sáu kiểm tra ở cả nền sáng lẫn nền tối.
- */
-const CHART_COLORS = ['#047857', '#0284c7', '#a16207', '#7c3aed', '#dc2626', '#0891b2'];
-const REVENUE_COLOR = CHART_COLORS[0];
-const ORDERS_COLOR = CHART_COLORS[1];
+// `recharts` nặng ~390 kB. Tách khỏi chunk của trang để thẻ số liệu và bảng phía trên vẽ được ngay;
+// đồ thị tự tải sau và dùng đúng `Skeleton` như trạng thái đang tải dữ liệu nên không nhảy layout.
+const RevenueAreaChart = lazy(() => import('../components/dashboard-charts')
+  .then((module) => ({ default: module.RevenueAreaChart })));
+const OrderStatusPieChart = lazy(() => import('../components/dashboard-charts')
+  .then((module) => ({ default: module.OrderStatusPieChart })));
+const CompletedOrdersBarChart = lazy(() => import('../components/dashboard-charts')
+  .then((module) => ({ default: module.CompletedOrdersBarChart })));
 
 const GRANULARITY_OPTIONS = [
   { value: 'DAY', label: 'Ngày' },
@@ -325,38 +308,9 @@ export function DashboardPage() {
             ) : revenueSeries.length === 0 ? (
               <Empty description={`Chưa có đơn nào hoàn tất trong ${PERIOD_DESCRIPTION[granularity]}`} />
             ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={revenueSeries}>
-                  <defs>
-                    <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={REVENUE_COLOR} stopOpacity={0.28} />
-                      <stop offset="100%" stopColor={REVENUE_COLOR} stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#e2e8f0" />
-                  <XAxis dataKey="date" fontSize={12} axisLine={false} tickLine={false} />
-                  <YAxis
-                    fontSize={12}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(value: number) => `${Math.round(value / 1_000_000)}tr`}
-                  />
-                  <Tooltip
-                    formatter={(value) => money.format(Number(value ?? 0))}
-                    contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }}
-                  />
-                  {/* Một chuỗi duy nhất nên không cần chú giải: tiêu đề thẻ đã nói đây là doanh thu. */}
-                  <Area
-                    type="monotone"
-                    dataKey="amount"
-                    name="Doanh thu thuần"
-                    stroke={REVENUE_COLOR}
-                    strokeWidth={2}
-                    fill="url(#revenueFill)"
-                    animationDuration={600}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<Skeleton active />}>
+                <RevenueAreaChart data={revenueSeries} money={money} />
+              </Suspense>
             )}
           </Card>
         </Col>
@@ -380,28 +334,9 @@ export function DashboardPage() {
             ) : statusPie.length === 0 ? (
               <Empty description="Chưa có đơn nào trong 30 ngày qua" />
             ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={statusPie}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={55}
-                    outerRadius={88}
-                    paddingAngle={2}
-                    // Khe 2px giữa các lát để hai màu cạnh nhau không dính thành một mảng.
-                    stroke="#fff"
-                    strokeWidth={2}
-                    animationDuration={600}
-                  >
-                    {statusPie.map((entry, index) => (
-                      <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <Tooltip contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }} />
-                </PieChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<Skeleton active />}>
+                <OrderStatusPieChart data={statusPie} />
+              </Suspense>
             )}
           </Card>
         </Col>
@@ -500,27 +435,9 @@ export function DashboardPage() {
             ) : revenueSeries.length === 0 ? (
               <Empty description="Chưa có đơn nào hoàn tất trong khoảng này" />
             ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={revenueSeries} barCategoryGap="28%">
-                  <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#e2e8f0" />
-                  <XAxis dataKey="date" fontSize={12} axisLine={false} tickLine={false} />
-                  <YAxis fontSize={12} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(15,23,42,0.04)' }}
-                    formatter={(value) => [`${Number(value ?? 0)} đơn`, 'Đã hoàn tất']}
-                    contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }}
-                  />
-                  {/* Đầu cột bo 4px và neo vào đường nền; một chuỗi nên không dựng chú giải. */}
-                  <Bar
-                    dataKey="orders"
-                    name="Đơn hoàn tất"
-                    fill={ORDERS_COLOR}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={44}
-                    animationDuration={600}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<Skeleton active />}>
+                <CompletedOrdersBarChart data={revenueSeries} />
+              </Suspense>
             )}
           </Card>
         </Col>

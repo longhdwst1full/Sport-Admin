@@ -21,7 +21,9 @@ Trang này **chỉ đọc**: mọi hành động vẫn đi qua `OrderDetailDrawe
 
 ## Ranh giới
 
-`pages/fulfillments-page.tsx` (filter/paging) → `components/fulfillment-table.tsx` (trình bày) → `OrderDetailDrawer` nhập từ barrel `@/features/orders`.
+`pages/fulfillments-page.tsx` (filter/paging) → `components/fulfillment-table.tsx` (trình bày) → `OrderDetailDrawer` nhập trực tiếp từ `@/features/orders/components/order-detail-drawer`.
+
+Import chéo giữa Orders và Fulfillments phải trỏ thẳng vào module đích, **không đi qua barrel**. Barrel `@/features/orders` kéo theo `orders-page`, còn `@/features/fulfillments` kéo theo `fulfillments-page`; mà `order-detail-drawer` lại cần `fulfillmentStatusPresentation`. Đi qua barrel là khép vòng phụ thuộc giữa hai chunk và Rollup cảnh báo sai thứ tự khởi tạo.
 
 ## Generated operation
 

@@ -44,7 +44,10 @@ import {
 import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
 import { OrderReturnPanel } from '@/features/returns';
 import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
-import { fulfillmentStatusPresentation } from '@/features/fulfillments';
+// Trỏ thẳng vào module hằng số thay vì barrel `@/features/fulfillments`: barrel đó kéo theo
+// `fulfillments-page`, mà trang này lại import ngược `OrderDetailDrawer` qua barrel `@/features/orders`
+// → vòng phụ thuộc giữa hai chunk, Rollup cảnh báo sai thứ tự khởi tạo.
+import { fulfillmentStatusPresentation } from '@/features/fulfillments/constants/fulfillment.constants';
 
 interface OrderDetailDrawerProps {
   orderId?: string;

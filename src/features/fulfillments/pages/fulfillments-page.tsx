@@ -6,7 +6,8 @@ import { useListAdminFulfillments } from '@/generated/api/fulfillments/fulfillme
 import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { OrderDetailDrawer } from '@/features/orders';
+// Trỏ thẳng vào component thay vì barrel `@/features/orders` để không khép vòng giữa hai feature.
+import { OrderDetailDrawer } from '@/features/orders/components/order-detail-drawer';
 import { FulfillmentTable } from '../components/fulfillment-table';
 import {
   ACTIONABLE_FULFILLMENT_STATUSES,
