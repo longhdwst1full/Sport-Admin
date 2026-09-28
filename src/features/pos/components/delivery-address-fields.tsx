@@ -1,4 +1,4 @@
-import { CACHE_POLICY } from '@/app/config/query-cache-policy';
+import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import { Form, Input, Select } from 'antd';
 import {
   useListShippingDistricts,

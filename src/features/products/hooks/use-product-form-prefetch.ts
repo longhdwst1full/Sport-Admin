@@ -6,7 +6,7 @@ import {
   searchActiveAdminBrands,
   searchActiveAdminCategories,
 } from '@/generated/api/catalog/catalog';
-import { CACHE_POLICY } from '@/app/config/query-cache-policy';
+import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 
 /** Cùng tham số mà form dùng cho lần mở đầu tiên; khác tham số là khác cache. */
 const FIRST_PAGE = { page: 1, limit: 20 } as const;

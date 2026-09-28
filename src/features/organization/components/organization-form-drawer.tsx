@@ -4,7 +4,7 @@ import { App, Button, Drawer, Form, Input, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import { Controller, useController, useForm, type Control } from 'react-hook-form';
 import * as yup from 'yup';
-import { CACHE_POLICY } from '@/app/config/query-cache-policy';
+import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import {
   useListShippingDistricts,
   useListShippingProvinces,

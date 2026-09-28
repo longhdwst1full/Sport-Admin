@@ -1,4 +1,4 @@
-import { CACHE_POLICY } from '@/app/config/query-cache-policy';
+import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Divider, Drawer, Form, Skeleton, Space, Tabs, Tag } from 'antd';

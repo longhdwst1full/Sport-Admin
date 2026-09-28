@@ -1,4 +1,4 @@
-import { CACHE_POLICY } from '@/app/config/query-cache-policy';
+import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import { DeleteOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Select, Tag } from 'antd';
 import type { FormInstance } from 'antd';
