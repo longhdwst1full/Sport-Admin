@@ -21,7 +21,7 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
     return { createAdminProduct: withOptions, createAdminProductPrice: withOptions, attachAdminProductMedia: withOptions };
   }
   if (domain === 'inventory') {
-    return { createStockAdjustment: withOptions, createStockTransfer: withOptions };
+    return { createStockAdjustment: withOptions, createStockTransfer: withOptions, createStocktake: withOptions };
   }
   if (domain === 'orders') {
     return {

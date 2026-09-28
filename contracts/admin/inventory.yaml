@@ -936,6 +936,451 @@ paths:
         - Admin Inventory Transfers
       x-required-permissions:
         - inventory.transfer.receive
+  /api/v1/admin/inventory/stocktakes:
+    get:
+      operationId: listStocktakes
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 25
+            type: number
+        - name: search
+          required: false
+          in: query
+          schema:
+            maxLength: 100
+            type: string
+        - name: warehouseCode
+          required: false
+          in: query
+          schema:
+            maxLength: 32
+            type: string
+        - name: status
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/StocktakeStatus"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StocktakeListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: List stocktakes visible to the assigned branches
+      tags:
+        - Admin Inventory Stocktakes
+      x-required-permissions:
+        - inventory.stocktake.manage
+    post:
+      description: scopeType FULL chụp mọi dòng tồn của kho; SKU_LIST chỉ chụp các SKU liệt kê. Bỏ trống warehouseCode khi tài khoản chỉ gắn một chi nhánh.
+      operationId: createStocktake
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStocktakeDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StocktakeDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Tạo phiếu kiểm kê nháp và chụp tồn hệ thống
+      tags:
+        - Admin Inventory Stocktakes
+      x-required-permissions:
+        - inventory.stocktake.manage
+  /api/v1/admin/inventory/stocktakes/{id}:
+    get:
+      description: Phiếu DRAFT ẩn systemQuantity/varianceQuantity để giữ nguyên tắc đếm mù. Từ SUBMITTED trả thêm currentOnHand, drifted và postingDelta.
+      operationId: getStocktake
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StocktakeDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Chi tiết phiếu kiểm kê
+      tags:
+        - Admin Inventory Stocktakes
+      x-required-permissions:
+        - inventory.stocktake.manage
+  /api/v1/admin/inventory/stocktakes/{id}/counts:
+    patch:
+      description: Đếm ra rỗng phải gửi countedQuantity = 0; dòng không gửi vẫn là chưa đếm. 409 STOCKTAKE_INVALID_STATUS khi phiếu không còn nháp.
+      operationId: recordStocktakeCounts
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordStocktakeCountsDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StocktakeDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Nhập số đếm thực tế cho các dòng của phiếu nháp
+      tags:
+        - Admin Inventory Stocktakes
+      x-required-permissions:
+        - inventory.stocktake.manage
+  /api/v1/admin/inventory/stocktakes/{id}/submit:
+    post:
+      description: 400 STOCKTAKE_COUNT_INCOMPLETE khi còn dòng chưa nhập số đếm.
+      operationId: submitStocktake
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StocktakeTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StocktakeDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Nộp phiếu để soát chênh lệch
+      tags:
+        - Admin Inventory Stocktakes
+      x-required-permissions:
+        - inventory.stocktake.manage
+  /api/v1/admin/inventory/stocktakes/{id}/approve:
+    post:
+      description: "Không thể hoàn tác: inventory_movements là append-only. Dòng không lệch không sinh movement. 409 STOCKTAKE_BELOW_RESERVED khi số đếm thấp hơn lượng đang giữ cho đơn chờ giao."
+      operationId: approveStocktake
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StocktakeTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StocktakeDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Duyệt phiếu và ghi chênh lệch vào sổ kho
+      tags:
+        - Admin Inventory Stocktakes
+      x-required-permissions:
+        - inventory.stocktake.manage
+  /api/v1/admin/inventory/stocktakes/{id}/cancel:
+    post:
+      description: Không phát sinh movement. Phiếu đã duyệt trả 409 STOCKTAKE_CANCEL_AFTER_APPROVED.
+      operationId: cancelStocktake
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelStocktakeDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StocktakeDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
+      summary: Huỷ phiếu nháp hoặc phiếu đã nộp
+      tags:
+        - Admin Inventory Stocktakes
+      x-required-permissions:
+        - inventory.stocktake.manage
 components:
   schemas:
     InventoryBalanceListDto:
@@ -1354,6 +1799,170 @@ components:
       required:
         - version
         - items
+    StocktakeStatus:
+      type: string
+      enum:
+        - DRAFT
+        - SUBMITTED
+        - APPROVED
+        - CANCELLED
+    StocktakeListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StocktakeSummaryDto"
+        total:
+          type: number
+        page:
+          type: number
+        limit:
+          type: number
+      required:
+        - items
+        - total
+        - page
+        - limit
+    CreateStocktakeDto:
+      type: object
+      properties:
+        warehouseCode:
+          type: string
+          maxLength: 32
+          description: Bỏ trống khi tài khoản chỉ gắn với một chi nhánh; bắt buộc với phạm vi GLOBAL.
+        scopeType:
+          description: FULL chụp mọi dòng tồn của kho; SKU_LIST chỉ chụp các SKU được liệt kê.
+          allOf:
+            - $ref: "#/components/schemas/StocktakeScopeType"
+        skus:
+          description: Bắt buộc khi scopeType = SKU_LIST.
+          type: array
+          items:
+            type: string
+      required:
+        - scopeType
+    StocktakeDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        stocktakeNo:
+          type: string
+        warehouseCode:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/StocktakeStatus"
+        scopeType:
+          allOf:
+            - $ref: "#/components/schemas/StocktakeScopeType"
+        itemCount:
+          type: number
+        countedCount:
+          type: number
+          description: Số dòng đã nhập số đếm.
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdByDisplayName:
+          type: string
+        snapshotAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        postedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelReason:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StocktakeItemDto"
+        approvedByDisplayName:
+          type: string
+          nullable: true
+        cancelledByDisplayName:
+          type: string
+          nullable: true
+        driftedCount:
+          type: number
+          nullable: true
+          description: Số dòng có phát sinh kho sau lúc đếm. Ẩn khi DRAFT. Lớn hơn 0 nên soát lại trước khi duyệt.
+      required:
+        - id
+        - stocktakeNo
+        - warehouseCode
+        - status
+        - scopeType
+        - itemCount
+        - countedCount
+        - version
+        - createdByDisplayName
+        - snapshotAt
+        - createdAt
+        - items
+    RecordStocktakeCountsDto:
+      type: object
+      properties:
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecordStocktakeCountItemDto"
+      required:
+        - version
+        - items
+    StocktakeTransitionDto:
+      type: object
+      properties:
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+      required:
+        - version
+    CancelStocktakeDto:
+      type: object
+      properties:
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+      required:
+        - version
+        - reason
     InventoryBalanceDto:
       type: object
       properties:
@@ -1670,6 +2279,140 @@ components:
         - sku
         - receivedQuantity
         - damagedQuantity
+    StocktakeSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        stocktakeNo:
+          type: string
+        warehouseCode:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/StocktakeStatus"
+        scopeType:
+          allOf:
+            - $ref: "#/components/schemas/StocktakeScopeType"
+        itemCount:
+          type: number
+        countedCount:
+          type: number
+          description: Số dòng đã nhập số đếm.
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdByDisplayName:
+          type: string
+        snapshotAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        postedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelReason:
+          type: string
+          nullable: true
+      required:
+        - id
+        - stocktakeNo
+        - warehouseCode
+        - status
+        - scopeType
+        - itemCount
+        - countedCount
+        - version
+        - createdByDisplayName
+        - snapshotAt
+        - createdAt
+    StocktakeScopeType:
+      type: string
+      enum:
+        - FULL
+        - SKU_LIST
+    StocktakeItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sku:
+          type: string
+        productName:
+          type: string
+        systemQuantity:
+          type: number
+          nullable: true
+          description: Tồn hệ thống lúc chụp. Ẩn (null) khi phiếu còn DRAFT để giữ nguyên tắc đếm mù.
+        countedQuantity:
+          type: number
+          nullable: true
+          description: null = chưa đếm; 0 = đã đếm và rỗng.
+        varianceQuantity:
+          type: number
+          nullable: true
+          description: "Chênh lệch đóng băng tại thời điểm đếm: countedQuantity - systemQuantity. Ẩn khi DRAFT."
+        note:
+          type: string
+          nullable: true
+        countedAt:
+          type: string
+          format: date-time
+          nullable: true
+        countedByDisplayName:
+          type: string
+          nullable: true
+        currentOnHand:
+          type: number
+          nullable: true
+          description: Tồn hiện tại. Ẩn khi DRAFT; khác systemQuantity nghĩa là kho đã phát sinh sau khi chụp.
+        drifted:
+          type: boolean
+          description: true khi có phát sinh kho SAU thời điểm đếm dòng này, nên số đếm đã lỗi thời.
+        postingDelta:
+          type: number
+          nullable: true
+          description: Delta sẽ ghi vào sổ nếu duyệt bây giờ. Đã tính bù phát sinh sau lúc đếm.
+      required:
+        - id
+        - sku
+        - productName
+    RecordStocktakeCountItemDto:
+      type: object
+      properties:
+        sku:
+          type: string
+        countedQuantity:
+          type: number
+          minimum: 0
+          description: Số đếm thực tế. Đếm ra rỗng phải gửi 0; bỏ trường này nghĩa là chưa đếm.
+        note:
+          type: string
+          maxLength: 500
+      required:
+        - sku
+        - countedQuantity
   securitySchemes:
     bearer:
       scheme: bearer

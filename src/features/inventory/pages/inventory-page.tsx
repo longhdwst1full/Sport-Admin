@@ -1,4 +1,4 @@
-import { AuditOutlined, InboxOutlined, PlusOutlined, ReloadOutlined, SwapOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons';
+import { AuditOutlined, ContainerOutlined, InboxOutlined, PlusOutlined, ReloadOutlined, SwapOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Tabs, Tooltip } from 'antd';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import {
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
   getListStockAdjustmentsQueryKey,
+  getListStocktakesQueryKey,
   getListStockTransfersQueryKey,
 } from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
@@ -19,6 +20,8 @@ import { StockAdjustmentDrawer } from '../components/stock-adjustment-drawer';
 import { StockAdjustmentPanel } from '../components/stock-adjustment-panel';
 import { StockTransferCreateDrawer } from '../components/stock-transfer-create-drawer';
 import { StockTransferPanel } from '../components/stock-transfer-panel';
+import { StocktakeCreateDrawer } from '../components/stocktake-create-drawer';
+import { StocktakePanel } from '../components/stocktake-panel';
 
 export function InventoryPage() {
   const queryClient = useQueryClient();
@@ -27,10 +30,13 @@ export function InventoryPage() {
   const [selectedBalance, setSelectedBalance] = useState<InventoryBalanceDto>();
   const [transferOpen, setTransferOpen] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState<string>();
+  const [stocktakeOpen, setStocktakeOpen] = useState(false);
+  const [selectedStocktakeId, setSelectedStocktakeId] = useState<string>();
   const [metrics, setMetrics] = useState({ total: 0, low: 0, out: 0, available: 0 });
   // SECURITY: xem phiếu chuyển kho là quyền riêng với xem tồn; thiếu quyền thì ẩn hẳn tab thay vì
   // để panel gọi API rồi hiển thị lỗi 403.
   const canViewTransfers = useCan('inventory.transfer.view');
+  const canManageStocktakes = useCan('inventory.stocktake.manage');
 
   const openAdjustment = (balance?: InventoryBalanceDto) => {
     setSelectedBalance(balance);
@@ -46,6 +52,7 @@ export function InventoryPage() {
         queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListStocktakesQueryKey() }),
       ]);
     } finally {
       setIsRefreshing(false);
@@ -81,6 +88,11 @@ export function InventoryPage() {
             <PermissionGate permission="inventory.transfer.create">
               <Button icon={<SwapOutlined />} onClick={() => setTransferOpen(true)}>
                 Tạo phiếu chuyển kho
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission="inventory.stocktake.manage">
+              <Button icon={<ContainerOutlined />} onClick={() => setStocktakeOpen(true)}>
+                Tạo phiếu kiểm kê
               </Button>
             </PermissionGate>
           </div>
@@ -141,6 +153,16 @@ export function InventoryPage() {
                 />
               ),
             },
+            canManageStocktakes && {
+              key: 'stocktakes',
+              label: 'Phiếu kiểm kê',
+              children: (
+                <StocktakePanel
+                  selectedId={selectedStocktakeId}
+                  onSelectedIdChange={setSelectedStocktakeId}
+                />
+              ),
+            },
           ].filter((item) => item !== false)}
         />
 
@@ -171,6 +193,14 @@ export function InventoryPage() {
             open
             onClose={() => setTransferOpen(false)}
             onCreated={() => void refresh()}
+          />
+        )}
+
+        {stocktakeOpen && (
+          <StocktakeCreateDrawer
+            open
+            onClose={() => setStocktakeOpen(false)}
+            onCreated={(createdId) => { setSelectedStocktakeId(createdId); void refresh(); }}
           />
         )}
       </ManagementPage>

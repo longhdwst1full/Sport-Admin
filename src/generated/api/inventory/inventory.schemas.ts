@@ -229,6 +229,105 @@ export interface ReceiveStockTransferDto {
   items: ReceiveStockTransferItemDto[];
 }
 
+export type StocktakeStatus = (typeof StocktakeStatus)[keyof typeof StocktakeStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const StocktakeStatus = {
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  APPROVED: 'APPROVED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export interface StocktakeListDto {
+  items: StocktakeSummaryDto[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface CreateStocktakeDto {
+  /**
+   * Bỏ trống khi tài khoản chỉ gắn với một chi nhánh; bắt buộc với phạm vi GLOBAL.
+   * @maxLength 32
+   */
+  warehouseCode?: string;
+  /** FULL chụp mọi dòng tồn của kho; SKU_LIST chỉ chụp các SKU được liệt kê. */
+  scopeType: StocktakeScopeType;
+  /** Bắt buộc khi scopeType = SKU_LIST. */
+  skus?: string[];
+}
+
+export interface StocktakeDetailDto {
+  /** @pattern ^[1-9][0-9]*$ */
+  id: string;
+  stocktakeNo: string;
+  warehouseCode: string;
+  status: StocktakeStatus;
+  scopeType: StocktakeScopeType;
+  itemCount: number;
+  /** Số dòng đã nhập số đếm. */
+  countedCount: number;
+  /**
+   * Current optimistic-lock version
+   * @pattern ^\d+$
+   */
+  version: string;
+  createdByDisplayName: string;
+  snapshotAt: string;
+  createdAt: string;
+  /** @nullable */
+  submittedAt?: string | null;
+  /** @nullable */
+  approvedAt?: string | null;
+  /** @nullable */
+  postedAt?: string | null;
+  /** @nullable */
+  cancelledAt?: string | null;
+  /** @nullable */
+  cancelReason?: string | null;
+  items: StocktakeItemDto[];
+  /** @nullable */
+  approvedByDisplayName?: string | null;
+  /** @nullable */
+  cancelledByDisplayName?: string | null;
+  /**
+   * Số dòng có phát sinh kho sau lúc đếm. Ẩn khi DRAFT. Lớn hơn 0 nên soát lại trước khi duyệt.
+   * @nullable
+   */
+  driftedCount?: number | null;
+}
+
+export interface RecordStocktakeCountsDto {
+  /**
+   * Current optimistic-lock version
+   * @pattern ^\d+$
+   */
+  version: string;
+  items: RecordStocktakeCountItemDto[];
+}
+
+export interface StocktakeTransitionDto {
+  /**
+   * Current optimistic-lock version
+   * @pattern ^\d+$
+   */
+  version: string;
+}
+
+export interface CancelStocktakeDto {
+  /**
+   * Current optimistic-lock version
+   * @pattern ^\d+$
+   */
+  version: string;
+  /**
+   * @minLength 3
+   * @maxLength 1000
+   */
+  reason: string;
+}
+
 export type InventoryBalanceDtoStatus =
   (typeof InventoryBalanceDtoStatus)[keyof typeof InventoryBalanceDtoStatus];
 
@@ -386,6 +485,95 @@ export interface ReceiveStockTransferItemDto {
   damageReason?: string;
 }
 
+export interface StocktakeSummaryDto {
+  /** @pattern ^[1-9][0-9]*$ */
+  id: string;
+  stocktakeNo: string;
+  warehouseCode: string;
+  status: StocktakeStatus;
+  scopeType: StocktakeScopeType;
+  itemCount: number;
+  /** Số dòng đã nhập số đếm. */
+  countedCount: number;
+  /**
+   * Current optimistic-lock version
+   * @pattern ^\d+$
+   */
+  version: string;
+  createdByDisplayName: string;
+  snapshotAt: string;
+  createdAt: string;
+  /** @nullable */
+  submittedAt?: string | null;
+  /** @nullable */
+  approvedAt?: string | null;
+  /** @nullable */
+  postedAt?: string | null;
+  /** @nullable */
+  cancelledAt?: string | null;
+  /** @nullable */
+  cancelReason?: string | null;
+}
+
+export type StocktakeScopeType = (typeof StocktakeScopeType)[keyof typeof StocktakeScopeType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const StocktakeScopeType = {
+  FULL: 'FULL',
+  SKU_LIST: 'SKU_LIST',
+} as const;
+
+export interface StocktakeItemDto {
+  /** @pattern ^[1-9][0-9]*$ */
+  id: string;
+  sku: string;
+  productName: string;
+  /**
+   * Tồn hệ thống lúc chụp. Ẩn (null) khi phiếu còn DRAFT để giữ nguyên tắc đếm mù.
+   * @nullable
+   */
+  systemQuantity?: number | null;
+  /**
+   * null = chưa đếm; 0 = đã đếm và rỗng.
+   * @nullable
+   */
+  countedQuantity?: number | null;
+  /**
+   * Chênh lệch đóng băng tại thời điểm đếm: countedQuantity - systemQuantity. Ẩn khi DRAFT.
+   * @nullable
+   */
+  varianceQuantity?: number | null;
+  /** @nullable */
+  note?: string | null;
+  /** @nullable */
+  countedAt?: string | null;
+  /** @nullable */
+  countedByDisplayName?: string | null;
+  /**
+   * Tồn hiện tại. Ẩn khi DRAFT; khác systemQuantity nghĩa là kho đã phát sinh sau khi chụp.
+   * @nullable
+   */
+  currentOnHand?: number | null;
+  /** true khi có phát sinh kho SAU thời điểm đếm dòng này, nên số đếm đã lỗi thời. */
+  drifted?: boolean;
+  /**
+   * Delta sẽ ghi vào sổ nếu duyệt bây giờ. Đã tính bù phát sinh sau lúc đếm.
+   * @nullable
+   */
+  postingDelta?: number | null;
+}
+
+export interface RecordStocktakeCountItemDto {
+  sku: string;
+  /**
+   * Số đếm thực tế. Đếm ra rỗng phải gửi 0; bỏ trường này nghĩa là chưa đếm.
+   * @minimum 0
+   */
+  countedQuantity: number;
+  /** @maxLength 500 */
+  note?: string;
+}
+
 export type ListInventoryBalancesParams = {
   /**
    * @minimum 1
@@ -496,4 +684,25 @@ export type ListStockTransfersParams = {
    */
   warehouseCode?: string;
   status?: StockTransferStatus;
+};
+
+export type ListStocktakesParams = {
+  /**
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * @maxLength 100
+   */
+  search?: string;
+  /**
+   * @maxLength 32
+   */
+  warehouseCode?: string;
+  status?: StocktakeStatus;
 };

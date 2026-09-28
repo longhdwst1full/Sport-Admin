@@ -23,8 +23,10 @@ import type {
 
 import type {
   CancelStockTransferDto,
+  CancelStocktakeDto,
   CreateStockAdjustmentDto,
   CreateStockTransferDto,
+  CreateStocktakeDto,
   ErrorResponseDto,
   InventoryBalanceListDto,
   InventoryBalanceSummaryDto,
@@ -33,13 +35,18 @@ import type {
   ListInventoryMovementsParams,
   ListStockAdjustmentsParams,
   ListStockTransfersParams,
+  ListStocktakesParams,
   ReceiveStockTransferDto,
+  RecordStocktakeCountsDto,
   StockAdjustmentDetailDto,
   StockAdjustmentListDto,
   StockAdjustmentResultDto,
   StockTransferDetailDto,
   StockTransferListDto,
   StockTransferTransitionDto,
+  StocktakeDetailDto,
+  StocktakeListDto,
+  StocktakeTransitionDto,
   SummarizeInventoryBalancesParams,
   UpdateStockTransferDto,
 } from './inventory.schemas';
@@ -1667,6 +1674,768 @@ export const useReceiveStockTransfer = <
   TContext
 > => {
   const mutationOptions = getReceiveStockTransferMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary List stocktakes visible to the assigned branches
+ */
+export const listStocktakes = (params?: ListStocktakesParams, signal?: AbortSignal) => {
+  return apiFetcher<StocktakeListDto>({
+    url: `/api/v1/admin/inventory/stocktakes`,
+    method: 'GET',
+    params,
+    signal,
+  });
+};
+
+export const getListStocktakesQueryKey = (params?: ListStocktakesParams) => {
+  return [`/api/v1/admin/inventory/stocktakes`, ...(params ? [params] : [])] as const;
+};
+
+export const getListStocktakesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStocktakes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStocktakesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStocktakes>>, TError, TData>>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStocktakesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStocktakes>>> = ({ signal }) =>
+    listStocktakes(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStocktakes>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListStocktakesQueryResult = NonNullable<Awaited<ReturnType<typeof listStocktakes>>>;
+export type ListStocktakesQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useListStocktakes<
+  TData = Awaited<ReturnType<typeof listStocktakes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params: undefined | ListStocktakesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStocktakes>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStocktakes>>,
+          TError,
+          Awaited<ReturnType<typeof listStocktakes>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStocktakes<
+  TData = Awaited<ReturnType<typeof listStocktakes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStocktakesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStocktakes>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStocktakes>>,
+          TError,
+          Awaited<ReturnType<typeof listStocktakes>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStocktakes<
+  TData = Awaited<ReturnType<typeof listStocktakes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStocktakesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStocktakes>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List stocktakes visible to the assigned branches
+ */
+
+export function useListStocktakes<
+  TData = Awaited<ReturnType<typeof listStocktakes>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  params?: ListStocktakesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStocktakes>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListStocktakesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * scopeType FULL chụp mọi dòng tồn của kho; SKU_LIST chỉ chụp các SKU liệt kê. Bỏ trống warehouseCode khi tài khoản chỉ gắn một chi nhánh.
+ * @summary Tạo phiếu kiểm kê nháp và chụp tồn hệ thống
+ */
+export const createStocktake = (
+  createStocktakeDto: CreateStocktakeDto,
+  options?: SecondParameter<typeof apiFetcherWithOptions>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcherWithOptions<StocktakeDetailDto>(
+    {
+      url: `/api/v1/admin/inventory/stocktakes`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createStocktakeDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getCreateStocktakeMutationOptions = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStocktake>>,
+    TError,
+    { data: CreateStocktakeDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetcherWithOptions>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createStocktake>>,
+  TError,
+  { data: CreateStocktakeDto },
+  TContext
+> => {
+  const mutationKey = ['createStocktake'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createStocktake>>,
+    { data: CreateStocktakeDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createStocktake(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateStocktakeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createStocktake>>
+>;
+export type CreateStocktakeMutationBody = CreateStocktakeDto;
+export type CreateStocktakeMutationError =
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto;
+
+/**
+ * @summary Tạo phiếu kiểm kê nháp và chụp tồn hệ thống
+ */
+export const useCreateStocktake = <
+  TError =
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createStocktake>>,
+      TError,
+      { data: CreateStocktakeDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetcherWithOptions>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createStocktake>>,
+  TError,
+  { data: CreateStocktakeDto },
+  TContext
+> => {
+  const mutationOptions = getCreateStocktakeMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Phiếu DRAFT ẩn systemQuantity/varianceQuantity để giữ nguyên tắc đếm mù. Từ SUBMITTED trả thêm currentOnHand, drifted và postingDelta.
+ * @summary Chi tiết phiếu kiểm kê
+ */
+export const getStocktake = (id: string, signal?: AbortSignal) => {
+  return apiFetcher<StocktakeDetailDto>({
+    url: `/api/v1/admin/inventory/stocktakes/${id}`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getGetStocktakeQueryKey = (id?: string) => {
+  return [`/api/v1/admin/inventory/stocktakes/${id}`] as const;
+};
+
+export const getGetStocktakeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStocktake>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStocktake>>, TError, TData>>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStocktakeQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStocktake>>> = ({ signal }) =>
+    getStocktake(id, signal);
+
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStocktake>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetStocktakeQueryResult = NonNullable<Awaited<ReturnType<typeof getStocktake>>>;
+export type GetStocktakeQueryError = ErrorType<
+  ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto
+>;
+
+export function useGetStocktake<
+  TData = Awaited<ReturnType<typeof getStocktake>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStocktake>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStocktake>>,
+          TError,
+          Awaited<ReturnType<typeof getStocktake>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStocktake<
+  TData = Awaited<ReturnType<typeof getStocktake>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStocktake>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStocktake>>,
+          TError,
+          Awaited<ReturnType<typeof getStocktake>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStocktake<
+  TData = Awaited<ReturnType<typeof getStocktake>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStocktake>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Chi tiết phiếu kiểm kê
+ */
+
+export function useGetStocktake<
+  TData = Awaited<ReturnType<typeof getStocktake>>,
+  TError = ErrorType<ErrorResponseDto | ErrorResponseDto | ErrorResponseDto | ErrorResponseDto>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStocktake>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetStocktakeQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Đếm ra rỗng phải gửi countedQuantity = 0; dòng không gửi vẫn là chưa đếm. 409 STOCKTAKE_INVALID_STATUS khi phiếu không còn nháp.
+ * @summary Nhập số đếm thực tế cho các dòng của phiếu nháp
+ */
+export const recordStocktakeCounts = (
+  id: string,
+  recordStocktakeCountsDto: BodyType<RecordStocktakeCountsDto>,
+) => {
+  return apiFetcher<StocktakeDetailDto>({
+    url: `/api/v1/admin/inventory/stocktakes/${id}/counts`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: recordStocktakeCountsDto,
+  });
+};
+
+export const getRecordStocktakeCountsMutationOptions = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordStocktakeCounts>>,
+    TError,
+    { id: string; data: BodyType<RecordStocktakeCountsDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordStocktakeCounts>>,
+  TError,
+  { id: string; data: BodyType<RecordStocktakeCountsDto> },
+  TContext
+> => {
+  const mutationKey = ['recordStocktakeCounts'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordStocktakeCounts>>,
+    { id: string; data: BodyType<RecordStocktakeCountsDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return recordStocktakeCounts(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordStocktakeCountsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordStocktakeCounts>>
+>;
+export type RecordStocktakeCountsMutationBody = BodyType<RecordStocktakeCountsDto>;
+export type RecordStocktakeCountsMutationError = ErrorType<
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+>;
+
+/**
+ * @summary Nhập số đếm thực tế cho các dòng của phiếu nháp
+ */
+export const useRecordStocktakeCounts = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordStocktakeCounts>>,
+      TError,
+      { id: string; data: BodyType<RecordStocktakeCountsDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordStocktakeCounts>>,
+  TError,
+  { id: string; data: BodyType<RecordStocktakeCountsDto> },
+  TContext
+> => {
+  const mutationOptions = getRecordStocktakeCountsMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * 400 STOCKTAKE_COUNT_INCOMPLETE khi còn dòng chưa nhập số đếm.
+ * @summary Nộp phiếu để soát chênh lệch
+ */
+export const submitStocktake = (
+  id: string,
+  stocktakeTransitionDto: BodyType<StocktakeTransitionDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<StocktakeDetailDto>({
+    url: `/api/v1/admin/inventory/stocktakes/${id}/submit`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: stocktakeTransitionDto,
+    signal,
+  });
+};
+
+export const getSubmitStocktakeMutationOptions = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitStocktake>>,
+    TError,
+    { id: string; data: BodyType<StocktakeTransitionDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitStocktake>>,
+  TError,
+  { id: string; data: BodyType<StocktakeTransitionDto> },
+  TContext
+> => {
+  const mutationKey = ['submitStocktake'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitStocktake>>,
+    { id: string; data: BodyType<StocktakeTransitionDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return submitStocktake(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitStocktakeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof submitStocktake>>
+>;
+export type SubmitStocktakeMutationBody = BodyType<StocktakeTransitionDto>;
+export type SubmitStocktakeMutationError = ErrorType<
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+>;
+
+/**
+ * @summary Nộp phiếu để soát chênh lệch
+ */
+export const useSubmitStocktake = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof submitStocktake>>,
+      TError,
+      { id: string; data: BodyType<StocktakeTransitionDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof submitStocktake>>,
+  TError,
+  { id: string; data: BodyType<StocktakeTransitionDto> },
+  TContext
+> => {
+  const mutationOptions = getSubmitStocktakeMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Không thể hoàn tác: inventory_movements là append-only. Dòng không lệch không sinh movement. 409 STOCKTAKE_BELOW_RESERVED khi số đếm thấp hơn lượng đang giữ cho đơn chờ giao.
+ * @summary Duyệt phiếu và ghi chênh lệch vào sổ kho
+ */
+export const approveStocktake = (
+  id: string,
+  stocktakeTransitionDto: BodyType<StocktakeTransitionDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<StocktakeDetailDto>({
+    url: `/api/v1/admin/inventory/stocktakes/${id}/approve`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: stocktakeTransitionDto,
+    signal,
+  });
+};
+
+export const getApproveStocktakeMutationOptions = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveStocktake>>,
+    TError,
+    { id: string; data: BodyType<StocktakeTransitionDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof approveStocktake>>,
+  TError,
+  { id: string; data: BodyType<StocktakeTransitionDto> },
+  TContext
+> => {
+  const mutationKey = ['approveStocktake'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof approveStocktake>>,
+    { id: string; data: BodyType<StocktakeTransitionDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return approveStocktake(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ApproveStocktakeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof approveStocktake>>
+>;
+export type ApproveStocktakeMutationBody = BodyType<StocktakeTransitionDto>;
+export type ApproveStocktakeMutationError = ErrorType<
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+>;
+
+/**
+ * @summary Duyệt phiếu và ghi chênh lệch vào sổ kho
+ */
+export const useApproveStocktake = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof approveStocktake>>,
+      TError,
+      { id: string; data: BodyType<StocktakeTransitionDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof approveStocktake>>,
+  TError,
+  { id: string; data: BodyType<StocktakeTransitionDto> },
+  TContext
+> => {
+  const mutationOptions = getApproveStocktakeMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Không phát sinh movement. Phiếu đã duyệt trả 409 STOCKTAKE_CANCEL_AFTER_APPROVED.
+ * @summary Huỷ phiếu nháp hoặc phiếu đã nộp
+ */
+export const cancelStocktake = (
+  id: string,
+  cancelStocktakeDto: BodyType<CancelStocktakeDto>,
+  signal?: AbortSignal,
+) => {
+  return apiFetcher<StocktakeDetailDto>({
+    url: `/api/v1/admin/inventory/stocktakes/${id}/cancel`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: cancelStocktakeDto,
+    signal,
+  });
+};
+
+export const getCancelStocktakeMutationOptions = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelStocktake>>,
+    TError,
+    { id: string; data: BodyType<CancelStocktakeDto> },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelStocktake>>,
+  TError,
+  { id: string; data: BodyType<CancelStocktakeDto> },
+  TContext
+> => {
+  const mutationKey = ['cancelStocktake'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelStocktake>>,
+    { id: string; data: BodyType<CancelStocktakeDto> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return cancelStocktake(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelStocktakeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelStocktake>>
+>;
+export type CancelStocktakeMutationBody = BodyType<CancelStocktakeDto>;
+export type CancelStocktakeMutationError = ErrorType<
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+  | ErrorResponseDto
+>;
+
+/**
+ * @summary Huỷ phiếu nháp hoặc phiếu đã nộp
+ */
+export const useCancelStocktake = <
+  TError = ErrorType<
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+    | ErrorResponseDto
+  >,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelStocktake>>,
+      TError,
+      { id: string; data: BodyType<CancelStocktakeDto> },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelStocktake>>,
+  TError,
+  { id: string; data: BodyType<CancelStocktakeDto> },
+  TContext
+> => {
+  const mutationOptions = getCancelStocktakeMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
