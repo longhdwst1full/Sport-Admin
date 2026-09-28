@@ -43,16 +43,18 @@ import {
 } from '../constants/order.constants';
 import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
 import { OrderReturnPanel } from '@/features/returns';
-import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
-// Trỏ thẳng vào module hằng số thay vì barrel `@/features/fulfillments`: barrel đó kéo theo
-// `fulfillments-page`, mà trang này lại import ngược `OrderDetailDrawer` qua barrel `@/features/orders`
-// → vòng phụ thuộc giữa hai chunk, Rollup cảnh báo sai thứ tự khởi tạo.
-import { fulfillmentStatusPresentation } from '@/features/fulfillments';
+// Nhãn trạng thái vận đơn sống ở shared (không phải trong `features/fulfillments`) vì đây chỉ
+// đọc `OrderShipmentDto.status`, không phải use case của fulfillments — xem comment tại nguồn.
+import { fulfillmentStatusPresentation } from '@/shared/constants/fulfillment-status-presentation';
 import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
+import type { ReactNode } from 'react';
 
 interface OrderDetailDrawerProps {
   orderId?: string;
   onClose: () => void;
+  // CONTRACT: OrderDetailDrawer không tự import panel vận đơn (feature `fulfillments`) để tránh
+  // vòng phụ thuộc orders↔fulfillments — nơi gọi (orders-page/fulfillments-page) inject panel này.
+  renderFulfillmentPanel?: (orderId: string) => ReactNode;
 }
 
 const ORDER_STEPS = [
@@ -84,7 +86,7 @@ function getOrderCurrentStep(status: string): number {
   }
 }
 
-export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) {
+export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: OrderDetailDrawerProps) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('order.manage');
@@ -504,7 +506,7 @@ export function OrderDetailDrawer({ orderId, onClose }: OrderDetailDrawerProps) 
             )}
 
             {/* Fulfillment workflow panel */}
-            <FulfillmentWorkflowPanel orderId={order.id} />
+            {renderFulfillmentPanel?.(order.id)}
 
             {/* Đổi trả: tự ẩn khi đơn chưa giao hoặc tài khoản không có return.create */}
             <OrderReturnPanel orderId={order.id} />

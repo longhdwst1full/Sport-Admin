@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
-import { PosOrderDrawer } from '@/features/pos/components/pos-order-drawer';
+import { PosOrderDrawer } from '@/features/pos';
+import { FulfillmentWorkflowPanel } from '@/features/fulfillments';
 import {
   DollarOutlined,
   InboxOutlined,
@@ -230,7 +231,11 @@ export function OrdersPage() {
         }
       />
 
-      <OrderDetailDrawer orderId={selectedId} onClose={() => setSelectedId(undefined)} />
+      <OrderDetailDrawer
+        orderId={selectedId}
+        onClose={() => setSelectedId(undefined)}
+        renderFulfillmentPanel={(orderId) => <FulfillmentWorkflowPanel orderId={orderId} />}
+      />
       <PosOrderDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
     </PageTransition>
   );

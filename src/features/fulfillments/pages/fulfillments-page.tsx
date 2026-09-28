@@ -6,9 +6,11 @@ import { useListAdminFulfillments } from '@/generated/api/fulfillments/fulfillme
 import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
-// Trỏ thẳng vào component thay vì barrel `@/features/orders` để không khép vòng giữa hai feature.
-import { OrderDetailDrawer } from '@/features/orders/components/order-detail-drawer';
+// `orders` không còn import gì từ `fulfillments` (OrderDetailDrawer nhận panel qua prop),
+// nên import qua barrel công khai ở đây không còn tạo vòng phụ thuộc giữa hai feature.
+import { OrderDetailDrawer } from '@/features/orders';
 import { FulfillmentTable } from '../components/fulfillment-table';
+import { FulfillmentWorkflowPanel } from '../components/fulfillment-workflow-panel';
 import {
   ACTIONABLE_FULFILLMENT_STATUSES,
   FULFILLMENT_PAGE_SIZE,
@@ -117,7 +119,11 @@ export function FulfillmentsPage() {
           onOpenOrder={setSelectedOrderId}
         />
       </ManagementPage>
-      <OrderDetailDrawer orderId={selectedOrderId} onClose={() => setSelectedOrderId(undefined)} />
+      <OrderDetailDrawer
+        orderId={selectedOrderId}
+        onClose={() => setSelectedOrderId(undefined)}
+        renderFulfillmentPanel={(orderId) => <FulfillmentWorkflowPanel orderId={orderId} />}
+      />
     </>
   );
 }
