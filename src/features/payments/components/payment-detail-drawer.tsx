@@ -5,6 +5,7 @@ import {
   confirmAdminPayment,
   getAdminPayment,
   getGetAdminPaymentQueryKey,
+  getListAdminPaymentsQueryKey,
   rejectAdminPayment,
 } from '@/generated/api/payments/payments';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
@@ -50,7 +51,8 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
     },
     onSuccess: async (updated) => {
       queryClient.setQueryData(getGetAdminPaymentQueryKey(updated.id), updated);
-      await queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/payments'] });
+      // Không truyền params: khớp tiền tố nên mọi trang/filter đang cache của danh sách payment đều bị invalidate.
+      await queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() });
       await queryClient.invalidateQueries({ queryKey: getGetAdminOrderQueryKey(updated.orderId) });
       await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
       closeAction();
