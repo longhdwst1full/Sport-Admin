@@ -12,6 +12,12 @@ export interface SystemModuleListDto {
   p1Models: number;
 }
 
+export interface JobHealthListDto {
+  items: JobHealthDto[];
+  /** Không có lượt thành công nào quá số phút này thì coi là chết. */
+  staleAfterMinutes: number;
+}
+
 export type SystemParameterGroup = (typeof SystemParameterGroup)[keyof typeof SystemParameterGroup];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -173,6 +179,38 @@ export interface SystemModuleDto {
   p1Count: number;
 }
 
+/**
+ * @nullable
+ */
+export type JobHealthDtoLastRunStatus = JobRunStatus | null;
+
+export interface JobHealthDto {
+  name: string;
+  /** Phần phút của lịch cron */
+  cadence: string;
+  /** Job bị tắt bằng tham số hệ thống thì không bị coi là chết. */
+  enabled: boolean;
+  /** UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng. */
+  health: JobHealthState;
+  /** @nullable */
+  lastRunStatus?: JobHealthDtoLastRunStatus;
+  /** @nullable */
+  lastRunAt?: string | null;
+  /** @nullable */
+  lastSuccessAt?: string | null;
+  /** @nullable */
+  minutesSinceSuccess?: number | null;
+  /** Số lượt thất bại liên tiếp tính từ lượt gần nhất. */
+  consecutiveFailures: number;
+  /** @nullable */
+  lastError?: string | null;
+  /**
+   * Lần gần nhất hệ thống tự cảnh báo job chết. Có giá trị mà không ai biết nghĩa là kênh gửi cảnh báo đang hỏng.
+   * @nullable
+   */
+  lastStaleAlertAt?: string | null;
+}
+
 export interface ErrorDetailDto {
   field?: string;
   code: string;
@@ -188,6 +226,27 @@ export const SystemParameterValueType = {
   DECIMAL: 'DECIMAL',
   BOOLEAN: 'BOOLEAN',
   STRING: 'STRING',
+} as const;
+
+/**
+ * UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng.
+ */
+export type JobHealthState = (typeof JobHealthState)[keyof typeof JobHealthState];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const JobHealthState = {
+  HEALTHY: 'HEALTHY',
+  DOWN: 'DOWN',
+  DISABLED: 'DISABLED',
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+export type JobRunStatus = (typeof JobRunStatus)[keyof typeof JobRunStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const JobRunStatus = {
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED',
 } as const;
 
 export type ListAdminSystemParametersParams = {

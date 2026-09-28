@@ -11,6 +11,4 @@ export const stocktakeScopeLabel = {
   SKU_LIST: 'Theo SKU',
 } as const;
 
-export const formatStocktakeTime = (value?: string | null) => value
-  ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value))
-  : '—';
+export { formatDateTime as formatStocktakeTime } from '@/lib/format/datetime';

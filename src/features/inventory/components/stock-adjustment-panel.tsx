@@ -4,6 +4,7 @@ import { AdminTable, TableActionButton , CursorPagination } from '@/foundation/t
 import { useState } from 'react';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { useGetStockAdjustment, useListStockAdjustments } from '@/generated/api/inventory/inventory';
+import { formatDateTime } from '@/lib/format/datetime';
 
 const adjustmentTypeLabel: Record<string, string> = {
   CORRECTION: 'Điều chỉnh',
@@ -37,7 +38,7 @@ export function StockAdjustmentPanel() {
           { title: 'Số dòng', dataIndex: 'itemCount', align: 'right', width: 100 },
           { title: 'Lý do', dataIndex: 'reason' },
           { title: 'Người tạo', dataIndex: 'createdByDisplayName', width: 170 },
-          { title: 'Thời điểm', dataIndex: 'postedAt', width: 180, render: (value) => new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) },
+          { title: 'Thời điểm', dataIndex: 'postedAt', width: 180, render: (value) => formatDateTime(value) },
           { title: '', key: 'actions', width: 72, fixed: 'right', render: (_, row) => <TableActionButton label={`Xem phiếu ${row.adjustmentNo}`} icon={<EyeOutlined />} onClick={() => setSelectedId(row.id)} /> },
         ]}
       />

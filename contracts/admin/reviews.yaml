@@ -277,7 +277,7 @@ components:
         verifiedPurchase:
           type: boolean
         status:
-          description: Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai
+          description: Đánh giá của khách đã mua vào thẳng APPROVED và hiển thị ngay; kiểm duyệt là hậu kiểm, Admin gỡ bằng REJECTED. PENDING chỉ còn ở dữ liệu cũ.
           allOf:
             - $ref: "#/components/schemas/ReviewModerationStatus"
         version:
@@ -365,7 +365,7 @@ components:
         - PENDING
         - APPROVED
         - REJECTED
-      description: Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai
+      description: Đánh giá của khách đã mua vào thẳng APPROVED và hiển thị ngay; kiểm duyệt là hậu kiểm, Admin gỡ bằng REJECTED. PENDING chỉ còn ở dữ liệu cũ.
     ReviewCommentDto:
       type: object
       properties:

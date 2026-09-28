@@ -21,6 +21,7 @@ import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { AdminTable } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { DashboardStatCard } from '../components/dashboard-stat-card';
+import { JobHealthCard } from '../components/job-health-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
 import { ReportExportButton } from '../components/report-export-button';
 
@@ -103,6 +104,7 @@ export function DashboardPage() {
   const canSeeRevenue = useCan('report.revenue.view');
   const canSeeInventory = useCan('report.inventory.view');
   const canSeeOrders = useCan('order.view');
+  const canSeeSystem = useCan('system.module.view');
 
   const [granularity, setGranularity] = useState<Granularity>('DAY');
   // Khoảng tính lại khi đổi mức gom; ghim theo ngày để không tạo query key mới mỗi lần render.
@@ -270,6 +272,9 @@ export function DashboardPage() {
       </section>
 
       {canSeeOrders && <PendingOrdersCard />}
+
+      {/* Tác vụ nền đặt ở màn đầu tiên: job chết từng im lặng hơn 12 giờ vì tín hiệu chỉ nằm trong audit_logs. */}
+      {canSeeSystem && <JobHealthCard />}
 
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={16}>

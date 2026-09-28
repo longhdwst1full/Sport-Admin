@@ -22,6 +22,7 @@ import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory
 import { getApiErrorMessage } from '@/lib/api/error';
 import { StockTransferCreateDrawer } from './stock-transfer-create-drawer';
 import { availableStockTransferActions } from '../model/stock-transfer-actions.policy';
+import { stockTransferStatusMeta } from '../model/stock-transfer-display';
 
 interface ReceiveLineValues {
   sku: string;
@@ -43,13 +44,6 @@ const receiveSchema: yup.ObjectSchema<ReceiveValues> = yup.object({
   })).required(),
 });
 
-const statusMeta = {
-  DRAFT: { label: 'Nháp', color: 'default' },
-  SUBMITTED: { label: 'Chờ xuất', color: 'blue' },
-  SHIPPED: { label: 'Đang vận chuyển', color: 'orange' },
-  RECEIVED: { label: 'Đã nhận', color: 'green' },
-  CANCELLED: { label: 'Đã huỷ', color: 'red' },
-} as const;
 
 
 function receiveDefaults(transfer?: StockTransferDetailDto): ReceiveValues {
@@ -185,7 +179,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
               <Typography.Title level={4} style={{ margin: 0 }}>{transfer.fromWarehouseCode} → {transfer.toWarehouseCode}</Typography.Title>
               <Typography.Text type="secondary">Tạo bởi {transfer.createdByDisplayName} · version {transfer.version}</Typography.Text>
             </div>
-            <Tag color={statusMeta[transfer.status].color}>{statusMeta[transfer.status].label}</Tag>
+            <Tag color={stockTransferStatusMeta[transfer.status].color}>{stockTransferStatusMeta[transfer.status].label}</Tag>
           </div>
           <Descriptions bordered size="small" column={{ xs: 1, sm: 2 }}>
             <Descriptions.Item label="Lý do" span={2}>{transfer.reason}</Descriptions.Item>

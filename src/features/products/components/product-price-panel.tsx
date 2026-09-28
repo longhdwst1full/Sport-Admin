@@ -17,6 +17,7 @@ import {
 import type { ProductDetailDto, ProductPriceWindowDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { useCan } from '@/core/auth/permissions';
+import { formatDateTime } from '@/lib/format/datetime';
 
 interface PriceFormValues {
   variantId: string;
@@ -38,7 +39,6 @@ const inputNow = () => {
 };
 
 const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
-const dateTime = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
 
 export function ProductPricePanel({
   product,
@@ -125,8 +125,8 @@ export function ProductPricePanel({
 
   const priceColumns = [
     { title: 'Giá đã VAT', dataIndex: 'amount', render: (value: string) => <strong>{money.format(Number(value))}</strong> },
-    { title: 'Bắt đầu', dataIndex: 'startsAt', render: (value: string) => dateTime.format(new Date(value)) },
-    { title: 'Kết thúc', dataIndex: 'endsAt', render: (value?: string | null) => value ? dateTime.format(new Date(value)) : 'Không giới hạn' },
+    { title: 'Bắt đầu', dataIndex: 'startsAt', render: (value: string) => formatDateTime(value) },
+    { title: 'Kết thúc', dataIndex: 'endsAt', render: (value?: string | null) => value ? formatDateTime(value) : 'Không giới hạn' },
     { title: 'Trạng thái', dataIndex: 'status', render: (value: string) => <Tag>{value}</Tag> },
   ];
 

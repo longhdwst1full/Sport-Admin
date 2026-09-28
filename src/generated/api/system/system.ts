@@ -25,6 +25,7 @@ import type {
   CreateSystemParameterDto,
   DeleteSystemParameterDto,
   ErrorResponseDto,
+  JobHealthListDto,
   ListAdminSystemParametersParams,
   SystemModuleListDto,
   SystemParameterDto,
@@ -132,6 +133,112 @@ export function useListSystemModules<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListSystemModulesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Đọc heartbeat trong audit_logs. health=DOWN nghĩa là không có lượt chạy thành công nào trong staleAfterMinutes; lastStaleAlertAt có giá trị mà không ai nhận được cảnh báo nghĩa là kênh gửi đang hỏng.
+ * @summary Sức khoẻ các job nền chạy bằng cron ngoài
+ */
+export const listJobHealth = (signal?: AbortSignal) => {
+  return apiFetcher<JobHealthListDto>({
+    url: `/api/v1/admin/system/job-health`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getListJobHealthQueryKey = () => {
+  return [`/api/v1/admin/system/job-health`] as const;
+};
+
+export const getListJobHealthQueryOptions = <
+  TData = Awaited<ReturnType<typeof listJobHealth>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobHealth>>, TError, TData>>;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListJobHealthQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listJobHealth>>> = ({ signal }) =>
+    listJobHealth(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listJobHealth>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListJobHealthQueryResult = NonNullable<Awaited<ReturnType<typeof listJobHealth>>>;
+export type ListJobHealthQueryError = ErrorType<unknown>;
+
+export function useListJobHealth<
+  TData = Awaited<ReturnType<typeof listJobHealth>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobHealth>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listJobHealth>>,
+          TError,
+          Awaited<ReturnType<typeof listJobHealth>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListJobHealth<
+  TData = Awaited<ReturnType<typeof listJobHealth>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobHealth>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listJobHealth>>,
+          TError,
+          Awaited<ReturnType<typeof listJobHealth>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListJobHealth<
+  TData = Awaited<ReturnType<typeof listJobHealth>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobHealth>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Sức khoẻ các job nền chạy bằng cron ngoài
+ */
+
+export function useListJobHealth<
+  TData = Awaited<ReturnType<typeof listJobHealth>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobHealth>>, TError, TData>>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListJobHealthQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

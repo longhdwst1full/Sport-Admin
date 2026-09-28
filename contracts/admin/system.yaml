@@ -27,6 +27,25 @@ paths:
         - Admin System
       x-required-permissions:
         - system.module.view
+  /api/v1/admin/system/job-health:
+    get:
+      description: Đọc heartbeat trong audit_logs. health=DOWN nghĩa là không có lượt chạy thành công nào trong staleAfterMinutes; lastStaleAlertAt có giá trị mà không ai nhận được cảnh báo nghĩa là kênh gửi đang hỏng.
+      operationId: listJobHealth
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobHealthListDto"
+      security:
+        - bearer: []
+      summary: Sức khoẻ các job nền chạy bằng cron ngoài
+      tags:
+        - Admin System
+      x-required-permissions:
+        - system.module.view
   /api/v1/admin/system/parameters:
     get:
       operationId: listAdminSystemParameters
@@ -275,6 +294,19 @@ components:
         - totalModels
         - p0Models
         - p1Models
+    JobHealthListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobHealthDto"
+        staleAfterMinutes:
+          type: number
+          description: Không có lượt thành công nào quá số phút này thì coi là chết.
+      required:
+        - items
+        - staleAfterMinutes
     SystemParameterGroup:
       type: string
       enum:
@@ -526,6 +558,55 @@ components:
         - tables
         - p0Count
         - p1Count
+    JobHealthDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: order-maintenance
+        cadence:
+          type: string
+          description: Phần phút của lịch cron
+          example: 2-59/5
+        enabled:
+          type: boolean
+          description: Job bị tắt bằng tham số hệ thống thì không bị coi là chết.
+        health:
+          description: UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng.
+          allOf:
+            - $ref: "#/components/schemas/JobHealthState"
+        lastRunStatus:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/JobRunStatus"
+        lastRunAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastSuccessAt:
+          type: string
+          format: date-time
+          nullable: true
+        minutesSinceSuccess:
+          type: number
+          nullable: true
+        consecutiveFailures:
+          type: number
+          description: Số lượt thất bại liên tiếp tính từ lượt gần nhất.
+        lastError:
+          type: string
+          nullable: true
+        lastStaleAlertAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Lần gần nhất hệ thống tự cảnh báo job chết. Có giá trị mà không ai biết nghĩa là kênh gửi cảnh báo đang hỏng.
+      required:
+        - name
+        - cadence
+        - enabled
+        - health
+        - consecutiveFailures
     ErrorDetailDto:
       type: object
       properties:
@@ -548,6 +629,19 @@ components:
         - DECIMAL
         - BOOLEAN
         - STRING
+    JobHealthState:
+      type: string
+      enum:
+        - HEALTHY
+        - DOWN
+        - DISABLED
+        - UNKNOWN
+      description: UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng.
+    JobRunStatus:
+      type: string
+      enum:
+        - SUCCEEDED
+        - FAILED
   securitySchemes:
     bearer:
       scheme: bearer

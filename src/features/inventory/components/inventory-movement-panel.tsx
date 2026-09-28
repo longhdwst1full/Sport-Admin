@@ -7,6 +7,7 @@ import { AdminTable , CursorPagination } from '@/foundation/table';
 import { useListInventoryMovements } from '@/generated/api/inventory/inventory';
 import { InventoryMovementType } from '@/generated/api/inventory/inventory.schemas';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
+import { formatDateTime } from '@/lib/format/datetime';
 
 // Khai theo enum sinh từ contract: backend thêm loại movement mà quên nhãn thì compile báo lỗi.
 const movementLabels: Record<InventoryMovementType, { label: string; color: string }> = {
@@ -57,7 +58,7 @@ export function InventoryMovementPanel() {
         locale={{ emptyText: 'Chưa có biến động kho phù hợp.' }}
         scroll={{ x: 1290 }}
         columns={[
-          { title: 'Thời điểm', dataIndex: 'occurredAt', width: 180, render: (value) => new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) },
+          { title: 'Thời điểm', dataIndex: 'occurredAt', width: 180, render: (value) => formatDateTime(value) },
           { title: 'SKU', dataIndex: 'sku', width: 180, render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },
           { title: 'Kho', dataIndex: 'warehouseCode', width: 150 },
           { title: 'Loại', dataIndex: 'movementType', width: 130, render: (value: InventoryMovementType) => <Tag color={movementLabels[value]?.color}>{movementLabels[value]?.label ?? value}</Tag> },

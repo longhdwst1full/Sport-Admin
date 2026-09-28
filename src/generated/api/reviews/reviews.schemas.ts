@@ -41,7 +41,7 @@ export interface ProductReviewDto {
   title: string;
   content: string;
   verifiedPurchase: boolean;
-  /** Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai */
+  /** Đánh giá của khách đã mua vào thẳng APPROVED và hiển thị ngay; kiểm duyệt là hậu kiểm, Admin gỡ bằng REJECTED. PENDING chỉ còn ở dữ liệu cũ. */
   status: ReviewModerationStatus;
   /** @minimum 0 */
   version: number;
@@ -88,7 +88,7 @@ export const ReviewModerationDecision = {
 } as const;
 
 /**
- * Đánh giá mới ở PENDING; chỉ APPROVED được hiển thị công khai
+ * Đánh giá của khách đã mua vào thẳng APPROVED và hiển thị ngay; kiểm duyệt là hậu kiểm, Admin gỡ bằng REJECTED. PENDING chỉ còn ở dữ liệu cũ.
  */
 export type ReviewModerationStatus =
   (typeof ReviewModerationStatus)[keyof typeof ReviewModerationStatus];
