@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { PosOrderDrawer } from '@/features/pos';
-import { FulfillmentWorkflowPanel } from '@/features/fulfillments';
 import {
   DollarOutlined,
   InboxOutlined,
@@ -24,6 +23,12 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
 import { moneyFormatter, ORDER_PAGE_SIZE, orderTabs } from '../constants/order.constants';
+
+// Nạp lười để phá vòng chunk tĩnh orders ↔ fulfillments (FulfillmentsPage lại import OrderDetailDrawer
+// từ barrel orders); vẫn đi qua barrel theo RULE-FA-03.
+const FulfillmentWorkflowPanel = lazy(() =>
+  import('@/features/fulfillments').then((module) => ({ default: module.FulfillmentWorkflowPanel })),
+);
 
 type OrderTab = 'ALL' | OrderStatusGroup;
 
@@ -234,7 +239,11 @@ export function OrdersPage() {
       <OrderDetailDrawer
         orderId={selectedId}
         onClose={() => setSelectedId(undefined)}
-        renderFulfillmentPanel={(orderId) => <FulfillmentWorkflowPanel orderId={orderId} />}
+        renderFulfillmentPanel={(orderId) => (
+          <Suspense fallback={null}>
+            <FulfillmentWorkflowPanel orderId={orderId} />
+          </Suspense>
+        )}
       />
       <PosOrderDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
     </PageTransition>
