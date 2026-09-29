@@ -24,6 +24,7 @@ import {
   Typography,
 } from 'antd';
 import { AdminTable } from '@/foundation/table';
+import { formatDateTime } from '@/lib/format/datetime';
 import { useState } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { useDebounce } from 'use-debounce';
@@ -208,10 +209,7 @@ export function AuditPage() {
               width: 170,
               render: (value: string) => (
                 <span className="text-xs font-mono text-slate-600">
-                  {new Intl.DateTimeFormat('vi-VN', {
-                    dateStyle: 'short',
-                    timeStyle: 'medium',
-                  }).format(new Date(value))}
+                  {formatDateTime(value)}
                 </span>
               ),
             },
@@ -316,7 +314,7 @@ export function AuditPage() {
             <div className="space-y-5 text-xs">
               <Descriptions size="small" bordered column={1} className="rounded-xl overflow-hidden">
                 <Descriptions.Item label="Thời gian">
-                  {new Date(selected.createdAt).toLocaleString('vi-VN')}
+                  {formatDateTime(selected.createdAt)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Hành động">
                   <span className="font-mono font-bold text-slate-800">{selected.action}</span>

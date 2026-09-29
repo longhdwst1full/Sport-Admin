@@ -2,6 +2,7 @@ import { DeleteOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
 import { Space, Tag, Tooltip, Typography } from 'antd';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import type { SystemParameterDto } from '@/generated/api/system/system.schemas';
+import { formatDateTime } from '@/lib/format/datetime';
 import {
   SYSTEM_PARAMETER_PAGE_SIZE,
   parameterGroupLabels,
@@ -119,7 +120,7 @@ export function SystemParameterTable({
           title: 'Cập nhật',
           dataIndex: 'updatedAt',
           width: 160,
-          render: (value: string) => new Date(value).toLocaleString('vi-VN'),
+          render: (value: string) => formatDateTime(value),
         },
         {
           title: '',

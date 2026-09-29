@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { MoneyInput } from '@/foundation/inputs/money-input';
+import { formatDateTime } from '@/lib/format/datetime';
 import {
   CalendarOutlined,
   ClockCircleOutlined,
@@ -270,7 +271,7 @@ export function FlashSaleDetailDrawer({
                 <div>
                   <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">Thời gian bắt đầu</span>
                   <span className="text-sm font-bold text-slate-800">
-                    {new Date(campaign.startsAt).toLocaleString('vi-VN')}
+                    {formatDateTime(campaign.startsAt)}
                   </span>
                 </div>
               </div>
@@ -282,7 +283,7 @@ export function FlashSaleDetailDrawer({
                 <div>
                   <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">Thời gian kết thúc</span>
                   <span className="text-sm font-bold text-slate-800">
-                    {new Date(campaign.endsAt).toLocaleString('vi-VN')}
+                    {formatDateTime(campaign.endsAt)}
                   </span>
                 </div>
               </div>

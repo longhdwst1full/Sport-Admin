@@ -1,6 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
 import type { OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
+import { formatDateTime } from '@/lib/format/datetime';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
@@ -58,7 +59,7 @@ export function OrderTable({
               <div>
                 <span className="font-mono font-bold text-slate-800 text-sm">{row.orderNo}</span>
                 <div className="mt-0.5 text-xs text-slate-400">
-                  {new Date(row.placedAt).toLocaleString('vi-VN')}
+                  {formatDateTime(row.placedAt)}
                 </div>
               </div>
             ),

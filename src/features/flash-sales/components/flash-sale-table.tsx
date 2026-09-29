@@ -2,6 +2,7 @@ import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { FlashSaleCampaignSummaryDto } from '@/generated/api/promotions/promotions.schemas';
+import { formatDateTime } from '@/lib/format/datetime';
 import { FLASH_SALE_PAGE_SIZE, flashSaleStatusPresentation } from '../constants/flash-sale.constants';
 
 export function FlashSaleTable({
@@ -48,13 +49,13 @@ export function FlashSaleTable({
           title: 'Bắt đầu',
           dataIndex: 'startsAt',
           width: 170,
-          render: (value: string) => new Date(value).toLocaleString('vi-VN'),
+          render: (value: string) => formatDateTime(value),
         },
         {
           title: 'Kết thúc',
           dataIndex: 'endsAt',
           width: 170,
-          render: (value: string) => new Date(value).toLocaleString('vi-VN'),
+          render: (value: string) => formatDateTime(value),
         },
         { title: 'Số suất bán', dataIndex: 'itemCount', width: 120, align: 'right' },
         {

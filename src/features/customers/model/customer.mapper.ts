@@ -2,13 +2,8 @@ import type {
   AdminCustomerDetailDto,
   AdminCustomerSummaryDto,
 } from '@/generated/api/customers/customers.schemas';
+import { formatDate } from '@/lib/format/datetime';
 import { moneyFormatter } from '../constants/customer.constants';
-
-const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-});
 
 export interface CustomerRowView {
   id: string;
@@ -31,7 +26,7 @@ export interface CustomerRowView {
 }
 
 function dateLabel(value: string | null | undefined, fallback: string): string {
-  return value ? dateFormatter.format(new Date(value)) : fallback;
+  return value ? formatDate(value) : fallback;
 }
 
 export function toCustomerRowView(dto: AdminCustomerSummaryDto): CustomerRowView {

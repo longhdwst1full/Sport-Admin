@@ -23,6 +23,7 @@ import {
 } from '@/generated/api/content/content';
 import type { ContentPostDto } from '@/generated/api/content/content.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatDate } from '@/lib/format/datetime';
 
 const ContentEditorDrawer = lazy(() =>
   import('../components/content-editor-drawer').then((module) => ({ default: module.ContentEditorDrawer })),
@@ -189,7 +190,7 @@ export function ContentPage() {
               width: 150,
               render: (value: string) => (
                 <span className="text-xs text-slate-600">
-                  {value ? new Date(value).toLocaleDateString('vi-VN') : '—'}
+                  {formatDate(value)}
                 </span>
               ),
             },

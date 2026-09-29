@@ -20,6 +20,7 @@ import {
 } from '@/generated/api/inventory/inventory';
 import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatDateTime } from '@/lib/format/datetime';
 import { StockTransferCreateDrawer } from './stock-transfer-create-drawer';
 import { availableStockTransferActions } from '../model/stock-transfer-actions.policy';
 import { stockTransferStatusMeta } from '../model/stock-transfer-display';
@@ -183,13 +184,13 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
           </div>
           <Descriptions bordered size="small" column={{ xs: 1, sm: 2 }}>
             <Descriptions.Item label="Lý do" span={2}>{transfer.reason}</Descriptions.Item>
-            <Descriptions.Item label="Ngày tạo">{new Date(transfer.createdAt).toLocaleString('vi-VN')}</Descriptions.Item>
+            <Descriptions.Item label="Ngày tạo">{formatDateTime(transfer.createdAt)}</Descriptions.Item>
             <Descriptions.Item label="Số SKU">{transfer.itemCount}</Descriptions.Item>
-            <Descriptions.Item label="Đã xuất">{transfer.shippedAt ? new Date(transfer.shippedAt).toLocaleString('vi-VN') : '—'}</Descriptions.Item>
-            <Descriptions.Item label="Đã nhận">{transfer.receivedAt ? new Date(transfer.receivedAt).toLocaleString('vi-VN') : '—'}</Descriptions.Item>
+            <Descriptions.Item label="Đã xuất">{transfer.shippedAt ? formatDateTime(transfer.shippedAt) : '—'}</Descriptions.Item>
+            <Descriptions.Item label="Đã nhận">{transfer.receivedAt ? formatDateTime(transfer.receivedAt) : '—'}</Descriptions.Item>
             {transfer.status === 'CANCELLED' && (
               <>
-                <Descriptions.Item label="Huỷ lúc">{transfer.cancelledAt ? new Date(transfer.cancelledAt).toLocaleString('vi-VN') : '—'}</Descriptions.Item>
+                <Descriptions.Item label="Huỷ lúc">{transfer.cancelledAt ? formatDateTime(transfer.cancelledAt) : '—'}</Descriptions.Item>
                 <Descriptions.Item label="Người huỷ">{transfer.cancelledByDisplayName ?? '—'}</Descriptions.Item>
                 <Descriptions.Item label="Lý do huỷ" span={2}>{transfer.cancelReason ?? '—'}</Descriptions.Item>
               </>

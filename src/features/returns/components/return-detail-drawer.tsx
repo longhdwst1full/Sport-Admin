@@ -6,6 +6,7 @@ import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { useGetAdminReturn } from '@/generated/api/returns/returns';
 import type { RefundDto, ReturnDetailDto, ReturnItemDto } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatDateTime } from '@/lib/format/datetime';
 import {
   inspectionConditionLabels,
   inspectionDispositionLabels,
@@ -37,8 +38,6 @@ const actionButtons: Record<ReturnAction, { label: string; type?: 'primary'; dan
   failRefund: { label: 'Lượt hoàn lỗi', danger: true },
   close: { label: 'Đóng phiếu' },
 };
-
-const formatDateTime = (value?: string | null) => (value ? new Date(value).toLocaleString('vi-VN') : '—');
 
 export function ReturnDetailDrawer({ returnId, onClose }: { returnId?: string; onClose: () => void }) {
   const { message } = App.useApp();

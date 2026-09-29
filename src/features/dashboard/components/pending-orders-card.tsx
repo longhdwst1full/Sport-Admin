@@ -5,6 +5,7 @@ import { CheckOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { formatDateTime } from '@/lib/format/datetime';
 import {
   confirmAdminOrder,
   getListAdminOrdersQueryKey,
@@ -131,11 +132,7 @@ export function PendingOrdersCard() {
               title: 'Đặt lúc',
               dataIndex: 'placedAt',
               width: 150,
-              render: (value: string) =>
-                new Intl.DateTimeFormat('vi-VN', {
-                  dateStyle: 'short',
-                  timeStyle: 'short',
-                }).format(new Date(value)),
+              render: (value: string) => formatDateTime(value),
             },
             {
               title: '',

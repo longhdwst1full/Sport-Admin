@@ -1,6 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
 import { AdminTable, TableActionButton } from '@/foundation/table';
+import { formatDateTime } from '@/lib/format/datetime';
 import type { FulfillmentStatus, FulfillmentSummaryDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { FULFILLMENT_PAGE_SIZE, fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
 import { CarrierShipmentStatusTag } from './carrier-shipment-status-tag';
@@ -102,7 +103,7 @@ export function FulfillmentTable({
           title: 'Tạo lúc',
           dataIndex: 'createdAt',
           width: 170,
-          render: (value: string) => new Date(value).toLocaleString('vi-VN'),
+          render: (value: string) => formatDateTime(value),
         },
         {
           title: '',

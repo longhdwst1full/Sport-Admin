@@ -5,6 +5,7 @@ import { AdminTable, TableActionButton } from '@/foundation/table';
 import type { ReturnSummaryDto } from '@/generated/api/returns/returns.schemas';
 import { RETURN_PAGE_SIZE, returnReasonLabels, returnStatusPresentation } from '../constants/return.constants';
 import { RETURN_LIST_TABLE_COLUMNS, type ReturnListColumnId } from '../constants/return-table-columns';
+import { formatDateTime } from '@/lib/format/datetime';
 import { buildTableColumns } from '../model/build-table-columns';
 
 export function ReturnTable({
@@ -26,7 +27,7 @@ export function ReturnTable({
     returnNo: (row) => <Typography.Text strong>{row.returnNo}</Typography.Text>,
     reasonCode: (row) => returnReasonLabels[row.reasonCode],
     status: (row) => <StatusTag status={row.status} presentations={returnStatusPresentation} />,
-    createdAt: (row) => new Date(row.createdAt).toLocaleString('vi-VN'),
+    createdAt: (row) => formatDateTime(row.createdAt),
     action: (row) => (
       <TableActionButton label={`Xem phiếu ${row.returnNo}`} icon={<EyeOutlined />} onClick={() => onOpen(row.id)} />
     ),

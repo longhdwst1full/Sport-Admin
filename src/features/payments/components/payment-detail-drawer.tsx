@@ -11,6 +11,7 @@ import {
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatDateTime } from '@/lib/format/datetime';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { moneyFormatter, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
@@ -92,7 +93,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
               { key: 'received', label: 'Đã nhận', children: moneyFormatter.format(Number(payment.receivedAmount)) },
               { key: 'orderStatus', label: 'Trạng thái đơn', children: payment.orderStatus },
               { key: 'version', label: 'Phiên bản', children: payment.version },
-              { key: 'expiry', label: 'Hết hạn', children: payment.expiresAt ? new Date(payment.expiresAt).toLocaleString('vi-VN') : 'Không áp dụng' },
+              { key: 'expiry', label: 'Hết hạn', children: payment.expiresAt ? formatDateTime(payment.expiresAt) : 'Không áp dụng' },
             ]} />
             {payment.failureReason && <Alert type="warning" showIcon message={payment.failureReason} />}
             <section><Typography.Title level={5}>Bằng chứng chuyển khoản</Typography.Title>{payment.evidences.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bằng chứng" /> : <div className="grid gap-4 sm:grid-cols-2">{payment.evidences.map((evidence) => <div key={evidence.id} className="rounded-xl border border-slate-200 p-3"><Image src={evidence.thumbnailUrl} preview={{ src: evidence.fileUrl }} className="max-h-48 rounded-lg object-contain" /><div className="mt-2 flex justify-between"><span>#{evidence.id}</span><Tag>{evidence.status}</Tag></div>{evidence.note && <p className="mt-2 text-sm text-slate-600">{evidence.note}</p>}</div>)}</div>}</section>

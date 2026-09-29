@@ -4,16 +4,13 @@ import { useCan } from '@/core/auth/permissions';
 import { useReplyAdminReview } from '@/generated/api/reviews/reviews';
 import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatDateTime } from '@/lib/format/datetime';
 import { canReplyToReview, REVIEW_STATUS_PRESENTATION } from '../model/review-moderation.policy';
 
 const AUTHOR_TYPE_LABELS: Record<string, string> = {
   CUSTOMER: 'Khách hàng',
   STAFF: 'Nhân viên',
 };
-
-function formatDateTime(value?: string): string {
-  return value ? new Date(value).toLocaleString('vi-VN') : '—';
-}
 
 export function ReviewDetailDrawer({
   review,

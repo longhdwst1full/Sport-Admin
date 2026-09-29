@@ -35,6 +35,7 @@ import {
   useGetAdminOrder,
 } from '@/generated/api/orders/orders';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatDateTime } from '@/lib/format/datetime';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { StatusTag } from '@/foundation/management';
 import {
@@ -224,7 +225,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                   {order.orderNo}
                 </h2>
                 <div className="mt-1 text-xs text-slate-300">
-                  Thời gian đặt: {new Date(order.placedAt).toLocaleString('vi-VN')}
+                  Thời gian đặt: {formatDateTime(order.placedAt)}
                 </div>
               </div>
 
@@ -329,7 +330,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Thanh toán lúc:</span>
-                    <span className="text-slate-700">{order.paidAt ? new Date(order.paidAt).toLocaleString('vi-VN') : 'Chưa thanh toán'}</span>
+                    <span className="text-slate-700">{order.paidAt ? formatDateTime(order.paidAt) : 'Chưa thanh toán'}</span>
                   </div>
                   {order.shipment && (
                     <>
@@ -352,13 +353,13 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                       {order.shipment.shippedAt && (
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Bàn giao lúc:</span>
-                          <span className="text-slate-700">{new Date(order.shipment.shippedAt).toLocaleString('vi-VN')}</span>
+                          <span className="text-slate-700">{formatDateTime(order.shipment.shippedAt)}</span>
                         </div>
                       )}
                       {order.shipment.deliveredAt && (
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Giao thành công:</span>
-                          <span className="text-slate-700">{new Date(order.shipment.deliveredAt).toLocaleString('vi-VN')}</span>
+                          <span className="text-slate-700">{formatDateTime(order.shipment.deliveredAt)}</span>
                         </div>
                       )}
                     </>
@@ -490,7 +491,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                           {orderStatusPresentation[history.toStatus]?.label ?? history.toStatus}
                         </span>
                         <div className="text-[11px] text-slate-400">
-                          {new Date(history.createdAt).toLocaleString('vi-VN')} · {history.actorType}
+                          {formatDateTime(history.createdAt)} · {history.actorType}
                         </div>
                         {history.reason && (
                           <div className="mt-1 text-slate-600 bg-slate-50 p-2 rounded text-[11px] border border-slate-100">

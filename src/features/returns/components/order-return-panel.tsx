@@ -4,6 +4,7 @@ import { App, Button, Card, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useCan } from '@/core/auth/permissions';
 import { useGetAdminReturnEligibility } from '@/generated/api/returns/returns';
+import { formatDate } from '@/lib/format/datetime';
 import { RETURN_PERMISSION, returnEligibilityReasonLabels } from '../constants/return.constants';
 import { CreateReturnModal } from './create-return-modal';
 
@@ -28,7 +29,7 @@ export function OrderReturnPanel({ orderId }: { orderId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm">
           {data.returnDeadline && (
-            <div>Hạn đổi trả: <strong>{new Date(data.returnDeadline).toLocaleDateString('vi-VN')}</strong></div>
+            <div>Hạn đổi trả: <strong>{formatDate(data.returnDeadline)}</strong></div>
           )}
           {data.reason && (
             <Typography.Text type="secondary">

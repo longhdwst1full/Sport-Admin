@@ -24,6 +24,7 @@ import {
 import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatDateTime } from '@/lib/format/datetime';
 import { CarrierShipmentStatusTag } from './carrier-shipment-status-tag';
 import { fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
@@ -213,7 +214,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
           children: (
             <div>
               <strong>{statusPresentation[item.toStatus]?.label ?? item.toStatus}</strong>
-              <div className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString('vi-VN')}</div>
+              <div className="text-xs text-slate-500">{formatDateTime(item.createdAt)}</div>
               {item.reason && <div className="mt-1 text-sm text-slate-600">{item.reason}</div>}
             </div>
           ),

@@ -2,19 +2,11 @@ import { RedoOutlined } from '@ant-design/icons';
 import { Button, Tag, Tooltip, Typography } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import type { AdminNotificationDto } from '@/generated/api/notifications/notifications.schemas';
+import { formatDateTime } from '@/lib/format/datetime';
 import {
   notificationEventLabels,
   notificationStatusPresentation,
 } from '../constants/notification.constants';
-
-const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
-  dateStyle: 'short',
-  timeStyle: 'medium',
-});
-
-function formatDateTime(value?: string | null): string {
-  return value ? dateTimeFormatter.format(new Date(value)) : '—';
-}
 
 export function NotificationTable({
   rows,
