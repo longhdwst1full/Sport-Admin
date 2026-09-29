@@ -15,7 +15,7 @@ export const CMS_POST_VIEW_PERMISSION = 'cms.content.view';
 /**
  * Mã lỗi ổn định của API tri thức (`api/src/modules/assistant/assistant.constants.ts`) mà UI phản ứng riêng.
  *
- * CONCURRENCY: VERSION_CONFLICT / INVALID_TRANSITION nghĩa là dòng đang hiển thị đã cũ — tải lại danh sách.
+ * CONCURRENCY: VERSION_CONFLICT / INVALID_TRANSITION / NOT_FOUND nghĩa là dòng đang hiển thị đã cũ — tải lại danh sách.
  */
 export const KNOWLEDGE_ERROR_CODE = {
   VERSION_CONFLICT: 'KNOWLEDGE_VERSION_CONFLICT',
@@ -23,11 +23,17 @@ export const KNOWLEDGE_ERROR_CODE = {
   ALREADY_ATTACHED: 'KNOWLEDGE_ALREADY_ATTACHED',
   SOURCE_NOT_VISIBLE: 'KNOWLEDGE_SOURCE_NOT_VISIBLE',
   SOURCE_EMPTY: 'KNOWLEDGE_SOURCE_EMPTY',
+  /** 404 — cũng là mã khi tài liệu nằm ngoài phạm vi chi nhánh (API giấu như không tồn tại). */
+  NOT_FOUND: 'KNOWLEDGE_DOCUMENT_NOT_FOUND',
+  /** 403 — gắn/quản lý tài liệu cho chi nhánh ngoài phạm vi, hoặc cho "tất cả chi nhánh" khi không phải GLOBAL. */
+  BRANCH_SCOPE_DENIED: 'ASSISTANT_BRANCH_SCOPE_DENIED',
 } as const;
 
 export const KNOWLEDGE_STALE_ERROR_CODES: ReadonlySet<string> = new Set([
   KNOWLEDGE_ERROR_CODE.VERSION_CONFLICT,
   KNOWLEDGE_ERROR_CODE.INVALID_TRANSITION,
+  // Dòng đang hiển thị không còn trong phạm vi/đã mất: tải lại để nó biến khỏi danh sách.
+  KNOWLEDGE_ERROR_CODE.NOT_FOUND,
 ]);
 
 export const knowledgeAudiencePresentation: Record<KnowledgeAudience, StatusPresentation & { hint: string }> = {

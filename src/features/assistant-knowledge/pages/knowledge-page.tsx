@@ -5,7 +5,6 @@ import { useSearchParams } from 'react-router-dom';
 import { usePermissions } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
-import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { AttachKnowledgePostModal } from '../components/attach-knowledge-post-modal';
 import { KnowledgeDocumentTable } from '../components/knowledge-document-table';
@@ -13,7 +12,6 @@ import { KnowledgeAudience, KnowledgeStatus } from '@/generated/api/assistant/as
 import { KnowledgeBranchSelect } from '../components/knowledge-branch-select';
 import {
   ALL_BRANCHES_LABEL,
-  KNOWLEDGE_ERROR_CODE,
   KNOWLEDGE_PAGE_SIZE,
   KNOWLEDGE_PERMISSION,
   knowledgeAudienceOptions,
@@ -22,6 +20,7 @@ import {
 } from '../constants/knowledge.constants';
 import { useKnowledgeCommand, useKnowledgeDocuments } from '../hooks/use-knowledge-documents';
 import type { KnowledgeAction } from '../model/knowledge-actions.policy';
+import { knowledgeTransitionErrorMessage } from '../model/knowledge-command-error';
 import type { AttachKnowledgePostInput, KnowledgeDocument } from '../model/knowledge-document.types';
 
 function parseEnum<T extends string>(values: Record<string, T>, value: string | null): T | undefined {
@@ -107,7 +106,7 @@ export function KnowledgePage() {
           await command.mutateAsync({ action, documentId: document.id, expectedVersion: document.version });
           void message.success(meta.success);
         } catch (error) {
-          void message.error(transitionErrorMessage(error));
+          void message.error(knowledgeTransitionErrorMessage(error));
           throw error;
         }
       },
@@ -184,18 +183,4 @@ export function KnowledgePage() {
       />
     </>
   );
-}
-
-function transitionErrorMessage(error: unknown): string {
-  switch (getApiErrorPayload(error)?.code) {
-    case KNOWLEDGE_ERROR_CODE.VERSION_CONFLICT:
-    case KNOWLEDGE_ERROR_CODE.INVALID_TRANSITION:
-      return 'Tài liệu vừa được người khác thay đổi. Danh sách đã tải lại, vui lòng xem lại rồi thao tác.';
-    case KNOWLEDGE_ERROR_CODE.SOURCE_NOT_VISIBLE:
-      return 'Bài CMS nguồn chưa xuất bản hoặc đang ẩn nên chưa xuất bản được cho trợ lý.';
-    case KNOWLEDGE_ERROR_CODE.SOURCE_EMPTY:
-      return 'Bài CMS nguồn không có nội dung để lập chỉ mục.';
-    default:
-      return getApiErrorMessage(error);
-  }
 }

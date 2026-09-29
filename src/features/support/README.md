@@ -1,10 +1,10 @@
 # Support — Hàng đợi hỗ trợ — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.0.1
 >
 > **Last updated:** 2026-09-29
 >
-> **Change summary:** Tạo feature hàng đợi hỗ trợ (list + drawer chi tiết, giao việc, trả lời/ghi chú nội bộ, giải quyết, đóng) nối SDK `support`.
+> **Change summary:** Ghi nhận test của feature; lệnh admin trả 200 kèm chi tiết ticket (không đổi hành vi UI).
 
 ## Phạm vi
 
@@ -61,7 +61,7 @@ thành công. Ghi chú nội bộ hiển thị nền vàng + khoá + nhãn "Nộ
 
 ## Kiểm thử / checklist khi sửa
 
-- Chưa có test riêng cho feature (policy/mapper là ứng viên đầu tiên).
+- Test: `model/support-ticket-actions.policy.test.ts`, `support-ticket.mapper.test.ts`, `support-command-error.test.ts`.
 - Đổi contract: `yarn contracts:sync && yarn generate:api`, sửa mapper, không sửa `src/generated`.
 - Thêm trạng thái/ưu tiên: `Record<Enum, …>` trong `constants/support.constants.ts` sẽ báo lỗi compile.
 
@@ -69,4 +69,5 @@ thành công. Ghi chú nội bộ hiển thị nền vàng + khoá + nhãn "Nộ
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-09-29 | Ghi nhận test; contract lệnh trả 200. | feat/assistant-v1 review fixes |
 | 1.0.0 | 2026-09-29 | Tạo feature và nối SDK support. | feat/assistant-v1 |

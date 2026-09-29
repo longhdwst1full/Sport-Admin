@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 import { Alert, Form, Modal, Radio } from 'antd';
 import { useCan } from '@/core/auth/permissions';
-import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { KnowledgeAudience } from '@/generated/api/assistant/assistant.schemas';
 import {
   ALL_BRANCHES_LABEL,
   CMS_POST_VIEW_PERMISSION,
-  KNOWLEDGE_ERROR_CODE,
   knowledgeAudiencePresentation,
 } from '../constants/knowledge.constants';
+import { attachKnowledgeErrorMessage } from '../model/knowledge-command-error';
 import type { AttachKnowledgePostInput } from '../model/knowledge-document.types';
 import { CmsPostSelect } from './cms-post-select';
 import { KnowledgeBranchSelect } from './knowledge-branch-select';
@@ -74,7 +73,7 @@ export function AttachKnowledgePostModal({
         />
       )}
       {Boolean(error) && (
-        <Alert className="mb-3" type="error" showIcon message="Không gắn được bài" description={attachErrorMessage(error)} />
+        <Alert className="mb-3" type="error" showIcon message="Không gắn được bài" description={attachKnowledgeErrorMessage(error)} />
       )}
       <Form
         form={form}
@@ -102,16 +101,4 @@ export function AttachKnowledgePostModal({
       </Form>
     </Modal>
   );
-}
-
-/** UX: hai lỗi nghiệp vụ hay gặp có lời giải thích cụ thể; còn lại dùng thông điệp của API. */
-function attachErrorMessage(error: unknown): string {
-  switch (getApiErrorPayload(error)?.code) {
-    case KNOWLEDGE_ERROR_CODE.ALREADY_ATTACHED:
-      return 'Bài này đã được gắn với đối tượng/chi nhánh khác. V1 chưa hỗ trợ đổi phạm vi của tài liệu đã gắn.';
-    case KNOWLEDGE_ERROR_CODE.SOURCE_NOT_VISIBLE:
-      return 'Bài CMS đã lưu trữ hoặc không còn hiển thị nên không gắn được.';
-    default:
-      return getApiErrorMessage(error);
-  }
 }
