@@ -1,4 +1,4 @@
-import { NAVIGATION_GROUP_LABELS, NAVIGATION_ITEMS } from '@/app/navigation/navigation.config';
+import { NAVIGATION_GROUP_LABELS, NAVIGATION_ITEMS_DATA } from '@/shared/constants/navigation';
 import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
 
 export interface PermissionTreeLeaf {
@@ -86,7 +86,7 @@ interface ScreenBinding {
 
 function buildScreenIndex(): Map<string, ScreenBinding> {
   const index = new Map<string, ScreenBinding>();
-  NAVIGATION_ITEMS.forEach((item, order) => {
+  NAVIGATION_ITEMS_DATA.forEach((item, order) => {
     const codes = Array.isArray(item.permission)
       ? item.permission
       : item.permission

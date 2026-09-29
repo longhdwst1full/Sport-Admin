@@ -45,15 +45,6 @@ export default tseslint.config(
     },
   },
   {
-    // WORKAROUND: vi phạm biên app→features có sẵn từ trước batch lint-boundary này.
-    // `NAVIGATION_ITEMS`/`NAVIGATION_GROUP_LABELS` gộp dữ liệu điều hướng với icon JSX ngay trong
-    // `app/navigation/navigation.config.tsx`; tách phần dữ liệu (không icon) xuống shared/ là hướng
-    // sửa đúng nhưng đụng cả 20 mục điều hướng và nơi render sidebar — để lại làm việc riêng thay vì
-    // gộp vào thay đổi lint boundary, tránh rủi ro làm hỏng menu khi không có test bảo vệ.
-    files: ['src/features/roles/model/permission-tree.ts'],
-    rules: { 'no-restricted-imports': 'off' },
-  },
-  {
     files: ['src/shared/**/*.{ts,tsx}', 'src/lib/**/*.{ts,tsx}', 'src/foundation/**/*.{ts,tsx}', 'src/core/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [noFeatureImport, noAppImport] }],
