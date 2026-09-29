@@ -79,9 +79,16 @@ paths:
     post:
       operationId: createPosOrder
       parameters:
-        - name: Idempotency-Key
+        - name: idempotency-key
           required: true
           in: header
+          description: UUID do quầy sinh; giữ nguyên khi gửi lại cùng một đơn
+          schema:
+            type: string
+        - name: x-request-timestamp
+          in: header
+          description: Thời điểm quầy tạo lệnh (ISO-8601), lệch tối đa ±5 phút; giữ nguyên khi gửi lại. Sẽ bắt buộc khi bật POS_REQUEST_TIMESTAMP_REQUIRED.
+          required: false
           schema:
             type: string
       requestBody:
@@ -116,7 +123,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: Hết hàng hoặc sản phẩm chưa có giá
+          description: Hết hàng, sản phẩm chưa có giá, hoặc Idempotency-Key đã dùng cho lệnh khác (IDEMPOTENCY_KEY_REUSED / IDEMPOTENCY_PAYLOAD_MISMATCH)
           content:
             application/json:
               schema:

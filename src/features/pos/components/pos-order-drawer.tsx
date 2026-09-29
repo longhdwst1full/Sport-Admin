@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Alert, App, Button, Card, Drawer, Popconfirm } from 'antd';
 import { ClearOutlined, WalletOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCreatePosOrder } from '@/generated/api/orders/orders';
+import { createPosOrder, useCreatePosOrder } from '@/generated/api/orders/orders';
 import { getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getListInventoryBalancesQueryKey } from '@/generated/api/inventory/inventory';
 import {
   PosPaymentMethod,
+  type CreatePosOrderDto,
   type OrderDetailDto,
   type PosCatalogItemDto,
 } from '@/generated/api/orders/orders.schemas';
@@ -63,6 +64,22 @@ const EMPTY_CHECKOUT: PosCheckoutValues = {
  */
 const POS_FLASH_SALE_REPRICED = 'POS_FLASH_SALE_REPRICED';
 
+/**
+ * Mã lỗi chống phát lại của Backend. Gặp một trong hai thì lượt gửi hiện tại không dùng lại được nữa:
+ * lần bấm kế tiếp phải là một lượt mới (key + timestamp mới).
+ */
+const POS_ATTEMPT_RESET_CODES = new Set(['REQUEST_TIMESTAMP_OUT_OF_WINDOW', 'IDEMPOTENCY_PAYLOAD_MISMATCH']);
+
+/**
+ * Một lượt gửi đơn: key (nonce) và timestamp sinh lúc bấm lần đầu, giữ nguyên khi bấm lại cùng nội dung
+ * để Backend trả lại đúng đơn cũ; nội dung đổi thì là đơn khác, phải sinh lượt mới.
+ */
+interface PosSubmitAttempt {
+  key: string;
+  timestamp: string;
+  fingerprint: string;
+}
+
 function isRepriced(error: unknown): boolean {
   return getApiErrorPayload(error)?.code === POS_FLASH_SALE_REPRICED;
 }
@@ -80,8 +97,9 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
   const [checkout, setCheckout] = useState<PosCheckoutValues>(EMPTY_CHECKOUT);
   const [receipt, setReceipt] = useState<OrderDetailDto>();
   // Khoá chống trùng đổi theo từng đơn: bấm hai lần cho cùng một đơn thì Backend trả
-  // lại đúng đơn đó, còn đơn kế tiếp phải là một giao dịch mới.
-  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  // lại đúng đơn đó, còn đơn kế tiếp phải là một giao dịch mới. Giữ trong ref để header
+  // của đúng lần bấm này được đọc lúc gửi, không phải giá trị của lần render trước.
+  const attemptRef = useRef<PosSubmitAttempt | null>(null);
 
   const pickedIds = useMemo(() => new Set(lines.map((line) => line.variantId)), [lines]);
   const total = cartTotal(lines);
@@ -90,8 +108,14 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
   const overStock = linesOverStock(lines);
 
   const mutation = useCreatePosOrder({
-    request: { headers: { 'Idempotency-Key': idempotencyKey } },
     mutation: {
+      mutationFn: ({ data }) => {
+        const attempt = attemptRef.current;
+        if (!attempt) throw new Error('Thiếu lượt gửi đơn');
+        return createPosOrder(data, {
+          headers: { 'Idempotency-Key': attempt.key, 'X-Request-Timestamp': attempt.timestamp },
+        });
+      },
       onSuccess: async (order) => {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() }),
@@ -109,12 +133,16 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
        */
       onError: (error) => {
         const payload = getApiErrorPayload(error);
+        if (payload?.code && POS_ATTEMPT_RESET_CODES.has(payload.code)) {
+          attemptRef.current = null;
+          return;
+        }
         if (payload?.code !== POS_FLASH_SALE_REPRICED) return;
         const affected = (payload.details ?? []).flatMap((detail) =>
           detail.field ? [detail.field] : [],
         );
         setLines((current) => dropFlashPrice(current, affected));
-        setIdempotencyKey(crypto.randomUUID());
+        attemptRef.current = null;
       },
     },
   });
@@ -148,13 +176,20 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
   const resetCounter = () => {
     setLines([]);
     setCheckout(EMPTY_CHECKOUT);
-    setIdempotencyKey(crypto.randomUUID());
+    attemptRef.current = null;
   };
 
   const submit = () => {
     if (blockedReason) return;
-    mutation.mutate({
-      data: {
+    const data = buildOrderData();
+    const fingerprint = JSON.stringify(data);
+    if (attemptRef.current?.fingerprint !== fingerprint) {
+      attemptRef.current = { key: crypto.randomUUID(), timestamp: new Date().toISOString(), fingerprint };
+    }
+    mutation.mutate({ data });
+  };
+
+  const buildOrderData = (): CreatePosOrderDto => ({
         customer: {
           name: checkout.customerName.trim(),
           phone: checkout.customerPhone.trim(),
@@ -180,9 +215,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
               handOverImmediately: checkout.handOverImmediately,
             }
           : {}),
-      },
-    });
-  };
+  });
 
   const closeDrawer = () => {
     if (mutation.isPending) return;

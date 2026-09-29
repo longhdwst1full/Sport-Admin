@@ -239,6 +239,70 @@ paths:
         - Admin Payments
       x-required-permissions:
         - payment.confirm
+  /api/v1/admin/payments/{id}/late-receipts:
+    post:
+      operationId: recordLatePaymentReceipt
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          required: true
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordLatePaymentReceiptDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Ghi nhận tiền chuyển khoản về sau khi thanh toán đã hủy, để đối soát và hoàn tiền thủ công
+      tags:
+        - Admin Payments
+      x-required-permissions:
+        - payment.confirm
 components:
   schemas:
     AdminPaymentListDto:
@@ -369,6 +433,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PaymentEvidenceDto"
+        lateReceipts:
+          description: "Chỉ có ở API Admin: tiền về sau khi payment đã hủy, cần hoàn tiền thủ công (D04)"
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentLateReceiptDto"
       required:
         - id
         - orderId
@@ -453,12 +522,70 @@ components:
         - provider
         - reference
         - customerMessage
+    PaymentLateReceiptDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        provider:
+          type: string
+          description: VNPAY khi IPN báo thu tiền trễ; MANUAL_BANK_TRANSFER khi Admin ghi nhận
+        reference:
+          type: string
+          description: Mã giao dịch VNPay hoặc số tham chiếu ngân hàng
+        amount:
+          type: string
+          example: "1490000.00"
+        receivedAt:
+          type: string
+          format: date-time
+        recordedAt:
+          type: string
+          format: date-time
+        note:
+          type: string
+      required:
+        - id
+        - provider
+        - reference
+        - amount
+        - receivedAt
+        - recordedAt
     PaymentMethod:
       type: string
       enum:
         - BANK_TRANSFER
         - COD
         - VNPAY
+    RecordLatePaymentReceiptDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+        amount:
+          type: string
+          example: "1490000.00"
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+        bankReference:
+          type: string
+          example: VCB-20260929-001
+          maxLength: 255
+          description: Số tham chiếu trên sao kê; mỗi số chỉ ghi nhận một lần
+        receivedAt:
+          type: string
+          format: date-time
+          description: Thời điểm tiền vào tài khoản theo sao kê
+        note:
+          type: string
+          maxLength: 1000
+      required:
+        - expectedVersion
+        - amount
+        - bankReference
+        - receivedAt
     RejectPaymentDto:
       type: object
       properties:
