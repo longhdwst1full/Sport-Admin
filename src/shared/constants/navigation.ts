@@ -58,6 +58,12 @@ export const NAVIGATION_ITEMS_DATA: NavigationItemData[] = [
     permission: 'return.view',
   },
   {
+    path: '/support-tickets',
+    label: 'Hàng đợi hỗ trợ',
+    group: 'sales',
+    permission: 'support.ticket.view',
+  },
+  {
     path: '/customers',
     label: 'Khách hàng',
     group: 'sales',
@@ -116,6 +122,12 @@ export const NAVIGATION_ITEMS_DATA: NavigationItemData[] = [
     label: 'Bài viết',
     group: 'experience',
     permission: 'cms.content.view',
+  },
+  {
+    path: '/assistant-knowledge',
+    label: 'Tri thức trợ lý',
+    group: 'experience',
+    permission: 'assistant.knowledge.manage',
   },
   {
     path: '/organization',

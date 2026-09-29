@@ -43,6 +43,8 @@ const FAMILY_LABELS: Record<string, string> = {
   'catalog.flash_sale': 'Flash Sale',
   'catalog.review': 'Đánh giá',
   'cms.content': 'Bài viết',
+  'support.ticket': 'Hàng đợi hỗ trợ',
+  'assistant.knowledge': 'Tri thức trợ lý',
   'system.parameter': 'Tham số hệ thống',
   'inventory.stock': 'Tồn kho',
   'inventory.stocktake': 'Kiểm kê',

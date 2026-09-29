@@ -538,6 +538,7 @@ components:
         - CART
         - PROMOTION
         - INTEGRATION
+        - ASSISTANT
     SystemParameterListDto:
       type: object
       properties:

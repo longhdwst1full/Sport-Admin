@@ -9,9 +9,9 @@ servers:
   - url: http://localhost:4000
     description: Local
 paths:
-  /api/v1/admin/content/posts:
+  /api/v1/admin/assistant/knowledge:
     get:
-      operationId: listAdminPosts
+      operationId: listAdminKnowledgeDocuments
       parameters:
         - name: page
           required: false
@@ -28,19 +28,30 @@ paths:
             maximum: 50
             default: 20
             type: number
-        - name: postType
+        - name: status
           required: false
           in: query
-          description: Lọc theo loại bài viết. Bỏ trống để lấy tất cả.
           schema:
-            $ref: "#/components/schemas/ContentPostType"
+            $ref: "#/components/schemas/KnowledgeStatus"
+        - name: audience
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/KnowledgeAudience"
+        - name: branchId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
       responses:
         "200":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ContentPostListDto"
+                $ref: "#/components/schemas/KnowledgeDocumentListDto"
         "400":
           description: ""
           content:
@@ -61,166 +72,27 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: List posts for administration (paginated summaries without body)
+      summary: Danh sách tài liệu tri thức của trợ lý
       tags:
-        - Admin Content
+        - Admin Assistant Knowledge
       x-required-permissions:
-        - cms.content.view
+        - assistant.knowledge.manage
     post:
-      operationId: createAdminPost
+      operationId: attachAdminKnowledgePost
       parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateContentPostDto"
+              $ref: "#/components/schemas/AttachKnowledgePostDto"
       responses:
         "201":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ContentPostDto"
-        "401":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-        "403":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-      security:
-        - bearer: []
-      summary: Create and publish a content post
-      tags:
-        - Admin Content
-      x-required-permissions:
-        - cms.content.manage
-  /api/v1/admin/content/posts/{id}:
-    get:
-      operationId: getAdminPost
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ContentPostDto"
-        "400":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-        "401":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-        "403":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-        "404":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-      security:
-        - bearer: []
-      summary: Get a post with full body for editing, including hidden or archived posts
-      tags:
-        - Admin Content
-      x-required-permissions:
-        - cms.content.view
-    patch:
-      operationId: updateAdminPost
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateContentPostDto"
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ContentPostDto"
-        "401":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-        "403":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-        "404":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-        "409":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-      security:
-        - bearer: []
-      summary: Sửa nội dung bài viết đã đăng theo expected version
-      tags:
-        - Admin Content
-      x-required-permissions:
-        - cms.content.manage
-    delete:
-      operationId: deleteAdminPost
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ArchiveContentPostDto"
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ContentPostDto"
+                $ref: "#/components/schemas/KnowledgeDocumentDto"
         "400":
           description: ""
           content:
@@ -253,206 +125,251 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Logically delete a content post by archiving it
+      summary: Gắn bài CMS làm tri thức (DRAFT); gắn lại cùng phạm vi là idempotent
       tags:
-        - Admin Content
+        - Admin Assistant Knowledge
       x-required-permissions:
-        - cms.content.manage
+        - assistant.knowledge.manage
+  /api/v1/admin/assistant/knowledge/{id}/publish:
+    post:
+      operationId: publishAdminKnowledgeDocument
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeDocumentDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Publish tài liệu và reindex từ nội dung CMS hiện tại
+      tags:
+        - Admin Assistant Knowledge
+      x-required-permissions:
+        - assistant.knowledge.manage
+  /api/v1/admin/assistant/knowledge/{id}/archive:
+    post:
+      operationId: archiveAdminKnowledgeDocument
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeDocumentDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Lưu trữ tài liệu; loại khỏi truy hồi ngay
+      tags:
+        - Admin Assistant Knowledge
+      x-required-permissions:
+        - assistant.knowledge.manage
 components:
   schemas:
-    ArchiveContentPostDto:
+    AttachKnowledgePostDto:
       type: object
       properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-        reason:
+        postId:
           type: string
-          minLength: 3
-          maxLength: 255
-          example: Nội dung không còn phù hợp
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: ID bài CMS (posts.id)
+        audience:
+          allOf:
+            - $ref: "#/components/schemas/KnowledgeAudience"
+        branchId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+          description: null hoặc bỏ trống = áp dụng mọi chi nhánh
       required:
-        - expectedVersion
-        - reason
-    ContentPostDto:
+        - postId
+        - audience
+    KnowledgeAudience:
+      type: string
+      enum:
+        - PUBLIC
+        - CUSTOMER
+        - STAFF
+        - ADMIN
+    KnowledgeDocumentDto:
       type: object
       properties:
         id:
           type: string
-        slug:
-          type: string
-        postType:
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sourceType:
           allOf:
-            - $ref: "#/components/schemas/ContentPostType"
-        isPublished:
-          type: boolean
-          example: true
-          description: Có hiển thị trên website hay không; tách khỏi status để ẩn tạm bài viết
+            - $ref: "#/components/schemas/KnowledgeSourceType"
+        sourceId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
         title:
           type: string
-        excerpt:
+        audience:
+          allOf:
+            - $ref: "#/components/schemas/KnowledgeAudience"
+        branchId:
           type: string
-        coverUrl:
-          type: string
-          format: uri
-        publishedAt:
-          type: string
-          format: date-time
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
         status:
           allOf:
-            - $ref: "#/components/schemas/ContentPostStatus"
+            - $ref: "#/components/schemas/KnowledgeStatus"
         version:
           type: number
           minimum: 0
+        chunkCount:
+          type: number
+          minimum: 0
+          description: Số chunk của version hiện hành
+        reindexedAt:
+          type: string
+          format: date-time
+          nullable: true
         archivedAt:
           type: string
           format: date-time
-        archiveReason:
+          nullable: true
+        createdAt:
           type: string
-        body:
+          format: date-time
+        updatedAt:
           type: string
-        relatedProductSlugs:
-          type: array
-          items:
-            type: string
+          format: date-time
       required:
         - id
-        - slug
-        - postType
-        - isPublished
+        - sourceType
+        - sourceId
         - title
-        - excerpt
-        - coverUrl
-        - publishedAt
+        - audience
+        - branchId
         - status
         - version
-        - body
-        - relatedProductSlugs
-    ContentPostListDto:
+        - chunkCount
+        - reindexedAt
+        - archivedAt
+        - createdAt
+        - updatedAt
+    KnowledgeDocumentListDto:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/ContentPostSummaryDto"
+            $ref: "#/components/schemas/KnowledgeDocumentDto"
         meta:
           $ref: ./_components.yaml#/components/schemas/PageMetaDto
       required:
         - items
         - meta
-    ContentPostStatus:
+    KnowledgeSourceType:
       type: string
       enum:
+        - CMS_POST
+        - MANUAL
+    KnowledgeStatus:
+      type: string
+      enum:
+        - DRAFT
         - PUBLISHED
         - ARCHIVED
-    ContentPostSummaryDto:
-      type: object
-      properties:
-        id:
-          type: string
-        slug:
-          type: string
-        postType:
-          allOf:
-            - $ref: "#/components/schemas/ContentPostType"
-        isPublished:
-          type: boolean
-          example: true
-          description: Có hiển thị trên website hay không; tách khỏi status để ẩn tạm bài viết
-        title:
-          type: string
-        excerpt:
-          type: string
-        coverUrl:
-          type: string
-          format: uri
-        publishedAt:
-          type: string
-          format: date-time
-        status:
-          allOf:
-            - $ref: "#/components/schemas/ContentPostStatus"
-        version:
-          type: number
-          minimum: 0
-        archivedAt:
-          type: string
-          format: date-time
-        archiveReason:
-          type: string
-      required:
-        - id
-        - slug
-        - postType
-        - isPublished
-        - title
-        - excerpt
-        - coverUrl
-        - publishedAt
-        - status
-        - version
-    ContentPostType:
-      type: string
-      enum:
-        - NEWS
-        - TRAINING_GUIDE
-        - PRODUCT_GUIDE
-        - ABOUT
-        - POLICY
-    CreateContentPostDto:
-      type: object
-      properties:
-        postType:
-          allOf:
-            - $ref: "#/components/schemas/ContentPostType"
-        title:
-          type: string
-        slug:
-          type: string
-          description: Đường dẫn bài viết. Bỏ trống để backend sinh từ tiêu đề.
-          example: huong-dan-chon-ta-tay
-        excerpt:
-          type: string
-        body:
-          type: string
-        coverUrl:
-          type: string
-          format: uri
-        relatedProductSlugs:
-          type: array
-          items:
-            type: string
-      required:
-        - postType
-        - title
-        - excerpt
-        - body
-        - coverUrl
-    UpdateContentPostDto:
+    KnowledgeTransitionDto:
       type: object
       properties:
         expectedVersion:
           type: number
           minimum: 0
-          description: Version bài viết mà Admin đang xem
-        title:
-          type: string
-        slug:
-          type: string
-        excerpt:
-          type: string
-        body:
-          type: string
-        coverUrl:
-          type: string
-          format: uri
-        relatedProductSlugs:
-          type: array
-          items:
-            type: string
-        isPublished:
-          type: boolean
-          description: Bật/tắt hiển thị trên website; không đổi status
+          description: Version đang hiển thị; lệch version trả 409
       required:
         - expectedVersion
   securitySchemes:

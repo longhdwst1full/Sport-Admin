@@ -64,6 +64,12 @@ const FulfillmentsPage = lazy(() =>
 const ReturnsPage = lazy(() =>
   import('@/features/returns').then((module) => ({ default: module.ReturnsPage })),
 );
+const SupportTicketsPage = lazy(() =>
+  import('@/features/support').then((module) => ({ default: module.SupportTicketsPage })),
+);
+const KnowledgePage = lazy(() =>
+  import('@/features/assistant-knowledge').then((module) => ({ default: module.KnowledgePage })),
+);
 const FlashSalesPage = lazy(() =>
   import('@/features/flash-sales').then((module) => ({ default: module.FlashSalesPage })),
 );
@@ -219,6 +225,22 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="return.view">
               <ReturnsPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="support-tickets"
+          element={
+            <PermissionRoute permission="support.ticket.view">
+              <SupportTicketsPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="assistant-knowledge"
+          element={
+            <PermissionRoute permission="assistant.knowledge.manage">
+              <KnowledgePage />
             </PermissionRoute>
           }
         />

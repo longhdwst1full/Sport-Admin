@@ -57,6 +57,15 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
       failAdminReturnRefund: withOptions,
     };
   }
+  if (domain === 'support') {
+    // IDEMPOTENCY: lệnh trên ticket gửi Idempotency-Key theo từng lần bấm (API replay/409 theo key + payload).
+    return {
+      assignAdminSupportTicket: withOptions,
+      addAdminSupportTicketMessage: withOptions,
+      resolveAdminSupportTicket: withOptions,
+      closeAdminSupportTicket: withOptions,
+    };
+  }
   return {};
 }
 
@@ -101,4 +110,6 @@ export default defineConfig({
   reporting: createDomainConfig('reporting'),
   customers: createDomainConfig('customers'),
   shipping: createDomainConfig('shipping'),
+  support: createDomainConfig('support'),
+  assistant: createDomainConfig('assistant'),
 });

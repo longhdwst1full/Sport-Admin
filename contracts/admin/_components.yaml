@@ -144,6 +144,27 @@ components:
       type: string
       enum:
         - CLOUDINARY
+    PageMetaDto:
+      type: object
+      properties:
+        page:
+          type: number
+          example: 1
+        limit:
+          type: number
+          example: 20
+        total:
+          type: number
+          example: 42
+          description: Tổng số dòng khớp bộ lọc, không phụ thuộc trang
+        hasMore:
+          type: boolean
+          example: true
+      required:
+        - page
+        - limit
+        - total
+        - hasMore
     PaymentStatus:
       type: string
       enum:

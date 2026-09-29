@@ -1,0 +1,201 @@
+import { useMemo, useState } from 'react';
+import { LinkOutlined, ReloadOutlined } from '@ant-design/icons';
+import { App, Button, Select, Tooltip } from 'antd';
+import { useSearchParams } from 'react-router-dom';
+import { usePermissions } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { ManagementPage } from '@/foundation/management';
+import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { AttachKnowledgePostModal } from '../components/attach-knowledge-post-modal';
+import { KnowledgeDocumentTable } from '../components/knowledge-document-table';
+import { KnowledgeAudience, KnowledgeStatus } from '@/generated/api/assistant/assistant.schemas';
+import { KnowledgeBranchSelect } from '../components/knowledge-branch-select';
+import {
+  ALL_BRANCHES_LABEL,
+  KNOWLEDGE_ERROR_CODE,
+  KNOWLEDGE_PAGE_SIZE,
+  KNOWLEDGE_PERMISSION,
+  knowledgeAudienceOptions,
+  knowledgeStatusOptions,
+  knowledgeStatusPresentation,
+} from '../constants/knowledge.constants';
+import { useKnowledgeCommand, useKnowledgeDocuments } from '../hooks/use-knowledge-documents';
+import type { KnowledgeAction } from '../model/knowledge-actions.policy';
+import type { AttachKnowledgePostInput, KnowledgeDocument } from '../model/knowledge-document.types';
+
+function parseEnum<T extends string>(values: Record<string, T>, value: string | null): T | undefined {
+  return value && value in values ? (value as T) : undefined;
+}
+
+const actionConfirm: Record<KnowledgeAction, { title: string; okText: string; consequence: string; success: string }> = {
+  publish: {
+    title: 'Xuất bản tài liệu cho trợ lý',
+    okText: 'Xuất bản',
+    consequence: 'Trợ lý bắt đầu dùng nội dung này để trả lời đúng đối tượng và chi nhánh đã chọn.',
+    success: 'Đã xuất bản tài liệu',
+  },
+  archive: {
+    title: 'Lưu trữ tài liệu',
+    okText: 'Lưu trữ',
+    consequence: 'Trợ lý ngừng dùng nội dung này; bài CMS gốc không bị thay đổi.',
+    success: 'Đã lưu trữ tài liệu',
+  },
+};
+
+/**
+ * Kho tri thức của trợ lý: gắn bài CMS (đối tượng + chi nhánh), xuất bản và lưu trữ. Bộ lọc nằm trên URL.
+ */
+export function KnowledgePage() {
+  const { message, modal } = App.useApp();
+  const permissions = usePermissions();
+  const [params, setParams] = useSearchParams();
+  const status = parseEnum(KnowledgeStatus, params.get('status'));
+  const audience = parseEnum(KnowledgeAudience, params.get('audience'));
+  const branchId = params.get('branch') ?? undefined;
+  const [page, setPage] = useListPageReset([status, audience, branchId]);
+  const [attachOpen, setAttachOpen] = useState(false);
+  const command = useKnowledgeCommand();
+  const canManage = permissions.has(KNOWLEDGE_PERMISSION.MANAGE);
+
+  const updateParam = (key: string, value?: string) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setParams(next, { replace: true });
+  };
+
+  const list = useKnowledgeDocuments({ page, limit: KNOWLEDGE_PAGE_SIZE, status, audience, branchId });
+  const rows = useMemo(() => list.data?.items ?? [], [list.data]);
+
+  const openAttach = () => {
+    command.reset();
+    setAttachOpen(true);
+  };
+  const closeAttach = () => {
+    if (command.isPending) return;
+    command.reset();
+    setAttachOpen(false);
+  };
+  const attach = (input: AttachKnowledgePostInput) => {
+    command.mutate({ action: 'attach', body: input }, {
+      onSuccess: () => {
+        void message.success('Đã gắn bài vào kho tri thức (ở trạng thái nháp)');
+        command.reset();
+        setAttachOpen(false);
+      },
+    });
+  };
+
+  const confirmAction = (document: KnowledgeDocument, action: KnowledgeAction) => {
+    const meta = actionConfirm[action];
+    modal.confirm({
+      title: meta.title,
+      okText: meta.okText,
+      cancelText: 'Huỷ',
+      okButtonProps: { danger: action === 'archive' },
+      content: (
+        <div className="space-y-1">
+          <div><strong>{document.title}</strong></div>
+          <div>Trạng thái hiện tại: {knowledgeStatusPresentation[document.status].label} · phiên bản {document.version}</div>
+          <div className="text-slate-500">{meta.consequence}</div>
+        </div>
+      ),
+      // CONCURRENCY: dùng version của dòng đang hiển thị; nếu người khác vừa đổi, API trả 409 và danh sách tự tải lại.
+      onOk: async () => {
+        try {
+          await command.mutateAsync({ action, documentId: document.id, expectedVersion: document.version });
+          void message.success(meta.success);
+        } catch (error) {
+          void message.error(transitionErrorMessage(error));
+          throw error;
+        }
+      },
+    });
+  };
+
+  return (
+    <>
+      <ManagementPage
+        eyebrow="AI assistant"
+        title="Tri thức trợ lý"
+        description="Chọn bài CMS mà trợ lý được dùng để trả lời, theo đối tượng và chi nhánh."
+        actions={(
+          <Button type="primary" icon={<LinkOutlined />} disabled={!canManage} onClick={openAttach}>
+            Gắn bài CMS
+          </Button>
+        )}
+        filters={(
+          <div className="flex w-full flex-wrap gap-3">
+            <Select
+              allowClear
+              className="min-w-44"
+              value={status}
+              onChange={(value?: string) => updateParam('status', value)}
+              placeholder="Trạng thái"
+              options={knowledgeStatusOptions}
+            />
+            <Select
+              allowClear
+              className="min-w-44"
+              value={audience}
+              onChange={(value?: string) => updateParam('audience', value)}
+              placeholder="Đối tượng"
+              options={knowledgeAudienceOptions}
+            />
+            <KnowledgeBranchSelect
+              className="min-w-48"
+              placeholder={ALL_BRANCHES_LABEL}
+              value={branchId}
+              onChange={(value) => updateParam('branch', value)}
+            />
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                aria-label="Làm mới"
+                loading={list.isFetching}
+                onClick={() => void list.refetch()}
+              />
+            </Tooltip>
+          </div>
+        )}
+      >
+        {list.isError && (
+          <QueryErrorAlert error={list.error} message="Không tải được kho tri thức" retry={() => void list.refetch()} />
+        )}
+        <KnowledgeDocumentTable
+          rows={rows}
+          loading={list.isLoading}
+          page={page}
+          total={list.data?.total ?? 0}
+          emptyText="Chưa có tài liệu phù hợp bộ lọc."
+          permissions={permissions}
+          actionsDisabled={command.isPending}
+          onPageChange={setPage}
+          onAction={confirmAction}
+        />
+      </ManagementPage>
+      <AttachKnowledgePostModal
+        open={attachOpen}
+        submitting={command.isPending}
+        error={command.variables?.action === 'attach' ? command.error : undefined}
+        onSubmit={attach}
+        onClose={closeAttach}
+      />
+    </>
+  );
+}
+
+function transitionErrorMessage(error: unknown): string {
+  switch (getApiErrorPayload(error)?.code) {
+    case KNOWLEDGE_ERROR_CODE.VERSION_CONFLICT:
+    case KNOWLEDGE_ERROR_CODE.INVALID_TRANSITION:
+      return 'Tài liệu vừa được người khác thay đổi. Danh sách đã tải lại, vui lòng xem lại rồi thao tác.';
+    case KNOWLEDGE_ERROR_CODE.SOURCE_NOT_VISIBLE:
+      return 'Bài CMS nguồn chưa xuất bản hoặc đang ẩn nên chưa xuất bản được cho trợ lý.';
+    case KNOWLEDGE_ERROR_CODE.SOURCE_EMPTY:
+      return 'Bài CMS nguồn không có nội dung để lập chỉ mục.';
+    default:
+      return getApiErrorMessage(error);
+  }
+}

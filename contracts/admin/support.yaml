@@ -1,0 +1,725 @@
+# Generated from NestJS decorators. Do not edit by hand.
+openapi: 3.0.0
+info:
+  title: DCTD-UTC Commerce API
+  description: Contract for storefront and admin applications
+  version: 1.0.0
+  contact: {}
+servers:
+  - url: http://localhost:4000
+    description: Local
+paths:
+  /api/v1/admin/support/tickets:
+    get:
+      operationId: listAdminSupportTickets
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+        - name: status
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SupportTicketStatus"
+        - name: priority
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SupportTicketPriority"
+        - name: assigneeUserId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+        - name: branchId
+          required: false
+          in: query
+          description: Chỉ thu hẹp trong phạm vi chi nhánh được phân quyền
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Mã phiếu, tiêu đề, tên hoặc SĐT khách
+          schema:
+            maxLength: 100
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSupportTicketListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Hàng đợi phiếu hỗ trợ trong phạm vi chi nhánh được phân quyền
+      tags:
+        - Admin Support
+      x-required-permissions:
+        - support.ticket.view
+  /api/v1/admin/support/tickets/{id}:
+    get:
+      operationId: getAdminSupportTicket
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSupportTicketDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết phiếu gồm cả ghi chú nội bộ và version
+      tags:
+        - Admin Support
+      x-required-permissions:
+        - support.ticket.view
+  /api/v1/admin/support/tickets/{id}/assign:
+    post:
+      operationId: assignAdminSupportTicket
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-120 ký tự; giữ nguyên khi retry cùng lệnh
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignSupportTicketDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSupportTicketDetailDto"
+        "400":
+          description: SUPPORT_ASSIGNEE_INVALID
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Giao hoặc giao lại người xử lý (OPEN|ASSIGNED → ASSIGNED)
+      tags:
+        - Admin Support
+      x-required-permissions:
+        - support.ticket.assign
+  /api/v1/admin/support/tickets/{id}/messages:
+    post:
+      operationId: addAdminSupportTicketMessage
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-120 ký tự; giữ nguyên khi retry cùng lệnh
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddAdminSupportTicketMessageDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSupportTicketDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: SUPPORT_TICKET_CLOSED, SUPPORT_VERSION_CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Trả lời khách hoặc ghi chú nội bộ (isInternal); không đổi trạng thái, tăng version
+      tags:
+        - Admin Support
+      x-required-permissions:
+        - support.ticket.manage
+  /api/v1/admin/support/tickets/{id}/resolve:
+    post:
+      operationId: resolveAdminSupportTicket
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-120 ký tự; giữ nguyên khi retry cùng lệnh
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveSupportTicketDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSupportTicketDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Đánh dấu đã xử lý (ASSIGNED → RESOLVED), bắt buộc ghi chú kết quả
+      tags:
+        - Admin Support
+      x-required-permissions:
+        - support.ticket.manage
+  /api/v1/admin/support/tickets/{id}/close:
+    post:
+      operationId: closeAdminSupportTicket
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-120 ký tự; giữ nguyên khi retry cùng lệnh
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTicketCommandDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSupportTicketDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Đóng phiếu đã RESOLVED (RESOLVED → CLOSED)
+      tags:
+        - Admin Support
+      x-required-permissions:
+        - support.ticket.close
+components:
+  schemas:
+    AddAdminSupportTicketMessageDto:
+      type: object
+      properties:
+        body:
+          type: string
+          maxLength: 4000
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Version phiếu khách đang xem; mỗi tin nhắn tăng version
+        isInternal:
+          type: boolean
+          default: false
+          description: true = ghi chú nội bộ, không bao giờ trả cho khách
+      required:
+        - body
+        - expectedVersion
+        - isInternal
+    AdminSupportTicketDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        ticketNo:
+          type: string
+          example: TKT-20260929-000001
+        status:
+          allOf:
+            - $ref: "#/components/schemas/SupportTicketStatus"
+        priority:
+          allOf:
+            - $ref: "#/components/schemas/SupportTicketPriority"
+        subject:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+        source:
+          allOf:
+            - $ref: "#/components/schemas/SupportTicketSource"
+        customerId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        customerName:
+          type: string
+        branchId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        assigneeUserId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        assigneeName:
+          type: string
+          nullable: true
+        conversationId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        customerNo:
+          type: string
+        customerPhone:
+          type: string
+          nullable: true
+        customerEmail:
+          type: string
+          nullable: true
+        resolutionNote:
+          type: string
+          nullable: true
+        assignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        messages:
+          description: Gồm cả ghi chú nội bộ
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminSupportTicketMessageDto"
+      required:
+        - id
+        - ticketNo
+        - status
+        - priority
+        - subject
+        - createdAt
+        - updatedAt
+        - version
+        - source
+        - customerId
+        - customerName
+        - customerNo
+        - messages
+    AdminSupportTicketListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminSupportTicketSummaryDto"
+        meta:
+          $ref: ./_components.yaml#/components/schemas/PageMetaDto
+      required:
+        - items
+        - meta
+    AdminSupportTicketMessageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        authorType:
+          allOf:
+            - $ref: "#/components/schemas/SupportMessageAuthorType"
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        isInternal:
+          type: boolean
+        authorUserId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        authorCustomerId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        authorName:
+          type: string
+          nullable: true
+      required:
+        - id
+        - authorType
+        - body
+        - createdAt
+        - isInternal
+    AdminSupportTicketSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        ticketNo:
+          type: string
+          example: TKT-20260929-000001
+        status:
+          allOf:
+            - $ref: "#/components/schemas/SupportTicketStatus"
+        priority:
+          allOf:
+            - $ref: "#/components/schemas/SupportTicketPriority"
+        subject:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+        source:
+          allOf:
+            - $ref: "#/components/schemas/SupportTicketSource"
+        customerId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        customerName:
+          type: string
+        branchId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        assigneeUserId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        assigneeName:
+          type: string
+          nullable: true
+      required:
+        - id
+        - ticketNo
+        - status
+        - priority
+        - subject
+        - createdAt
+        - updatedAt
+        - version
+        - source
+        - customerId
+        - customerName
+    AssignSupportTicketDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+        assigneeUserId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Nhân viên nhận xử lý phiếu
+      required:
+        - expectedVersion
+        - assigneeUserId
+    ResolveSupportTicketDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+        resolutionNote:
+          type: string
+          maxLength: 1000
+      required:
+        - expectedVersion
+        - resolutionNote
+    SupportMessageAuthorType:
+      type: string
+      enum:
+        - CUSTOMER
+        - STAFF
+        - SYSTEM
+    SupportTicketCommandDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+      required:
+        - expectedVersion
+    SupportTicketPriority:
+      type: string
+      enum:
+        - LOW
+        - NORMAL
+        - HIGH
+        - URGENT
+    SupportTicketSource:
+      type: string
+      enum:
+        - CHAT
+    SupportTicketStatus:
+      type: string
+      enum:
+        - OPEN
+        - ASSIGNED
+        - RESOLVED
+        - CLOSED
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
