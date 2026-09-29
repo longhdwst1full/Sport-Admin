@@ -55,19 +55,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: Tài khoản không thuộc đúng một chi nhánh
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: "Danh mục bán tại quầy: hàng lẻ và combo kèm giá, tồn khả dụng theo chi nhánh"
@@ -102,25 +102,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: Tài khoản không thuộc đúng một chi nhánh
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Hết hàng hoặc sản phẩm chưa có giá
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: "Tạo đơn bán tại quầy: thu tiền ngay và giao hàng tại chỗ"
@@ -193,13 +193,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Danh sách đơn hàng theo tab trạng thái, tìm kiếm và phạm vi chi nhánh
@@ -228,25 +228,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Chi tiết và lịch sử đơn hàng trong phạm vi chi nhánh
@@ -286,31 +286,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Admin hủy đơn chưa thanh toán/xử lý trong phạm vi chi nhánh
@@ -350,31 +350,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Admin xác nhận đơn đủ điều kiện để kho bắt đầu xử lý
@@ -414,31 +414,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Admin hoàn tất đơn bất kỳ lúc nào sau khi đã giao đủ và thu đủ tiền
@@ -448,71 +448,52 @@ paths:
         - order.manage
 components:
   schemas:
-    PosCatalogResponseDto:
+    AdminOrderListDto:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/PosCatalogItemDto"
+            $ref: "#/components/schemas/OrderSummaryDto"
         page:
           type: number
-          example: 1
         limit:
           type: number
-          example: 20
         total:
           type: number
-          example: 42
-        hasMore:
-          type: boolean
-          example: true
-        branchId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-          description: Chi nhánh đã dùng để tính tồn
       required:
         - items
         - page
         - limit
         - total
-        - hasMore
-        - branchId
-    ErrorResponseDto:
+    CompleteOrderCommandDto:
       type: object
       properties:
-        statusCode:
+        expectedVersion:
           type: number
-          example: 400
-        code:
+          minimum: 0
+          description: Version đơn hàng mà Admin đang xem
+        reason:
           type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
+          minLength: 5
+          maxLength: 500
+          description: Lý do chắc chắn giao đủ và hoàn tất sớm
       required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
+        - expectedVersion
+        - reason
+    ConfirmOrderCommandDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: Version đơn hàng mà Admin đang xem
+        note:
+          type: string
+          maxLength: 500
+          description: Ghi chú xác nhận để kho bắt đầu xử lý
+      required:
+        - expectedVersion
     CreatePosOrderDto:
       type: object
       properties:
@@ -546,6 +527,20 @@ components:
         - customer
         - items
         - paymentMethod
+    OrderCancelCommandDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: Version đơn hàng mà người dùng đang xem
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+      required:
+        - expectedVersion
+        - reason
     OrderDetailDto:
       type: object
       properties:
@@ -560,7 +555,7 @@ components:
             - $ref: "#/components/schemas/OrderStatus"
         paymentStatus:
           allOf:
-            - $ref: "#/components/schemas/PaymentStatus"
+            - $ref: ./_components.yaml#/components/schemas/PaymentStatus
         fulfillmentStatus:
           allOf:
             - $ref: "#/components/schemas/OrderFulfillmentStatus"
@@ -645,242 +640,6 @@ components:
         - taxTotal
         - items
         - statusHistory
-    OrderStatusGroup:
-      type: string
-      enum:
-        - PENDING_CONFIRMATION
-        - CONFIRMED
-        - IN_TRANSIT
-        - DELIVERED
-    AdminOrderListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/OrderSummaryDto"
-        page:
-          type: number
-        limit:
-          type: number
-        total:
-          type: number
-      required:
-        - items
-        - page
-        - limit
-        - total
-    OrderCancelCommandDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-          description: Version đơn hàng mà người dùng đang xem
-        reason:
-          type: string
-          minLength: 3
-          maxLength: 500
-      required:
-        - expectedVersion
-        - reason
-    ConfirmOrderCommandDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-          description: Version đơn hàng mà Admin đang xem
-        note:
-          type: string
-          maxLength: 500
-          description: Ghi chú xác nhận để kho bắt đầu xử lý
-      required:
-        - expectedVersion
-    CompleteOrderCommandDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-          description: Version đơn hàng mà Admin đang xem
-        reason:
-          type: string
-          minLength: 5
-          maxLength: 500
-          description: Lý do chắc chắn giao đủ và hoàn tất sớm
-      required:
-        - expectedVersion
-        - reason
-    PosCatalogItemDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        sku:
-          type: string
-          example: HQ-909S
-        name:
-          type: string
-          example: Giàn tạ đa năng HQ-909S
-        unitPrice:
-          type: string
-          nullable: true
-          example: "16000000.00"
-          description: Giá bán hiện hành; null nghĩa là chưa có bảng giá hiệu lực, chưa bán được
-        isBundle:
-          type: boolean
-          example: false
-          description: Combo bán nguyên cụm, không tách lẻ
-        components:
-          description: Thành phần của combo; rỗng với hàng lẻ
-          type: array
-          items:
-            $ref: "#/components/schemas/PosCatalogComponentDto"
-        availableQuantity:
-          type: number
-          example: 3
-          description: Tồn khả dụng tại kho của chi nhánh bán (đã trừ hàng đang giữ). Combo lấy theo thành phần thiếu nhất vì combo không có tồn riêng.
-        flashPrice:
-          type: string
-          nullable: true
-          example: "13900000.00"
-          description: Giá flash sale đang hiệu lực; null khi không có chương trình nào áp cho SKU này. Giá cuối vẫn do Backend chốt lúc tạo đơn.
-        flashSaleAvailableQuantity:
-          type: number
-          nullable: true
-          example: 4
-          description: Số suất flash còn lại. null khi không có chương trình. Suất có thể hết giữa lúc lập đơn, khi đó tạo đơn trả 409 POS_FLASH_SALE_REPRICED kèm giá gốc.
-      required:
-        - id
-        - sku
-        - name
-        - unitPrice
-        - isBundle
-        - components
-        - availableQuantity
-        - flashPrice
-        - flashSaleAvailableQuantity
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    PosCustomerDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Nguyễn Văn An
-          maxLength: 255
-        phone:
-          type: string
-          example: "0901234567"
-          description: Dùng để tìm lại khách cũ và tra cứu bảo hành sau này
-        email:
-          type: string
-          maxLength: 255
-      required:
-        - name
-        - phone
-    PosOrderItemDto:
-      type: object
-      properties:
-        productVariantId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        quantity:
-          type: number
-          minimum: 1
-          example: 1
-      required:
-        - productVariantId
-        - quantity
-    PosPaymentMethod:
-      type: string
-      enum:
-        - CASH
-        - BANK_TRANSFER
-        - COD
-    PosDeliveryAddressDto:
-      type: object
-      properties:
-        recipient:
-          type: string
-          example: Nguyễn Văn An
-          maxLength: 255
-        phone:
-          type: string
-          example: "0901234567"
-        addressLine:
-          type: string
-          example: 12 Nguyễn Trãi
-          maxLength: 500
-        province:
-          type: string
-          example: Hà Nội
-          maxLength: 255
-        provinceCode:
-          type: string
-          example: "201"
-          maxLength: 32
-          description: Mã tỉnh/thành của hãng vận chuyển
-        district:
-          type: string
-          example: Ba Đình
-          maxLength: 255
-        districtCode:
-          type: string
-          example: "1442"
-          maxLength: 32
-        ward:
-          type: string
-          example: Phúc Xá
-          maxLength: 255
-        wardCode:
-          type: string
-          example: "21012"
-          maxLength: 32
-      required:
-        - recipient
-        - phone
-        - addressLine
-        - province
-        - provinceCode
-    OrderStatus:
-      type: string
-      enum:
-        - PENDING_CONFIRMATION
-        - CONFIRMED
-        - PICKING
-        - PACKED
-        - SHIPPED
-        - DELIVERED
-        - COMPLETED
-        - CANCELLED
-    PaymentStatus:
-      type: string
-      enum:
-        - PENDING
-        - AWAITING_CONFIRMATION
-        - NEED_REVIEW
-        - SUCCESS
-        - FAILED
-        - CANCELLED
-        - REFUNDED
     OrderFulfillmentStatus:
       type: string
       enum:
@@ -892,31 +651,27 @@ components:
         - FAILED
         - RETURNED
         - CANCELLED
-    OrderRecipientDto:
+    OrderItemComponentDto:
       type: object
       properties:
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sku:
+          type: string
         name:
           type: string
-        phone:
-          type: string
-        email:
-          type: string
-          nullable: true
-        addressLine:
-          type: string
-        ward:
-          type: string
-          nullable: true
-        district:
-          type: string
-          nullable: true
-        province:
-          type: string
+        quantityPerBundle:
+          type: number
+        totalQuantity:
+          type: number
       required:
+        - productVariantId
+        - sku
         - name
-        - phone
-        - addressLine
-        - province
+        - quantityPerBundle
+        - totalQuantity
     OrderItemDto:
       type: object
       properties:
@@ -958,31 +713,31 @@ components:
         - unitPrice
         - lineTotal
         - components
-    OrderStatusHistoryDto:
+    OrderRecipientDto:
       type: object
       properties:
-        sequenceNo:
-          type: number
-        fromStatus:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/OrderStatus"
-        toStatus:
-          allOf:
-            - $ref: "#/components/schemas/OrderStatus"
-        reason:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
           type: string
           nullable: true
-        actorType:
+        addressLine:
           type: string
-        createdAt:
+        ward:
           type: string
-          format: date-time
+          nullable: true
+        district:
+          type: string
+          nullable: true
+        province:
+          type: string
       required:
-        - sequenceNo
-        - toStatus
-        - actorType
-        - createdAt
+        - name
+        - phone
+        - addressLine
+        - province
     OrderShipmentDto:
       type: object
       properties:
@@ -1011,6 +766,49 @@ components:
           nullable: true
       required:
         - status
+    OrderStatus:
+      type: string
+      enum:
+        - PENDING_CONFIRMATION
+        - CONFIRMED
+        - PICKING
+        - PACKED
+        - SHIPPED
+        - DELIVERED
+        - COMPLETED
+        - CANCELLED
+    OrderStatusGroup:
+      type: string
+      enum:
+        - PENDING_CONFIRMATION
+        - CONFIRMED
+        - IN_TRANSIT
+        - DELIVERED
+    OrderStatusHistoryDto:
+      type: object
+      properties:
+        sequenceNo:
+          type: number
+        fromStatus:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrderStatus"
+        toStatus:
+          allOf:
+            - $ref: "#/components/schemas/OrderStatus"
+        reason:
+          type: string
+          nullable: true
+        actorType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - sequenceNo
+        - toStatus
+        - actorType
+        - createdAt
     OrderSummaryDto:
       type: object
       properties:
@@ -1025,7 +823,7 @@ components:
             - $ref: "#/components/schemas/OrderStatus"
         paymentStatus:
           allOf:
-            - $ref: "#/components/schemas/PaymentStatus"
+            - $ref: ./_components.yaml#/components/schemas/PaymentStatus
         fulfillmentStatus:
           allOf:
             - $ref: "#/components/schemas/OrderFulfillmentStatus"
@@ -1090,27 +888,170 @@ components:
         - sku
         - name
         - quantity
-    OrderItemComponentDto:
+    PosCatalogItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sku:
+          type: string
+          example: HQ-909S
+        name:
+          type: string
+          example: Giàn tạ đa năng HQ-909S
+        unitPrice:
+          type: string
+          nullable: true
+          example: "16000000.00"
+          description: Giá bán hiện hành; null nghĩa là chưa có bảng giá hiệu lực, chưa bán được
+        isBundle:
+          type: boolean
+          example: false
+          description: Combo bán nguyên cụm, không tách lẻ
+        components:
+          description: Thành phần của combo; rỗng với hàng lẻ
+          type: array
+          items:
+            $ref: "#/components/schemas/PosCatalogComponentDto"
+        availableQuantity:
+          type: number
+          example: 3
+          description: Tồn khả dụng tại kho của chi nhánh bán (đã trừ hàng đang giữ). Combo lấy theo thành phần thiếu nhất vì combo không có tồn riêng.
+        flashPrice:
+          type: string
+          nullable: true
+          example: "13900000.00"
+          description: Giá flash sale đang hiệu lực; null khi không có chương trình nào áp cho SKU này. Giá cuối vẫn do Backend chốt lúc tạo đơn.
+        flashSaleAvailableQuantity:
+          type: number
+          nullable: true
+          example: 4
+          description: Số suất flash còn lại. null khi không có chương trình. Suất có thể hết giữa lúc lập đơn, khi đó tạo đơn trả 409 POS_FLASH_SALE_REPRICED kèm giá gốc.
+      required:
+        - id
+        - sku
+        - name
+        - unitPrice
+        - isBundle
+        - components
+        - availableQuantity
+        - flashPrice
+        - flashSaleAvailableQuantity
+    PosCatalogResponseDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PosCatalogItemDto"
+        page:
+          type: number
+          example: 1
+        limit:
+          type: number
+          example: 20
+        total:
+          type: number
+          example: 42
+        hasMore:
+          type: boolean
+          example: true
+        branchId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Chi nhánh đã dùng để tính tồn
+      required:
+        - items
+        - page
+        - limit
+        - total
+        - hasMore
+        - branchId
+    PosCustomerDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nguyễn Văn An
+          maxLength: 255
+        phone:
+          type: string
+          example: "0901234567"
+          description: Dùng để tìm lại khách cũ và tra cứu bảo hành sau này
+        email:
+          type: string
+          maxLength: 255
+      required:
+        - name
+        - phone
+    PosDeliveryAddressDto:
+      type: object
+      properties:
+        recipient:
+          type: string
+          example: Nguyễn Văn An
+          maxLength: 255
+        phone:
+          type: string
+          example: "0901234567"
+        addressLine:
+          type: string
+          example: 12 Nguyễn Trãi
+          maxLength: 500
+        province:
+          type: string
+          example: Hà Nội
+          maxLength: 255
+        provinceCode:
+          type: string
+          example: "201"
+          maxLength: 32
+          description: Mã tỉnh/thành của hãng vận chuyển
+        district:
+          type: string
+          example: Ba Đình
+          maxLength: 255
+        districtCode:
+          type: string
+          example: "1442"
+          maxLength: 32
+        ward:
+          type: string
+          example: Phúc Xá
+          maxLength: 255
+        wardCode:
+          type: string
+          example: "21012"
+          maxLength: 32
+      required:
+        - recipient
+        - phone
+        - addressLine
+        - province
+        - provinceCode
+    PosOrderItemDto:
       type: object
       properties:
         productVariantId:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-        sku:
-          type: string
-        name:
-          type: string
-        quantityPerBundle:
+        quantity:
           type: number
-        totalQuantity:
-          type: number
+          minimum: 1
+          example: 1
       required:
         - productVariantId
-        - sku
-        - name
-        - quantityPerBundle
-        - totalQuantity
+        - quantity
+    PosPaymentMethod:
+      type: string
+      enum:
+        - CASH
+        - BANK_TRANSFER
+        - COD
   securitySchemes:
     bearer:
       scheme: bearer

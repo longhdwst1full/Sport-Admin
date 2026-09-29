@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# Disposable Orval output, regenerated from contracts/ (see generate:api / predev / prebuild).
+src/generated/
 coverage/
 storybook-static/
 *.log

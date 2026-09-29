@@ -71,13 +71,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Danh sách khách hàng kèm số đơn, giá trị vòng đời và lần mua gần nhất
@@ -107,25 +107,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Số điện thoại hoặc email đã có chủ
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Quản trị toàn hệ thống tạo hồ sơ khách độc lập
@@ -154,19 +154,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Chi tiết khách hàng kèm địa chỉ và đơn gần đây
@@ -200,25 +200,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Sửa thông tin liên hệ của khách theo expected version
@@ -248,19 +248,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Khách đã có đơn hoặc có tài khoản đăng nhập
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Xoá hồ sơ khách chưa phát sinh đơn và chưa có tài khoản đăng nhập
@@ -295,19 +295,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Ngừng hoạt động hồ sơ khách, giữ nguyên lịch sử mua hàng
@@ -342,19 +342,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Mở lại hồ sơ khách đã ngừng
@@ -364,105 +364,129 @@ paths:
         - customer.manage
 components:
   schemas:
-    CustomerStatus:
+    AddressCodeProvider:
       type: string
       enum:
-        - ACTIVE
-        - INACTIVE
-    CustomerKind:
-      type: string
-      enum:
-        - MEMBER
-        - GUEST
-    AdminCustomerListDto:
+        - GHN
+      description: Hãng đã cấp bộ mã địa giới của địa chỉ này.
+    AdminCustomerAddressDto:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/AdminCustomerSummaryDto"
-        page:
-          type: number
-          example: 1
-        limit:
-          type: number
-          example: 20
-        total:
-          type: number
-          example: 42
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        recipient:
+          type: string
+        phone:
+          type: string
+        addressLine:
+          type: string
+        ward:
+          type: string
+          nullable: true
+        wardCode:
+          type: string
+          nullable: true
+          example: "21012"
+          description: Mã phường/xã của hãng vận chuyển; thiếu thì không tạo được vận đơn.
+        district:
+          type: string
+          nullable: true
+        districtCode:
+          type: string
+          nullable: true
+          example: "1442"
+          description: Mã quận/huyện của hãng vận chuyển; thiếu thì không tạo được vận đơn.
+        province:
+          type: string
+          nullable: true
+          example: Hà Nội
+        provinceCode:
+          type: string
+          example: "201"
+          description: Mã tỉnh/thành của hãng vận chuyển.
+        codeProvider:
+          nullable: true
+          description: Hãng đã cấp bộ mã địa giới này. Mã của hãng khác không dùng lẫn được, nên địa chỉ lưu từ hãng cũ phải chọn lại khi đổi hãng.
+          allOf:
+            - $ref: "#/components/schemas/AddressCodeProvider"
+        isDefault:
+          type: boolean
       required:
-        - items
-        - page
-        - limit
-        - total
-    ErrorResponseDto:
+        - id
+        - recipient
+        - phone
+        - addressLine
+        - ward
+        - wardCode
+        - district
+        - districtCode
+        - province
+        - provinceCode
+        - codeProvider
+        - isDefault
+    AdminCustomerAddressInputDto:
       type: object
       properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
+        id:
           type: string
-          example: VALIDATION_ERROR
-        message:
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Có id là sửa địa chỉ đang có; bỏ trống là thêm mới
+        recipient:
           type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-      required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
-    CreateAdminCustomerDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Nguyễn Minh Anh
+          example: Nguyễn Văn An
           maxLength: 255
         phone:
           type: string
           example: "0912345678"
           maxLength: 32
-          description: "Bắt buộc: hồ sơ khách phải có cả SĐT và email để nhận lại khách và gửi thông báo đơn."
-        email:
+        addressLine:
           type: string
-          example: minh.anh@example.com
+          example: 12 Nguyễn Trãi
+          maxLength: 500
+        ward:
+          type: string
+          example: Phường Bến Thành
           maxLength: 255
-        marketingConsent:
+        wardCode:
+          type: string
+          example: "21012"
+          maxLength: 32
+          description: Mã phường/xã theo danh mục hãng vận chuyển. Thiếu thì địa chỉ không tạo được vận đơn.
+        district:
+          type: string
+          example: Quận 1
+          maxLength: 255
+        districtCode:
+          type: string
+          example: "1442"
+          maxLength: 32
+          description: Mã quận/huyện theo danh mục hãng vận chuyển. Thiếu thì địa chỉ không tạo được vận đơn.
+        province:
+          type: string
+          example: Hà Nội
+          maxLength: 255
+        provinceCode:
+          type: string
+          example: "201"
+          maxLength: 32
+          description: Mã tỉnh/thành theo danh mục hãng vận chuyển
+        codeProvider:
+          default: GHN
+          description: Hãng đã cấp bộ mã gửi kèm. Bỏ trống thì hiểu là hãng mặc định của hệ thống.
+          allOf:
+            - $ref: "#/components/schemas/AddressCodeProvider"
+        isDefault:
           type: boolean
           default: false
-          description: Khách đồng ý nhận tin khuyến mãi
-        avatarAssetId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-          description: Media asset đã upload dùng làm ảnh đại diện
-        addresses:
-          maxItems: 10
-          type: array
-          items:
-            $ref: "#/components/schemas/AdminCustomerAddressInputDto"
+          description: Đúng một địa chỉ mặc định cho mỗi khách
       required:
-        - name
+        - recipient
         - phone
-        - email
+        - addressLine
+        - provinceCode
     AdminCustomerDetailDto:
       type: object
       properties:
@@ -546,53 +570,53 @@ components:
         - version
         - addresses
         - recentOrders
-    UpdateAdminCustomerDto:
+    AdminCustomerListDto:
       type: object
       properties:
-        expectedVersion:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminCustomerSummaryDto"
+        page:
           type: number
-          minimum: 0
-          description: Version khách hàng mà Admin đang xem
-        name:
-          type: string
-          maxLength: 255
-        phone:
-          type: string
-          maxLength: 32
-          description: SĐT là bắt buộc trên hồ sơ, nên gửi giá trị mới chứ không gửi chuỗi rỗng để xoá.
-        email:
-          type: string
-          maxLength: 255
-          description: Email là bắt buộc trên hồ sơ, nên gửi giá trị mới chứ không gửi chuỗi rỗng để xoá.
-        marketingConsent:
-          type: boolean
-        avatarAssetId:
+          example: 1
+        limit:
+          type: number
+          example: 20
+        total:
+          type: number
+          example: 42
+      required:
+        - items
+        - page
+        - limit
+        - total
+    AdminCustomerOrderDto:
+      type: object
+      properties:
+        id:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-          nullable: true
-          description: Gửi null để gỡ ảnh đại diện; bỏ trống để giữ nguyên
-        addresses:
-          maxItems: 10
-          description: Trạng thái địa chỉ mong muốn sau khi lưu; bỏ trống để không đụng tới địa chỉ
-          type: array
-          items:
-            $ref: "#/components/schemas/AdminCustomerAddressInputDto"
-      required:
-        - expectedVersion
-    CustomerStatusCommandDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-          description: Version khách hàng mà Admin đang xem
-        reason:
+        orderNo:
           type: string
-          maxLength: 500
-          description: Lý do, lưu lại để truy vết
+          example: ORD-20260915-00000025
+        status:
+          type: string
+        paymentStatus:
+          type: string
+        grandTotal:
+          type: string
+          example: "36100000.00"
+        placedAt:
+          type: string
       required:
-        - expectedVersion
+        - id
+        - orderNo
+        - status
+        - paymentStatus
+        - grandTotal
+        - placedAt
     AdminCustomerSummaryDto:
       type: object
       properties:
@@ -665,170 +689,97 @@ components:
         - lastOrderAt
         - createdAt
         - version
-    ErrorDetailDto:
+    CreateAdminCustomerDto:
       type: object
       properties:
-        field:
+        name:
           type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    AdminCustomerAddressInputDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-          description: Có id là sửa địa chỉ đang có; bỏ trống là thêm mới
-        recipient:
-          type: string
-          example: Nguyễn Văn An
+          example: Nguyễn Minh Anh
           maxLength: 255
         phone:
           type: string
           example: "0912345678"
           maxLength: 32
-        addressLine:
+          description: "Bắt buộc: hồ sơ khách phải có cả SĐT và email để nhận lại khách và gửi thông báo đơn."
+        email:
           type: string
-          example: 12 Nguyễn Trãi
-          maxLength: 500
-        ward:
-          type: string
-          example: Phường Bến Thành
+          example: minh.anh@example.com
           maxLength: 255
-        wardCode:
-          type: string
-          example: "21012"
-          maxLength: 32
-          description: Mã phường/xã theo danh mục hãng vận chuyển. Thiếu thì địa chỉ không tạo được vận đơn.
-        district:
-          type: string
-          example: Quận 1
-          maxLength: 255
-        districtCode:
-          type: string
-          example: "1442"
-          maxLength: 32
-          description: Mã quận/huyện theo danh mục hãng vận chuyển. Thiếu thì địa chỉ không tạo được vận đơn.
-        province:
-          type: string
-          example: Hà Nội
-          maxLength: 255
-        provinceCode:
-          type: string
-          example: "201"
-          maxLength: 32
-          description: Mã tỉnh/thành theo danh mục hãng vận chuyển
-        codeProvider:
-          default: GHN
-          description: Hãng đã cấp bộ mã gửi kèm. Bỏ trống thì hiểu là hãng mặc định của hệ thống.
-          allOf:
-            - $ref: "#/components/schemas/AddressCodeProvider"
-        isDefault:
+        marketingConsent:
           type: boolean
           default: false
-          description: Đúng một địa chỉ mặc định cho mỗi khách
-      required:
-        - recipient
-        - phone
-        - addressLine
-        - provinceCode
-    AdminCustomerAddressDto:
-      type: object
-      properties:
-        id:
+          description: Khách đồng ý nhận tin khuyến mãi
+        avatarAssetId:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-        recipient:
-          type: string
-        phone:
-          type: string
-        addressLine:
-          type: string
-        ward:
-          type: string
-          nullable: true
-        wardCode:
-          type: string
-          nullable: true
-          example: "21012"
-          description: Mã phường/xã của hãng vận chuyển; thiếu thì không tạo được vận đơn.
-        district:
-          type: string
-          nullable: true
-        districtCode:
-          type: string
-          nullable: true
-          example: "1442"
-          description: Mã quận/huyện của hãng vận chuyển; thiếu thì không tạo được vận đơn.
-        province:
-          type: string
-          nullable: true
-          example: Hà Nội
-        provinceCode:
-          type: string
-          example: "201"
-          description: Mã tỉnh/thành của hãng vận chuyển.
-        codeProvider:
-          nullable: true
-          description: Hãng đã cấp bộ mã địa giới này. Mã của hãng khác không dùng lẫn được, nên địa chỉ lưu từ hãng cũ phải chọn lại khi đổi hãng.
-          allOf:
-            - $ref: "#/components/schemas/AddressCodeProvider"
-        isDefault:
-          type: boolean
+          description: Media asset đã upload dùng làm ảnh đại diện
+        addresses:
+          maxItems: 10
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminCustomerAddressInputDto"
       required:
-        - id
-        - recipient
+        - name
         - phone
-        - addressLine
-        - ward
-        - wardCode
-        - district
-        - districtCode
-        - province
-        - provinceCode
-        - codeProvider
-        - isDefault
-    AdminCustomerOrderDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        orderNo:
-          type: string
-          example: ORD-20260915-00000025
-        status:
-          type: string
-        paymentStatus:
-          type: string
-        grandTotal:
-          type: string
-          example: "36100000.00"
-        placedAt:
-          type: string
-      required:
-        - id
-        - orderNo
-        - status
-        - paymentStatus
-        - grandTotal
-        - placedAt
-    AddressCodeProvider:
+        - email
+    CustomerKind:
       type: string
       enum:
-        - GHN
-      description: Hãng đã cấp bộ mã địa giới của địa chỉ này.
+        - MEMBER
+        - GUEST
+    CustomerStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+    CustomerStatusCommandDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: Version khách hàng mà Admin đang xem
+        reason:
+          type: string
+          maxLength: 500
+          description: Lý do, lưu lại để truy vết
+      required:
+        - expectedVersion
+    UpdateAdminCustomerDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: Version khách hàng mà Admin đang xem
+        name:
+          type: string
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 32
+          description: SĐT là bắt buộc trên hồ sơ, nên gửi giá trị mới chứ không gửi chuỗi rỗng để xoá.
+        email:
+          type: string
+          maxLength: 255
+          description: Email là bắt buộc trên hồ sơ, nên gửi giá trị mới chứ không gửi chuỗi rỗng để xoá.
+        marketingConsent:
+          type: boolean
+        avatarAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+          description: Gửi null để gỡ ảnh đại diện; bỏ trống để giữ nguyên
+        addresses:
+          maxItems: 10
+          description: Trạng thái địa chỉ mong muốn sau khi lưu; bỏ trống để không đụng tới địa chỉ
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminCustomerAddressInputDto"
+      required:
+        - expectedVersion
   securitySchemes:
     bearer:
       scheme: bearer

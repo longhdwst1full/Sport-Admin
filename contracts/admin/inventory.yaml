@@ -53,25 +53,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List warehouse balances
@@ -123,25 +123,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tổng hợp tồn kho trên toàn bộ dòng khớp bộ lọc, không chỉ trang đang xem
@@ -220,25 +220,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List immutable stock ledger entries
@@ -294,25 +294,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List posted stock adjustment documents
@@ -346,31 +346,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Post a basic stock adjustment
@@ -399,31 +399,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Get a posted stock adjustment document
@@ -479,25 +479,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List stock transfers visible to the assigned branches
@@ -531,31 +531,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create a DRAFT full-shipment stock transfer
@@ -584,25 +584,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Get stock transfer detail
@@ -637,37 +637,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Sửa lý do và/hoặc thay toàn bộ danh sách hàng của phiếu DRAFT
@@ -703,37 +703,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Huỷ phiếu DRAFT hoặc từ chối phiếu SUBMITTED
@@ -768,37 +768,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Submit a DRAFT transfer
@@ -833,37 +833,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Ship every requested item from the source warehouse
@@ -898,37 +898,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Receive a full shipment and record damaged quantities
@@ -984,25 +984,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List stocktakes visible to the assigned branches
@@ -1037,31 +1037,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tạo phiếu kiểm kê nháp và chụp tồn hệ thống
@@ -1091,25 +1091,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Chi tiết phiếu kiểm kê
@@ -1145,37 +1145,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Nhập số đếm thực tế cho các dòng của phiếu nháp
@@ -1211,37 +1211,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Nộp phiếu để soát chênh lệch
@@ -1277,37 +1277,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Duyệt phiếu và ghi chênh lệch vào sổ kho
@@ -1343,37 +1343,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Huỷ phiếu nháp hoặc phiếu đã nộp
@@ -1383,124 +1383,36 @@ paths:
         - inventory.stocktake.manage
 components:
   schemas:
-    InventoryBalanceListDto:
+    CancelStockTransferDto:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/InventoryBalanceDto"
-        total:
-          type: number
-        page:
-          type: number
-        limit:
-          type: number
+        version:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Current optimistic-lock version
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
       required:
-        - items
-        - total
-        - page
-        - limit
-    ErrorResponseDto:
+        - version
+        - reason
+    CancelStocktakeDto:
       type: object
       properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
+        version:
           type: string
-          example: VALIDATION_ERROR
-        message:
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        reason:
           type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
+          minLength: 3
+          maxLength: 1000
       required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
-    InventoryBalanceSummaryDto:
-      type: object
-      properties:
-        trackedBalances:
-          type: number
-          description: Số dòng tồn khớp bộ lọc
-        inStock:
-          type: number
-          description: Số dòng còn bán bình thường
-        lowStock:
-          type: number
-          description: Số dòng chạm hoặc dưới ngưỡng đặt lại
-        outOfStock:
-          type: number
-          description: Số dòng hết hàng bán (available = 0)
-        totalOnHand:
-          type: number
-          description: Tổng tồn vật lý
-        totalReserved:
-          type: number
-          description: Tổng đang giữ cho đơn chưa xuất
-        totalAvailable:
-          type: number
-          description: Tổng còn bán được = onHand - reserved
-      required:
-        - trackedBalances
-        - inStock
-        - lowStock
-        - outOfStock
-        - totalOnHand
-        - totalReserved
-        - totalAvailable
-    InventoryMovementType:
-      type: string
-      enum:
-        - ADJUST
-        - RECEIVE
-        - TRANSFER_OUT
-        - TRANSFER_IN
-        - SALE_SHIP
-        - DELIVERY_RETURN_RESTOCK
-        - RETURN_RESTOCK
-    InventoryMovementListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/InventoryMovementDto"
-        nextCursor:
-          type: string
-          nullable: true
-      required:
-        - items
-    StockAdjustmentListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/StockAdjustmentSummaryDto"
-        nextCursor:
-          type: string
-          nullable: true
-      required:
-        - items
+        - version
+        - reason
     CreateStockAdjustmentDto:
       type: object
       properties:
@@ -1533,43 +1445,272 @@ components:
         - warehouseCode
         - reason
         - items
-    StockAdjustmentResultDto:
+    CreateStockTransferDto:
       type: object
       properties:
-        adjustmentNo:
+        fromWarehouseCode:
           type: string
+        toWarehouseCode:
+          type: string
+        reason:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateStockTransferItemDto"
+      required:
+        - fromWarehouseCode
+        - toWarehouseCode
+        - reason
+        - items
+    CreateStockTransferItemDto:
+      type: object
+      properties:
+        sku:
+          type: string
+        requestedQuantity:
+          type: number
+          minimum: 1
+      required:
+        - sku
+        - requestedQuantity
+    CreateStocktakeDto:
+      type: object
+      properties:
+        warehouseCode:
+          type: string
+          maxLength: 32
+          description: Bỏ trống khi tài khoản chỉ gắn với một chi nhánh; bắt buộc với phạm vi GLOBAL.
+        scopeType:
+          description: FULL chụp mọi dòng tồn của kho; SKU_LIST chỉ chụp các SKU được liệt kê.
+          allOf:
+            - $ref: "#/components/schemas/StocktakeScopeType"
+        skus:
+          description: Bắt buộc khi scopeType = SKU_LIST.
+          type: array
+          items:
+            type: string
+      required:
+        - scopeType
+    InventoryBalanceDto:
+      type: object
+      properties:
+        id:
+          type: string
+        warehouseCode:
+          type: string
+        sku:
+          type: string
+        productName:
+          type: string
+        onHand:
+          type: number
+        reserved:
+          type: number
+        available:
+          type: number
+        reorderPoint:
+          type: number
         status:
           type: string
           enum:
-            - POSTED
-        adjustmentType:
-          allOf:
-            - $ref: "#/components/schemas/StockAdjustmentType"
-        reasonCode:
-          type: string
-        externalReference:
-          type: string
-          nullable: true
-        sourceName:
-          type: string
-          nullable: true
-        reason:
-          type: string
-        balances:
+            - IN_STOCK
+            - LOW_STOCK
+            - OUT_OF_STOCK
+      required:
+        - id
+        - warehouseCode
+        - sku
+        - productName
+        - onHand
+        - reserved
+        - available
+        - reorderPoint
+        - status
+    InventoryBalanceListDto:
+      type: object
+      properties:
+        items:
           type: array
           items:
             $ref: "#/components/schemas/InventoryBalanceDto"
-        postedAt:
+        total:
+          type: number
+        page:
+          type: number
+        limit:
+          type: number
+      required:
+        - items
+        - total
+        - page
+        - limit
+    InventoryBalanceSummaryDto:
+      type: object
+      properties:
+        trackedBalances:
+          type: number
+          description: Số dòng tồn khớp bộ lọc
+        inStock:
+          type: number
+          description: Số dòng còn bán bình thường
+        lowStock:
+          type: number
+          description: Số dòng chạm hoặc dưới ngưỡng đặt lại
+        outOfStock:
+          type: number
+          description: Số dòng hết hàng bán (available = 0)
+        totalOnHand:
+          type: number
+          description: Tổng tồn vật lý
+        totalReserved:
+          type: number
+          description: Tổng đang giữ cho đơn chưa xuất
+        totalAvailable:
+          type: number
+          description: Tổng còn bán được = onHand - reserved
+      required:
+        - trackedBalances
+        - inStock
+        - lowStock
+        - outOfStock
+        - totalOnHand
+        - totalReserved
+        - totalAvailable
+    InventoryMovementDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        warehouseCode:
+          type: string
+        sku:
+          type: string
+        productName:
+          type: string
+        movementType:
+          allOf:
+            - $ref: "#/components/schemas/InventoryMovementType"
+        quantityDelta:
+          type: number
+        balanceAfter:
+          type: number
+        referenceType:
+          type: string
+        referenceId:
+          type: string
+        reason:
+          type: string
+        createdBy:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        createdByDisplayName:
+          type: string
+        occurredAt:
           type: string
           format: date-time
       required:
-        - adjustmentNo
-        - status
-        - adjustmentType
-        - reasonCode
+        - id
+        - warehouseCode
+        - sku
+        - productName
+        - movementType
+        - quantityDelta
+        - balanceAfter
+        - referenceType
+        - referenceId
         - reason
-        - balances
-        - postedAt
+        - createdBy
+        - createdByDisplayName
+        - occurredAt
+    InventoryMovementListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryMovementDto"
+        nextCursor:
+          type: string
+          nullable: true
+      required:
+        - items
+    InventoryMovementType:
+      type: string
+      enum:
+        - ADJUST
+        - RECEIVE
+        - TRANSFER_OUT
+        - TRANSFER_IN
+        - SALE_SHIP
+        - DELIVERY_RETURN_RESTOCK
+        - RETURN_RESTOCK
+    ReceiveStockTransferDto:
+      type: object
+      properties:
+        version:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Current optimistic-lock version
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReceiveStockTransferItemDto"
+      required:
+        - version
+        - items
+    ReceiveStockTransferItemDto:
+      type: object
+      properties:
+        sku:
+          type: string
+        receivedQuantity:
+          type: number
+          minimum: 0
+        damagedQuantity:
+          type: number
+          minimum: 0
+        damageReason:
+          type: string
+          maxLength: 500
+      required:
+        - sku
+        - receivedQuantity
+        - damagedQuantity
+    RecordStocktakeCountItemDto:
+      type: object
+      properties:
+        sku:
+          type: string
+        countedQuantity:
+          type: number
+          minimum: 0
+          description: Số đếm thực tế. Đếm ra rỗng phải gửi 0; bỏ trường này nghĩa là chưa đếm.
+        note:
+          type: string
+          maxLength: 500
+      required:
+        - sku
+        - countedQuantity
+    RecordStocktakeCountsDto:
+      type: object
+      properties:
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecordStocktakeCountItemDto"
+      required:
+        - version
+        - items
     StockAdjustmentDetailDto:
       type: object
       properties:
@@ -1623,50 +1764,154 @@ components:
         - createdByDisplayName
         - postedAt
         - items
-    StockTransferStatus:
+    StockAdjustmentItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sku:
+          type: string
+        productName:
+          type: string
+        quantityDelta:
+          type: number
+        expectedOnHand:
+          type: number
+        actualOnHand:
+          type: number
+        note:
+          type: string
+          nullable: true
+      required:
+        - id
+        - sku
+        - productName
+        - quantityDelta
+        - expectedOnHand
+        - actualOnHand
+    StockAdjustmentItemInputDto:
+      type: object
+      properties:
+        sku:
+          type: string
+        quantityDelta:
+          type: number
+          example: 5
+      required:
+        - sku
+        - quantityDelta
+    StockAdjustmentListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockAdjustmentSummaryDto"
+        nextCursor:
+          type: string
+          nullable: true
+      required:
+        - items
+    StockAdjustmentReason:
       type: string
       enum:
-        - DRAFT
-        - SUBMITTED
-        - SHIPPED
-        - RECEIVED
-        - CANCELLED
-    StockTransferListDto:
+        - MANUAL
+        - COUNT_CORRECTION
+        - INITIAL_STOCK
+        - EXTERNAL_RECEIPT
+    StockAdjustmentResultDto:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/StockTransferSummaryDto"
-        total:
-          type: number
-        page:
-          type: number
-        limit:
-          type: number
-      required:
-        - items
-        - total
-        - page
-        - limit
-    CreateStockTransferDto:
-      type: object
-      properties:
-        fromWarehouseCode:
+        adjustmentNo:
           type: string
-        toWarehouseCode:
+        status:
           type: string
+          enum:
+            - POSTED
+        adjustmentType:
+          allOf:
+            - $ref: "#/components/schemas/StockAdjustmentType"
+        reasonCode:
+          type: string
+        externalReference:
+          type: string
+          nullable: true
+        sourceName:
+          type: string
+          nullable: true
         reason:
           type: string
-        items:
+        balances:
           type: array
           items:
-            $ref: "#/components/schemas/CreateStockTransferItemDto"
+            $ref: "#/components/schemas/InventoryBalanceDto"
+        postedAt:
+          type: string
+          format: date-time
       required:
-        - fromWarehouseCode
-        - toWarehouseCode
+        - adjustmentNo
+        - status
+        - adjustmentType
+        - reasonCode
         - reason
-        - items
+        - balances
+        - postedAt
+    StockAdjustmentSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        adjustmentNo:
+          type: string
+        warehouseCode:
+          type: string
+        adjustmentType:
+          type: string
+        reasonCode:
+          type: string
+        externalReference:
+          type: string
+          nullable: true
+        sourceName:
+          type: string
+          nullable: true
+        reason:
+          type: string
+        status:
+          type: string
+        itemCount:
+          type: number
+        createdBy:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        createdByDisplayName:
+          type: string
+        postedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - adjustmentNo
+        - warehouseCode
+        - adjustmentType
+        - reasonCode
+        - reason
+        - status
+        - itemCount
+        - createdBy
+        - createdByDisplayName
+        - postedAt
+    StockAdjustmentType:
+      type: string
+      enum:
+        - CORRECTION
+        - OPENING_BALANCE
+        - MANUAL_RECEIPT
     StockTransferDetailDto:
       type: object
       properties:
@@ -1740,79 +1985,43 @@ components:
         - createdByDisplayName
         - createdAt
         - items
-    UpdateStockTransferDto:
+    StockTransferItemDto:
       type: object
       properties:
-        version:
+        id:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-          description: Current optimistic-lock version
-        reason:
+        sku:
           type: string
-          minLength: 3
-          maxLength: 1000
-        items:
-          description: Khi gửi thì thay toàn bộ danh sách hàng của phiếu
-          type: array
-          items:
-            $ref: "#/components/schemas/CreateStockTransferItemDto"
+        productName:
+          type: string
+        requestedQuantity:
+          type: number
+        shippedQuantity:
+          type: number
+        receivedQuantity:
+          type: number
+        damagedQuantity:
+          type: number
+        damageReason:
+          type: string
+          nullable: true
       required:
-        - version
-    CancelStockTransferDto:
-      type: object
-      properties:
-        version:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-          description: Current optimistic-lock version
-        reason:
-          type: string
-          minLength: 3
-          maxLength: 1000
-      required:
-        - version
-        - reason
-    StockTransferTransitionDto:
-      type: object
-      properties:
-        version:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-          description: Current optimistic-lock version
-      required:
-        - version
-    ReceiveStockTransferDto:
-      type: object
-      properties:
-        version:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-          description: Current optimistic-lock version
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/ReceiveStockTransferItemDto"
-      required:
-        - version
-        - items
-    StocktakeStatus:
-      type: string
-      enum:
-        - DRAFT
-        - SUBMITTED
-        - APPROVED
-        - CANCELLED
-    StocktakeListDto:
+        - id
+        - sku
+        - productName
+        - requestedQuantity
+        - shippedQuantity
+        - receivedQuantity
+        - damagedQuantity
+    StockTransferListDto:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/StocktakeSummaryDto"
+            $ref: "#/components/schemas/StockTransferSummaryDto"
         total:
           type: number
         page:
@@ -1824,24 +2033,83 @@ components:
         - total
         - page
         - limit
-    CreateStocktakeDto:
+    StockTransferStatus:
+      type: string
+      enum:
+        - DRAFT
+        - SUBMITTED
+        - SHIPPED
+        - RECEIVED
+        - CANCELLED
+    StockTransferSummaryDto:
       type: object
       properties:
-        warehouseCode:
+        id:
           type: string
-          maxLength: 32
-          description: Bỏ trống khi tài khoản chỉ gắn với một chi nhánh; bắt buộc với phạm vi GLOBAL.
-        scopeType:
-          description: FULL chụp mọi dòng tồn của kho; SKU_LIST chỉ chụp các SKU được liệt kê.
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        transferNo:
+          type: string
+        fromWarehouseCode:
+          type: string
+        toWarehouseCode:
+          type: string
+        status:
           allOf:
-            - $ref: "#/components/schemas/StocktakeScopeType"
-        skus:
-          description: Bắt buộc khi scopeType = SKU_LIST.
-          type: array
-          items:
-            type: string
+            - $ref: "#/components/schemas/StockTransferStatus"
+        reason:
+          type: string
+        itemCount:
+          type: number
+        version:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        createdByDisplayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        shippedAt:
+          type: string
+          format: date-time
+          nullable: true
+        receivedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelReason:
+          type: string
+          nullable: true
       required:
-        - scopeType
+        - id
+        - transferNo
+        - fromWarehouseCode
+        - toWarehouseCode
+        - status
+        - reason
+        - itemCount
+        - version
+        - createdByDisplayName
+        - createdAt
+    StockTransferTransitionDto:
+      type: object
+      properties:
+        version:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Current optimistic-lock version
+      required:
+        - version
     StocktakeDetailDto:
       type: object
       properties:
@@ -1923,362 +2191,84 @@ components:
         - snapshotAt
         - createdAt
         - items
-    RecordStocktakeCountsDto:
-      type: object
-      properties:
-        version:
-          type: string
-          pattern: ^\d+$
-          example: "0"
-          description: Current optimistic-lock version
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/RecordStocktakeCountItemDto"
-      required:
-        - version
-        - items
-    StocktakeTransitionDto:
-      type: object
-      properties:
-        version:
-          type: string
-          pattern: ^\d+$
-          example: "0"
-          description: Current optimistic-lock version
-      required:
-        - version
-    CancelStocktakeDto:
-      type: object
-      properties:
-        version:
-          type: string
-          pattern: ^\d+$
-          example: "0"
-          description: Current optimistic-lock version
-        reason:
-          type: string
-          minLength: 3
-          maxLength: 1000
-      required:
-        - version
-        - reason
-    InventoryBalanceDto:
+    StocktakeItemDto:
       type: object
       properties:
         id:
           type: string
-        warehouseCode:
-          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         sku:
           type: string
         productName:
           type: string
-        onHand:
+        systemQuantity:
           type: number
-        reserved:
-          type: number
-        available:
-          type: number
-        reorderPoint:
-          type: number
-        status:
-          type: string
-          enum:
-            - IN_STOCK
-            - LOW_STOCK
-            - OUT_OF_STOCK
-      required:
-        - id
-        - warehouseCode
-        - sku
-        - productName
-        - onHand
-        - reserved
-        - available
-        - reorderPoint
-        - status
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    InventoryMovementDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        warehouseCode:
-          type: string
-        sku:
-          type: string
-        productName:
-          type: string
-        movementType:
-          allOf:
-            - $ref: "#/components/schemas/InventoryMovementType"
-        quantityDelta:
-          type: number
-        balanceAfter:
-          type: number
-        referenceType:
-          type: string
-        referenceId:
-          type: string
-        reason:
-          type: string
-        createdBy:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        createdByDisplayName:
-          type: string
-        occurredAt:
-          type: string
-          format: date-time
-      required:
-        - id
-        - warehouseCode
-        - sku
-        - productName
-        - movementType
-        - quantityDelta
-        - balanceAfter
-        - referenceType
-        - referenceId
-        - reason
-        - createdBy
-        - createdByDisplayName
-        - occurredAt
-    StockAdjustmentSummaryDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        adjustmentNo:
-          type: string
-        warehouseCode:
-          type: string
-        adjustmentType:
-          type: string
-        reasonCode:
-          type: string
-        externalReference:
-          type: string
           nullable: true
-        sourceName:
-          type: string
+          description: Tồn hệ thống lúc chụp. Ẩn (null) khi phiếu còn DRAFT để giữ nguyên tắc đếm mù.
+        countedQuantity:
+          type: number
           nullable: true
-        reason:
-          type: string
-        status:
-          type: string
-        itemCount:
+          description: null = chưa đếm; 0 = đã đếm và rỗng.
+        varianceQuantity:
           type: number
-        createdBy:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        createdByDisplayName:
-          type: string
-        postedAt:
-          type: string
-          format: date-time
-      required:
-        - id
-        - adjustmentNo
-        - warehouseCode
-        - adjustmentType
-        - reasonCode
-        - reason
-        - status
-        - itemCount
-        - createdBy
-        - createdByDisplayName
-        - postedAt
-    StockAdjustmentType:
-      type: string
-      enum:
-        - CORRECTION
-        - OPENING_BALANCE
-        - MANUAL_RECEIPT
-    StockAdjustmentReason:
-      type: string
-      enum:
-        - MANUAL
-        - COUNT_CORRECTION
-        - INITIAL_STOCK
-        - EXTERNAL_RECEIPT
-    StockAdjustmentItemInputDto:
-      type: object
-      properties:
-        sku:
-          type: string
-        quantityDelta:
-          type: number
-          example: 5
-      required:
-        - sku
-        - quantityDelta
-    StockAdjustmentItemDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        sku:
-          type: string
-        productName:
-          type: string
-        quantityDelta:
-          type: number
-        expectedOnHand:
-          type: number
-        actualOnHand:
-          type: number
+          nullable: true
+          description: "Chênh lệch đóng băng tại thời điểm đếm: countedQuantity - systemQuantity. Ẩn khi DRAFT."
         note:
           type: string
           nullable: true
+        countedAt:
+          type: string
+          format: date-time
+          nullable: true
+        countedByDisplayName:
+          type: string
+          nullable: true
+        currentOnHand:
+          type: number
+          nullable: true
+          description: Tồn hiện tại. Ẩn khi DRAFT; khác systemQuantity nghĩa là kho đã phát sinh sau khi chụp.
+        drifted:
+          type: boolean
+          description: true khi có phát sinh kho SAU thời điểm đếm dòng này, nên số đếm đã lỗi thời.
+        postingDelta:
+          type: number
+          nullable: true
+          description: Delta sẽ ghi vào sổ nếu duyệt bây giờ. Đã tính bù phát sinh sau lúc đếm.
       required:
         - id
         - sku
         - productName
-        - quantityDelta
-        - expectedOnHand
-        - actualOnHand
-    StockTransferSummaryDto:
+    StocktakeListDto:
       type: object
       properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        transferNo:
-          type: string
-        fromWarehouseCode:
-          type: string
-        toWarehouseCode:
-          type: string
-        status:
-          allOf:
-            - $ref: "#/components/schemas/StockTransferStatus"
-        reason:
-          type: string
-        itemCount:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StocktakeSummaryDto"
+        total:
           type: number
-        version:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        createdByDisplayName:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        submittedAt:
-          type: string
-          format: date-time
-          nullable: true
-        shippedAt:
-          type: string
-          format: date-time
-          nullable: true
-        receivedAt:
-          type: string
-          format: date-time
-          nullable: true
-        cancelledAt:
-          type: string
-          format: date-time
-          nullable: true
-        cancelReason:
-          type: string
-          nullable: true
+        page:
+          type: number
+        limit:
+          type: number
       required:
-        - id
-        - transferNo
-        - fromWarehouseCode
-        - toWarehouseCode
-        - status
-        - reason
-        - itemCount
-        - version
-        - createdByDisplayName
-        - createdAt
-    CreateStockTransferItemDto:
-      type: object
-      properties:
-        sku:
-          type: string
-        requestedQuantity:
-          type: number
-          minimum: 1
-      required:
-        - sku
-        - requestedQuantity
-    StockTransferItemDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        sku:
-          type: string
-        productName:
-          type: string
-        requestedQuantity:
-          type: number
-        shippedQuantity:
-          type: number
-        receivedQuantity:
-          type: number
-        damagedQuantity:
-          type: number
-        damageReason:
-          type: string
-          nullable: true
-      required:
-        - id
-        - sku
-        - productName
-        - requestedQuantity
-        - shippedQuantity
-        - receivedQuantity
-        - damagedQuantity
-    ReceiveStockTransferItemDto:
-      type: object
-      properties:
-        sku:
-          type: string
-        receivedQuantity:
-          type: number
-          minimum: 0
-        damagedQuantity:
-          type: number
-          minimum: 0
-        damageReason:
-          type: string
-          maxLength: 500
-      required:
-        - sku
-        - receivedQuantity
-        - damagedQuantity
+        - items
+        - total
+        - page
+        - limit
+    StocktakeScopeType:
+      type: string
+      enum:
+        - FULL
+        - SKU_LIST
+    StocktakeStatus:
+      type: string
+      enum:
+        - DRAFT
+        - SUBMITTED
+        - APPROVED
+        - CANCELLED
     StocktakeSummaryDto:
       type: object
       properties:
@@ -2345,74 +2335,35 @@ components:
         - createdByDisplayName
         - snapshotAt
         - createdAt
-    StocktakeScopeType:
-      type: string
-      enum:
-        - FULL
-        - SKU_LIST
-    StocktakeItemDto:
+    StocktakeTransitionDto:
       type: object
       properties:
-        id:
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+      required:
+        - version
+    UpdateStockTransferDto:
+      type: object
+      properties:
+        version:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-        sku:
+          description: Current optimistic-lock version
+        reason:
           type: string
-        productName:
-          type: string
-        systemQuantity:
-          type: number
-          nullable: true
-          description: Tồn hệ thống lúc chụp. Ẩn (null) khi phiếu còn DRAFT để giữ nguyên tắc đếm mù.
-        countedQuantity:
-          type: number
-          nullable: true
-          description: null = chưa đếm; 0 = đã đếm và rỗng.
-        varianceQuantity:
-          type: number
-          nullable: true
-          description: "Chênh lệch đóng băng tại thời điểm đếm: countedQuantity - systemQuantity. Ẩn khi DRAFT."
-        note:
-          type: string
-          nullable: true
-        countedAt:
-          type: string
-          format: date-time
-          nullable: true
-        countedByDisplayName:
-          type: string
-          nullable: true
-        currentOnHand:
-          type: number
-          nullable: true
-          description: Tồn hiện tại. Ẩn khi DRAFT; khác systemQuantity nghĩa là kho đã phát sinh sau khi chụp.
-        drifted:
-          type: boolean
-          description: true khi có phát sinh kho SAU thời điểm đếm dòng này, nên số đếm đã lỗi thời.
-        postingDelta:
-          type: number
-          nullable: true
-          description: Delta sẽ ghi vào sổ nếu duyệt bây giờ. Đã tính bù phát sinh sau lúc đếm.
+          minLength: 3
+          maxLength: 1000
+        items:
+          description: Khi gửi thì thay toàn bộ danh sách hàng của phiếu
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateStockTransferItemDto"
       required:
-        - id
-        - sku
-        - productName
-    RecordStocktakeCountItemDto:
-      type: object
-      properties:
-        sku:
-          type: string
-        countedQuantity:
-          type: number
-          minimum: 0
-          description: Số đếm thực tế. Đếm ra rỗng phải gửi 0; bỏ trường này nghĩa là chưa đếm.
-        note:
-          type: string
-          maxLength: 500
-      required:
-        - sku
-        - countedQuantity
+        - version
   securitySchemes:
     bearer:
       scheme: bearer

@@ -20,12 +20,13 @@ function review(id: string, status: ProductReviewDto['status'], rating: number):
 }
 
 describe('review moderation policy', () => {
-  it('counts PENDING separately and computes average from actual data', () => {
+  it('counts hidden (REJECTED) separately and computes average from actual data', () => {
+    // Reviews now publish straight to APPROVED; PENDING only exists in legacy rows.
     expect(getReviewMetrics([
       review('1', 'PENDING', 5),
       review('2', 'APPROVED', 3),
       review('3', 'REJECTED', 4),
-    ])).toEqual({ total: 3, approved: 1, pending: 1, averageRating: '4.0' });
+    ])).toEqual({ total: 3, approved: 1, hidden: 1, averageRating: '4.0' });
   });
 
   it('only exposes reply for APPROVED review with reply permission', () => {

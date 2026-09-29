@@ -52,13 +52,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Danh sách giao vận theo kho, trạng thái và thông tin đơn hàng
@@ -87,13 +87,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Chi tiết giao vận của một đơn hàng
@@ -122,13 +122,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Chi tiết và lịch sử giao vận
@@ -168,7 +168,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Bắt đầu lấy hàng trong kho
@@ -208,7 +208,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Xác nhận đã đóng gói toàn bộ đơn
@@ -248,19 +248,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Bàn giao vận chuyển và commit tồn kho atomically
@@ -290,19 +290,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tạo lại vận đơn GHN tự động đang ở trạng thái tạo lỗi
@@ -331,13 +331,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Lấy URL in phiếu giao từ hãng vận chuyển
@@ -377,7 +377,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Xác nhận khách đã nhận đủ hàng
@@ -417,7 +417,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Ghi nhận giao thất bại và đưa hàng về kho xuất
@@ -457,7 +457,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Kho nhận hàng giao thất bại; chỉ SELLABLE được hoàn tồn bán
@@ -467,18 +467,6 @@ paths:
         - fulfillment.delivery_update
 components:
   schemas:
-    FulfillmentStatus:
-      type: string
-      enum:
-        - PENDING
-        - PICKING
-        - PACKED
-        - SHIPPED
-        - DELIVERED
-        - DELIVERY_FAILED
-        - RETURNING_TO_WAREHOUSE
-        - RETURNED_TO_WAREHOUSE
-        - CANCELLED
     AdminFulfillmentListDto:
       type: object
       properties:
@@ -497,40 +485,35 @@ components:
         - page
         - limit
         - total
-    ErrorResponseDto:
+    CarrierShipmentStatus:
+      type: string
+      enum:
+        - PENDING
+        - CREATING
+        - CREATED
+        - CREATE_FAILED
+      description: Vận đơn GHN tự tạo sau thanh toán/xác nhận COD. null = không áp dụng (tạo vận đơn lúc ship như trước).
+    FailDeliveryDto:
       type: object
       properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
+        expectedVersion:
           type: string
-          example: VALIDATION_ERROR
-        message:
+          pattern: ^\d+$
+        note:
           type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
+          maxLength: 500
+        reasonCode:
           type: string
-          example: /api/v1/catalog/products
-        method:
+          minLength: 2
+          maxLength: 64
+        reason:
           type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
+          minLength: 5
+          maxLength: 500
       required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
+        - expectedVersion
+        - reasonCode
+        - reason
     FulfillmentDetailDto:
       type: object
       properties:
@@ -634,34 +617,27 @@ components:
         - paymentStatus
         - paymentMethod
         - history
-    FulfillmentTransitionDto:
+    FulfillmentHistoryDto:
       type: object
       properties:
-        expectedVersion:
+        sequenceNo:
+          type: number
+        fromStatus:
           type: string
-          pattern: ^\d+$
-        note:
+          nullable: true
+        toStatus:
+          allOf:
+            - $ref: "#/components/schemas/FulfillmentStatus"
+        reason:
           type: string
-          maxLength: 500
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
       required:
-        - expectedVersion
-    ShipFulfillmentDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: string
-          pattern: ^\d+$
-        note:
-          type: string
-          maxLength: 500
-        carrierCode:
-          type: string
-          maxLength: 64
-        trackingNo:
-          type: string
-          maxLength: 128
-      required:
-        - expectedVersion
+        - sequenceNo
+        - toStatus
+        - createdAt
     FulfillmentLabelDto:
       type: object
       properties:
@@ -674,47 +650,18 @@ components:
       required:
         - trackingNo
         - labelUrl
-    FailDeliveryDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: string
-          pattern: ^\d+$
-        note:
-          type: string
-          maxLength: 500
-        reasonCode:
-          type: string
-          minLength: 2
-          maxLength: 64
-        reason:
-          type: string
-          minLength: 5
-          maxLength: 500
-      required:
-        - expectedVersion
-        - reasonCode
-        - reason
-    ReceiveReturnDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: string
-          pattern: ^\d+$
-        note:
-          type: string
-          maxLength: 500
-        condition:
-          allOf:
-            - $ref: "#/components/schemas/ReturnCondition"
-        reason:
-          type: string
-          minLength: 5
-          maxLength: 500
-      required:
-        - expectedVersion
-        - condition
-        - reason
+    FulfillmentStatus:
+      type: string
+      enum:
+        - PENDING
+        - PICKING
+        - PACKED
+        - SHIPPED
+        - DELIVERED
+        - DELIVERY_FAILED
+        - RETURNING_TO_WAREHOUSE
+        - RETURNED_TO_WAREHOUSE
+        - CANCELLED
     FulfillmentSummaryDto:
       type: object
       properties:
@@ -778,56 +725,54 @@ components:
         - recipientPhone
         - createdAt
         - version
-    ErrorDetailDto:
+    FulfillmentTransitionDto:
       type: object
       properties:
-        field:
+        expectedVersion:
           type: string
-          example: name
-        code:
+          pattern: ^\d+$
+        note:
           type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
+          maxLength: 500
       required:
-        - code
-        - message
-    CarrierShipmentStatus:
-      type: string
-      enum:
-        - PENDING
-        - CREATING
-        - CREATED
-        - CREATE_FAILED
-      description: Vận đơn GHN tự tạo sau thanh toán/xác nhận COD. null = không áp dụng (tạo vận đơn lúc ship như trước).
-    FulfillmentHistoryDto:
+        - expectedVersion
+    ReceiveReturnDto:
       type: object
       properties:
-        sequenceNo:
-          type: number
-        fromStatus:
+        expectedVersion:
           type: string
-          nullable: true
-        toStatus:
+          pattern: ^\d+$
+        note:
+          type: string
+          maxLength: 500
+        condition:
           allOf:
-            - $ref: "#/components/schemas/FulfillmentStatus"
+            - $ref: ./_components.yaml#/components/schemas/ReturnCondition
         reason:
           type: string
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
+          minLength: 5
+          maxLength: 500
       required:
-        - sequenceNo
-        - toStatus
-        - createdAt
-    ReturnCondition:
-      type: string
-      enum:
-        - SELLABLE
-        - DAMAGED
-        - MISSING
+        - expectedVersion
+        - condition
+        - reason
+    ShipFulfillmentDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+        note:
+          type: string
+          maxLength: 500
+        carrierCode:
+          type: string
+          maxLength: 64
+        trackingNo:
+          type: string
+          maxLength: 128
+      required:
+        - expectedVersion
   securitySchemes:
     bearer:
       scheme: bearer

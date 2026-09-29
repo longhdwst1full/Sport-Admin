@@ -25,13 +25,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: "Số liệu vận hành: đơn theo trạng thái, đơn chờ giao, sản phẩm, khách hàng"
@@ -75,13 +75,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Doanh thu đã thực nhận theo khoảng thời gian, gom theo ngày/tháng/quý/năm
@@ -105,13 +105,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tồn kho chạm ngưỡng đặt lại và hết hàng bán
@@ -157,13 +157,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Sản phẩm bán chạy tính trên đơn đã thu được tiền
@@ -209,13 +209,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Khách mua nhiều nhất tính trên đơn đã hoàn tất
@@ -270,13 +270,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tải doanh thu theo kỳ ra file CSV hoặc XLSX
@@ -331,13 +331,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tải bóc tách doanh thu theo chi nhánh ra file CSV hoặc XLSX
@@ -393,13 +393,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tải danh sách sản phẩm bán chạy ra file CSV hoặc XLSX
@@ -455,13 +455,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tải danh sách khách mua nhiều nhất ra file CSV hoặc XLSX
@@ -495,13 +495,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tải danh sách tồn kho cần nhập thêm ra file CSV hoặc XLSX
@@ -511,6 +511,93 @@ paths:
         - report.inventory.view
 components:
   schemas:
+    BranchRevenueDto:
+      type: object
+      properties:
+        branchName:
+          type: string
+        completedRevenue:
+          type: string
+        completedOrderCount:
+          type: number
+        expectedRevenue:
+          type: string
+        refundedAmount:
+          type: string
+          description: Tiền đã hoàn thành công trong kỳ của chi nhánh
+        netRevenue:
+          type: string
+          description: completedRevenue - refundedAmount
+      required:
+        - branchName
+        - completedRevenue
+        - completedOrderCount
+        - expectedRevenue
+        - refundedAmount
+        - netRevenue
+    InventoryReportDto:
+      type: object
+      properties:
+        trackedBalances:
+          type: number
+          description: Số dòng tồn đang theo dõi
+        outOfStock:
+          type: number
+          description: Số dòng hết hàng bán (available <= 0)
+        lowStock:
+          type: number
+          description: Số dòng chạm hoặc dưới ngưỡng đặt lại
+        items:
+          description: Danh sách cần nhập thêm, ưu tiên thiếu nhất
+          type: array
+          items:
+            $ref: "#/components/schemas/LowStockItemDto"
+      required:
+        - trackedBalances
+        - outOfStock
+        - lowStock
+        - items
+    LowStockItemDto:
+      type: object
+      properties:
+        sku:
+          type: string
+        productName:
+          type: string
+        warehouseName:
+          type: string
+        onHand:
+          type: number
+          description: Tồn thực tế
+        reserved:
+          type: number
+          description: Đang giữ cho đơn chưa xuất
+        available:
+          type: number
+          description: Còn bán được = onHand - reserved
+        reorderPoint:
+          type: number
+          description: Ngưỡng đặt lại hàng
+      required:
+        - sku
+        - productName
+        - warehouseName
+        - onHand
+        - reserved
+        - available
+        - reorderPoint
+    OrderStatusCountDto:
+      type: object
+      properties:
+        status:
+          type: string
+          example: PENDING_CONFIRMATION
+        count:
+          type: number
+          example: 12
+      required:
+        - status
+        - count
     OverviewReportDto:
       type: object
       properties:
@@ -544,40 +631,11 @@ components:
         - publishedProducts
         - customers
         - ordersByStatus
-    ErrorResponseDto:
-      type: object
-      properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-      required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
+    ReportExportFormat:
+      type: string
+      enum:
+        - CSV
+        - XLSX
     ReportGranularity:
       type: string
       enum:
@@ -585,6 +643,34 @@ components:
         - MONTH
         - QUARTER
         - YEAR
+    RevenuePointDto:
+      type: object
+      properties:
+        date:
+          type: string
+          example: 2026-09-15
+          description: "Khoá kỳ theo mức gom: YYYY-MM-DD, YYYY-MM, YYYY-Qn hoặc YYYY."
+        amount:
+          type: string
+          example: "15400000.00"
+          description: Doanh thu gộp của đơn hoàn tất trong kỳ
+        orderCount:
+          type: number
+          example: 3
+        refundAmount:
+          type: string
+          example: "500000.00"
+          description: Tiền đã hoàn thành công trong kỳ (theo mốc hoàn tiền)
+        netAmount:
+          type: string
+          example: "14900000.00"
+          description: amount - refundAmount
+      required:
+        - date
+        - amount
+        - orderCount
+        - refundAmount
+        - netAmount
     RevenueReportDto:
       type: object
       properties:
@@ -650,177 +736,6 @@ components:
         - granularity
         - series
         - byBranch
-    InventoryReportDto:
-      type: object
-      properties:
-        trackedBalances:
-          type: number
-          description: Số dòng tồn đang theo dõi
-        outOfStock:
-          type: number
-          description: Số dòng hết hàng bán (available <= 0)
-        lowStock:
-          type: number
-          description: Số dòng chạm hoặc dưới ngưỡng đặt lại
-        items:
-          description: Danh sách cần nhập thêm, ưu tiên thiếu nhất
-          type: array
-          items:
-            $ref: "#/components/schemas/LowStockItemDto"
-      required:
-        - trackedBalances
-        - outOfStock
-        - lowStock
-        - items
-    TopProductListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/TopProductDto"
-      required:
-        - items
-    TopCustomerListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/TopCustomerDto"
-      required:
-        - items
-    ReportExportFormat:
-      type: string
-      enum:
-        - CSV
-        - XLSX
-    OrderStatusCountDto:
-      type: object
-      properties:
-        status:
-          type: string
-          example: PENDING_CONFIRMATION
-        count:
-          type: number
-          example: 12
-      required:
-        - status
-        - count
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    RevenuePointDto:
-      type: object
-      properties:
-        date:
-          type: string
-          example: 2026-09-15
-          description: "Khoá kỳ theo mức gom: YYYY-MM-DD, YYYY-MM, YYYY-Qn hoặc YYYY."
-        amount:
-          type: string
-          example: "15400000.00"
-          description: Doanh thu gộp của đơn hoàn tất trong kỳ
-        orderCount:
-          type: number
-          example: 3
-        refundAmount:
-          type: string
-          example: "500000.00"
-          description: Tiền đã hoàn thành công trong kỳ (theo mốc hoàn tiền)
-        netAmount:
-          type: string
-          example: "14900000.00"
-          description: amount - refundAmount
-      required:
-        - date
-        - amount
-        - orderCount
-        - refundAmount
-        - netAmount
-    BranchRevenueDto:
-      type: object
-      properties:
-        branchName:
-          type: string
-        completedRevenue:
-          type: string
-        completedOrderCount:
-          type: number
-        expectedRevenue:
-          type: string
-        refundedAmount:
-          type: string
-          description: Tiền đã hoàn thành công trong kỳ của chi nhánh
-        netRevenue:
-          type: string
-          description: completedRevenue - refundedAmount
-      required:
-        - branchName
-        - completedRevenue
-        - completedOrderCount
-        - expectedRevenue
-        - refundedAmount
-        - netRevenue
-    LowStockItemDto:
-      type: object
-      properties:
-        sku:
-          type: string
-        productName:
-          type: string
-        warehouseName:
-          type: string
-        onHand:
-          type: number
-          description: Tồn thực tế
-        reserved:
-          type: number
-          description: Đang giữ cho đơn chưa xuất
-        available:
-          type: number
-          description: Còn bán được = onHand - reserved
-        reorderPoint:
-          type: number
-          description: Ngưỡng đặt lại hàng
-      required:
-        - sku
-        - productName
-        - warehouseName
-        - onHand
-        - reserved
-        - available
-        - reorderPoint
-    TopProductDto:
-      type: object
-      properties:
-        sku:
-          type: string
-        productName:
-          type: string
-        quantitySold:
-          type: number
-          description: Số lượng đã bán trong khoảng
-        revenue:
-          type: string
-          description: Doanh thu đã thực nhận từ SKU này
-      required:
-        - sku
-        - productName
-        - quantitySold
-        - revenue
     TopCustomerDto:
       type: object
       properties:
@@ -841,6 +756,42 @@ components:
         - name
         - orderCount
         - revenue
+    TopCustomerListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopCustomerDto"
+      required:
+        - items
+    TopProductDto:
+      type: object
+      properties:
+        sku:
+          type: string
+        productName:
+          type: string
+        quantitySold:
+          type: number
+          description: Số lượng đã bán trong khoảng
+        revenue:
+          type: string
+          description: Doanh thu đã thực nhận từ SKU này
+      required:
+        - sku
+        - productName
+        - quantitySold
+        - revenue
+    TopProductListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopProductDto"
+      required:
+        - items
   securitySchemes:
     bearer:
       scheme: bearer

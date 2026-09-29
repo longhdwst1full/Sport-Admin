@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Input, Select } from 'antd';
+import { App, Button, Drawer, Form, Input, Select, Skeleton } from 'antd';
 import { useEffect, useState } from 'react';
 import {
   createAdminPost,
   getListAdminPostsQueryKey,
   updateAdminPost,
+  useGetAdminPost,
 } from '@/generated/api/content/content';
-import type { ContentPostDto } from '@/generated/api/content/content.schemas';
+import type { ContentPostSummaryDto } from '@/generated/api/content/content.schemas';
 import {
   ContentPostType,
   type ContentPostType as PostType,
@@ -21,8 +22,8 @@ export function ContentEditorDrawer({
   onClose,
 }: {
   open: boolean;
-  /** Bỏ trống là soạn bài mới; có giá trị là sửa bài đã đăng. */
-  editing?: ContentPostDto;
+  /** Bỏ trống là soạn bài mới; có giá trị (từ list, chỉ có summary) là sửa bài đã đăng. */
+  editing?: ContentPostSummaryDto;
   onClose: () => void;
 }) {
   const { message } = App.useApp();
@@ -33,16 +34,26 @@ export function ContentEditorDrawer({
   const [coverUrl, setCoverUrl] = useState('');
   const [relatedProducts, setRelatedProducts] = useState('');
   const [body, setBody] = useState('');
-  // Đổ lại form mỗi lần mở: mở sửa bài khác mà giữ state cũ sẽ ghi đè nhầm nội dung.
+
+  // List item không còn có body/relatedProductSlugs (chỉ là summary), nên form sửa bài phải tải
+  // lại bản đầy đủ theo id thay vì đọc từ row của bảng.
+  const postDetail = useGetAdminPost(editing?.id ?? '', {
+    query: { enabled: open && Boolean(editing?.id) },
+  });
+  const editingFull = editing ? postDetail.data : undefined;
+
+  // Đổ lại form mỗi lần mở/khi bản đầy đủ tải xong: mở sửa bài khác mà giữ state cũ sẽ ghi đè
+  // nhầm nội dung; với bài mới thì reset ngay khi drawer mở.
   useEffect(() => {
     if (!open) return;
-    setTitle(editing?.title ?? '');
-    setPostType((editing?.postType as PostType) ?? ContentPostType.NEWS);
-    setExcerpt(editing?.excerpt ?? '');
-    setCoverUrl(editing?.coverUrl ?? '');
-    setRelatedProducts((editing?.relatedProductSlugs ?? []).join(', '));
-    setBody(editing?.body ?? '');
-  }, [open, editing]);
+    if (editing && !editingFull) return;
+    setTitle(editingFull?.title ?? '');
+    setPostType((editingFull?.postType as PostType) ?? ContentPostType.NEWS);
+    setExcerpt(editingFull?.excerpt ?? '');
+    setCoverUrl(editingFull?.coverUrl ?? '');
+    setRelatedProducts((editingFull?.relatedProductSlugs ?? []).join(', '));
+    setBody(editingFull?.body ?? '');
+  }, [open, editing, editingFull]);
 
   const savePost = useMutation({
     mutationFn: (payload: {
@@ -54,7 +65,12 @@ export function ContentEditorDrawer({
       relatedProductSlugs: string[];
     }) =>
       editing
-        ? updateAdminPost(editing.id, { ...payload, expectedVersion: editing.version })
+        ? updateAdminPost(editing.id, {
+            ...payload,
+            // IDEMPOTENCY: dùng version của bản vừa tải (editingFull), không phải version cũ trên
+            // row danh sách — tránh optimistic-lock conflict giả khi bài đã đổi version từ lúc mở list.
+            expectedVersion: editingFull?.version ?? editing.version,
+          })
         : createAdminPost(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() });
@@ -96,12 +112,16 @@ export function ContentEditorDrawer({
         <Button
           type="primary"
           loading={savePost.isPending}
+          disabled={Boolean(editing) && !editingFull}
           onClick={submit}
         >
           Tạo và xuất bản
         </Button>
       }
     >
+      {editing && !editingFull ? (
+        <Skeleton active paragraph={{ rows: 8 }} />
+      ) : (
       <Form layout="vertical">
         <Form.Item label="Tiêu đề" required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -145,6 +165,7 @@ export function ContentEditorDrawer({
           />
         </Form.Item>
       </Form>
+      )}
     </Drawer>
   );
 }

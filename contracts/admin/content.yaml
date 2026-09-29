@@ -13,6 +13,21 @@ paths:
     get:
       operationId: listAdminPosts
       parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
         - name: postType
           required: false
           in: query
@@ -26,21 +41,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ContentPostListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: List posts for administration
+      summary: List posts for administration (paginated summaries without body)
       tags:
         - Admin Content
       x-required-permissions:
@@ -66,13 +87,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create and publish a content post
@@ -81,6 +102,52 @@ paths:
       x-required-permissions:
         - cms.content.manage
   /api/v1/admin/content/posts/{id}:
+    get:
+      operationId: getAdminPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentPostDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Get a post with full body for editing, including hidden or archived posts
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.view
     patch:
       operationId: updateAdminPost
       parameters:
@@ -107,25 +174,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Sửa nội dung bài viết đã đăng theo expected version
@@ -159,31 +226,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Logically delete a content post by archiving it
@@ -193,6 +260,137 @@ paths:
         - cms.content.manage
 components:
   schemas:
+    ArchiveContentPostDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 255
+          example: Nội dung không còn phù hợp
+      required:
+        - expectedVersion
+        - reason
+    ContentPostDto:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        postType:
+          allOf:
+            - $ref: "#/components/schemas/ContentPostType"
+        isPublished:
+          type: boolean
+          example: true
+          description: Có hiển thị trên website hay không; tách khỏi status để ẩn tạm bài viết
+        title:
+          type: string
+        excerpt:
+          type: string
+        coverUrl:
+          type: string
+          format: uri
+        publishedAt:
+          type: string
+          format: date-time
+        status:
+          allOf:
+            - $ref: "#/components/schemas/ContentPostStatus"
+        version:
+          type: number
+          minimum: 0
+        archivedAt:
+          type: string
+          format: date-time
+        archiveReason:
+          type: string
+        body:
+          type: string
+        relatedProductSlugs:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - slug
+        - postType
+        - isPublished
+        - title
+        - excerpt
+        - coverUrl
+        - publishedAt
+        - status
+        - version
+        - body
+        - relatedProductSlugs
+    ContentPostListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContentPostSummaryDto"
+        meta:
+          $ref: "#/components/schemas/PageMetaDto"
+      required:
+        - items
+        - meta
+    ContentPostStatus:
+      type: string
+      enum:
+        - PUBLISHED
+        - ARCHIVED
+    ContentPostSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        postType:
+          allOf:
+            - $ref: "#/components/schemas/ContentPostType"
+        isPublished:
+          type: boolean
+          example: true
+          description: Có hiển thị trên website hay không; tách khỏi status để ẩn tạm bài viết
+        title:
+          type: string
+        excerpt:
+          type: string
+        coverUrl:
+          type: string
+          format: uri
+        publishedAt:
+          type: string
+          format: date-time
+        status:
+          allOf:
+            - $ref: "#/components/schemas/ContentPostStatus"
+        version:
+          type: number
+          minimum: 0
+        archivedAt:
+          type: string
+          format: date-time
+        archiveReason:
+          type: string
+      required:
+        - id
+        - slug
+        - postType
+        - isPublished
+        - title
+        - excerpt
+        - coverUrl
+        - publishedAt
+        - status
+        - version
     ContentPostType:
       type: string
       enum:
@@ -201,52 +399,6 @@ components:
         - PRODUCT_GUIDE
         - ABOUT
         - POLICY
-    ContentPostListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/ContentPostDto"
-        total:
-          type: number
-      required:
-        - items
-        - total
-    ErrorResponseDto:
-      type: object
-      properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-      required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
     CreateContentPostDto:
       type: object
       properties:
@@ -276,60 +428,27 @@ components:
         - excerpt
         - body
         - coverUrl
-    ContentPostDto:
+    PageMetaDto:
       type: object
       properties:
-        id:
-          type: string
-        slug:
-          type: string
-        postType:
-          allOf:
-            - $ref: "#/components/schemas/ContentPostType"
-        isPublished:
+        page:
+          type: number
+          example: 1
+        limit:
+          type: number
+          example: 20
+        total:
+          type: number
+          example: 42
+          description: Tổng số dòng khớp bộ lọc, không phụ thuộc trang
+        hasMore:
           type: boolean
           example: true
-          description: Có hiển thị trên website hay không; tách khỏi status để ẩn tạm bài viết
-        title:
-          type: string
-        excerpt:
-          type: string
-        body:
-          type: string
-        coverUrl:
-          type: string
-          format: uri
-        relatedProductSlugs:
-          type: array
-          items:
-            type: string
-        publishedAt:
-          type: string
-          format: date-time
-        status:
-          allOf:
-            - $ref: "#/components/schemas/ContentPostStatus"
-        version:
-          type: number
-          minimum: 0
-        archivedAt:
-          type: string
-          format: date-time
-        archiveReason:
-          type: string
       required:
-        - id
-        - slug
-        - postType
-        - isPublished
-        - title
-        - excerpt
-        - body
-        - coverUrl
-        - relatedProductSlugs
-        - publishedAt
-        - status
-        - version
+        - page
+        - limit
+        - total
+        - hasMore
     UpdateContentPostDto:
       type: object
       properties:
@@ -357,40 +476,6 @@ components:
           description: Bật/tắt hiển thị trên website; không đổi status
       required:
         - expectedVersion
-    ArchiveContentPostDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-        reason:
-          type: string
-          minLength: 3
-          maxLength: 255
-          example: Nội dung không còn phù hợp
-      required:
-        - expectedVersion
-        - reason
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    ContentPostStatus:
-      type: string
-      enum:
-        - PUBLISHED
-        - ARCHIVED
   securitySchemes:
     bearer:
       scheme: bearer

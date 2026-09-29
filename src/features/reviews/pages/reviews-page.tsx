@@ -1,8 +1,8 @@
 import {
   CheckCircleOutlined,
   CheckOutlined,
-  ClockCircleOutlined,
   DeleteOutlined,
+  EyeInvisibleOutlined,
   EyeOutlined,
   ReloadOutlined,
   SettingOutlined,
@@ -85,15 +85,17 @@ export function ReviewsPage() {
   const working = moderate.isPending || deleteReview.isPending;
 
   /**
-   * Duyệt/ẩn chạy tuần tự chứ không song song: mỗi đánh giá là một lệnh ghi riêng
+   * Khôi phục/ẩn chạy tuần tự chứ không song song: mỗi đánh giá là một lệnh ghi riêng
    * có kiểm tra version, bắn đồng loạt sẽ làm khóa hàng và khó biết dòng nào hỏng.
+   * Đánh giá đã lên thẳng APPROVED từ lúc khách gửi; hai action này chỉ là hậu kiểm
+   * (khôi phục hiển thị / ẩn khỏi storefront), không còn ý nghĩa "duyệt lần đầu".
    */
-  async function runBulk(action: 'APPROVE' | 'HIDE') {
-    const targets = action === 'APPROVE' ? approvable : hideable;
+  async function runBulk(action: 'RESTORE' | 'HIDE') {
+    const targets = action === 'RESTORE' ? approvable : hideable;
     let done = 0;
     for (const row of targets) {
       try {
-        if (action === 'APPROVE') {
+        if (action === 'RESTORE') {
           await moderate.mutateAsync({
             id: row.id,
             data: { status: 'APPROVED', expectedVersion: row.version },
@@ -112,7 +114,7 @@ export function ReviewsPage() {
     }
     if (done > 0) {
       void message.success(
-        `${action === 'APPROVE' ? 'Đã duyệt' : 'Đã từ chối'} ${done}/${targets.length} đánh giá.`,
+        `${action === 'RESTORE' ? 'Đã khôi phục hiển thị' : 'Đã ẩn'} ${done}/${targets.length} đánh giá.`,
       );
     }
     setSelectedIds([]);
@@ -217,7 +219,7 @@ export function ReviewsPage() {
       <ManagementPage
         eyebrow="Ý kiến khách hàng"
         title="Đánh giá & Nhận xét"
-        description="Kiểm duyệt đánh giá chất lượng sản phẩm từ người mua hàng trước khi xuất bản ra storefront."
+        description="Đánh giá của khách đã mua hiển thị ngay trên storefront; hậu kiểm ở đây là ẩn đánh giá vi phạm hoặc khôi phục lại."
         actions={
           <div className="flex gap-2">
             <Tooltip title="Làm mới dữ liệu">
@@ -246,10 +248,10 @@ export function ReviewsPage() {
             tone: 'green',
           },
           {
-            key: 'pending',
-            label: 'Chờ duyệt',
-            value: metrics.pending,
-            icon: <ClockCircleOutlined />,
+            key: 'hidden',
+            label: 'Đã ẩn',
+            value: metrics.hidden,
+            icon: <EyeInvisibleOutlined />,
             tone: 'orange',
           },
           {
@@ -282,15 +284,15 @@ export function ReviewsPage() {
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <span className="text-sm font-semibold text-slate-700">
               {selectedIds.length === 0
-                ? 'Chọn đánh giá trong bảng để kiểm duyệt'
+                ? 'Chọn đánh giá trong bảng để hậu kiểm'
                 : `Đã chọn ${selectedIds.length} đánh giá`}
             </span>
             <Space size="small">
               <Popconfirm
-                title={`Duyệt ${approvable.length} đánh giá?`}
+                title={`Khôi phục hiển thị ${approvable.length} đánh giá?`}
                 description="Các đánh giá này sẽ hiển thị công khai trên trang sản phẩm."
                 disabled={approvable.length === 0 || working}
-                onConfirm={() => void runBulk('APPROVE')}
+                onConfirm={() => void runBulk('RESTORE')}
               >
                 <Button
                   type="primary"
@@ -299,11 +301,11 @@ export function ReviewsPage() {
                   disabled={approvable.length === 0 || working}
                   loading={moderate.isPending}
                 >
-                  Duyệt{approvable.length > 0 ? ` (${approvable.length})` : ''}
+                  Khôi phục{approvable.length > 0 ? ` (${approvable.length})` : ''}
                 </Button>
               </Popconfirm>
               <Popconfirm
-                title={`Từ chối ${hideable.length} đánh giá?`}
+                title={`Ẩn ${hideable.length} đánh giá?`}
                 description="Đánh giá vẫn được lưu để truy vết nhưng không hiển thị trên website."
                 disabled={hideable.length === 0 || working}
                 onConfirm={() => void runBulk('HIDE')}
@@ -314,7 +316,7 @@ export function ReviewsPage() {
                   disabled={hideable.length === 0 || working}
                   loading={deleteReview.isPending}
                 >
-                  Từ chối{hideable.length > 0 ? ` (${hideable.length})` : ''}
+                  Ẩn{hideable.length > 0 ? ` (${hideable.length})` : ''}
                 </Button>
               </Popconfirm>
               {selectedIds.length > 0 && (

@@ -1,5 +1,5 @@
 const { existsSync } = require('node:fs');
-const { mkdir, readFile, writeFile } = require('node:fs/promises');
+const { mkdir, readdir, readFile, writeFile } = require('node:fs/promises');
 const { resolve } = require('node:path');
 
 const domains = [
@@ -28,8 +28,11 @@ const defaultBaseUrl =
   'https://raw.githubusercontent.com/longhdwst1full/dctd-utc/main/document/api/admin';
 const baseUrl = (process.env.SPORT_API_CONTRACT_BASE_URL || defaultBaseUrl).replace(/\/$/, '');
 const siblingContractDirectory = resolve(__dirname, '../../api/document/api/admin');
-const contractDirectory = process.env.SPORT_API_CONTRACT_DIR
-  ? resolve(process.env.SPORT_API_CONTRACT_DIR)
+// CONTRACTS_SOURCE_DIR overrides the source dir (e.g. an api worktree that has the
+// contract ahead of the api main checkout); SPORT_API_CONTRACT_DIR kept as legacy alias.
+const overrideContractDirectory = process.env.CONTRACTS_SOURCE_DIR || process.env.SPORT_API_CONTRACT_DIR;
+const contractDirectory = overrideContractDirectory
+  ? resolve(overrideContractDirectory)
   : (existsSync(siblingContractDirectory) ? siblingContractDirectory : undefined);
 const outputDirectory = resolve(__dirname, '../contracts/admin');
 
@@ -49,13 +52,28 @@ async function main() {
     }),
   );
 
+  // Shared `_*.yaml` files (e.g. `_components.yaml`) are referenced by domain slices via
+  // relative `$ref` and must sit alongside them in contracts/admin for those refs to resolve.
+  let sharedFiles = [];
+  if (contractDirectory) {
+    const entries = await readdir(contractDirectory);
+    sharedFiles = await Promise.all(
+      entries
+        .filter((name) => name.startsWith('_') && name.endsWith('.yaml'))
+        .map(async (name) => ({ name, content: await readFile(resolve(contractDirectory, name), 'utf8') })),
+    );
+  }
+
   await mkdir(outputDirectory, { recursive: true });
-  await Promise.all(
-    contracts.map(({ domain, content }) =>
+  await Promise.all([
+    ...contracts.map(({ domain, content }) =>
       writeFile(resolve(outputDirectory, `${domain}.yaml`), content, 'utf8'),
     ),
+    ...sharedFiles.map(({ name, content }) => writeFile(resolve(outputDirectory, name), content, 'utf8')),
+  ]);
+  console.log(
+    `Synced ${contracts.length} Admin API contracts${sharedFiles.length ? ` + ${sharedFiles.length} shared file(s)` : ''} from ${contractDirectory ?? baseUrl}`,
   );
-  console.log(`Synced ${contracts.length} Admin API contracts from ${contractDirectory ?? baseUrl}`);
 }
 
 main().catch((error) => {

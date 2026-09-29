@@ -25,16 +25,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: List reviews for moderation
+      summary: List published and hidden reviews for post-publication moderation
       tags:
         - Admin Reviews
       x-required-permissions:
@@ -61,21 +61,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductReviewDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Approve or reject a review
+      summary: Hide (REJECTED) or restore (APPROVED) an already published review
       tags:
         - Admin Reviews
       x-required-permissions:
@@ -107,28 +125,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Nhân viên phản hồi một đánh giá đã được duyệt
+      summary: Nhân viên phản hồi một đánh giá đang hiển thị; phản hồi xuất bản ngay
       tags:
         - Admin Reviews
       x-required-permissions:
@@ -160,31 +178,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Logically delete a review by hiding it from the storefront
@@ -194,55 +212,20 @@ paths:
         - catalog.review.moderate
 components:
   schemas:
-    ProductReviewListDto:
+    DeleteReviewDto:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/ProductReviewDto"
-        total:
+        expectedVersion:
           type: number
-        averageRating:
-          type: number
+          minimum: 0
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 255
+          example: Đánh giá vi phạm chính sách
       required:
-        - items
-        - total
-        - averageRating
-    ErrorResponseDto:
-      type: object
-      properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-      required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
+        - expectedVersion
+        - reason
     ModerateReviewDto:
       type: object
       properties:
@@ -288,6 +271,7 @@ components:
         moderatedAt:
           type: string
           format: date-time
+          description: Mốc xuất bản (review tự hiển thị) hoặc lần Admin gỡ/khôi phục gần nhất.
         comments:
           type: array
           items:
@@ -312,6 +296,21 @@ components:
         - comments
         - media
         - createdAt
+    ProductReviewListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductReviewDto"
+        total:
+          type: number
+        averageRating:
+          type: number
+      required:
+        - items
+        - total
+        - averageRating
     ReplyReviewDto:
       type: object
       properties:
@@ -325,47 +324,6 @@ components:
       required:
         - content
         - expectedVersion
-    DeleteReviewDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-        reason:
-          type: string
-          minLength: 3
-          maxLength: 255
-          example: Đánh giá vi phạm chính sách
-      required:
-        - expectedVersion
-        - reason
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    ReviewModerationDecision:
-      type: string
-      enum:
-        - APPROVED
-        - REJECTED
-    ReviewModerationStatus:
-      type: string
-      enum:
-        - PENDING
-        - APPROVED
-        - REJECTED
-      description: Đánh giá của khách đã mua vào thẳng APPROVED và hiển thị ngay; kiểm duyệt là hậu kiểm, Admin gỡ bằng REJECTED. PENDING chỉ còn ở dữ liệu cũ.
     ReviewCommentDto:
       type: object
       properties:
@@ -414,6 +372,18 @@ components:
         - url
         - thumbnailUrl
         - sortOrder
+    ReviewModerationDecision:
+      type: string
+      enum:
+        - APPROVED
+        - REJECTED
+    ReviewModerationStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+      description: Đánh giá của khách đã mua vào thẳng APPROVED và hiển thị ngay; kiểm duyệt là hậu kiểm, Admin gỡ bằng REJECTED. PENDING chỉ còn ở dữ liệu cũ.
   securitySchemes:
     bearer:
       scheme: bearer

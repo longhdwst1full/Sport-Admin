@@ -1,10 +1,10 @@
 # Content — maintenance note
 
-> **Document version:** 2.0.0
+> **Document version:** 3.0.0
 >
-> **Last updated:** 2026-09-21
+> **Last updated:** 2026-09-29
 >
-> **Change summary:** Gỡ cảnh báo in-memory: backend CMS đã lưu vào bảng `posts` qua Prisma. Ghi lại trạng thái vòng đời bài viết hiện có.
+> **Change summary:** `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
 
 ## Phạm vi
 
@@ -16,7 +16,12 @@ Tạo/liệt kê/xoá bài viết nội dung (`Admin Content`).
 
 ## Generated operation
 
-`useListAdminPosts`, `useCreateAdminPost`, `useUpdateAdminPost`, `useDeleteAdminPost` — `src/generated/api/content`.
+`useListAdminPosts`, `useGetAdminPost`, `useCreateAdminPost`, `useUpdateAdminPost`, `useDeleteAdminPost` — `src/generated/api/content`.
+
+`useListAdminPosts` trả `{ items: ContentPostSummaryDto[], meta: { page, limit, total, hasMore } }`;
+`ContentPostSummaryDto` không có `body`/`relatedProductSlugs`. Form sửa bài (`content-editor-drawer.tsx`)
+gọi `useGetAdminPost(id)` để lấy `ContentPostDto` đầy đủ trước khi đổ vào form — không đọc `body` từ
+row của bảng nữa.
 
 ## Dữ liệu đã bền
 
@@ -33,7 +38,8 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 | Lưu bền vào database | Có |
 | Cờ `isPublished` tách khỏi `status` | Có — ẩn tạm một bài không cần đẩy về nháp |
 | Chuyển trạng thái có tên (publish/archive) như Product | **Chưa** — hiện chỉ sửa trực tiếp |
-| Tìm kiếm và phân trang phía server | **Chưa đầy đủ** |
+| Phân trang phía server (`page`/`limit`) | Có |
+| Tìm kiếm/lọc phía server (ngoài `postType`) | **Chưa** |
 
 Đừng mô tả màn này là đã có quy trình duyệt bài; nó mới là CRUD trên dữ liệu bền.
 
@@ -50,3 +56,4 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 | --- | --- | --- |
 | 1.0.0 | 2026-09-13 | Tạo note, cảnh báo CMS in-memory. |
 | 2.0.0 | 2026-09-21 | Gỡ cảnh báo in-memory; ghi lại vòng đời bài viết hiện có và phần còn thiếu. |
+| 3.0.0 | 2026-09-29 | `listAdminPosts` phân trang server-side, list item chỉ còn summary; form sửa bài tải đầy đủ qua `getAdminPost`. |

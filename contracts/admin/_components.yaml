@@ -1,0 +1,214 @@
+# Generated from NestJS decorators. Do not edit by hand.
+openapi: 3.0.0
+info:
+  title: DCTD-UTC Commerce API
+  description: Contract for storefront and admin applications
+  version: 1.0.0
+  contact: {}
+paths: {}
+components:
+  schemas:
+    ActiveLookupMetaDto:
+      type: object
+      properties:
+        page:
+          type: number
+          example: 1
+        limit:
+          type: number
+          example: 20
+        total:
+          type: number
+          example: 1
+        hasMore:
+          type: boolean
+          example: false
+      required:
+        - page
+        - limit
+        - total
+        - hasMore
+    ActiveLookupOptionDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+          example: CN-HCM-01
+        label:
+          type: string
+          example: Chi nhánh Hồ Chí Minh
+        priceAmount:
+          type: string
+          example: "1990000.00"
+          nullable: true
+      required:
+        - id
+        - code
+        - label
+    ActiveLookupResponseDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActiveLookupOptionDto"
+        meta:
+          $ref: "#/components/schemas/ActiveLookupMetaDto"
+      required:
+        - items
+        - meta
+    CreateMediaUploadDto:
+      type: object
+      properties:
+        fileName:
+          type: string
+          example: product-front.webp
+        contentType:
+          example: image/webp
+          allOf:
+            - $ref: "#/components/schemas/ImageMimeType"
+        sizeBytes:
+          type: number
+          minimum: 1
+          maximum: 10485760
+          example: 245760
+      required:
+        - fileName
+        - contentType
+        - sizeBytes
+    CurrencyCode:
+      type: string
+      enum:
+        - VND
+    ErrorDetailDto:
+      type: object
+      properties:
+        field:
+          type: string
+          example: name
+        code:
+          type: string
+          example: INVALID_VALUE
+        message:
+          type: string
+          example: 'Trường "name": Trường này không được để trống.'
+      required:
+        - code
+        - message
+    ErrorResponseDto:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 400
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Dữ liệu gửi lên không hợp lệ.
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorDetailDto"
+        path:
+          type: string
+          example: /api/v1/catalog/products
+        method:
+          type: string
+          example: POST
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+      required:
+        - statusCode
+        - code
+        - message
+        - path
+        - method
+        - timestamp
+    ImageMimeType:
+      type: string
+      enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        - image/avif
+    MediaProvider:
+      type: string
+      enum:
+        - CLOUDINARY
+    PaymentStatus:
+      type: string
+      enum:
+        - PENDING
+        - AWAITING_CONFIRMATION
+        - NEED_REVIEW
+        - SUCCESS
+        - FAILED
+        - CANCELLED
+        - REFUNDED
+    ReturnCondition:
+      type: string
+      enum:
+        - SELLABLE
+        - DAMAGED
+        - MISSING
+    SignedMediaUploadDto:
+      type: object
+      properties:
+        provider:
+          allOf:
+            - $ref: "#/components/schemas/MediaProvider"
+        uploadUrl:
+          type: string
+          format: uri
+        cloudName:
+          type: string
+        apiKey:
+          type: string
+        timestamp:
+          type: number
+        signature:
+          type: string
+        folder:
+          type: string
+        publicId:
+          type: string
+        allowedFormats:
+          type: array
+          items:
+            type: string
+        maxBytes:
+          type: number
+        overwrite:
+          type: boolean
+          enum:
+            - false
+        uniqueFilename:
+          type: boolean
+          enum:
+            - false
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - provider
+        - uploadUrl
+        - cloudName
+        - apiKey
+        - timestamp
+        - signature
+        - folder
+        - publicId
+        - allowedFormats
+        - maxBytes
+        - overwrite
+        - uniqueFilename
+        - expiresAt

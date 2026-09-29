@@ -31,7 +31,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       summary: Authenticate staff by email or phone
       tags:
         - Admin Auth
@@ -57,13 +57,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: "AUTH_REFRESH_CONFLICT: xung đột tạm thời, thử lại; không đăng xuất."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       summary: Rotate a refresh token
       tags:
         - Admin Auth
@@ -101,13 +101,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Change the current staff password and clear mandatory password change
@@ -133,90 +133,20 @@ paths:
         - Admin Auth
 components:
   schemas:
-    LoginDto:
+    AuthScopeDto:
       type: object
       properties:
-        identifier:
+        type:
           type: string
-          example: owner@example.com
-          description: Email or Vietnamese phone number
-          maxLength: 255
-        password:
+          enum:
+            - GLOBAL
+            - BRANCH
+        branchId:
           type: string
-          format: password
-          minLength: 8
-          maxLength: 128
-          description: Leading and trailing whitespace is ignored
-        rememberMe:
-          type: boolean
-          example: false
-          default: false
-          description: Keep the refresh cookie after the browser closes. Omitted or false creates a session cookie.
+          pattern: ^[1-9][0-9]*$
+          example: "1"
       required:
-        - identifier
-        - password
-    TokenPairDto:
-      type: object
-      properties:
-        accessToken:
-          type: string
-        refreshToken:
-          type: string
-          description: Returned only in BODY transport; COOKIE transport uses an HttpOnly cookie
-        tokenType:
-          type: string
-          example: Bearer
-        expiresIn:
-          type: number
-          example: 900
-        mustChangePassword:
-          type: boolean
-          example: false
-      required:
-        - accessToken
-        - tokenType
-        - expiresIn
-        - mustChangePassword
-    ErrorResponseDto:
-      type: object
-      properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-      required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
-    RefreshTokenDto:
-      type: object
-      properties:
-        refreshToken:
-          type: string
-          description: Required in BODY transport; omitted when the refresh token is in HttpOnly cookie
+        - type
     ChangePasswordDto:
       type: object
       properties:
@@ -266,35 +196,56 @@ components:
         - scopes
         - permissionVersion
         - mustChangePassword
-    ErrorDetailDto:
+    LoginDto:
       type: object
       properties:
-        field:
+        identifier:
           type: string
-          example: name
-        code:
+          example: owner@example.com
+          description: Email or Vietnamese phone number
+          maxLength: 255
+        password:
           type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
+          format: password
+          minLength: 8
+          maxLength: 128
+          description: Leading and trailing whitespace is ignored
+        rememberMe:
+          type: boolean
+          example: false
+          default: false
+          description: Keep the refresh cookie after the browser closes. Omitted or false creates a session cookie.
       required:
-        - code
-        - message
-    AuthScopeDto:
+        - identifier
+        - password
+    RefreshTokenDto:
       type: object
       properties:
-        type:
+        refreshToken:
           type: string
-          enum:
-            - GLOBAL
-            - BRANCH
-        branchId:
+          description: Required in BODY transport; omitted when the refresh token is in HttpOnly cookie
+    TokenPairDto:
+      type: object
+      properties:
+        accessToken:
           type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
+        refreshToken:
+          type: string
+          description: Returned only in BODY transport; COOKIE transport uses an HttpOnly cookie
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: number
+          example: 900
+        mustChangePassword:
+          type: boolean
+          example: false
       required:
-        - type
+        - accessToken
+        - tokenType
+        - expiresIn
+        - mustChangePassword
   securitySchemes:
     bearer:
       scheme: bearer

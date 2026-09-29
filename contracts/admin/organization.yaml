@@ -25,13 +25,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List sales branches
@@ -60,19 +60,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Branch or warehouse code already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create a branch with its single V1 warehouse
@@ -97,13 +97,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List branch warehouses
@@ -143,25 +143,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActiveLookupResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ActiveLookupResponseDto
         "400":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Search active branches for admin lookups
@@ -209,25 +209,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActiveLookupResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ActiveLookupResponseDto
         "400":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Search active warehouses for admin lookups
@@ -262,25 +262,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Update a branch and its single V1 warehouse
@@ -315,31 +315,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Logically delete a branch and its V1 warehouse atomically
@@ -375,25 +375,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Deactivate a branch and its V1 warehouse atomically
@@ -429,25 +429,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Reactivate a branch and its V1 warehouse atomically
@@ -458,170 +458,44 @@ paths:
         - org.warehouse.manage
 components:
   schemas:
-    BranchListDto:
+    AddressDto:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/BranchDto"
-        total:
+        addressLine:
+          type: string
+          example: 123 Nguyễn Văn Linh
+        district:
+          type: string
+          example: Quận 7
+        province:
+          type: string
+          example: TP. Hồ Chí Minh
+        provinceCode:
+          type: string
+          example: "79"
+          description: Canonical/provider province code when available
+        districtCode:
+          type: string
+          example: "1454"
+          description: Carrier district code when available
+        wardCode:
+          type: string
+          example: "21211"
+          description: Carrier ward code when available
+        latitude:
           type: number
-          example: 2
-      required:
-        - items
-        - total
-    ErrorResponseDto:
-      type: object
-      properties:
-        statusCode:
+          example: 10.7769
+          minimum: -90
+          maximum: 90
+        longitude:
           type: number
-          example: 400
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
+          example: 106.7009
+          minimum: -180
+          maximum: 180
       required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
-    CreateBranchDto:
-      type: object
-      properties:
-        code:
-          type: string
-          example: CN-DN-01
-        name:
-          type: string
-          example: Chi nhánh Đà Nẵng
-        phone:
-          type: string
-          example: 0236 7300 8899
-        email:
-          type: string
-          example: danang@dctd.vn
-        address:
-          $ref: "#/components/schemas/AddressDto"
-        freeDeliveryDistrictCodes:
-          maxItems: 100
-          example:
-            - "1454"
-            - "1442"
-          description: GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
-          type: array
-          items:
-            type: string
-        warehouse:
-          $ref: "#/components/schemas/CreateWarehouseInputDto"
-      required:
-        - code
-        - name
-        - address
-        - warehouse
-    BranchWithWarehouseDto:
-      type: object
-      properties:
-        branch:
-          $ref: "#/components/schemas/BranchDto"
-        warehouse:
-          $ref: "#/components/schemas/WarehouseDto"
-      required:
-        - branch
-        - warehouse
-    WarehouseListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/WarehouseDto"
-        total:
-          type: number
-          example: 2
-      required:
-        - items
-        - total
-    ActiveLookupResponseDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/ActiveLookupOptionDto"
-        meta:
-          $ref: "#/components/schemas/ActiveLookupMetaDto"
-      required:
-        - items
-        - meta
-    UpdateBranchWithWarehouseDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Chi nhánh Đà Nẵng
-        phone:
-          type: string
-          example: 0236 7300 8899
-        email:
-          type: string
-          example: danang@dctd.vn
-        address:
-          $ref: "#/components/schemas/AddressDto"
-        freeDeliveryDistrictCodes:
-          maxItems: 100
-          example:
-            - "1454"
-            - "1442"
-          description: GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
-          type: array
-          items:
-            type: string
-        warehouse:
-          $ref: "#/components/schemas/UpdateWarehouseDto"
-        expectedVersion:
-          type: number
-          minimum: 0
-        warehouseExpectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - name
-        - address
-        - warehouse
-        - expectedVersion
-        - warehouseExpectedVersion
-    ChangeBranchStatusDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-        warehouseExpectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedVersion
-        - warehouseExpectedVersion
+        - addressLine
+        - district
+        - province
     BranchDto:
       type: object
       properties:
@@ -669,59 +543,74 @@ components:
         - timezone
         - freeDeliveryDistrictCodes
         - version
-    ErrorDetailDto:
+    BranchListDto:
       type: object
       properties:
-        field:
-          type: string
-          example: name
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BranchDto"
+        total:
+          type: number
+          example: 2
+      required:
+        - items
+        - total
+    BranchWithWarehouseDto:
+      type: object
+      properties:
+        branch:
+          $ref: "#/components/schemas/BranchDto"
+        warehouse:
+          $ref: "#/components/schemas/WarehouseDto"
+      required:
+        - branch
+        - warehouse
+    ChangeBranchStatusDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+        warehouseExpectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedVersion
+        - warehouseExpectedVersion
+    CreateBranchDto:
+      type: object
+      properties:
         code:
           type: string
-          example: INVALID_VALUE
-        message:
+          example: CN-DN-01
+        name:
           type: string
-          example: 'Trường "name": Trường này không được để trống.'
+          example: Chi nhánh Đà Nẵng
+        phone:
+          type: string
+          example: 0236 7300 8899
+        email:
+          type: string
+          example: danang@dctd.vn
+        address:
+          $ref: "#/components/schemas/AddressDto"
+        freeDeliveryDistrictCodes:
+          maxItems: 100
+          example:
+            - "1454"
+            - "1442"
+          description: GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
+          type: array
+          items:
+            type: string
+        warehouse:
+          $ref: "#/components/schemas/CreateWarehouseInputDto"
       required:
         - code
-        - message
-    AddressDto:
-      type: object
-      properties:
-        addressLine:
-          type: string
-          example: 123 Nguyễn Văn Linh
-        district:
-          type: string
-          example: Quận 7
-        province:
-          type: string
-          example: TP. Hồ Chí Minh
-        provinceCode:
-          type: string
-          example: "79"
-          description: Canonical/provider province code when available
-        districtCode:
-          type: string
-          example: "1454"
-          description: Carrier district code when available
-        wardCode:
-          type: string
-          example: "21211"
-          description: Carrier ward code when available
-        latitude:
-          type: number
-          example: 10.7769
-          minimum: -90
-          maximum: 90
-        longitude:
-          type: number
-          example: 106.7009
-          minimum: -180
-          maximum: 180
-      required:
-        - addressLine
-        - district
-        - province
+        - name
+        - address
+        - warehouse
     CreateWarehouseInputDto:
       type: object
       properties:
@@ -733,6 +622,56 @@ components:
           example: Kho bán hàng Đà Nẵng
       required:
         - code
+        - name
+    OrganizationStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+    UpdateBranchWithWarehouseDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Chi nhánh Đà Nẵng
+        phone:
+          type: string
+          example: 0236 7300 8899
+        email:
+          type: string
+          example: danang@dctd.vn
+        address:
+          $ref: "#/components/schemas/AddressDto"
+        freeDeliveryDistrictCodes:
+          maxItems: 100
+          example:
+            - "1454"
+            - "1442"
+          description: GHN DistrictID (chuỗi số) chi nhánh tự giao miễn phí. Bỏ trống khi cập nhật thì giữ nguyên.
+          type: array
+          items:
+            type: string
+        warehouse:
+          $ref: "#/components/schemas/UpdateWarehouseDto"
+        expectedVersion:
+          type: number
+          minimum: 0
+        warehouseExpectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - name
+        - address
+        - warehouse
+        - expectedVersion
+        - warehouseExpectedVersion
+    UpdateWarehouseDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Kho bán hàng Đà Nẵng
+      required:
         - name
     WarehouseDto:
       type: object
@@ -764,60 +703,19 @@ components:
         - name
         - status
         - version
-    ActiveLookupOptionDto:
+    WarehouseListDto:
       type: object
       properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        code:
-          type: string
-          example: CN-HCM-01
-        label:
-          type: string
-          example: Chi nhánh Hồ Chí Minh
-        priceAmount:
-          type: string
-          example: "1990000.00"
-          nullable: true
-      required:
-        - id
-        - code
-        - label
-    ActiveLookupMetaDto:
-      type: object
-      properties:
-        page:
-          type: number
-          example: 1
-        limit:
-          type: number
-          example: 20
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/WarehouseDto"
         total:
           type: number
-          example: 1
-        hasMore:
-          type: boolean
-          example: false
+          example: 2
       required:
-        - page
-        - limit
+        - items
         - total
-        - hasMore
-    UpdateWarehouseDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Kho bán hàng Đà Nẵng
-      required:
-        - name
-    OrganizationStatus:
-      type: string
-      enum:
-        - ACTIVE
-        - INACTIVE
   securitySchemes:
     bearer:
       scheme: bearer

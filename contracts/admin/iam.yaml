@@ -48,31 +48,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: Role or branch not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Email already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Root Admin creates an active subordinate account with a branch role
@@ -107,31 +107,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: User is no longer ACTIVE
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Root Admin locks a subordinate account and revokes every active session
@@ -166,31 +166,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Logically delete a subordinate staff account by locking it and revoking sessions
@@ -219,31 +219,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: User is no longer LOCKED
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Root Admin unlocks a subordinate account and resets its password
@@ -290,25 +290,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: Granting a permission the actor does not hold
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Role code already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create a custom role with an explicit permission set
@@ -384,25 +384,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActiveLookupResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ActiveLookupResponseDto
         "400":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Search assignable BRANCH_MANAGER or STAFF roles
@@ -431,7 +431,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Read one role with its permission set
@@ -465,31 +465,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Version conflict
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Rename a role or replace its permission set
@@ -519,31 +519,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: OWNER cannot be deactivated or deleted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Role is still assigned
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Deactivate a system role or delete an unassigned custom role
@@ -578,19 +578,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: User or role not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: The same assignment already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Root Admin assigns BRANCH_MANAGER or STAFF within an active branch
@@ -630,31 +630,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Root Admin revokes one subordinate assignment and refreshes permissions
@@ -664,18 +664,56 @@ paths:
         - iam.assignment.manage
 components:
   schemas:
-    UserListDto:
+    AssignUserRoleDto:
       type: object
       properties:
-        items:
+        roleCode:
+          example: BRANCH_MANAGER
+          allOf:
+            - $ref: "#/components/schemas/AssignableStaffRoleCode"
+        scopeType:
+          type: string
+          enum:
+            - BRANCH
+        branchId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+      required:
+        - roleCode
+        - scopeType
+        - branchId
+    AssignableStaffRoleCode:
+      type: string
+      enum:
+        - BRANCH_MANAGER
+        - STAFF
+    CreateRoleDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: WAREHOUSE_LEAD
+          description: Mã vai trò, chữ in hoa và gạch dưới, duy nhất toàn hệ thống
+        name:
+          type: string
+          example: Trưởng kho
+          maxLength: 255
+        description:
+          type: string
+          example: Phụ trách nhập xuất kho chi nhánh
+          maxLength: 1000
+        permissionCodes:
+          example:
+            - inventory.stock.view
+            - inventory.stock.adjust
           type: array
           items:
-            $ref: "#/components/schemas/UserDto"
-        total:
-          type: number
+            type: string
       required:
-        - items
-        - total
+        - code
+        - name
+        - permissionCodes
     CreateStaffUserDto:
       type: object
       properties:
@@ -701,6 +739,156 @@ components:
         - email
         - roleCode
         - branchId
+    DeleteRoleDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          example: 0
+          minimum: 0
+          description: Version đọc được lần gần nhất
+        reason:
+          type: string
+          example: Vai trò không còn dùng
+          minLength: 3
+          maxLength: 255
+      required:
+        - expectedVersion
+        - reason
+    LockStaffUserDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: Nhân viên đã nghỉ việc
+          minLength: 3
+          maxLength: 255
+      required:
+        - reason
+    PermissionDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: org.branch.view
+        module:
+          type: string
+          example: Organization
+        action:
+          type: string
+          example: view
+        sensitive:
+          type: boolean
+          example: false
+      required:
+        - code
+        - module
+        - action
+        - sensitive
+    PermissionListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PermissionDto"
+        total:
+          type: number
+      required:
+        - items
+        - total
+    RevokeRoleAssignmentDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: Nhân viên chuyển sang vai trò khác
+          minLength: 3
+          maxLength: 255
+      required:
+        - reason
+    RoleDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+          example: BRANCH_MANAGER
+        name:
+          type: string
+          example: Branch Manager
+        description:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/RoleStatus"
+        system:
+          type: boolean
+        permissionCodes:
+          type: array
+          items:
+            type: string
+        version:
+          type: number
+          example: 0
+      required:
+        - id
+        - code
+        - name
+        - status
+        - system
+        - permissionCodes
+        - version
+    RoleListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleDto"
+        total:
+          type: number
+      required:
+        - items
+        - total
+    RoleStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+    ScopeType:
+      type: string
+      enum:
+        - GLOBAL
+        - BRANCH
+    UpdateRoleDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Trưởng kho
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+        status:
+          allOf:
+            - $ref: "#/components/schemas/RoleStatus"
+        permissionCodes:
+          description: Danh sách quyền thay thế toàn bộ. Bỏ trống để giữ nguyên quyền hiện tại.
+          type: array
+          items:
+            type: string
+        expectedVersion:
+          type: number
+          example: 0
+          minimum: 0
+          description: Version đọc được lần gần nhất
+      required:
+        - expectedVersion
     UserDto:
       type: object
       properties:
@@ -754,207 +942,18 @@ components:
         - failedLoginAttempts
         - mustChangePassword
         - assignments
-    ErrorResponseDto:
-      type: object
-      properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-      required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
-    LockStaffUserDto:
-      type: object
-      properties:
-        reason:
-          type: string
-          example: Nhân viên đã nghỉ việc
-          minLength: 3
-          maxLength: 255
-      required:
-        - reason
-    RoleListDto:
+    UserListDto:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/RoleDto"
+            $ref: "#/components/schemas/UserDto"
         total:
           type: number
       required:
         - items
         - total
-    CreateRoleDto:
-      type: object
-      properties:
-        code:
-          type: string
-          example: WAREHOUSE_LEAD
-          description: Mã vai trò, chữ in hoa và gạch dưới, duy nhất toàn hệ thống
-        name:
-          type: string
-          example: Trưởng kho
-          maxLength: 255
-        description:
-          type: string
-          example: Phụ trách nhập xuất kho chi nhánh
-          maxLength: 1000
-        permissionCodes:
-          example:
-            - inventory.stock.view
-            - inventory.stock.adjust
-          type: array
-          items:
-            type: string
-      required:
-        - code
-        - name
-        - permissionCodes
-    RoleDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        code:
-          type: string
-          example: BRANCH_MANAGER
-        name:
-          type: string
-          example: Branch Manager
-        description:
-          type: string
-        status:
-          allOf:
-            - $ref: "#/components/schemas/RoleStatus"
-        system:
-          type: boolean
-        permissionCodes:
-          type: array
-          items:
-            type: string
-        version:
-          type: number
-          example: 0
-      required:
-        - id
-        - code
-        - name
-        - status
-        - system
-        - permissionCodes
-        - version
-    PermissionListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/PermissionDto"
-        total:
-          type: number
-      required:
-        - items
-        - total
-    ActiveLookupResponseDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/ActiveLookupOptionDto"
-        meta:
-          $ref: "#/components/schemas/ActiveLookupMetaDto"
-      required:
-        - items
-        - meta
-    UpdateRoleDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Trưởng kho
-          maxLength: 255
-        description:
-          type: string
-          maxLength: 1000
-        status:
-          allOf:
-            - $ref: "#/components/schemas/RoleStatus"
-        permissionCodes:
-          description: Danh sách quyền thay thế toàn bộ. Bỏ trống để giữ nguyên quyền hiện tại.
-          type: array
-          items:
-            type: string
-        expectedVersion:
-          type: number
-          example: 0
-          minimum: 0
-          description: Version đọc được lần gần nhất
-      required:
-        - expectedVersion
-    DeleteRoleDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          example: 0
-          minimum: 0
-          description: Version đọc được lần gần nhất
-        reason:
-          type: string
-          example: Vai trò không còn dùng
-          minLength: 3
-          maxLength: 255
-      required:
-        - expectedVersion
-        - reason
-    AssignUserRoleDto:
-      type: object
-      properties:
-        roleCode:
-          example: BRANCH_MANAGER
-          allOf:
-            - $ref: "#/components/schemas/AssignableStaffRoleCode"
-        scopeType:
-          type: string
-          enum:
-            - BRANCH
-        branchId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-      required:
-        - roleCode
-        - scopeType
-        - branchId
     UserRoleAssignmentDto:
       type: object
       properties:
@@ -994,107 +993,6 @@ components:
         - scopeType
         - status
         - validFrom
-    RevokeRoleAssignmentDto:
-      type: object
-      properties:
-        reason:
-          type: string
-          example: Nhân viên chuyển sang vai trò khác
-          minLength: 3
-          maxLength: 255
-      required:
-        - reason
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    RoleStatus:
-      type: string
-      enum:
-        - ACTIVE
-        - INACTIVE
-    PermissionDto:
-      type: object
-      properties:
-        code:
-          type: string
-          example: org.branch.view
-        module:
-          type: string
-          example: Organization
-        action:
-          type: string
-          example: view
-        sensitive:
-          type: boolean
-          example: false
-      required:
-        - code
-        - module
-        - action
-        - sensitive
-    ActiveLookupOptionDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        code:
-          type: string
-          example: CN-HCM-01
-        label:
-          type: string
-          example: Chi nhánh Hồ Chí Minh
-        priceAmount:
-          type: string
-          example: "1990000.00"
-          nullable: true
-      required:
-        - id
-        - code
-        - label
-    ActiveLookupMetaDto:
-      type: object
-      properties:
-        page:
-          type: number
-          example: 1
-        limit:
-          type: number
-          example: 20
-        total:
-          type: number
-          example: 1
-        hasMore:
-          type: boolean
-          example: false
-      required:
-        - page
-        - limit
-        - total
-        - hasMore
-    AssignableStaffRoleCode:
-      type: string
-      enum:
-        - BRANCH_MANAGER
-        - STAFF
-    ScopeType:
-      type: string
-      enum:
-        - GLOBAL
-        - BRANCH
   securitySchemes:
     bearer:
       scheme: bearer

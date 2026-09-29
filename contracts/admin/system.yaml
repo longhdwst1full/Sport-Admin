@@ -115,13 +115,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Danh sách tham số nghiệp vụ cấu hình được từ Admin
@@ -150,19 +150,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Tạo tham số tuỳ biến; code không tham chiếu nên chỉ dùng để lưu giá trị vận hành
@@ -197,25 +197,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Cập nhật giá trị tham số; có hiệu lực ngay, không cần deploy
@@ -245,25 +245,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Ngừng dùng tham số tuỳ biến (xoá mềm); tham số hệ thống không xoá được
@@ -273,115 +273,6 @@ paths:
         - system.parameter.manage
 components:
   schemas:
-    SystemModuleListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/SystemModuleDto"
-        totalModels:
-          type: number
-          example: 74
-        p0Models:
-          type: number
-          example: 43
-        p1Models:
-          type: number
-          example: 31
-      required:
-        - items
-        - totalModels
-        - p0Models
-        - p1Models
-    JobHealthListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/JobHealthDto"
-        staleAfterMinutes:
-          type: number
-          description: Không có lượt thành công nào quá số phút này thì coi là chết.
-      required:
-        - items
-        - staleAfterMinutes
-    SystemParameterGroup:
-      type: string
-      enum:
-        - SHIPPING
-        - CHECKOUT
-        - ORDER
-        - PAYMENT
-        - CART
-        - PROMOTION
-        - INTEGRATION
-    SystemParameterStatus:
-      type: string
-      enum:
-        - ACTIVE
-        - INACTIVE
-    SystemParameterSortField:
-      type: string
-      enum:
-        - id
-        - code
-        - groupCode
-        - sortOrder
-        - updatedAt
-    SystemParameterListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/SystemParameterDto"
-        page:
-          type: number
-        limit:
-          type: number
-        total:
-          type: number
-      required:
-        - items
-        - page
-        - limit
-        - total
-    ErrorResponseDto:
-      type: object
-      properties:
-        statusCode:
-          type: number
-          example: 400
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
-          type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-      required:
-        - statusCode
-        - code
-        - message
-        - path
-        - method
-        - timestamp
     CreateSystemParameterDto:
       type: object
       properties:
@@ -426,6 +317,142 @@ components:
         - label
         - valueType
         - value
+    DeleteSystemParameterDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: Lý do nếu người thao tác muốn ghi thêm vào audit
+      required:
+        - expectedVersion
+    JobHealthDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: order-maintenance
+        cadence:
+          type: string
+          description: Phần phút của lịch cron
+          example: 2-59/5
+        enabled:
+          type: boolean
+          description: Job bị tắt bằng tham số hệ thống thì không bị coi là chết.
+        health:
+          description: UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng.
+          allOf:
+            - $ref: "#/components/schemas/JobHealthState"
+        lastRunStatus:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/JobRunStatus"
+        lastRunAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastSuccessAt:
+          type: string
+          format: date-time
+          nullable: true
+        minutesSinceSuccess:
+          type: number
+          nullable: true
+        consecutiveFailures:
+          type: number
+          description: Số lượt thất bại liên tiếp tính từ lượt gần nhất.
+        lastError:
+          type: string
+          nullable: true
+        lastStaleAlertAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Lần gần nhất hệ thống tự cảnh báo job chết. Có giá trị mà không ai biết nghĩa là kênh gửi cảnh báo đang hỏng.
+      required:
+        - name
+        - cadence
+        - enabled
+        - health
+        - consecutiveFailures
+    JobHealthListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobHealthDto"
+        staleAfterMinutes:
+          type: number
+          description: Không có lượt thành công nào quá số phút này thì coi là chết.
+      required:
+        - items
+        - staleAfterMinutes
+    JobHealthState:
+      type: string
+      enum:
+        - HEALTHY
+        - DOWN
+        - DISABLED
+        - UNKNOWN
+      description: UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng.
+    JobRunStatus:
+      type: string
+      enum:
+        - SUCCEEDED
+        - FAILED
+    SystemModuleDto:
+      type: object
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - SCAFFOLDED
+        tables:
+          type: array
+          items:
+            type: string
+        p0Count:
+          type: number
+        p1Count:
+          type: number
+      required:
+        - key
+        - name
+        - status
+        - tables
+        - p0Count
+        - p1Count
+    SystemModuleListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SystemModuleDto"
+        totalModels:
+          type: number
+          example: 74
+        p0Models:
+          type: number
+          example: 43
+        p1Models:
+          type: number
+          example: 31
+      required:
+        - items
+        - totalModels
+        - p0Models
+        - p1Models
     SystemParameterDto:
       type: object
       properties:
@@ -501,6 +528,54 @@ components:
         - isSecret
         - version
         - updatedAt
+    SystemParameterGroup:
+      type: string
+      enum:
+        - SHIPPING
+        - CHECKOUT
+        - ORDER
+        - PAYMENT
+        - CART
+        - PROMOTION
+        - INTEGRATION
+    SystemParameterListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SystemParameterDto"
+        page:
+          type: number
+        limit:
+          type: number
+        total:
+          type: number
+      required:
+        - items
+        - page
+        - limit
+        - total
+    SystemParameterSortField:
+      type: string
+      enum:
+        - id
+        - code
+        - groupCode
+        - sortOrder
+        - updatedAt
+    SystemParameterStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+    SystemParameterValueType:
+      type: string
+      enum:
+        - INTEGER
+        - DECIMAL
+        - BOOLEAN
+        - STRING
     UpdateSystemParameterDto:
       type: object
       properties:
@@ -518,130 +593,6 @@ components:
       required:
         - expectedVersion
         - value
-    DeleteSystemParameterDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: string
-          pattern: ^\d+$
-        reason:
-          type: string
-          minLength: 5
-          maxLength: 500
-          description: Lý do nếu người thao tác muốn ghi thêm vào audit
-      required:
-        - expectedVersion
-    SystemModuleDto:
-      type: object
-      properties:
-        key:
-          type: string
-        name:
-          type: string
-        status:
-          type: string
-          enum:
-            - ACTIVE
-            - SCAFFOLDED
-        tables:
-          type: array
-          items:
-            type: string
-        p0Count:
-          type: number
-        p1Count:
-          type: number
-      required:
-        - key
-        - name
-        - status
-        - tables
-        - p0Count
-        - p1Count
-    JobHealthDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: order-maintenance
-        cadence:
-          type: string
-          description: Phần phút của lịch cron
-          example: 2-59/5
-        enabled:
-          type: boolean
-          description: Job bị tắt bằng tham số hệ thống thì không bị coi là chết.
-        health:
-          description: UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng.
-          allOf:
-            - $ref: "#/components/schemas/JobHealthState"
-        lastRunStatus:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/JobRunStatus"
-        lastRunAt:
-          type: string
-          format: date-time
-          nullable: true
-        lastSuccessAt:
-          type: string
-          format: date-time
-          nullable: true
-        minutesSinceSuccess:
-          type: number
-          nullable: true
-        consecutiveFailures:
-          type: number
-          description: Số lượt thất bại liên tiếp tính từ lượt gần nhất.
-        lastError:
-          type: string
-          nullable: true
-        lastStaleAlertAt:
-          type: string
-          format: date-time
-          nullable: true
-          description: Lần gần nhất hệ thống tự cảnh báo job chết. Có giá trị mà không ai biết nghĩa là kênh gửi cảnh báo đang hỏng.
-      required:
-        - name
-        - cadence
-        - enabled
-        - health
-        - consecutiveFailures
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    SystemParameterValueType:
-      type: string
-      enum:
-        - INTEGER
-        - DECIMAL
-        - BOOLEAN
-        - STRING
-    JobHealthState:
-      type: string
-      enum:
-        - HEALTHY
-        - DOWN
-        - DISABLED
-        - UNKNOWN
-      description: UNKNOWN nghĩa là chưa có heartbeat nào, không phải đang hỏng.
-    JobRunStatus:
-      type: string
-      enum:
-        - SUCCEEDED
-        - FAILED
   securitySchemes:
     bearer:
       scheme: bearer

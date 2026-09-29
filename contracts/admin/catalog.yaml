@@ -25,13 +25,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: ""
@@ -60,13 +60,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: ""
@@ -106,19 +106,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActiveLookupResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ActiveLookupResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: ""
@@ -153,25 +153,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Update mutable brand fields
@@ -201,31 +201,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: Thương hiệu đang gắn với sản phẩm, hoặc version đã thay đổi
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Xoá hẳn thương hiệu chưa gắn sản phẩm nào
@@ -260,25 +260,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Deactivate a brand
@@ -313,25 +313,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Reactivate a brand
@@ -355,13 +355,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: ""
@@ -390,13 +390,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: ""
@@ -436,19 +436,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActiveLookupResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ActiveLookupResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: ""
@@ -483,25 +483,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Update mutable category fields
@@ -535,37 +535,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: "Gỡ danh mục: chuyển trạng thái INACTIVE và nâng các danh mục con lên làm con của cha nó"
@@ -600,31 +600,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Ngừng danh mục và nâng danh mục con lên làm con của cha nó
@@ -659,31 +659,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Reactivate a category
@@ -707,13 +707,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List attribute definitions (active and inactive)
@@ -742,25 +742,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create an attribute definition; code is immutable
@@ -795,31 +795,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Update name/unit/options/status; unit and used options are locked once products use them
@@ -915,13 +915,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: List products for admin
@@ -956,31 +956,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: Thiếu catalog.price.manage khi gửi initialPriceAmount
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create product and its initial SKU variants atomically
@@ -1020,19 +1020,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActiveLookupResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ActiveLookupResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Search active standard SKU variants for selectors and combo components
@@ -1061,13 +1061,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Get product detail for admin
@@ -1096,19 +1096,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: "Publish checklist: blocking issues and warnings, same policy as publish"
@@ -1143,31 +1143,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Replace product specifications; values are validated against attribute definitions
@@ -1202,13 +1202,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Update product
@@ -1242,37 +1242,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Logically delete a product or combo by changing its status to ARCHIVED
@@ -1307,13 +1307,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create a sellable SKU variant
@@ -1348,37 +1348,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Update mutable SKU metadata
@@ -1412,37 +1412,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Logically delete one sellable SKU variant by changing its status to INACTIVE
@@ -1485,37 +1485,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Attach one finalized media asset to a product or SKU
@@ -1552,37 +1552,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Replace the order of all active product media
@@ -1624,37 +1624,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Update product media alt text or primary flag
@@ -1695,43 +1695,43 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
           description: Cloudinary deletion failed and the product media link was restored
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Delete an unshared product image from the product and Cloudinary
@@ -1773,37 +1773,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Archive a product media link without deleting its asset
@@ -1844,31 +1844,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create a global VAT-included price window
@@ -1896,19 +1896,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Get the current, upcoming, and immutable price history of a SKU
@@ -1943,37 +1943,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Atomically close the current open price and create its replacement
@@ -2008,31 +2008,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "422":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Publish a complete draft product
@@ -2067,13 +2067,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Archive a product or combo and remove it from storefront sales
@@ -2108,13 +2108,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Reactivate an archived product or combo as DRAFT for review
@@ -2149,13 +2149,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Archive one sellable SKU variant
@@ -2190,13 +2190,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Reactivate one archived SKU variant
@@ -2231,13 +2231,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Create a fixed non-nested virtual combo
@@ -2247,71 +2247,113 @@ paths:
         - catalog.product.manage
 components:
   schemas:
-    BrandListDto:
+    AttachProductMediaDto:
+      type: object
+      properties:
+        mediaAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        variantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        altText:
+          type: string
+          maxLength: 500
+        isPrimary:
+          type: boolean
+          default: false
+        expectedProductVersion:
+          type: number
+          minimum: 0
+      required:
+        - mediaAssetId
+        - expectedProductVersion
+    AttributeDataType:
+      type: string
+      enum:
+        - TEXT
+        - NUMBER
+        - BOOLEAN
+        - OPTION
+    AttributeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+          example: ADJUSTABLE_HEIGHT
+        name:
+          type: string
+          example: Chiều cao điều chỉnh
+        dataType:
+          allOf:
+            - $ref: "#/components/schemas/AttributeDataType"
+        unit:
+          type: string
+          example: m
+          nullable: true
+        isVariantAxis:
+          type: boolean
+          description: Có thể dùng làm trục biến thể (Option) — chưa dùng ở V1
+        options:
+          description: Chỉ với OPTION; rỗng với kiểu khác
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeOptionDto"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/AttributeStatus"
+        sortOrder:
+          type: number
+        version:
+          type: number
+          minimum: 0
+      required:
+        - id
+        - code
+        - name
+        - dataType
+        - isVariantAxis
+        - options
+        - status
+        - sortOrder
+        - version
+    AttributeListDto:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/BrandDto"
-        total:
-          type: number
+            $ref: "#/components/schemas/AttributeDto"
       required:
         - items
-        - total
-    ErrorResponseDto:
+    AttributeOptionDto:
       type: object
       properties:
-        statusCode:
-          type: number
-          example: 400
         code:
           type: string
-          example: VALIDATION_ERROR
-        message:
+          example: WHITE
+          description: Mã lựa chọn, bất biến khi đã có sản phẩm dùng
+        label:
           type: string
-          example: Dữ liệu gửi lên không hợp lệ.
-        details:
-          type: array
-          items:
-            $ref: "#/components/schemas/ErrorDetailDto"
-        path:
+          example: Trắng
+        colorHex:
           type: string
-          example: /api/v1/catalog/products
-        method:
-          type: string
-          example: POST
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
+          example: "#FFFFFF"
+          nullable: true
       required:
-        - statusCode
         - code
-        - message
-        - path
-        - method
-        - timestamp
-    CreateBrandDto:
-      type: object
-      properties:
-        name:
-          type: string
-        code:
-          type: string
-          description: Bỏ trống để Backend suy từ tên. Chỉ gửi khi cần giữ mã của hệ thống cũ.
-        slug:
-          type: string
-          description: Bỏ trống để Backend suy từ tên và tự thêm hậu tố khi trùng.
-        description:
-          type: string
-        logoAssetId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-      required:
-        - name
+        - label
+    AttributeStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
     BrandDto:
       type: object
       properties:
@@ -2343,87 +2385,42 @@ components:
         - slug
         - status
         - version
-    ActiveLookupResponseDto:
+    BrandListDto:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/ActiveLookupOptionDto"
-        meta:
-          $ref: "#/components/schemas/ActiveLookupMetaDto"
-      required:
-        - items
-        - meta
-    UpdateBrandDto:
-      type: object
-      properties:
-        name:
-          type: string
-        slug:
-          type: string
-        description:
-          type: string
-        logoAssetId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        expectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedVersion
-    ChangeMasterStatusDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedVersion
-    CategoryListDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/CategoryDto"
+            $ref: "#/components/schemas/BrandDto"
         total:
           type: number
       required:
         - items
         - total
-    CreateCategoryDto:
+    BundleComponentDto:
       type: object
       properties:
-        parentId:
+        componentVariantId:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-        name:
+        componentSku:
           type: string
-        code:
+        componentName:
           type: string
-          description: Bỏ trống để Backend suy từ tên. Chỉ gửi khi cần giữ mã của hệ thống cũ.
-        slug:
-          type: string
-          description: Bỏ trống để Backend suy từ tên và tự thêm hậu tố khi trùng.
-        description:
-          type: string
-        imageAssetId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        sortOrder:
+        quantity:
           type: number
-          minimum: 0
-          default: 0
-        returnable:
-          type: boolean
-          default: true
-          description: Cho phép trả hàng sản phẩm thuộc danh mục (D54)
+          minimum: 1
       required:
-        - name
+        - componentVariantId
+        - componentSku
+        - componentName
+        - quantity
+    CatalogMasterStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
     CategoryDto:
       type: object
       properties:
@@ -2472,39 +2469,42 @@ components:
         - returnable
         - status
         - version
-    UpdateCategoryDto:
-      type: object
-      properties:
-        name:
-          type: string
-        slug:
-          type: string
-        description:
-          type: string
-        imageAssetId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        sortOrder:
-          type: number
-          minimum: 0
-        returnable:
-          type: boolean
-          description: Cho phép trả hàng sản phẩm thuộc danh mục (D54)
-        expectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedVersion
-    AttributeListDto:
+    CategoryListDto:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/AttributeDto"
+            $ref: "#/components/schemas/CategoryDto"
+        total:
+          type: number
       required:
         - items
+        - total
+    ChangeMasterStatusDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedVersion
+    ChangeProductMediaStatusDto:
+      type: object
+      properties:
+        expectedProductVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedProductVersion
+    ChangeProductStatusDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedVersion
     CreateAttributeDto:
       type: object
       properties:
@@ -2537,104 +2537,103 @@ components:
         - code
         - name
         - dataType
-    AttributeDto:
+    CreateBrandDto:
       type: object
       properties:
-        id:
+        name:
+          type: string
+        code:
+          type: string
+          description: Bỏ trống để Backend suy từ tên. Chỉ gửi khi cần giữ mã của hệ thống cũ.
+        slug:
+          type: string
+          description: Bỏ trống để Backend suy từ tên và tự thêm hậu tố khi trùng.
+        description:
+          type: string
+        logoAssetId:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-        code:
-          type: string
-          example: ADJUSTABLE_HEIGHT
-        name:
-          type: string
-          example: Chiều cao điều chỉnh
-        dataType:
-          allOf:
-            - $ref: "#/components/schemas/AttributeDataType"
-        unit:
-          type: string
-          example: m
-          nullable: true
-        isVariantAxis:
-          type: boolean
-          description: Có thể dùng làm trục biến thể (Option) — chưa dùng ở V1
-        options:
-          description: Chỉ với OPTION; rỗng với kiểu khác
-          type: array
-          items:
-            $ref: "#/components/schemas/AttributeOptionDto"
-        status:
-          allOf:
-            - $ref: "#/components/schemas/AttributeStatus"
-        sortOrder:
-          type: number
-        version:
-          type: number
-          minimum: 0
       required:
-        - id
-        - code
         - name
-        - dataType
-        - isVariantAxis
-        - options
-        - status
-        - sortOrder
-        - version
-    UpdateAttributeDto:
+    CreateBundleDto:
       type: object
       properties:
-        name:
+        bundleVariantId:
           type: string
-        unit:
-          type: string
-          nullable: true
-          description: Không đổi được khi thuộc tính NUMBER đã có sản phẩm dùng
-        isVariantAxis:
-          type: boolean
-        options:
-          description: Danh sách đầy đủ; không được bỏ lựa chọn đang có sản phẩm dùng
-          type: array
-          items:
-            $ref: "#/components/schemas/AttributeOptionDto"
-        status:
-          description: Ngừng dùng thay cho xoá
-          allOf:
-            - $ref: "#/components/schemas/AttributeStatus"
-        sortOrder:
-          type: number
-        expectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedVersion
-    ProductStatus:
-      type: string
-      enum:
-        - DRAFT
-        - PUBLISHED
-        - ARCHIVED
-    ProductListSort:
-      type: string
-      enum:
-        - NEWEST
-        - PRICE_ASC
-        - PRICE_DESC
-        - NAME_ASC
-    ProductListResponseDto:
-      type: object
-      properties:
+          pattern: ^[1-9][0-9]*$
+          example: "1"
         items:
           type: array
           items:
-            $ref: "#/components/schemas/ProductSummaryDto"
-        meta:
-          $ref: "#/components/schemas/ProductListMetaDto"
+            $ref: "#/components/schemas/CreateBundleItemDto"
       required:
+        - bundleVariantId
         - items
-        - meta
+    CreateBundleItemDto:
+      type: object
+      properties:
+        componentVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        quantity:
+          type: number
+          minimum: 1
+      required:
+        - componentVariantId
+        - quantity
+    CreateCategoryDto:
+      type: object
+      properties:
+        parentId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        name:
+          type: string
+        code:
+          type: string
+          description: Bỏ trống để Backend suy từ tên. Chỉ gửi khi cần giữ mã của hệ thống cũ.
+        slug:
+          type: string
+          description: Bỏ trống để Backend suy từ tên và tự thêm hậu tố khi trùng.
+        description:
+          type: string
+        imageAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sortOrder:
+          type: number
+          minimum: 0
+          default: 0
+        returnable:
+          type: boolean
+          default: true
+          description: Cho phép trả hàng sản phẩm thuộc danh mục (D54)
+      required:
+        - name
+    CreatePriceDto:
+      type: object
+      properties:
+        amount:
+          type: string
+          example: "18990000.00"
+          description: VAT-included VND amount greater than zero
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          maxLength: 500
+          description: Business reason; mandatory when reducing the reference price by more than 20%
+      required:
+        - amount
+        - startsAt
     CreateProductDto:
       type: object
       properties:
@@ -2687,6 +2686,109 @@ components:
         - categoryIds
         - primaryCategoryId
         - variants
+    CreateProductMediaDto:
+      type: object
+      properties:
+        mediaAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        altText:
+          type: string
+          maxLength: 500
+      required:
+        - mediaAssetId
+    CreateProductVariantDto:
+      type: object
+      properties:
+        sku:
+          type: string
+          example: TD-02
+          maxLength: 40
+          description: Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
+        barcode:
+          type: string
+        name:
+          type: string
+        weightGrams:
+          type: number
+          default: 0
+        lengthMm:
+          type: number
+        widthMm:
+          type: number
+        heightMm:
+          type: number
+        initialPriceAmount:
+          type: string
+          example: "7800000"
+          description: Giá bán ban đầu (VND, đã gồm VAT) có hiệu lực ngay; cần quyền catalog.price.manage
+      required:
+        - name
+    CreateVariantDto:
+      type: object
+      properties:
+        sku:
+          type: string
+          example: TD-02
+          maxLength: 40
+          description: Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
+        barcode:
+          type: string
+        name:
+          type: string
+        weightGrams:
+          type: number
+          default: 0
+        lengthMm:
+          type: number
+        widthMm:
+          type: number
+        heightMm:
+          type: number
+      required:
+        - name
+    ProductBundleDto:
+      type: object
+      properties:
+        bundleType:
+          allOf:
+            - $ref: "#/components/schemas/ProductBundleType"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/ProductBundleStatus"
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/BundleComponentDto"
+      required:
+        - bundleType
+        - status
+        - components
+    ProductBundleStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+    ProductBundleType:
+      type: string
+      enum:
+        - FIXED_VIRTUAL
+    ProductCategoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        name:
+          type: string
+        isPrimary:
+          type: boolean
+      required:
+        - id
+        - name
+        - isPrimary
     ProductDetailDto:
       type: object
       properties:
@@ -2734,7 +2836,7 @@ components:
         currency:
           example: VND
           allOf:
-            - $ref: "#/components/schemas/CurrencyCode"
+            - $ref: ./_components.yaml#/components/schemas/CurrencyCode
         imageUrl:
           type: string
           format: uri
@@ -2797,179 +2899,45 @@ components:
         - media
         - categories
         - categoryIds
-    ProductSetupStatusDto:
+    ProductListMetaDto:
       type: object
       properties:
-        productId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        status:
-          allOf:
-            - $ref: "#/components/schemas/ProductStatus"
-        canPublish:
-          type: boolean
-          description: DRAFT và không còn điều kiện chặn
-        blockingIssues:
-          description: Điều kiện chặn xuất bản
+        page:
+          type: number
+          example: 1
+        limit:
+          type: number
+          example: 12
+        total:
+          type: number
+          example: 2
+        totalPages:
+          type: number
+          example: 1
+      required:
+        - page
+        - limit
+        - total
+        - totalPages
+    ProductListResponseDto:
+      type: object
+      properties:
+        items:
           type: array
           items:
-            $ref: "#/components/schemas/ProductReadinessIssueDto"
-        warnings:
-          description: Chỉ cảnh báo, không chặn (ví dụ chưa có tồn)
-          type: array
-          items:
-            $ref: "#/components/schemas/ProductReadinessIssueDto"
+            $ref: "#/components/schemas/ProductSummaryDto"
+        meta:
+          $ref: "#/components/schemas/ProductListMetaDto"
       required:
-        - productId
-        - status
-        - canPublish
-        - blockingIssues
-        - warnings
-    ReplaceProductSpecificationsDto:
-      type: object
-      properties:
-        specifications:
-          type: array
-          items:
-            $ref: "#/components/schemas/ProductSpecificationInputDto"
-        expectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - specifications
-        - expectedVersion
-    UpdateProductDto:
-      type: object
-      properties:
-        productType:
-          default: STANDARD
-          allOf:
-            - $ref: "#/components/schemas/ProductType"
-        name:
-          type: string
-        categoryIds:
-          example:
-            - "1"
-          type: array
-          items:
-            type: string
-            pattern: ^[1-9][0-9]*$
-        primaryCategoryId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        specifications:
-          maxItems: 60
-          description: "Thông số kỹ thuật lưu cùng transaction; giá trị kiểm theo từ điển thuộc tính như replaceAdminProductSpecifications. Ở updateAdminProduct: gửi thì ghi đè cả bộ, bỏ trống thì giữ nguyên."
-          type: array
-          items:
-            $ref: "#/components/schemas/ProductSpecificationInputDto"
-        slug:
-          type: string
-          description: Only mutable while the product is DRAFT
-        brandId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-          nullable: true
-        shortDescription:
-          type: string
-          maxLength: 1000
-          nullable: true
-        description:
-          type: string
-          nullable: true
-        expectedVersion:
-          type: number
-          minimum: 0
-        isPublished:
-          type: boolean
-          description: Bật/tắt hiển thị trên website. Không đổi status của sản phẩm.
-      required:
-        - expectedVersion
-    ChangeProductStatusDto:
-      type: object
-      properties:
-        expectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedVersion
-    CreateVariantDto:
-      type: object
-      properties:
-        sku:
-          type: string
-          example: TD-02
-          maxLength: 40
-          description: Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
-        barcode:
-          type: string
-        name:
-          type: string
-        weightGrams:
-          type: number
-          default: 0
-        lengthMm:
-          type: number
-        widthMm:
-          type: number
-        heightMm:
-          type: number
-      required:
-        - name
-    UpdateVariantDto:
-      type: object
-      properties:
-        name:
-          type: string
-        barcode:
-          type: string
-          nullable: true
-        weightGrams:
-          type: number
-          minimum: 0
-        lengthMm:
-          type: number
-          minimum: 1
-          nullable: true
-        widthMm:
-          type: number
-          minimum: 1
-          nullable: true
-        heightMm:
-          type: number
-          minimum: 1
-          nullable: true
-        expectedVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedVersion
-    AttachProductMediaDto:
-      type: object
-      properties:
-        mediaAssetId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        variantId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        altText:
-          type: string
-          maxLength: 500
-        isPrimary:
-          type: boolean
-          default: false
-        expectedProductVersion:
-          type: number
-          minimum: 0
-      required:
-        - mediaAssetId
-        - expectedProductVersion
+        - items
+        - meta
+    ProductListSort:
+      type: string
+      enum:
+        - NEWEST
+        - PRICE_ASC
+        - PRICE_DESC
+        - NAME_ASC
     ProductMediaDto:
       type: object
       properties:
@@ -3011,61 +2979,11 @@ components:
         - sortOrder
         - isPrimary
         - status
-    ReorderProductMediaDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/ReorderProductMediaItemDto"
-        expectedProductVersion:
-          type: number
-          minimum: 0
-      required:
-        - items
-        - expectedProductVersion
-    UpdateProductMediaDto:
-      type: object
-      properties:
-        altText:
-          type: string
-          maxLength: 500
-          nullable: true
-        isPrimary:
-          type: boolean
-        expectedProductVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedProductVersion
-    ChangeProductMediaStatusDto:
-      type: object
-      properties:
-        expectedProductVersion:
-          type: number
-          minimum: 0
-      required:
-        - expectedProductVersion
-    CreatePriceDto:
-      type: object
-      properties:
-        amount:
-          type: string
-          example: "18990000.00"
-          description: VAT-included VND amount greater than zero
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
-        reason:
-          type: string
-          maxLength: 500
-          description: Business reason; mandatory when reducing the reference price by more than 20%
-      required:
-        - amount
-        - startsAt
+    ProductMediaStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
     ProductPriceTimelineDto:
       type: object
       properties:
@@ -3090,139 +3008,153 @@ components:
         - productVariantId
         - upcoming
         - history
-    ReplacePriceDto:
-      type: object
-      properties:
-        amount:
-          type: string
-          example: "18990000.00"
-          description: VAT-included VND amount greater than zero
-        startsAt:
-          type: string
-          format: date-time
-        endsAt:
-          type: string
-          format: date-time
-        reason:
-          type: string
-          maxLength: 500
-          description: Business reason; mandatory when reducing the reference price by more than 20%
-        expectedCurrentPriceId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        expectedCurrentPriceVersion:
-          type: number
-          minimum: 0
-      required:
-        - amount
-        - startsAt
-        - expectedCurrentPriceId
-        - expectedCurrentPriceVersion
-    CreateBundleDto:
-      type: object
-      properties:
-        bundleVariantId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/CreateBundleItemDto"
-      required:
-        - bundleVariantId
-        - items
-    ErrorDetailDto:
-      type: object
-      properties:
-        field:
-          type: string
-          example: name
-        code:
-          type: string
-          example: INVALID_VALUE
-        message:
-          type: string
-          example: 'Trường "name": Trường này không được để trống.'
-      required:
-        - code
-        - message
-    CatalogMasterStatus:
-      type: string
-      enum:
-        - ACTIVE
-        - INACTIVE
-    ActiveLookupOptionDto:
+    ProductPriceWindowDto:
       type: object
       properties:
         id:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-        code:
+        amount:
           type: string
-          example: CN-HCM-01
-        label:
+          example: "18990000.00"
+        startsAt:
           type: string
-          example: Chi nhánh Hồ Chí Minh
-        priceAmount:
-          type: string
-          example: "1990000.00"
+          format: date-time
+        endsAt:
+          type: object
+          format: date-time
           nullable: true
+        status:
+          type: string
+        version:
+          type: number
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
       required:
         - id
-        - code
-        - label
-    ActiveLookupMetaDto:
-      type: object
-      properties:
-        page:
-          type: number
-          example: 1
-        limit:
-          type: number
-          example: 20
-        total:
-          type: number
-          example: 1
-        hasMore:
-          type: boolean
-          example: false
-      required:
-        - page
-        - limit
-        - total
-        - hasMore
-    AttributeDataType:
+        - amount
+        - startsAt
+        - status
+        - version
+        - createdAt
+    ProductReadinessIssueCode:
       type: string
       enum:
-        - TEXT
-        - NUMBER
-        - BOOLEAN
-        - OPTION
-    AttributeOptionDto:
+        - NO_SELLABLE_VARIANT
+        - STANDARD_HAS_BUNDLE_VARIANT
+        - INVALID_BUNDLE
+        - MISSING_PRIMARY_IMAGE
+        - NO_AVAILABLE_STOCK
+    ProductReadinessIssueDto:
+      type: object
+      properties:
+        code:
+          allOf:
+            - $ref: "#/components/schemas/ProductReadinessIssueCode"
+        message:
+          type: string
+          description: Câu mô tả ổn định (tiếng Anh); UI hiển thị theo `code`
+      required:
+        - code
+        - message
+    ProductSetupStatusDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/ProductStatus"
+        canPublish:
+          type: boolean
+          description: DRAFT và không còn điều kiện chặn
+        blockingIssues:
+          description: Điều kiện chặn xuất bản
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductReadinessIssueDto"
+        warnings:
+          description: Chỉ cảnh báo, không chặn (ví dụ chưa có tồn)
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductReadinessIssueDto"
+      required:
+        - productId
+        - status
+        - canPublish
+        - blockingIssues
+        - warnings
+    ProductSpecificationDto:
       type: object
       properties:
         code:
           type: string
-          example: WHITE
-          description: Mã lựa chọn, bất biến khi đã có sản phẩm dùng
-        label:
+          example: ADJUSTABLE_HEIGHT
+        name:
           type: string
-          example: Trắng
-        colorHex:
+          example: Chiều cao điều chỉnh
+        dataType:
+          allOf:
+            - $ref: "#/components/schemas/AttributeDataType"
+        unit:
           type: string
-          example: "#FFFFFF"
           nullable: true
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductSpecificationValueDto"
       required:
         - code
+        - name
+        - dataType
+        - values
+    ProductSpecificationInputDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: ADJUSTABLE_HEIGHT
+        values:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - type: number
+              - type: boolean
+          example:
+            - 1.55
+            - 2.25
+            - 2.44
+          description: "TEXT: chuỗi; NUMBER: số (đơn vị lấy từ thuộc tính); BOOLEAN: một giá trị; OPTION: mã lựa chọn"
+      required:
+        - code
+        - values
+    ProductSpecificationValueDto:
+      type: object
+      properties:
+        value:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+        label:
+          type: string
+          example: 2.25 m
+          description: Nhãn hiển thị đã ghép đơn vị / nhãn lựa chọn
+      required:
+        - value
         - label
-    AttributeStatus:
+    ProductStatus:
       type: string
       enum:
-        - ACTIVE
-        - INACTIVE
+        - DRAFT
+        - PUBLISHED
+        - ARCHIVED
     ProductSummaryDto:
       type: object
       properties:
@@ -3270,7 +3202,7 @@ components:
         currency:
           example: VND
           allOf:
-            - $ref: "#/components/schemas/CurrencyCode"
+            - $ref: ./_components.yaml#/components/schemas/CurrencyCode
         imageUrl:
           type: string
           format: uri
@@ -3292,119 +3224,11 @@ components:
         - isPublished
         - version
         - currency
-    ProductListMetaDto:
-      type: object
-      properties:
-        page:
-          type: number
-          example: 1
-        limit:
-          type: number
-          example: 12
-        total:
-          type: number
-          example: 2
-        totalPages:
-          type: number
-          example: 1
-      required:
-        - page
-        - limit
-        - total
-        - totalPages
     ProductType:
       type: string
       enum:
         - STANDARD
         - BUNDLE
-    CreateProductVariantDto:
-      type: object
-      properties:
-        sku:
-          type: string
-          example: TD-02
-          maxLength: 40
-          description: Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
-        barcode:
-          type: string
-        name:
-          type: string
-        weightGrams:
-          type: number
-          default: 0
-        lengthMm:
-          type: number
-        widthMm:
-          type: number
-        heightMm:
-          type: number
-        initialPriceAmount:
-          type: string
-          example: "7800000"
-          description: Giá bán ban đầu (VND, đã gồm VAT) có hiệu lực ngay; cần quyền catalog.price.manage
-      required:
-        - name
-    CreateProductMediaDto:
-      type: object
-      properties:
-        mediaAssetId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        altText:
-          type: string
-          maxLength: 500
-      required:
-        - mediaAssetId
-    ProductSpecificationInputDto:
-      type: object
-      properties:
-        code:
-          type: string
-          example: ADJUSTABLE_HEIGHT
-        values:
-          type: array
-          items:
-            oneOf:
-              - type: string
-              - type: number
-              - type: boolean
-          example:
-            - 1.55
-            - 2.25
-            - 2.44
-          description: "TEXT: chuỗi; NUMBER: số (đơn vị lấy từ thuộc tính); BOOLEAN: một giá trị; OPTION: mã lựa chọn"
-      required:
-        - code
-        - values
-    CurrencyCode:
-      type: string
-      enum:
-        - VND
-    ProductSpecificationDto:
-      type: object
-      properties:
-        code:
-          type: string
-          example: ADJUSTABLE_HEIGHT
-        name:
-          type: string
-          example: Chiều cao điều chỉnh
-        dataType:
-          allOf:
-            - $ref: "#/components/schemas/AttributeDataType"
-        unit:
-          type: string
-          nullable: true
-        values:
-          type: array
-          items:
-            $ref: "#/components/schemas/ProductSpecificationValueDto"
-      required:
-        - code
-        - name
-        - dataType
-        - values
     ProductVariantDto:
       type: object
       properties:
@@ -3467,38 +3291,24 @@ components:
         - weightGrams
         - status
         - version
-    ProductCategoryDto:
-      type: object
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        name:
-          type: string
-        isPrimary:
-          type: boolean
-      required:
-        - id
-        - name
-        - isPrimary
-    ProductReadinessIssueDto:
-      type: object
-      properties:
-        code:
-          allOf:
-            - $ref: "#/components/schemas/ProductReadinessIssueCode"
-        message:
-          type: string
-          description: Câu mô tả ổn định (tiếng Anh); UI hiển thị theo `code`
-      required:
-        - code
-        - message
-    ProductMediaStatus:
+    ProductVariantStatus:
       type: string
       enum:
         - ACTIVE
         - INACTIVE
+    ReorderProductMediaDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReorderProductMediaItemDto"
+        expectedProductVersion:
+          type: number
+          minimum: 0
+      required:
+        - items
+        - expectedProductVersion
     ReorderProductMediaItemDto:
       type: object
       properties:
@@ -3512,124 +3322,208 @@ components:
       required:
         - id
         - sortOrder
-    ProductPriceWindowDto:
+    ReplacePriceDto:
       type: object
       properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
         amount:
           type: string
           example: "18990000.00"
+          description: VAT-included VND amount greater than zero
         startsAt:
           type: string
           format: date-time
         endsAt:
-          type: object
-          format: date-time
-          nullable: true
-        status:
           type: string
-        version:
+          format: date-time
+        reason:
+          type: string
+          maxLength: 500
+          description: Business reason; mandatory when reducing the reference price by more than 20%
+        expectedCurrentPriceId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        expectedCurrentPriceVersion:
           type: number
           minimum: 0
-        createdAt:
-          type: string
-          format: date-time
       required:
-        - id
         - amount
         - startsAt
-        - status
-        - version
-        - createdAt
-    CreateBundleItemDto:
+        - expectedCurrentPriceId
+        - expectedCurrentPriceVersion
+    ReplaceProductSpecificationsDto:
       type: object
       properties:
-        componentVariantId:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          example: "1"
-        quantity:
-          type: number
-          minimum: 1
-      required:
-        - componentVariantId
-        - quantity
-    ProductSpecificationValueDto:
-      type: object
-      properties:
-        value:
-          oneOf:
-            - type: string
-            - type: number
-            - type: boolean
-        label:
-          type: string
-          example: 2.25 m
-          description: Nhãn hiển thị đã ghép đơn vị / nhãn lựa chọn
-      required:
-        - value
-        - label
-    ProductVariantStatus:
-      type: string
-      enum:
-        - ACTIVE
-        - INACTIVE
-    ProductBundleDto:
-      type: object
-      properties:
-        bundleType:
-          allOf:
-            - $ref: "#/components/schemas/ProductBundleType"
-        status:
-          allOf:
-            - $ref: "#/components/schemas/ProductBundleStatus"
-        components:
+        specifications:
           type: array
           items:
-            $ref: "#/components/schemas/BundleComponentDto"
+            $ref: "#/components/schemas/ProductSpecificationInputDto"
+        expectedVersion:
+          type: number
+          minimum: 0
       required:
-        - bundleType
-        - status
-        - components
-    ProductReadinessIssueCode:
-      type: string
-      enum:
-        - NO_SELLABLE_VARIANT
-        - STANDARD_HAS_BUNDLE_VARIANT
-        - INVALID_BUNDLE
-        - MISSING_PRIMARY_IMAGE
-        - NO_AVAILABLE_STOCK
-    ProductBundleType:
-      type: string
-      enum:
-        - FIXED_VIRTUAL
-    ProductBundleStatus:
-      type: string
-      enum:
-        - ACTIVE
-        - INACTIVE
-    BundleComponentDto:
+        - specifications
+        - expectedVersion
+    UpdateAttributeDto:
       type: object
       properties:
-        componentVariantId:
+        name:
+          type: string
+        unit:
+          type: string
+          nullable: true
+          description: Không đổi được khi thuộc tính NUMBER đã có sản phẩm dùng
+        isVariantAxis:
+          type: boolean
+        options:
+          description: Danh sách đầy đủ; không được bỏ lựa chọn đang có sản phẩm dùng
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeOptionDto"
+        status:
+          description: Ngừng dùng thay cho xoá
+          allOf:
+            - $ref: "#/components/schemas/AttributeStatus"
+        sortOrder:
+          type: number
+        expectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedVersion
+    UpdateBrandDto:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        logoAssetId:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
-        componentSku:
+        expectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedVersion
+    UpdateCategoryDto:
+      type: object
+      properties:
+        name:
           type: string
-        componentName:
+        slug:
           type: string
-        quantity:
+        description:
+          type: string
+        imageAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sortOrder:
+          type: number
+          minimum: 0
+        returnable:
+          type: boolean
+          description: Cho phép trả hàng sản phẩm thuộc danh mục (D54)
+        expectedVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedVersion
+    UpdateProductDto:
+      type: object
+      properties:
+        productType:
+          default: STANDARD
+          allOf:
+            - $ref: "#/components/schemas/ProductType"
+        name:
+          type: string
+        categoryIds:
+          example:
+            - "1"
+          type: array
+          items:
+            type: string
+            pattern: ^[1-9][0-9]*$
+        primaryCategoryId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        specifications:
+          maxItems: 60
+          description: "Thông số kỹ thuật lưu cùng transaction; giá trị kiểm theo từ điển thuộc tính như replaceAdminProductSpecifications. Ở updateAdminProduct: gửi thì ghi đè cả bộ, bỏ trống thì giữ nguyên."
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductSpecificationInputDto"
+        slug:
+          type: string
+          description: Only mutable while the product is DRAFT
+        brandId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        shortDescription:
+          type: string
+          maxLength: 1000
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        expectedVersion:
+          type: number
+          minimum: 0
+        isPublished:
+          type: boolean
+          description: Bật/tắt hiển thị trên website. Không đổi status của sản phẩm.
+      required:
+        - expectedVersion
+    UpdateProductMediaDto:
+      type: object
+      properties:
+        altText:
+          type: string
+          maxLength: 500
+          nullable: true
+        isPrimary:
+          type: boolean
+        expectedProductVersion:
+          type: number
+          minimum: 0
+      required:
+        - expectedProductVersion
+    UpdateVariantDto:
+      type: object
+      properties:
+        name:
+          type: string
+        barcode:
+          type: string
+          nullable: true
+        weightGrams:
+          type: number
+          minimum: 0
+        lengthMm:
           type: number
           minimum: 1
+          nullable: true
+        widthMm:
+          type: number
+          minimum: 1
+          nullable: true
+        heightMm:
+          type: number
+          minimum: 1
+          nullable: true
+        expectedVersion:
+          type: number
+          minimum: 0
       required:
-        - componentVariantId
-        - componentSku
-        - componentName
-        - quantity
+        - expectedVersion
   securitySchemes:
     bearer:
       scheme: bearer
