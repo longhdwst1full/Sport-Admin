@@ -44,6 +44,7 @@ import {
 } from '../constants/order.constants';
 import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
 import { OrderReturnPanel } from '@/features/returns';
+import { PrintableOrderReceipt, printOrderReceipt } from '@/features/receipt';
 // Nhãn trạng thái vận đơn sống ở shared (không phải trong `features/fulfillments`) vì đây chỉ
 // đọc `OrderShipmentDto.status`, không phải use case của fulfillments — xem comment tại nguồn.
 import { fulfillmentStatusPresentation } from '@/shared/constants/fulfillment-status-presentation';
@@ -237,7 +238,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                 <Button
                   size="small"
                   icon={<PrinterOutlined />}
-                  onClick={() => window.print()}
+                  onClick={printOrderReceipt}
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
                 >
                   In phiếu
@@ -559,6 +560,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
         onCancel={closeAction}
         onConfirm={() => actionMutation.mutate()}
       />
+      <PrintableOrderReceipt order={order} />
     </Drawer>
   );
 }
