@@ -2,6 +2,7 @@ import { CheckCircleFilled, PrinterOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Modal, Table, Tag } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import type { OrderDetailDto } from '@/generated/api/orders/orders.schemas';
+import { PrintableOrderReceipt, printOrderReceipt } from '@/features/receipt';
 import { moneyFormatter, posPaymentMethodLabels } from '../constants/pos.constants';
 
 /**
@@ -33,7 +34,7 @@ export function PosReceiptModal({
         </span>
       }
       footer={[
-        <Button key="print" icon={<PrinterOutlined />} onClick={() => window.print()}>
+        <Button key="print" icon={<PrinterOutlined />} onClick={printOrderReceipt}>
           In biên lai
         </Button>,
         <Button key="new" type="primary" onClick={onNewOrder}>
@@ -104,6 +105,7 @@ export function PosReceiptModal({
           />
         </div>
       )}
+      <PrintableOrderReceipt order={order} />
     </Modal>
   );
 }
