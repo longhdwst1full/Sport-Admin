@@ -1,10 +1,10 @@
 # Support — Hàng đợi hỗ trợ — maintenance note
 
-> **Document version:** 1.2.0
+> **Document version:** 1.3.0
 >
 > **Last updated:** 2026-09-30
 >
-> **Change summary:** Ô "Người nhận" dùng `listAdminSupportAssignees` theo chi nhánh; bỏ fallback `listAdminUsers`.
+> **Change summary:** Nhãn người nhận kèm email đã che để phân biệt nhân viên trùng tên; tìm kiếm khớp cả tên lẫn email.
 
 ## Phạm vi
 
@@ -50,7 +50,13 @@ theo phạm vi chi nhánh của token (`branchId` trên URL chỉ thu hẹp, kh�
   chi nhánh đang lọc. Bỏ trống `branchId` = phiếu không gắn chi nhánh → API chỉ trả nhân viên phạm vi GLOBAL (bộ
   lọc không chọn chi nhánh vì vậy chỉ liệt kê nhân viên GLOBAL).
 - Không có `support.ticket.assign` thì không gọi lookup, chỉ còn "Tôi".
-- `model/support-assignee.mapper.ts` ghép "Tôi (<tên>)" lên đầu và bỏ trùng; nhãn lấy `fullName`.
+- `model/support-assignee.mapper.ts` ghép "Tôi (<tên>)" lên đầu và bỏ trùng. Nhãn ứng viên là
+  `<fullName> — <email đã che>` (vd `Nguyễn Văn A — na***@dctd.vn`), chỉ còn `fullName` khi API trả `email` null:
+  API không đảm bảo tên duy nhất nên email đã che là thứ duy nhất phân biệt hai nhân viên trùng tên. Mục "Tôi"
+  không kèm email vì tiền tố đã đủ phân biệt.
+- SECURITY: `email` do API che sẵn (`AdminSupportAssigneeDto.email`); FE hiển thị nguyên văn, không tự che và
+  không dựng lại email thật. `value` của option luôn là `userId`, email không bao giờ đi vào giá trị gửi đi.
+- Hai Select đặt `optionFilterProp="label"` nên ô tìm kiếm khớp cả tên lẫn email đã che.
 
 ## Concurrency, idempotency, cache
 
@@ -79,6 +85,7 @@ thành công. Ghi chú nội bộ hiển thị nền vàng + khoá + nhãn "Nộ
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-09-30 | Nhãn ứng viên `<tên> — <email đã che>`; `value` vẫn là `userId`; tìm kiếm theo cả hai. | API 5773c18 |
 | 1.2.0 | 2026-09-30 | Nối `listAdminSupportAssignees`, bỏ fallback `listAdminUsers`; nhãn ô giao việc "Người nhận". | API 5773c18 |
 | 1.0.1 | 2026-09-29 | Ghi nhận test; contract lệnh trả 200. | feat/assistant-v1 review fixes |
 | 1.0.0 | 2026-09-29 | Tạo feature và nối SDK support. | feat/assistant-v1 |
