@@ -66,6 +66,12 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
       closeAdminSupportTicket: withOptions,
     };
   }
+  if (domain === 'assistant') {
+    // IDEMPOTENCY: mỗi lượt Copilot bắt buộc Idempotency-Key (cùng khoá + cùng nội dung trả lại lượt cũ).
+    // Xác nhận draft: contract không khai header (API dùng `draft:<id>` làm khoá xuống Inventory); override
+    // để FE gửi kèm khoá theo từng lần bấm, vô hại nếu API bỏ qua.
+    return { sendAdminChatMessage: withOptions, confirmAdminActionDraft: withOptions };
+  }
   return {};
 }
 

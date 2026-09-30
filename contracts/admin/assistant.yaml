@@ -248,8 +248,537 @@ paths:
         - Admin Assistant Knowledge
       x-required-permissions:
         - assistant.knowledge.manage
+  /api/v1/admin/assistant/conversations:
+    post:
+      operationId: createAdminChatConversation
+      parameters: []
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminChatConversationDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Tạo hội thoại Admin Copilot của nhân viên đang đăng nhập
+      tags:
+        - Admin Assistant Copilot
+      x-required-permissions:
+        - assistant.use
+        - assistant.tool.execute
+  /api/v1/admin/assistant/conversations/{id}/messages:
+    post:
+      operationId: sendAdminChatMessage
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: Khoá của lượt; gửi lại cùng khoá + cùng nội dung trả lại câu trả lời cũ
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendAdminChatMessageDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendAdminChatMessageResponseDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Hỏi Admin Copilot (JSON, không streaming); có thể trả bản nháp chờ xác nhận
+      tags:
+        - Admin Assistant Copilot
+      x-required-permissions:
+        - assistant.use
+        - assistant.tool.execute
+    get:
+      operationId: listAdminChatMessages
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          description: Cursor từ meta.nextCursor để lấy các tin cũ hơn
+          schema:
+            pattern: ^[1-9][0-9]*$
+            type: string
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 30
+            type: number
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminChatMessageListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Lịch sử hội thoại Copilot (cursor, mới nhất trước khi lật trang)
+      tags:
+        - Admin Assistant Copilot
+      x-required-permissions:
+        - assistant.use
+        - assistant.tool.execute
+  /api/v1/admin/assistant/drafts/{id}:
+    get:
+      operationId: getAdminActionDraft
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminActionDraftDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết bản nháp thao tác (đánh dấu EXPIRED nếu quá hạn)
+      tags:
+        - Admin Assistant Copilot
+      x-required-permissions:
+        - assistant.use
+  /api/v1/admin/assistant/drafts/{id}/confirm:
+    post:
+      operationId: confirmAdminActionDraft
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmAdminActionDraftDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminActionDraftDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xác nhận và thực thi bản nháp bằng quyền của người xác nhận; lỗi nghiệp vụ trả draft FAILED kèm errorCode
+      tags:
+        - Admin Assistant Copilot
+      x-required-permissions:
+        - assistant.use
+  /api/v1/admin/assistant/drafts/{id}/reject:
+    post:
+      operationId: rejectAdminActionDraft
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectAdminActionDraftDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminActionDraftDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Từ chối bản nháp đang chờ xác nhận
+      tags:
+        - Admin Assistant Copilot
+      x-required-permissions:
+        - assistant.use
 components:
   schemas:
+    AdminActionDraftDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        conversationId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        actionType:
+          allOf:
+            - $ref: "#/components/schemas/AssistantActionDraftType"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/AssistantActionDraftStatus"
+        preview:
+          $ref: "#/components/schemas/StockAdjustmentDraftPreviewDto"
+        payloadHash:
+          type: string
+          description: SHA-256 của payload; gửi lại nguyên văn khi xác nhận
+          pattern: ^[0-9a-f]{64}$
+        version:
+          type: number
+          description: Version optimistic-lock; gửi làm expectedVersion khi xác nhận/từ chối
+        createdBy:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        decidedBy:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+          nullable: true
+        executedAt:
+          type: string
+          format: date-time
+          nullable: true
+        resultRef:
+          type: string
+          nullable: true
+          description: Mã chứng từ nghiệp vụ khi EXECUTED (adjustmentNo)
+        errorCode:
+          type: string
+          nullable: true
+          description: Mã lỗi ổn định khi FAILED, vd INVENTORY_EXPECTED_ON_HAND_MISMATCH
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - actionType
+        - status
+        - preview
+        - payloadHash
+        - version
+        - createdBy
+        - expiresAt
+        - createdAt
+    AdminChatConversationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/ChatConversationStatus"
+        lastMessageAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - status
+        - lastMessageAt
+        - createdAt
+    AdminChatMessageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        role:
+          allOf:
+            - $ref: "#/components/schemas/AdminChatMessageRole"
+        content:
+          type: string
+          description: Nội dung đã che PII
+        actionDraftIds:
+          description: ID các bản nháp thao tác được tạo trong lượt trả lời này
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - role
+        - content
+        - actionDraftIds
+        - createdAt
+    AdminChatMessageListDto:
+      type: object
+      properties:
+        items:
+          description: Tin USER/ASSISTANT, cũ trước mới sau trong một trang
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminChatMessageDto"
+        meta:
+          $ref: "#/components/schemas/ChatMessageListMetaDto"
+      required:
+        - items
+        - meta
+    AdminChatMessageRole:
+      type: string
+      enum:
+        - USER
+        - ASSISTANT
+    AdminChatPageContextDto:
+      type: object
+      properties:
+        sku:
+          type: string
+          maxLength: 64
+          pattern: ^[A-Za-z0-9._-]+$
+        orderId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        warehouseCode:
+          type: string
+          maxLength: 32
+          pattern: ^[A-Za-z0-9-]+$
+    AssistantActionDraftStatus:
+      type: string
+      enum:
+        - PENDING
+        - CONFIRMED
+        - REJECTED
+        - EXPIRED
+        - EXECUTED
+        - FAILED
+    AssistantActionDraftType:
+      type: string
+      enum:
+        - STOCK_ADJUSTMENT
     AttachKnowledgePostDto:
       type: object
       properties:
@@ -270,6 +799,40 @@ components:
       required:
         - postId
         - audience
+    ChatConversationStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - CLOSED
+        - HANDED_OFF
+    ChatMessageListMetaDto:
+      type: object
+      properties:
+        limit:
+          type: number
+        hasMore:
+          type: boolean
+        nextCursor:
+          type: string
+          nullable: true
+      required:
+        - limit
+        - hasMore
+        - nextCursor
+    ConfirmAdminActionDraftDto:
+      type: object
+      properties:
+        payloadHash:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+          description: payloadHash người xác nhận đang xem
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: Version draft người xác nhận đang xem
+      required:
+        - payloadHash
+        - expectedVersion
     KnowledgeAudience:
       type: string
       enum:
@@ -372,6 +935,87 @@ components:
           description: Version đang hiển thị; lệch version trả 409
       required:
         - expectedVersion
+    RejectAdminActionDraftDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: Version draft người từ chối đang xem
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+      required:
+        - expectedVersion
+    SendAdminChatMessageDto:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 8000
+          description: Câu hỏi của nhân viên; trần hiệu lực do ASSISTANT_MAX_INPUT_CHARS
+        pageContext:
+          $ref: "#/components/schemas/AdminChatPageContextDto"
+      required:
+        - content
+    SendAdminChatMessageResponseDto:
+      type: object
+      properties:
+        conversation:
+          $ref: "#/components/schemas/AdminChatConversationDto"
+        userMessage:
+          $ref: "#/components/schemas/AdminChatMessageDto"
+        assistantMessage:
+          $ref: "#/components/schemas/AdminChatMessageDto"
+        actionDrafts:
+          description: Bản nháp chờ xác nhận tạo trong lượt này (trạng thái hiện tại)
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminActionDraftDto"
+      required:
+        - conversation
+        - userMessage
+        - assistantMessage
+        - actionDrafts
+    StockAdjustmentDraftPreviewDto:
+      type: object
+      properties:
+        warehouseCode:
+          type: string
+          example: KHO-HCM-01
+        branchId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        branchName:
+          type: string
+          nullable: true
+        sku:
+          type: string
+        productName:
+          type: string
+        currentOnHand:
+          type: number
+          description: Tồn vật lý lúc tạo draft; gửi làm expectedOnHand khi xác nhận
+        requestedOnHand:
+          type: number
+          description: Tồn vật lý mong muốn sau điều chỉnh
+        delta:
+          type: number
+          description: requestedOnHand - currentOnHand (khác 0)
+        reason:
+          type: string
+      required:
+        - warehouseCode
+        - sku
+        - productName
+        - currentOnHand
+        - requestedOnHand
+        - delta
+        - reason
   securitySchemes:
     bearer:
       scheme: bearer

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button, Tabs, Tooltip } from 'antd';
 import { useState } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
+import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import {
@@ -28,6 +29,12 @@ export function InventoryPage() {
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
   const [openingImportOpen, setOpeningImportOpen] = useState(false);
   const [selectedBalance, setSelectedBalance] = useState<InventoryBalanceDto>();
+  // Dòng tồn đang điều chỉnh là ngữ cảnh gợi ý cho Copilot (SKU + kho).
+  useCopilotPageHints(
+    adjustmentOpen && selectedBalance
+      ? { sku: selectedBalance.sku, warehouseCode: selectedBalance.warehouseCode }
+      : undefined,
+  );
   const [transferOpen, setTransferOpen] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState<string>();
   const [stocktakeOpen, setStocktakeOpen] = useState(false);

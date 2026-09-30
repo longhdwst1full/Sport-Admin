@@ -41,6 +41,16 @@ paths:
           schema:
             maxLength: 32
             type: string
+        - name: status
+          required: false
+          in: query
+          description: Filter by derived stock status (available = onHand - reserved vs reorderPoint). Ignored by summarizeInventoryBalances.
+          schema:
+            type: string
+            enum:
+              - IN_STOCK
+              - LOW_STOCK
+              - OUT_OF_STOCK
       responses:
         "200":
           description: ""
@@ -111,6 +121,16 @@ paths:
           schema:
             maxLength: 32
             type: string
+        - name: status
+          required: false
+          in: query
+          description: Filter by derived stock status (available = onHand - reserved vs reorderPoint). Ignored by summarizeInventoryBalances.
+          schema:
+            type: string
+            enum:
+              - IN_STOCK
+              - LOW_STOCK
+              - OUT_OF_STOCK
       responses:
         "200":
           description: ""
@@ -1799,6 +1819,12 @@ components:
         quantityDelta:
           type: number
           example: 5
+        expectedOnHand:
+          type: number
+          minimum: 0
+          maximum: 2147483647
+          example: 12
+          description: On-hand quantity the caller saw when drafting the line. When present, the adjustment is rejected with 409 INVENTORY_EXPECTED_ON_HAND_MISMATCH if the locked on_hand differs.
       required:
         - sku
         - quantityDelta

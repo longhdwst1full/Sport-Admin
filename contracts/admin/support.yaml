@@ -198,7 +198,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT
+          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT, SUPPORT_IDEMPOTENCY_CONFLICT
           content:
             application/json:
               schema:
@@ -269,7 +269,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: SUPPORT_TICKET_CLOSED, SUPPORT_VERSION_CONFLICT
+          description: SUPPORT_TICKET_CLOSED, SUPPORT_VERSION_CONFLICT, SUPPORT_IDEMPOTENCY_CONFLICT
           content:
             application/json:
               schema:
@@ -340,7 +340,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT
+          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT, SUPPORT_IDEMPOTENCY_CONFLICT
           content:
             application/json:
               schema:
@@ -411,7 +411,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT
+          description: SUPPORT_INVALID_TRANSITION, SUPPORT_VERSION_CONFLICT, SUPPORT_IDEMPOTENCY_CONFLICT
           content:
             application/json:
               schema:
@@ -429,6 +429,56 @@ paths:
         - Admin Support
       x-required-permissions:
         - support.ticket.close
+  /api/v1/admin/support/assignees:
+    get:
+      operationId: listAdminSupportAssignees
+      parameters:
+        - name: branchId
+          required: false
+          in: query
+          description: Chi nhánh của phiếu; bỏ trống = phiếu không gắn chi nhánh (chỉ nhân viên phạm vi GLOBAL nhận được)
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSupportAssigneeListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: Thiếu quyền hoặc SUPPORT_BRANCH_OUT_OF_SCOPE
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Nhân viên ACTIVE có quyền xử lý phiếu ở chi nhánh (bỏ trống = phiếu không gắn chi nhánh, chỉ GLOBAL)
+      tags:
+        - Admin Support
+      x-required-permissions:
+        - support.ticket.assign
 components:
   schemas:
     AddAdminSupportTicketMessageDto:
@@ -450,6 +500,37 @@ components:
         - body
         - expectedVersion
         - isInternal
+    AdminSupportAssigneeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        fullName:
+          type: string
+          example: Nguyễn Hoàng Nam
+        email:
+          type: string
+          nullable: true
+          example: na***@dctd.vn
+          description: Email đã che giống danh sách user của IAM; null khi không có email
+      required:
+        - id
+        - fullName
+    AdminSupportAssigneeListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminSupportAssigneeDto"
+        total:
+          type: number
+          example: 1
+      required:
+        - items
+        - total
     AdminSupportTicketDetailDto:
       type: object
       properties:

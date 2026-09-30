@@ -1,10 +1,10 @@
 # Admin features — maintenance guide
 
-> **Document version:** 1.2.0
+> **Document version:** 1.3.0
 >
 > **Last updated:** 2026-09-29
 >
-> **Change summary:** Thêm feature `support` (hàng đợi hỗ trợ) và `assistant-knowledge` (tri thức trợ lý) vào bản đồ.
+> **Change summary:** Thêm feature `assistant-copilot` (drawer Trợ lý Copilot, nối SDK assistant).
 
 ## Luồng phụ thuộc chuẩn
 
@@ -37,6 +37,7 @@ app route/navigation
 | `shipping-consultations` | Nhân viên chốt phí/ETA giao riêng | Đây là Checkout consultation, chưa phải Order CRUD. Xem README trong feature. |
 | `support` | Hàng đợi hỗ trợ: giao việc, trả lời/ghi chú nội bộ, giải quyết, đóng ticket | Lệnh có Idempotency-Key + expectedVersion (chuỗi bigint); 409 xử lý theo mã `SUPPORT_*`. Xem README trong feature. |
 | `assistant-knowledge` | Gắn bài CMS làm tri thức trợ lý theo đối tượng/chi nhánh, xuất bản, lưu trữ | Không có Idempotency-Key; publish/archive dùng expectedVersion. Chọn bài cần `cms.content.view`. Xem README trong feature. |
+| `assistant-copilot` | Drawer Trợ lý Copilot trên header: hỏi đáp chỉ đọc về đơn/tồn kho, xác nhận đề xuất điều chỉnh tồn | Gate `assistant.use` + `assistant.tool.execute`; xác nhận cần `inventory.stock.adjust`, gửi payloadHash + expectedVersion; gửi tin có Idempotency-Key. Chỉ render văn bản + bản nháp (contract không trả thẻ dữ liệu). Xem README trong feature. |
 | `content` / `reviews` | Nội dung và kiểm duyệt | CKEditor chỉ thuộc Content; lifecycle dùng action có xác nhận. |
 | `audit` | Nhật ký nhạy cảm | Chỉ đọc, server pagination; không expose dữ liệu đã redact. |
 | `dashboard` / `customers` | Tổng quan và customer view | Kiểm tra rõ API-backed hay fixture trước khi coi là hoàn thành. |
@@ -70,6 +71,7 @@ Không comment lại JSX như “render button”, “set loading”. Tên compo
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-09-29 | Thêm `assistant-copilot`. | feat/assistant-v1 |
 | 1.2.0 | 2026-09-29 | Thêm `support` và `assistant-knowledge`. | feat/assistant-v1 |
 | 1.1.0 | 2026-09-24 | Thêm feature `returns`. | API-20260924-RETURN-EVIDENCE-IMAGES |
 | 1.0.0 | 2026-09-09 | Tạo bản đồ và quy tắc maintenance cho Admin features. | DOC-20260909-FEATURE-MAINTENANCE-NOTES |

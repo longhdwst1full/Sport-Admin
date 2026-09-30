@@ -1,10 +1,10 @@
 # Support — Hàng đợi hỗ trợ — maintenance note
 
-> **Document version:** 1.0.1
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-09-29
+> **Last updated:** 2026-09-30
 >
-> **Change summary:** Ghi nhận test của feature; lệnh admin trả 200 kèm chi tiết ticket (không đổi hành vi UI).
+> **Change summary:** Ô "Người nhận" dùng `listAdminSupportAssignees` theo chi nhánh; bỏ fallback `listAdminUsers`.
 
 ## Phạm vi
 
@@ -35,13 +35,22 @@ Ngoài phạm vi: tạo ticket hộ khách (`support.ticket.create` chưa có m�
 
 | Lệnh | Trạng thái hợp lệ | Quyền | Ghi chú |
 | --- | --- | --- | --- |
-| Giao việc / giao lại | OPEN, ASSIGNED | `support.ticket.assign` | Người nhận: "Tôi" + nhân viên ACTIVE nếu có `iam.user.view` |
+| Giao việc / giao lại | OPEN, ASSIGNED | `support.ticket.assign` | Người nhận: "Tôi" + danh sách theo mục "Nguồn người nhận" |
 | Trả lời / ghi chú nội bộ | khác CLOSED | `support.ticket.manage` | Mỗi tin tăng `version`; response là chi tiết ticket |
 | Giải quyết | ASSIGNED | `support.ticket.manage` | Bắt buộc ghi chú (≤ 1000 ký tự) |
 | Đóng | RESOLVED | `support.ticket.close` | Sau khi đóng chỉ còn đọc |
 
 `model/support-ticket-actions.policy.ts` chỉ quyết định affordance; API là nguồn quyết định cuối và giới hạn
 theo phạm vi chi nhánh của token (`branchId` trên URL chỉ thu hẹp, không mở rộng quyền).
+
+## Nguồn người nhận
+
+- `useListAdminSupportAssignees({ branchId })` (`GET /admin/support/assignees`, cần `support.ticket.assign`): nhân
+  viên ACTIVE có quyền xử lý phiếu ở chi nhánh. Modal giao việc truyền chi nhánh của ticket; bộ lọc hàng đợi truyền
+  chi nhánh đang lọc. Bỏ trống `branchId` = phiếu không gắn chi nhánh → API chỉ trả nhân viên phạm vi GLOBAL (bộ
+  lọc không chọn chi nhánh vì vậy chỉ liệt kê nhân viên GLOBAL).
+- Không có `support.ticket.assign` thì không gọi lookup, chỉ còn "Tôi".
+- `model/support-assignee.mapper.ts` ghép "Tôi (<tên>)" lên đầu và bỏ trùng; nhãn lấy `fullName`.
 
 ## Concurrency, idempotency, cache
 
@@ -61,7 +70,8 @@ thành công. Ghi chú nội bộ hiển thị nền vàng + khoá + nhãn "Nộ
 
 ## Kiểm thử / checklist khi sửa
 
-- Test: `model/support-ticket-actions.policy.test.ts`, `support-ticket.mapper.test.ts`, `support-command-error.test.ts`.
+- Test: `model/support-ticket-actions.policy.test.ts`, `support-ticket.mapper.test.ts`, `support-command-error.test.ts`,
+  `support-assignee.mapper.test.ts`.
 - Đổi contract: `yarn contracts:sync && yarn generate:api`, sửa mapper, không sửa `src/generated`.
 - Thêm trạng thái/ưu tiên: `Record<Enum, …>` trong `constants/support.constants.ts` sẽ báo lỗi compile.
 
@@ -69,5 +79,6 @@ thành công. Ghi chú nội bộ hiển thị nền vàng + khoá + nhãn "Nộ
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-09-30 | Nối `listAdminSupportAssignees`, bỏ fallback `listAdminUsers`; nhãn ô giao việc "Người nhận". | API 5773c18 |
 | 1.0.1 | 2026-09-29 | Ghi nhận test; contract lệnh trả 200. | feat/assistant-v1 review fixes |
 | 1.0.0 | 2026-09-29 | Tạo feature và nối SDK support. | feat/assistant-v1 |

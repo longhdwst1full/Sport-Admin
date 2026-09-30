@@ -36,7 +36,7 @@ export function SupportTicketsPage() {
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search.trim(), 350);
   const [page, setPage] = useListPageReset([debouncedSearch, status, priority, assigneeId, branchId]);
-  const assignees = useSupportAssigneeOptions(true);
+  const assignees = useSupportAssigneeOptions(true, branchId);
 
   const updateParam = (key: string, value?: string) => {
     const next = new URLSearchParams(params);

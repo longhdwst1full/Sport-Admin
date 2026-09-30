@@ -35,6 +35,7 @@ import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import { setSidebarCollapsed, toggleSidebar } from '@/app/store/layout.slice';
 import { usePermissions } from '@/core/auth/permissions';
 import { useAuth } from '@/core/auth/auth-context';
+import { CopilotLauncher, CopilotPageContextProvider } from '@/features/assistant-copilot';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { PageContainer } from '@/foundation/layout/page-container';
 import { NavigationTabs } from '@/layouts/components/navigation-tabs';
@@ -128,6 +129,7 @@ export function AdminLayout() {
   const initials = getInitials(displayName);
 
   return (
+    <CopilotPageContextProvider>
     <Layout className="h-screen max-h-screen overflow-hidden bg-white">
       {/* ── Command Palette (Cmd+K) ──────────────────────────── */}
       <CommandPalette />
@@ -307,6 +309,9 @@ export function AdminLayout() {
                   </Tag>
                 )}
 
+                {/* Copilot: tự ẩn khi thiếu assistant.use hoặc assistant.tool.execute */}
+                <CopilotLauncher className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800" />
+
                 {/* Search icon button */}
                 <Tooltip title="Tìm kiếm nhanh (Ctrl+K)">
                   <Button
@@ -384,5 +389,6 @@ export function AdminLayout() {
       {/* ── Settings Modal ─────────────────────────────────────── */}
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Layout>
+    </CopilotPageContextProvider>
   );
 }

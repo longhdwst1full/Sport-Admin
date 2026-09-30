@@ -51,7 +51,7 @@ export function SupportTicketActionModal({
   onClose: () => void;
 }) {
   const [form] = Form.useForm<FormValues>();
-  const assignees = useSupportAssigneeOptions(action === 'assign');
+  const assignees = useSupportAssigneeOptions(action === 'assign', ticket.branchId);
 
   useEffect(() => {
     if (!action) return;
@@ -100,9 +100,9 @@ export function SupportTicketActionModal({
         {action === 'assign' && (
           <Form.Item
             name="assigneeUserId"
-            label="Người xử lý"
-            rules={[{ required: true, message: 'Chọn người xử lý' }]}
-            extra={assignees.limitedToSelf ? 'Bạn chỉ có thể tự nhận ticket vì không có quyền xem danh sách nhân sự.' : undefined}
+            label="Người nhận"
+            rules={[{ required: true, message: 'Chọn người nhận' }]}
+            extra={assignees.limitedToSelf ? 'Bạn chỉ có thể tự nhận ticket vì không có quyền giao việc.' : undefined}
           >
             <Select
               showSearch

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/core/auth/auth-context';
 import { useCan } from '@/core/auth/permissions';
-import { useListAdminUsers } from '@/generated/api/iam/iam';
+import { useListAdminSupportAssignees } from '@/generated/api/support/support';
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
-
-const USER_LIST_PERMISSION = 'iam.user.view';
+import { SUPPORT_PERMISSION } from '../constants/support.constants';
+import { toSupportAssigneeOptions } from '../model/support-assignee.mapper';
 
 export interface SupportAssigneeOption {
   value: string;
@@ -12,37 +12,32 @@ export interface SupportAssigneeOption {
 }
 
 /**
- * Danh sách người có thể nhận ticket: luôn có chính người đang đăng nhập ("Tôi"), cộng nhân viên
- * đang hoạt động nếu người dùng được xem danh sách nhân sự.
+ * Người nhận ticket: "Tôi" luôn đứng đầu, cộng nhân viên ACTIVE có quyền xử lý phiếu ở `branchId`
+ * (`listAdminSupportAssignees`). Bỏ trống `branchId` = phiếu không gắn chi nhánh → API chỉ trả nhân viên
+ * phạm vi GLOBAL.
  *
- * PERMISSION: `listAdminUsers` đòi `iam.user.view`; nhân viên hỗ trợ thường không có quyền này nên
- * chỉ gọi khi có quyền, tránh một lượt 403 mỗi lần mở màn. Backend vẫn kiểm người nhận có hợp lệ
- * (đúng phạm vi chi nhánh, có quyền hỗ trợ) khi giao việc.
- *
- * CONTRACT: nếu backend hỗ trợ phát hành lookup người nhận theo phạm vi ticket, thay nguồn này bằng
- * lookup đó; lọc STAFF/ACTIVE ở đây chỉ là gần đúng.
+ * PERMISSION: lookup đòi `support.ticket.assign`; không có quyền thì không gọi (tránh 403) và chỉ còn "Tôi".
+ * SECURITY: API lọc theo phạm vi chi nhánh của token và vẫn kiểm người nhận khi giao việc.
  */
-export function useSupportAssigneeOptions(enabled: boolean): {
+export function useSupportAssigneeOptions(
+  enabled: boolean,
+  branchId?: string,
+): {
   options: SupportAssigneeOption[];
   loading: boolean;
   limitedToSelf: boolean;
 } {
   const { currentUser } = useAuth();
-  const canListUsers = useCan(USER_LIST_PERMISSION);
-  const users = useListAdminUsers({
-    query: { ...CACHE_POLICY.LOOKUP, enabled: enabled && canListUsers, retry: false },
+  const canAssign = useCan(SUPPORT_PERMISSION.ASSIGN);
+  const assignees = useListAdminSupportAssignees(branchId ? { branchId } : undefined, {
+    query: { ...CACHE_POLICY.LOOKUP, enabled: enabled && canAssign, retry: false },
   });
 
   const options = useMemo(() => {
-    const self = currentUser
-      ? [{ value: currentUser.userId, label: `Tôi (${currentUser.displayName})` }]
-      : [];
-    const staff = (users.data?.items ?? [])
-      .filter((user) => user.userType === 'STAFF' && user.status === 'ACTIVE')
-      .filter((user) => user.id !== currentUser?.userId)
-      .map((user) => ({ value: user.id, label: user.displayName }));
-    return [...self, ...staff];
-  }, [currentUser, users.data]);
+    const self = currentUser ? { userId: currentUser.userId, displayName: currentUser.displayName } : undefined;
+    const candidates = (assignees.data?.items ?? []).map((item) => ({ userId: item.id, displayName: item.fullName }));
+    return toSupportAssigneeOptions(self, candidates);
+  }, [currentUser, assignees.data]);
 
-  return { options, loading: users.isLoading, limitedToSelf: !canListUsers };
+  return { options, loading: assignees.isLoading, limitedToSelf: !canAssign };
 }

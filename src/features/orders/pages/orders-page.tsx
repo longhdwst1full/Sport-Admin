@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
+import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { PosOrderDrawer } from '@/features/pos';
 import {
   DollarOutlined,
@@ -52,6 +53,8 @@ export function OrdersPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(ORDER_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
+  // Đơn đang mở ở drawer chi tiết là ngữ cảnh gợi ý cho Copilot.
+  useCopilotPageHints(selectedId ? { orderId: selectedId } : undefined);
   const [columnModalOpen, setColumnModalOpen] = useState(false);
   const [colVisibility, setColVisibility] = useState<Record<string, boolean>>({
     order: true,
