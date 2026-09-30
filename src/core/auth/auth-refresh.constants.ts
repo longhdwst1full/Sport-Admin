@@ -36,7 +36,11 @@ export const AUTH_BROADCAST_CHANNEL = 'dctd-admin-auth';
 
 export const AuthBroadcastMessage = {
   TOKENS_ROTATED: 'tokens-rotated',
+  TOKENS_REQUESTED: 'tokens-requested',
 } as const;
+
+/** Chờ tab đang giữ access token trả lời trước khi tự xoay refresh cookie thêm lần nữa. */
+export const AUTH_PEER_TOKEN_WAIT_MS = 120;
 
 /** Chờ trước khi thử lại một lần khi Backend trả `AUTH_REFRESH_CONFLICT`. */
 export const REFRESH_CONFLICT_RETRY_DELAY_MS = 300;

@@ -15,6 +15,19 @@ let cookieTransportTokens: TokenPairDto | undefined;
 let tokenVersion = 0;
 /** Mốc hết hạn tính lúc lưu, gắn với đúng access token đó để không áp nhầm cho token khác. */
 let savedExpiry: { accessToken: string; expiresAt: number } | undefined;
+/**
+ * Mốc tab này nhận token. Dùng để bỏ qua broadcast đến trễ từ một tab vẫn giữ token cũ.
+ * `Date.now()` an toàn ở đây vì tất cả tab chạy trên cùng một thiết bị/đồng hồ.
+ */
+let tokenSavedAt = 0;
+
+interface AuthBroadcastPayload {
+  type?: string;
+  tokens?: TokenPairDto;
+  expiresAt?: number;
+  savedAt?: number;
+  accessTokenBefore?: string;
+}
 
 function notify(): void {
   tokenVersion += 1;
@@ -27,6 +40,7 @@ export function readAuthTokens(): TokenPairDto | undefined {
 }
 
 export function saveAuthTokens(tokens: TokenPairDto, remember?: boolean): void {
+  tokenSavedAt = Date.now();
   savedExpiry =
     tokens.expiresIn > 0
       ? { accessToken: tokens.accessToken, expiresAt: Date.now() + tokens.expiresIn * 1000 }
@@ -48,6 +62,7 @@ export function usesAuthCookieTransport(): boolean {
 export function clearAuthTokens(): void {
   cookieTransportTokens = undefined;
   savedExpiry = undefined;
+  tokenSavedAt = 0;
   AuthService.clear();
   notify();
 }
@@ -94,6 +109,32 @@ export function syncAuthTokensFromStorage(): boolean {
 
 let channel: BroadcastChannel | undefined;
 
+function publishCurrentAccessToken(accessTokenBefore?: string): void {
+  if (!cookieTransport) return;
+  const tokens = cookieTransportTokens;
+  if (!tokens?.accessToken || tokens.accessToken === accessTokenBefore) return;
+  channel?.postMessage({
+    type: AuthBroadcastMessage.TOKENS_ROTATED,
+    tokens,
+    expiresAt: getAccessTokenExpiresAt(),
+    savedAt: tokenSavedAt,
+  } satisfies AuthBroadcastPayload);
+}
+
+function acceptPeerAccessToken(payload: AuthBroadcastPayload): void {
+  if (!cookieTransport || !payload.tokens?.accessToken || !payload.savedAt) return;
+  // CONCURRENCY: Một tab cũ có thể trả lời sau tab vừa refresh. Không cho message cũ ghi đè
+  // access token mới, nếu không request kế tiếp lại 401 và tạo vòng xoay refresh liên tục.
+  if (cookieTransportTokens && payload.savedAt <= tokenSavedAt) return;
+  cookieTransportTokens = { ...payload.tokens, refreshToken: undefined };
+  tokenSavedAt = payload.savedAt;
+  savedExpiry =
+    payload.expiresAt && payload.expiresAt > Date.now()
+      ? { accessToken: payload.tokens.accessToken, expiresAt: payload.expiresAt }
+      : undefined;
+  notify();
+}
+
 function authChannel(): BroadcastChannel | undefined {
   if (channel || typeof BroadcastChannel === 'undefined') return channel;
   // WORKAROUND: BroadcastChannel của Node truyền qua mọi worker thread của Vitest và nổ khi nhận
@@ -101,8 +142,14 @@ function authChannel(): BroadcastChannel | undefined {
   if (import.meta.env.MODE === 'test') return undefined;
   try {
     channel = new BroadcastChannel(AUTH_BROADCAST_CHANNEL);
-    channel.onmessage = (event: MessageEvent<{ type?: string }>) => {
-      if (event.data?.type === AuthBroadcastMessage.TOKENS_ROTATED) syncAuthTokensFromStorage();
+    channel.onmessage = (event: MessageEvent<AuthBroadcastPayload>) => {
+      if (event.data?.type === AuthBroadcastMessage.TOKENS_REQUESTED) {
+        publishCurrentAccessToken(event.data.accessTokenBefore);
+        return;
+      }
+      if (event.data?.type !== AuthBroadcastMessage.TOKENS_ROTATED) return;
+      if (cookieTransport) acceptPeerAccessToken(event.data);
+      else syncAuthTokensFromStorage();
     };
   } catch {
     channel = undefined;
@@ -113,10 +160,49 @@ function authChannel(): BroadcastChannel | undefined {
 /** Báo tab khác đồng bộ lại token (và đặt lại hẹn giờ xoay) sau khi tab này xoay xong. */
 export function announceTokenRotation(): void {
   try {
-    authChannel()?.postMessage({ type: AuthBroadcastMessage.TOKENS_ROTATED, at: Date.now() });
+    authChannel();
+    if (cookieTransport) publishCurrentAccessToken();
+    else channel?.postMessage({ type: AuthBroadcastMessage.TOKENS_ROTATED });
   } catch {
     // Kênh đã đóng hoặc trình duyệt chặn: tab khác vẫn tự đồng bộ khi gặp 401.
   }
+}
+
+/**
+ * COOKIE mode không thể đọc access token của tab khác từ storage. Hỏi trực tiếp các tab qua
+ * BroadcastChannel và chờ ngắn trong Web Lock; nếu một tab vừa refresh, dùng token đó thay vì
+ * rotate HttpOnly cookie lần nữa. BODY mode đã đồng bộ bằng AuthService nên trả ngay.
+ */
+export function waitForPeerAccessToken(
+  accessTokenBefore: string | undefined,
+  timeoutMs: number,
+): Promise<TokenPairDto | undefined> {
+  if (!cookieTransport) return Promise.resolve(readAuthTokens());
+  const current = readAuthTokens();
+  if (current?.accessToken && current.accessToken !== accessTokenBefore) {
+    return Promise.resolve(current);
+  }
+  const broadcast = authChannel();
+  if (!broadcast) return Promise.resolve(undefined);
+  return new Promise((resolve) => {
+    let finished = false;
+    const finish = (tokens?: TokenPairDto) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(tokens);
+    };
+    const unsubscribe = subscribeAuthTokens(() => {
+      const latest = readAuthTokens();
+      if (latest?.accessToken && latest.accessToken !== accessTokenBefore) finish(latest);
+    });
+    const timer = setTimeout(() => finish(), timeoutMs);
+    broadcast.postMessage({
+      type: AuthBroadcastMessage.TOKENS_REQUESTED,
+      accessTokenBefore,
+    } satisfies AuthBroadcastPayload);
+  });
 }
 
 // Mở kênh ngay khi module nạp để tab này NHẬN được thông báo từ tab khác.

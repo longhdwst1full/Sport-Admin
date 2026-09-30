@@ -7,17 +7,26 @@ import {
   saveAuthTokens,
   syncAuthTokensFromStorage,
   usesAuthCookieTransport,
+  waitForPeerAccessToken,
 } from '@/core/auth/auth-token.store';
 import type { TokenPairDto } from '@/generated/api/auth/auth.schemas';
 import { expireAdminSession } from '@/core/auth/auth-session-expiry';
 import {
   AUTH_REFRESH_LOCK_NAME,
+  AUTH_PEER_TOKEN_WAIT_MS,
   AuthRefreshErrorCode,
   REFRESH_CONFLICT_RETRY_DELAY_MS,
   TERMINAL_REFRESH_ERROR_CODES,
 } from '@/core/auth/auth-refresh.constants';
 
-export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const configuredApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const useProductionCookieProxy =
+  import.meta.env.PROD && import.meta.env.VITE_AUTH_TOKEN_TRANSPORT === 'COOKIE';
+
+// SECURITY: COOKIE production phải gọi cùng origin để refresh cookie là first-party. Policy này
+// cố ý ưu tiên hơn VITE_API_URL trên Vercel Dashboard; một biến deploy cũ không được phép âm thầm
+// đưa Admin trở lại cross-site cookie và làm người dùng logout khi access token hết hạn.
+export const API_URL = useProductionCookieProxy ? globalThis.location.origin : configuredApiUrl;
 
 export class ApiError<T = unknown> extends Error {
   constructor(
@@ -87,12 +96,18 @@ async function refreshAcrossTabs(accessTokenBefore: string | undefined): Promise
 async function refreshInsideLock(accessTokenBefore: string | undefined): Promise<TokenPairDto> {
   // BODY mode: trong lúc chờ lock, tab khác có thể đã xoay xong và ghi token mới vào cookie
   // dùng chung. Dùng luôn token đó thay vì gửi refresh token cũ (sẽ bị coi là reuse).
-  // COOKIE mode: access token là của riêng tab nên vẫn phải tự gọi; lúc đã có lock thì refresh
-  // cookie trình duyệt gửi đi đã là bản mới nhất.
+  // COOKIE mode: access token là memory riêng từng tab, nên hỏi tab khác trong lock trước khi
+  // quyết định xoay HttpOnly refresh cookie dùng chung.
   if (!usesAuthCookieTransport()) {
     syncAuthTokensFromStorage();
     const current = readAuthTokens();
     if (current?.accessToken && current.accessToken !== accessTokenBefore) return current;
+  } else {
+    // CONCURRENCY: Access token COOKIE mode chỉ nằm trong memory từng tab. Khi tab này vừa chờ
+    // Web Lock, hỏi tab đã refresh để nhận access token mới; tự gọi /refresh tiếp sẽ rotate cookie
+    // lần nữa và làm access token của tab kia mất hiệu lực sau vài vòng.
+    const peerTokens = await waitForPeerAccessToken(accessTokenBefore, AUTH_PEER_TOKEN_WAIT_MS);
+    if (peerTokens?.accessToken && peerTokens.accessToken !== accessTokenBefore) return peerTokens;
   }
   let tokens: TokenPairDto;
   try {
