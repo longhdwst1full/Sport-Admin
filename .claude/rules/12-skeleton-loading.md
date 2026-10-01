@@ -1,3 +1,9 @@
+---
+paths:
+  - "src/features/**"
+  - "src/foundation/**"
+---
+
 # Admin skeleton loading
 
 Applies to every screen that renders data from `src/generated/api`.

@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/**/*.tsx"
+---
+
 # Admin React hooks
 
 ## RULE-HOOK-01: Không `setState` trong thân `useEffect` (P0)

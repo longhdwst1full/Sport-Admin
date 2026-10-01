@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/features/**"
+---
+
 # Admin list and form patterns
 
 For list pages:

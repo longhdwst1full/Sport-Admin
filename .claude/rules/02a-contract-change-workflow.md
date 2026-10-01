@@ -1,3 +1,10 @@
+---
+paths:
+  - "contracts/**"
+  - "orval.config.ts"
+  - "src/generated/**"
+---
+
 # Admin contract change workflow
 
 The Admin app never invents an endpoint, a field or an enum value. Every HTTP shape traces to `api/` NestJS decorators.

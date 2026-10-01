@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/features/**"
+---
+
 # Admin feature anatomy
 
 Chuẩn hoá theo `admin-client` — nơi ~120 feature dùng đúng một khuôn.

@@ -1,3 +1,9 @@
+---
+paths:
+  - "src/app/**"
+  - "src/layouts/**"
+---
+
 # Admin routing and layouts
 
 - Declare routes in `src/app/router/app-routes.tsx` and lazy-load every business feature.

@@ -1,3 +1,9 @@
+---
+paths:
+  - "src/core/**"
+  - "src/lib/**"
+---
+
 # Admin core infrastructure
 
 `src/core` sở hữu policy xuyên feature: auth/session, storage, http.

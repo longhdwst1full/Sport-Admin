@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/**/*.tsx"
+---
+
 # Ant Design and Tailwind ownership
 
 - Use Ant Design for data tables, forms, modal/drawer interaction, notification, date input, selection and accessibility behavior.

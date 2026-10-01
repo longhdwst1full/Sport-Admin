@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/features/**"
+---
+
 # Admin feature maintenance notes
 
 > **Rule version:** 1.1.0

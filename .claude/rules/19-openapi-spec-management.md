@@ -1,3 +1,10 @@
+---
+paths:
+  - "contracts/**"
+  - "orval.config.ts"
+  - "src/generated/**"
+---
+
 # Admin OpenAPI spec management
 
 Bổ trợ `02a-contract-change-workflow.md`.

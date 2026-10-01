@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/shared/**"
+---
+
 # Admin shared module
 
 ## RULE-SHR-01: Cấu trúc (P0)

@@ -1,3 +1,12 @@
+---
+paths:
+  - "docs/**"
+  - "_docs/**"
+  - "_plans/**"
+  - "_features/**"
+  - "_prompts/**"
+---
+
 # Admin document versioning
 
 > **Rule version:** 2.2.0
