@@ -1,0 +1,53 @@
+import {
+  GoodsReceiptStatus,
+  PurchaseOrderApprovalLevel,
+  PurchaseOrderStatus,
+  SupplierReturnStatus,
+} from '@/generated/api/procurement/procurement.schemas';
+
+export type ProcurementAction =
+  | 'edit'
+  | 'submit'
+  | 'approve'
+  | 'approveFinance'
+  | 'post'
+  | 'ship'
+  | 'close'
+  | 'cancel';
+
+export interface PurchaseOrderActionInput {
+  status: string;
+  approvalLevel?: string | null;
+  /** Chỉ có ở detail; list không trả nên coi như chưa ai duyệt. */
+  approvals?: { approvedBy?: unknown | null };
+}
+
+/**
+ * Lifecycle chỉ quyết định affordance; API vẫn kiểm tra quyền, maker-checker, scope và version.
+ * SUBMITTED tách hai bước duyệt: PO cấp OWNER_FINANCE cần Owner duyệt trước rồi mới tới tài chính,
+ * nên không bao giờ hiện đồng thời hai nút — hiện cả hai sẽ dẫn tới 409 chắc chắn.
+ */
+export function purchaseOrderActions(input: PurchaseOrderActionInput | string): ProcurementAction[] {
+  const po = typeof input === 'string' ? { status: input } as PurchaseOrderActionInput : input;
+  if (po.status === PurchaseOrderStatus.DRAFT) return ['edit', 'submit', 'cancel'];
+  if (po.status === PurchaseOrderStatus.SUBMITTED) {
+    const needsFinance = po.approvalLevel === PurchaseOrderApprovalLevel.OWNER_FINANCE;
+    const ownerApproved = Boolean(po.approvals?.approvedBy);
+    return [needsFinance && ownerApproved ? 'approveFinance' : 'approve', 'cancel'];
+  }
+  if ([PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.PARTIALLY_RECEIVED, PurchaseOrderStatus.RECEIVED].includes(po.status as never)) {
+    return ['close', ...(po.status === PurchaseOrderStatus.APPROVED ? ['cancel' as const] : [])];
+  }
+  return [];
+}
+
+export function goodsReceiptActions(status: string): ProcurementAction[] {
+  return status === GoodsReceiptStatus.DRAFT ? ['edit', 'post', 'cancel'] : [];
+}
+
+export function supplierReturnActions(status: string): ProcurementAction[] {
+  if (status === SupplierReturnStatus.DRAFT) return ['edit', 'approve', 'cancel'];
+  if (status === SupplierReturnStatus.APPROVED) return ['ship', 'cancel'];
+  if (status === SupplierReturnStatus.SHIPPED) return ['close'];
+  return [];
+}

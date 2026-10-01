@@ -72,6 +72,14 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
     // để FE gửi kèm khoá theo từng lần bấm, vô hại nếu API bỏ qua.
     return { sendAdminChatMessage: withOptions, confirmAdminActionDraft: withOptions };
   }
+  if (domain === 'procurement') {
+    // IDEMPOTENCY: ba lệnh tạo chứng từ bắt buộc giữ một key ổn định trong suốt một lần submit.
+    return {
+      createPurchaseOrder: withOptions,
+      createGoodsReceipt: withOptions,
+      createSupplierReturn: withOptions,
+    };
+  }
   return {};
 }
 
@@ -118,4 +126,5 @@ export default defineConfig({
   shipping: createDomainConfig('shipping'),
   support: createDomainConfig('support'),
   assistant: createDomainConfig('assistant'),
+  procurement: createDomainConfig('procurement'),
 });

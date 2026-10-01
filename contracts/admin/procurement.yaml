@@ -1,0 +1,3270 @@
+# Generated from NestJS decorators. Do not edit by hand.
+openapi: 3.0.0
+info:
+  title: DCTD-UTC Commerce API
+  description: Contract for storefront and admin applications
+  version: 1.0.0
+  contact: {}
+servers:
+  - url: http://localhost:4000
+    description: Local
+paths:
+  /api/v1/admin/procurement/suppliers:
+    get:
+      operationId: listSuppliers
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+        - name: search
+          required: false
+          in: query
+          description: Tìm theo mã hoặc tên NCC (không phân biệt hoa thường).
+          schema:
+            maxLength: 100
+            type: string
+        - name: status
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SupplierStatus"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Danh sách nhà cung cấp, tìm theo mã/tên và lọc trạng thái
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    post:
+      description: Mã tự chuyển chữ hoa và bất biến sau khi tạo. 409 PROCUREMENT_SUPPLIER_CODE_DUPLICATE khi trùng mã.
+      operationId: createSupplier
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplierDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Tạo nhà cung cấp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - supplier.manage
+  /api/v1/admin/procurement/suppliers/{id}:
+    get:
+      operationId: getSupplier
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết nhà cung cấp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    patch:
+      description: PATCH từng phần; gửi null để xoá trường tuỳ chọn. Không đổi được mã/trạng thái. 409 PROCUREMENT_VERSION_STALE khi expectedVersion cũ.
+      operationId: updateSupplier
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSupplierDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Cập nhật thông tin nhà cung cấp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - supplier.manage
+  /api/v1/admin/procurement/suppliers/{id}/status:
+    post:
+      description: INACTIVE chỉ chặn chứng từ mới; chứng từ đang mở vẫn xử lý tiếp. Đặt lại đúng trạng thái hiện tại là no-op.
+      operationId: setSupplierStatus
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetSupplierStatusDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Ngừng hoặc mở lại giao dịch với nhà cung cấp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - supplier.manage
+  /api/v1/admin/procurement/purchase-orders:
+    get:
+      operationId: listPurchaseOrders
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+        - name: status
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/PurchaseOrderStatus"
+        - name: supplierId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Tìm theo một phần số PO.
+          schema:
+            maxLength: 40
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Danh sách PO trong phạm vi chi nhánh được gán
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    post:
+      description: Đơn giá chưa VAT. 409 PROCUREMENT_IDEMPOTENCY_CONFLICT khi key đã dùng với payload khác.
+      operationId: createPurchaseOrder
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: 8–150 ký tự; cùng key + cùng payload trả lại PO đã tạo.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePurchaseOrderDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Tạo PO nháp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.create
+  /api/v1/admin/procurement/purchase-orders/{id}:
+    get:
+      description: 404 PROCUREMENT_NOT_FOUND khi PO ngoài phạm vi.
+      operationId: getPurchaseOrder
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết PO
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    put:
+      description: Chỉ khi DRAFT; bắt buộc expectedVersion.
+      operationId: updatePurchaseOrder
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePurchaseOrderDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Thay toàn bộ nội dung PO nháp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.create
+  /api/v1/admin/procurement/purchase-orders/{id}/submit:
+    post:
+      description: Chốt approvalLevel theo subtotal chưa VAT so với ngưỡng Owner/Finance trong tham số hệ thống.
+      operationId: submitPurchaseOrder
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Nộp PO để duyệt
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.create
+  /api/v1/admin/procurement/purchase-orders/{id}/approve:
+    post:
+      description: 403 PROCUREMENT_MAKER_CHECKER khi người tạo tự duyệt; 403 PROCUREMENT_APPROVAL_LEVEL_REQUIRED khi cấp OWNER/OWNER_FINANCE mà không có phạm vi GLOBAL. Cấp OWNER_FINANCE giữ SUBMITTED chờ duyệt tài chính.
+      operationId: approvePurchaseOrder
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Duyệt PO (cấp Branch Manager hoặc Owner)
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.approve
+  /api/v1/admin/procurement/purchase-orders/{id}/approve-finance:
+    post:
+      description: 409 PROCUREMENT_FINANCE_APPROVAL_REQUIRED khi chưa có duyệt Owner; 403 cùng mã khi người duyệt trùng người tạo hoặc người duyệt Owner.
+      operationId: approvePurchaseOrderFinance
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Duyệt tài chính PO cấp OWNER_FINANCE
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.approve.finance
+  /api/v1/admin/procurement/purchase-orders/{id}/cancel:
+    post:
+      description: 400 PROCUREMENT_CANCEL_REASON_REQUIRED khi thiếu lý do; 409 PROCUREMENT_INVALID_STATUS khi đã có phiếu nhập POSTED.
+      operationId: cancelPurchaseOrder
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelPurchaseOrderDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Huỷ PO DRAFT/SUBMITTED/APPROVED
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.create
+  /api/v1/admin/procurement/purchase-orders/{id}/close:
+    post:
+      description: Cho phép từ APPROVED, PARTIALLY_RECEIVED, RECEIVED.
+      operationId: closePurchaseOrder
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Đóng PO, dừng nhận hàng tiếp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.approve
+  /api/v1/admin/procurement/goods-receipts:
+    get:
+      operationId: listGoodsReceipts
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 25
+            type: number
+        - name: search
+          required: false
+          in: query
+          description: Tìm theo số phiếu hoặc số hoá đơn NCC.
+          schema:
+            maxLength: 64
+            type: string
+        - name: status
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/GoodsReceiptStatus"
+        - name: receiptType
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/GoodsReceiptType"
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+        - name: supplierId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+        - name: purchaseOrderId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoodsReceiptListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Danh sách phiếu nhập trong phạm vi chi nhánh được giao
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    post:
+      description: "WITH_PO: PO phải APPROVED/PARTIALLY_RECEIVED (409 PROCUREMENT_PO_NOT_RECEIVABLE); NCC/kho lấy từ PO; dòng lạ trả 400 PROCUREMENT_PO_ITEM_MISMATCH. DIRECT_RECEIPT: bắt buộc supplierId, warehouseId, reasonCode (400 PROCUREMENT_DIRECT_REASON_REQUIRED) và đơn giá. Chưa ghi tồn kho."
+      operationId: createGoodsReceipt
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: 8–150 ký tự; cùng key khác nội dung trả 409.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGoodsReceiptDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoodsReceiptDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Tạo phiếu nhập nháp (WITH_PO hoặc DIRECT_RECEIPT)
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.receipt.create
+  /api/v1/admin/procurement/goods-receipts/{id}:
+    get:
+      operationId: getGoodsReceipt
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoodsReceiptDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết phiếu nhập kèm phân bổ chi phí và tổng tiền
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    put:
+      description: Chỉ khi DRAFT (409 PROCUREMENT_INVALID_STATUS); expectedVersion lệch trả 409 PROCUREMENT_VERSION_STALE.
+      operationId: updateGoodsReceipt
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGoodsReceiptDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoodsReceiptDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Sửa phiếu nhập nháp (thay toàn bộ dòng hàng và chi phí)
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.receipt.create
+  /api/v1/admin/procurement/goods-receipts/{id}/post:
+    post:
+      description: Không thể hoàn tác (không un-post). Vượt dung sai PO trả 409 PROCUREMENT_OVER_RECEIPT với details theo SKU. Phiếu đã POSTED trả lại trạng thái hiện tại.
+      operationId: postGoodsReceipt
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoodsReceiptTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoodsReceiptDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Ghi sổ phiếu nhập: cộng tồn, cập nhật giá vốn bình quân và số đã nhận của PO"
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.receipt.post
+  /api/v1/admin/procurement/goods-receipts/{id}/cancel:
+    post:
+      description: Chỉ khi DRAFT; phiếu đã POSTED trả 409 PROCUREMENT_INVALID_STATUS. Không phát sinh movement.
+      operationId: cancelGoodsReceipt
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelGoodsReceiptDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoodsReceiptDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Huỷ phiếu nhập nháp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.receipt.create
+  /api/v1/admin/procurement/supplier-returns:
+    get:
+      operationId: listSupplierReturns
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 25
+            type: number
+        - name: search
+          required: false
+          in: query
+          description: Tìm theo mã phiếu trả.
+          schema:
+            maxLength: 40
+            type: string
+        - name: status
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SupplierReturnStatus"
+        - name: supplierId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+        - name: warehouseId
+          required: false
+          in: query
+          schema:
+            pattern: ^[1-9][0-9]*$
+            example: "1"
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Danh sách phiếu trả NCC trong phạm vi chi nhánh
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    post:
+      description: "Có goodsReceiptId: phiếu nhập phải POSTED, cùng NCC/kho; số trả mỗi SKU ≤ số nhập − phần đã nằm trên phiếu trả chưa huỷ (409 PROCUREMENT_RETURN_EXCEEDS_RECEIPT). 409 PROCUREMENT_IDEMPOTENCY_CONFLICT khi key đã dùng với payload khác."
+      operationId: createSupplierReturn
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: 8–150 ký tự; cùng key cùng payload trả lại phiếu cũ.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplierReturnDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Tạo phiếu trả NCC nháp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.return.manage
+  /api/v1/admin/procurement/supplier-returns/{id}:
+    get:
+      description: costVariance = (invoiceUnitCost − issuedUnitCost) × quantity, chỉ có khi đã SHIPPED và có giá hoá đơn.
+      operationId: getSupplierReturn
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnDetailDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết phiếu trả NCC
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.order.view
+    patch:
+      description: Chỉ khi DRAFT. 409 PROCUREMENT_VERSION_STALE khi expectedVersion lệch.
+      operationId: updateSupplierReturn
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSupplierReturnDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Sửa phiếu trả NCC nháp
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.return.manage
+  /api/v1/admin/procurement/supplier-returns/{id}/approve:
+    post:
+      description: DRAFT → APPROVED. 403 PROCUREMENT_MAKER_CHECKER khi người duyệt là người tạo.
+      operationId: approveSupplierReturn
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierReturnTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Duyệt phiếu trả NCC
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.return.manage
+  /api/v1/admin/procurement/supplier-returns/{id}/ship:
+    post:
+      description: APPROVED → SHIPPED; ghi movement SUPPLIER_RETURN tại WAC hiện tại (không hoàn tác). 409 PROCUREMENT_RETURN_EXCEEDS_ON_HAND / PROCUREMENT_RETURN_BELOW_RESERVED khi tồn không đủ hoặc chạm phần đang giữ cho đơn.
+      operationId: shipSupplierReturn
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierReturnTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xuất hàng trả NCC và ghi sổ kho
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.return.manage
+  /api/v1/admin/procurement/supplier-returns/{id}/close:
+    post:
+      description: SHIPPED → CLOSED. Không phát sinh movement.
+      operationId: closeSupplierReturn
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierReturnTransitionDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Đóng phiếu trả NCC sau khi NCC xác nhận nhận hàng/ghi có
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.return.manage
+  /api/v1/admin/procurement/supplier-returns/{id}/cancel:
+    post:
+      description: DRAFT/APPROVED → CANCELLED; bắt buộc lý do. Phiếu đã SHIPPED trả 409 PROCUREMENT_INVALID_STATUS.
+      operationId: cancelSupplierReturn
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelSupplierReturnDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierReturnDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Huỷ phiếu trả NCC chưa xuất
+      tags:
+        - Admin Procurement
+      x-required-permissions:
+        - purchase.return.manage
+components:
+  schemas:
+    CancelGoodsReceiptDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+      required:
+        - expectedVersion
+        - reason
+    CancelPurchaseOrderDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        reason:
+          type: string
+          maxLength: 1000
+          description: Lý do huỷ; bắt buộc, không được rỗng.
+      required:
+        - expectedVersion
+        - reason
+    CancelSupplierReturnDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+      required:
+        - expectedVersion
+        - reason
+    CreateGoodsReceiptDto:
+      type: object
+      properties:
+        reasonCode:
+          description: Bắt buộc với DIRECT_RECEIPT; bỏ trống với WITH_PO.
+          allOf:
+            - $ref: "#/components/schemas/DirectReceiptReason"
+        supplierInvoiceNo:
+          type: string
+          maxLength: 64
+        note:
+          type: string
+          maxLength: 2000
+        costAllocation:
+          default: VALUE
+          description: VALUE chia theo (số lượng × đơn giá); QUANTITY chia theo số lượng.
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptCostAllocation"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoodsReceiptItemInputDto"
+        costs:
+          default: []
+          type: array
+          items:
+            $ref: "#/components/schemas/GoodsReceiptCostInputDto"
+        receiptType:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptType"
+        purchaseOrderId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Bắt buộc với WITH_PO; NCC và kho lấy từ PO.
+        supplierId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Bắt buộc với DIRECT_RECEIPT (NCC đang ACTIVE).
+        warehouseId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Bắt buộc với DIRECT_RECEIPT; phải thuộc phạm vi chi nhánh.
+      required:
+        - items
+        - receiptType
+    CreatePurchaseOrderDto:
+      type: object
+      properties:
+        supplierId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Nhà cung cấp đang ACTIVE.
+        warehouseId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Kho nhận hàng đang ACTIVE, trong phạm vi chi nhánh của tài khoản.
+        items:
+          maxItems: 200
+          description: Ít nhất một dòng; mỗi SKU chỉ một dòng. Thứ tự gửi lên là thứ tự dòng (lineNo).
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderItemInputDto"
+        expectedAt:
+          type: string
+          format: date
+          nullable: true
+          example: 2026-10-15
+          description: Ngày dự kiến nhận hàng.
+        note:
+          type: string
+          maxLength: 2000
+          nullable: true
+      required:
+        - supplierId
+        - warehouseId
+        - items
+    CreateSupplierDto:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          pattern: ^[A-Z0-9][A-Z0-9_-]*$
+          example: NCC-SAMSUNG
+          description: Mã NCC, tự chuyển về chữ hoa; duy nhất toàn hệ thống và không sửa được sau khi tạo.
+        name:
+          type: string
+          maxLength: 255
+        taxCode:
+          type: string
+          maxLength: 32
+        phone:
+          type: string
+          maxLength: 32
+        email:
+          type: string
+          maxLength: 255
+          format: email
+        contactName:
+          type: string
+          maxLength: 255
+        address:
+          $ref: "#/components/schemas/SupplierAddressDto"
+        note:
+          type: string
+          maxLength: 2000
+      required:
+        - code
+        - name
+    CreateSupplierReturnDto:
+      type: object
+      properties:
+        supplierId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        warehouseId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        goodsReceiptId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Phiếu nhập gốc (POSTED, cùng NCC và kho). Khi có, số trả mỗi SKU không vượt phần còn lại của dòng nhập.
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierReturnItemInputDto"
+      required:
+        - supplierId
+        - warehouseId
+        - reason
+        - items
+    DirectReceiptReason:
+      type: string
+      enum:
+        - SPOT_PURCHASE
+        - URGENT_PURCHASE
+        - WARRANTY_REPLACEMENT
+        - SUPPLIER_GIFT
+        - OTHER
+    GoodsReceiptCostAllocation:
+      type: string
+      enum:
+        - VALUE
+        - QUANTITY
+    GoodsReceiptCostDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        costType:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptCostType"
+        amount:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+        note:
+          type: string
+          nullable: true
+      required:
+        - id
+        - costType
+        - amount
+    GoodsReceiptCostInputDto:
+      type: object
+      properties:
+        costType:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptCostType"
+        amount:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+          description: Số tiền > 0.
+        note:
+          type: string
+          maxLength: 500
+      required:
+        - costType
+        - amount
+    GoodsReceiptCostType:
+      type: string
+      enum:
+        - FREIGHT
+        - HANDLING
+        - DUTY
+        - OTHER
+    GoodsReceiptDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        receiptNo:
+          type: string
+        receiptType:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptType"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptStatus"
+        supplier:
+          $ref: "#/components/schemas/GoodsReceiptPartyDto"
+        warehouse:
+          $ref: "#/components/schemas/GoodsReceiptPartyDto"
+        purchaseOrder:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptPurchaseOrderRefDto"
+        reasonCode:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/DirectReceiptReason"
+        supplierInvoiceNo:
+          type: string
+          nullable: true
+        costAllocation:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptCostAllocation"
+        totals:
+          $ref: "#/components/schemas/GoodsReceiptTotalsDto"
+        itemCount:
+          type: number
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdAt:
+          type: string
+          format: date-time
+        postedAt:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        createdByDisplayName:
+          type: string
+        postedByDisplayName:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoodsReceiptItemDto"
+        costs:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoodsReceiptCostDto"
+      required:
+        - id
+        - receiptNo
+        - receiptType
+        - status
+        - supplier
+        - warehouse
+        - costAllocation
+        - totals
+        - itemCount
+        - version
+        - createdAt
+        - createdByDisplayName
+        - updatedAt
+        - items
+        - costs
+    GoodsReceiptItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sku:
+          type: string
+        variantName:
+          type: string
+        purchaseOrderItemId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        orderedQuantity:
+          type: number
+          nullable: true
+          description: Số đặt trên dòng PO (WITH_PO).
+        receivedQuantity:
+          type: number
+          nullable: true
+          description: Số đã nhận luỹ kế trên dòng PO (WITH_PO).
+        quantity:
+          type: number
+        unitCost:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+        allocatedCost:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+          description: Chi phí nhập phân bổ vào dòng; 0 cho tới khi post.
+        landedUnitCost:
+          type: string
+          example: "1250000.0000"
+          description: Giá vốn đơn vị sau phân bổ; null khi chưa post.
+          nullable: true
+        lineValue:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+          description: quantity × unitCost.
+      required:
+        - id
+        - productVariantId
+        - sku
+        - variantName
+        - quantity
+        - unitCost
+        - allocatedCost
+        - lineValue
+    GoodsReceiptItemInputDto:
+      type: object
+      properties:
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        quantity:
+          type: number
+          minimum: 1
+          maximum: 1000000
+        unitCost:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+          description: Đơn giá nhập chưa gồm chi phí phân bổ. Bỏ trống với WITH_PO để lấy đơn giá dòng PO; bắt buộc với DIRECT_RECEIPT.
+        purchaseOrderItemId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Dòng PO tương ứng (WITH_PO). Bỏ trống thì khớp theo SKU.
+      required:
+        - productVariantId
+        - quantity
+    GoodsReceiptListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoodsReceiptSummaryDto"
+        total:
+          type: number
+        page:
+          type: number
+        limit:
+          type: number
+      required:
+        - items
+        - total
+        - page
+        - limit
+    GoodsReceiptPartyDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - code
+        - name
+    GoodsReceiptPurchaseOrderRefDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        poNo:
+          type: string
+      required:
+        - id
+        - poNo
+    GoodsReceiptStatus:
+      type: string
+      enum:
+        - DRAFT
+        - POSTED
+        - CANCELLED
+    GoodsReceiptSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        receiptNo:
+          type: string
+        receiptType:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptType"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptStatus"
+        supplier:
+          $ref: "#/components/schemas/GoodsReceiptPartyDto"
+        warehouse:
+          $ref: "#/components/schemas/GoodsReceiptPartyDto"
+        purchaseOrder:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptPurchaseOrderRefDto"
+        reasonCode:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/DirectReceiptReason"
+        supplierInvoiceNo:
+          type: string
+          nullable: true
+        costAllocation:
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptCostAllocation"
+        totals:
+          $ref: "#/components/schemas/GoodsReceiptTotalsDto"
+        itemCount:
+          type: number
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdAt:
+          type: string
+          format: date-time
+        postedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - receiptNo
+        - receiptType
+        - status
+        - supplier
+        - warehouse
+        - costAllocation
+        - totals
+        - itemCount
+        - version
+        - createdAt
+    GoodsReceiptTotalsDto:
+      type: object
+      properties:
+        goodsValue:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+          description: Σ quantity × unitCost.
+        costsTotal:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+          description: Σ chi phí nhập.
+        landedTotal:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "1200000.00"
+          description: goodsValue + costsTotal.
+      required:
+        - goodsValue
+        - costsTotal
+        - landedTotal
+    GoodsReceiptTransitionDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+      required:
+        - expectedVersion
+    GoodsReceiptType:
+      type: string
+      enum:
+        - WITH_PO
+        - DIRECT_RECEIPT
+    PurchaseOrderApprovalLevel:
+      type: string
+      enum:
+        - BRANCH_MANAGER
+        - OWNER
+        - OWNER_FINANCE
+      description: Chốt khi nộp duyệt, theo subtotal chưa VAT.
+    PurchaseOrderApprovalsDto:
+      type: object
+      properties:
+        approvedBy:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/PurchaseOrderUserDto"
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        financeApprovedBy:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/PurchaseOrderUserDto"
+        financeApprovedAt:
+          type: string
+          format: date-time
+          nullable: true
+    PurchaseOrderDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        poNo:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/PurchaseOrderStatus"
+        supplier:
+          $ref: "#/components/schemas/PurchaseOrderPartyDto"
+        warehouse:
+          $ref: "#/components/schemas/PurchaseOrderPartyDto"
+        approvalLevel:
+          nullable: true
+          description: Chốt khi nộp duyệt, theo subtotal chưa VAT.
+          allOf:
+            - $ref: "#/components/schemas/PurchaseOrderApprovalLevel"
+        currencyCode:
+          type: string
+          example: VND
+        subtotal:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+          description: Tổng chưa VAT.
+        taxTotal:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+        grandTotal:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+        expectedAt:
+          type: string
+          format: date
+          nullable: true
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdBy:
+          $ref: "#/components/schemas/PurchaseOrderUserDto"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        note:
+          type: string
+          nullable: true
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        approvals:
+          $ref: "#/components/schemas/PurchaseOrderApprovalsDto"
+        cancelledBy:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/PurchaseOrderUserDto"
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelReason:
+          type: string
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderItemDto"
+      required:
+        - id
+        - poNo
+        - status
+        - supplier
+        - warehouse
+        - currencyCode
+        - subtotal
+        - taxTotal
+        - grandTotal
+        - version
+        - createdBy
+        - createdAt
+        - updatedAt
+        - approvals
+        - items
+    PurchaseOrderItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        lineNo:
+          type: number
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sku:
+          type: string
+        variantName:
+          type: string
+        productName:
+          type: string
+        orderedQty:
+          type: number
+        receivedQty:
+          type: number
+          description: Số đã nhận qua phiếu nhập đã POST.
+        remainingQty:
+          type: number
+          description: max(orderedQty − receivedQty, 0).
+        unitCost:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+        taxRate:
+          type: string
+          example: "10.00"
+        lineTotal:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+          description: orderedQty × unitCost, chưa VAT.
+      required:
+        - id
+        - lineNo
+        - productVariantId
+        - sku
+        - variantName
+        - productName
+        - orderedQty
+        - receivedQty
+        - remainingQty
+        - unitCost
+        - taxRate
+        - lineTotal
+    PurchaseOrderItemInputDto:
+      type: object
+      properties:
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Product variant ID; sản phẩm phải là loại STANDARD.
+        orderedQty:
+          type: number
+          minimum: 1
+          maximum: 100000
+        unitCost:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+          description: Đơn giá mua CHƯA VAT (VND), ≥ 0.
+        taxRate:
+          type: string
+          pattern: ^\d{1,3}(\.\d{1,2})?$
+          example: "10"
+          description: Thuế suất VAT đầu vào 0..100 (%).
+      required:
+        - productVariantId
+        - orderedQty
+        - unitCost
+        - taxRate
+    PurchaseOrderListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderSummaryDto"
+        meta:
+          $ref: ./_components.yaml#/components/schemas/PageMetaDto
+      required:
+        - items
+        - meta
+    PurchaseOrderPartyDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - code
+        - name
+    PurchaseOrderStatus:
+      type: string
+      enum:
+        - DRAFT
+        - SUBMITTED
+        - APPROVED
+        - PARTIALLY_RECEIVED
+        - RECEIVED
+        - CLOSED
+        - CANCELLED
+    PurchaseOrderSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        poNo:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/PurchaseOrderStatus"
+        supplier:
+          $ref: "#/components/schemas/PurchaseOrderPartyDto"
+        warehouse:
+          $ref: "#/components/schemas/PurchaseOrderPartyDto"
+        approvalLevel:
+          nullable: true
+          description: Chốt khi nộp duyệt, theo subtotal chưa VAT.
+          allOf:
+            - $ref: "#/components/schemas/PurchaseOrderApprovalLevel"
+        currencyCode:
+          type: string
+          example: VND
+        subtotal:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+          description: Tổng chưa VAT.
+        taxTotal:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+        grandTotal:
+          type: string
+          pattern: ^\d+(\.\d{1,2})?$
+          example: "1250000.00"
+        expectedAt:
+          type: string
+          format: date
+          nullable: true
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdBy:
+          $ref: "#/components/schemas/PurchaseOrderUserDto"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - poNo
+        - status
+        - supplier
+        - warehouse
+        - currencyCode
+        - subtotal
+        - taxTotal
+        - grandTotal
+        - version
+        - createdBy
+        - createdAt
+        - updatedAt
+    PurchaseOrderTransitionDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+      required:
+        - expectedVersion
+    PurchaseOrderUserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        displayName:
+          type: string
+      required:
+        - id
+        - displayName
+    SetSupplierStatusDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        status:
+          allOf:
+            - $ref: "#/components/schemas/SupplierStatus"
+        reason:
+          type: string
+          maxLength: 500
+          description: Lý do đổi trạng thái; ghi vào audit.
+      required:
+        - expectedVersion
+        - status
+    SupplierAddressDto:
+      type: object
+      properties:
+        addressLine:
+          type: string
+          maxLength: 255
+          nullable: true
+        ward:
+          type: string
+          maxLength: 120
+          nullable: true
+        district:
+          type: string
+          maxLength: 120
+          nullable: true
+        province:
+          type: string
+          maxLength: 120
+          nullable: true
+    SupplierAddressResponseDto:
+      type: object
+      properties:
+        addressLine:
+          type: string
+          nullable: true
+        ward:
+          type: string
+          nullable: true
+        district:
+          type: string
+          nullable: true
+        province:
+          type: string
+          nullable: true
+    SupplierDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+        name:
+          type: string
+        taxCode:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        contactName:
+          type: string
+          nullable: true
+        address:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/SupplierAddressResponseDto"
+        note:
+          type: string
+          nullable: true
+        status:
+          allOf:
+            - $ref: "#/components/schemas/SupplierStatus"
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdByDisplayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - code
+        - name
+        - taxCode
+        - phone
+        - email
+        - contactName
+        - address
+        - note
+        - status
+        - version
+        - createdByDisplayName
+        - createdAt
+        - updatedAt
+    SupplierListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierDto"
+        meta:
+          $ref: ./_components.yaml#/components/schemas/PageMetaDto
+      required:
+        - items
+        - meta
+    SupplierReturnDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        returnNo:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/SupplierReturnStatus"
+        supplier:
+          $ref: "#/components/schemas/SupplierReturnSupplierRefDto"
+        warehouse:
+          $ref: "#/components/schemas/SupplierReturnWarehouseRefDto"
+        goodsReceipt:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/SupplierReturnGoodsReceiptRefDto"
+        reason:
+          type: string
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdByDisplayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        shippedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelReason:
+          type: string
+          nullable: true
+        approvedByDisplayName:
+          type: string
+          nullable: true
+        shippedByDisplayName:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierReturnItemDto"
+      required:
+        - id
+        - returnNo
+        - status
+        - supplier
+        - warehouse
+        - goodsReceipt
+        - reason
+        - version
+        - createdByDisplayName
+        - createdAt
+        - approvedAt
+        - shippedAt
+        - closedAt
+        - cancelledAt
+        - cancelReason
+        - approvedByDisplayName
+        - shippedByDisplayName
+        - items
+    SupplierReturnGoodsReceiptRefDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        receiptNo:
+          type: string
+      required:
+        - id
+        - receiptNo
+    SupplierReturnItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        sku:
+          type: string
+        variantName:
+          type: string
+        productName:
+          type: string
+        quantity:
+          type: number
+        invoiceUnitCost:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "125000.00"
+          nullable: true
+          description: Đơn giá hoá đơn NCC; null khi không nhập.
+        issuedUnitCost:
+          type: string
+          nullable: true
+          example: "118500.0000"
+          description: WAC tại thời điểm xuất (4 chữ số lẻ); null cho tới khi SHIPPED.
+        costVariance:
+          type: string
+          pattern: ^-?\d{1,17}(\.\d{1,2})?$
+          example: "125000.00"
+          nullable: true
+          description: (invoiceUnitCost − issuedUnitCost) × quantity, làm tròn 2 chữ số; null khi thiếu một trong hai giá. Có thể âm.
+      required:
+        - id
+        - productVariantId
+        - sku
+        - variantName
+        - productName
+        - quantity
+        - invoiceUnitCost
+        - issuedUnitCost
+        - costVariance
+    SupplierReturnItemInputDto:
+      type: object
+      properties:
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        quantity:
+          type: number
+          minimum: 1
+          maximum: 1000000
+        invoiceUnitCost:
+          type: string
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          example: "125000.00"
+          description: Đơn giá theo hoá đơn NCC (VND, chưa VAT). Chỉ để đối chiếu; hàng luôn xuất theo WAC.
+      required:
+        - productVariantId
+        - quantity
+    SupplierReturnListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierReturnSummaryDto"
+        total:
+          type: number
+        page:
+          type: number
+        limit:
+          type: number
+      required:
+        - items
+        - total
+        - page
+        - limit
+    SupplierReturnStatus:
+      type: string
+      enum:
+        - DRAFT
+        - APPROVED
+        - SHIPPED
+        - CLOSED
+        - CANCELLED
+    SupplierReturnSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        returnNo:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/SupplierReturnStatus"
+        supplier:
+          $ref: "#/components/schemas/SupplierReturnSupplierRefDto"
+        warehouse:
+          $ref: "#/components/schemas/SupplierReturnWarehouseRefDto"
+        goodsReceipt:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/SupplierReturnGoodsReceiptRefDto"
+        reason:
+          type: string
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdByDisplayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        shippedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelReason:
+          type: string
+          nullable: true
+      required:
+        - id
+        - returnNo
+        - status
+        - supplier
+        - warehouse
+        - goodsReceipt
+        - reason
+        - version
+        - createdByDisplayName
+        - createdAt
+        - approvedAt
+        - shippedAt
+        - closedAt
+        - cancelledAt
+        - cancelReason
+    SupplierReturnSupplierRefDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - code
+        - name
+    SupplierReturnTransitionDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+      required:
+        - expectedVersion
+    SupplierReturnWarehouseRefDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - code
+        - name
+    SupplierStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+    UpdateGoodsReceiptDto:
+      type: object
+      properties:
+        reasonCode:
+          description: Bắt buộc với DIRECT_RECEIPT; bỏ trống với WITH_PO.
+          allOf:
+            - $ref: "#/components/schemas/DirectReceiptReason"
+        supplierInvoiceNo:
+          type: string
+          maxLength: 64
+        note:
+          type: string
+          maxLength: 2000
+        costAllocation:
+          default: VALUE
+          description: VALUE chia theo (số lượng × đơn giá); QUANTITY chia theo số lượng.
+          allOf:
+            - $ref: "#/components/schemas/GoodsReceiptCostAllocation"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoodsReceiptItemInputDto"
+        costs:
+          default: []
+          type: array
+          items:
+            $ref: "#/components/schemas/GoodsReceiptCostInputDto"
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+      required:
+        - items
+        - expectedVersion
+    UpdatePurchaseOrderDto:
+      type: object
+      properties:
+        supplierId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Nhà cung cấp đang ACTIVE.
+        warehouseId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Kho nhận hàng đang ACTIVE, trong phạm vi chi nhánh của tài khoản.
+        items:
+          maxItems: 200
+          description: Ít nhất một dòng; mỗi SKU chỉ một dòng. Thứ tự gửi lên là thứ tự dòng (lineNo).
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderItemInputDto"
+        expectedAt:
+          type: string
+          format: date
+          nullable: true
+          example: 2026-10-15
+          description: Ngày dự kiến nhận hàng.
+        note:
+          type: string
+          maxLength: 2000
+          nullable: true
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+      required:
+        - supplierId
+        - warehouseId
+        - items
+        - expectedVersion
+    UpdateSupplierDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        name:
+          type: string
+          maxLength: 255
+        taxCode:
+          type: string
+          maxLength: 32
+          nullable: true
+        phone:
+          type: string
+          maxLength: 32
+          nullable: true
+        email:
+          type: string
+          maxLength: 255
+          format: email
+          nullable: true
+        contactName:
+          type: string
+          maxLength: 255
+          nullable: true
+        address:
+          nullable: true
+          description: Gửi object để thay toàn bộ địa chỉ; gửi null để xoá.
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/SupplierAddressDto"
+        note:
+          type: string
+          maxLength: 2000
+          nullable: true
+      required:
+        - expectedVersion
+    UpdateSupplierReturnDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+        items:
+          description: Thay toàn bộ danh sách dòng.
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierReturnItemInputDto"
+      required:
+        - expectedVersion
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http

@@ -1,10 +1,10 @@
 # Admin features — maintenance guide
 
-> **Document version:** 1.3.0
+> **Document version:** 1.4.0
 >
-> **Last updated:** 2026-09-29
+> **Last updated:** 2026-09-30
 >
-> **Change summary:** Thêm feature `assistant-copilot` (drawer Trợ lý Copilot, nối SDK assistant).
+> **Change summary:** Thêm feature `procurement` cho toàn bộ luồng nhà cung cấp, PO, nhập kho và trả nhà cung cấp.
 
 ## Luồng phụ thuộc chuẩn
 
@@ -33,6 +33,7 @@ app route/navigation
 | `catalog-masters` | Brand/category CRUD lifecycle | Dropdown tạo sản phẩm dùng active-search API, không dùng list quản trị. |
 | `products` | Product, variant, price, media, combo | Là feature lớn; mapper/policy tách riêng và editor/media giữ lazy boundary. |
 | `inventory` | Balance, movement, adjustment, transfer | Không sửa balance trực tiếp; UI gửi command và idempotency key. |
+| `procurement` | Nhà cung cấp, PO, phiếu nhập và trả NCC | Lifecycle riêng, maker-checker, expectedVersion và Idempotency-Key; xem README trong feature. |
 | `returns` | Đổi trả: hàng đợi, duyệt, nhận & kiểm, hoàn tiền có chứng từ, tạo phiếu hộ từ chi tiết đơn | Lệnh là action có Idempotency-Key + expectedVersion; ảnh tải bằng chữ ký API. Xem README trong feature. |
 | `shipping-consultations` | Nhân viên chốt phí/ETA giao riêng | Đây là Checkout consultation, chưa phải Order CRUD. Xem README trong feature. |
 | `support` | Hàng đợi hỗ trợ: giao việc, trả lời/ghi chú nội bộ, giải quyết, đóng ticket | Lệnh có Idempotency-Key + expectedVersion (chuỗi bigint); 409 xử lý theo mã `SUPPORT_*`. Xem README trong feature. |
@@ -71,6 +72,7 @@ Không comment lại JSX như “render button”, “set loading”. Tên compo
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.4.0 | 2026-09-30 | Ghép Admin Procurement với generated SDK và route/menu phân quyền. | V2 Procurement Core |
 | 1.3.0 | 2026-09-29 | Thêm `assistant-copilot`. | feat/assistant-v1 |
 | 1.2.0 | 2026-09-29 | Thêm `support` và `assistant-knowledge`. | feat/assistant-v1 |
 | 1.1.0 | 2026-09-24 | Thêm feature `returns`. | API-20260924-RETURN-EVIDENCE-IMAGES |

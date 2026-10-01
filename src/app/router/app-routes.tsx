@@ -43,6 +43,9 @@ const InventoryPage = lazy(() =>
     default: module.InventoryPage,
   })),
 );
+const ProcurementPage = lazy(() =>
+  import('@/features/procurement').then((module) => ({ default: module.ProcurementPage })),
+);
 const ContentPage = lazy(() =>
   import('@/features/content').then((module) => ({
     default: module.ContentPage,
@@ -185,6 +188,14 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="inventory.stock.view">
               <InventoryPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="procurement"
+          element={
+            <PermissionRoute permission="purchase.order.view">
+              <ProcurementPage />
             </PermissionRoute>
           }
         />

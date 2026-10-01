@@ -112,6 +112,12 @@ export const NAVIGATION_ITEMS_DATA: NavigationItemData[] = [
     permission: 'inventory.stock.view',
   },
   {
+    path: '/procurement',
+    label: 'Nhập hàng & NCC',
+    group: 'operations',
+    permission: 'purchase.order.view',
+  },
+  {
     path: '/reviews',
     label: 'Đánh giá',
     group: 'experience',

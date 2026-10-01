@@ -1668,6 +1668,7 @@ components:
         - SALE_SHIP
         - DELIVERY_RETURN_RESTOCK
         - RETURN_RESTOCK
+        - SUPPLIER_RETURN
     ReceiveStockTransferDto:
       type: object
       properties:

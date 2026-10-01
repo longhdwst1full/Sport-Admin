@@ -18,6 +18,7 @@ const movementLabels: Record<InventoryMovementType, { label: string; color: stri
   SALE_SHIP: { label: 'Xuất bán', color: 'purple' },
   DELIVERY_RETURN_RESTOCK: { label: 'Nhập lại hàng giao thất bại', color: 'gold' },
   RETURN_RESTOCK: { label: 'Nhập lại hàng khách trả', color: 'cyan' },
+  SUPPLIER_RETURN: { label: 'Xuất trả nhà cung cấp', color: 'magenta' },
 };
 
 export function InventoryMovementPanel() {

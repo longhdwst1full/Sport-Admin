@@ -15,6 +15,7 @@ const groupLabels: Record<SystemParameterGroup, string> = {
   PROMOTION: 'Khuyến mãi',
   INTEGRATION: 'Tích hợp',
   ASSISTANT: 'Trợ lý AI',
+  PROCUREMENT: 'Mua hàng & nhập kho',
 };
 
 export const parameterGroupLabels: Record<string, string> = groupLabels;

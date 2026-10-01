@@ -537,6 +537,7 @@ components:
         - PAYMENT
         - CART
         - PROMOTION
+        - PROCUREMENT
         - INTEGRATION
         - ASSISTANT
     SystemParameterListDto:

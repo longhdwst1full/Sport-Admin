@@ -25,6 +25,7 @@ const domains = [
   'shipping',
   'support',
   'assistant',
+  'procurement',
 ];
 const defaultBaseUrl =
   'https://raw.githubusercontent.com/longhdwst1full/dctd-utc/main/document/api/admin';
