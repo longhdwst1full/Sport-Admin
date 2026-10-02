@@ -36,4 +36,5 @@ export const mediaUsageLabels: Record<MediaUsageType, string> = {
   CUSTOMER_AVATAR: 'Ảnh đại diện khách',
   PAYMENT_EVIDENCE: 'Bằng chứng thanh toán',
   PRODUCT_REVIEW: 'Đánh giá sản phẩm',
+  BANNER: 'Banner',
 };
