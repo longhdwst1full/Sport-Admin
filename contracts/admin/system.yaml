@@ -540,6 +540,7 @@ components:
         - PROCUREMENT
         - INTEGRATION
         - ASSISTANT
+        - NOTIFICATION
     SystemParameterListDto:
       type: object
       properties:

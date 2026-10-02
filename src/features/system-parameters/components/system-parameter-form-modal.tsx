@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Alert, Form, Input, InputNumber, Modal, Select, Switch, Typography } from 'antd';
 import type { SystemParameterDto } from '@/generated/api/system/system.schemas';
 import {
+  EMPTY_ALLOWED_PARAMETER_GROUPS,
   parameterGroupLabels,
   parameterValueTypeLabels,
 } from '../constants/system-parameter.constants';
@@ -43,6 +44,7 @@ export function SystemParameterFormModal({
   const [form] = Form.useForm<ParameterFormValues>();
   const isEdit = Boolean(editing);
   const isSystem = editing?.isSystem ?? false;
+  const allowEmptyValue = EMPTY_ALLOWED_PARAMETER_GROUPS.includes(editing?.groupCode ?? '');
 
   useEffect(() => {
     if (!open) return;
@@ -151,10 +153,19 @@ export function SystemParameterFormModal({
               </Typography.Text>
             ) : undefined
           }
-          rules={[{ required: true, message: 'Nhập giá trị' }]}
+          rules={allowEmptyValue ? [] : [{ required: true, message: 'Nhập giá trị' }]}
         >
-          <Input maxLength={500} />
+          {allowEmptyValue ? (
+            <Input.TextArea rows={4} maxLength={500} showCount placeholder="Để trống để dùng nội dung mặc định" />
+          ) : (
+            <Input maxLength={500} />
+          )}
         </Form.Item>
+        {allowEmptyValue && editing?.description && (
+          <Typography.Paragraph type="secondary" className="-mt-3 text-xs">
+            {editing.description}
+          </Typography.Paragraph>
+        )}
 
         {isEdit && (
           <Form.Item

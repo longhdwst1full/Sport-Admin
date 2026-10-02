@@ -16,7 +16,14 @@ const groupLabels: Record<SystemParameterGroup, string> = {
   INTEGRATION: 'Tích hợp',
   ASSISTANT: 'Trợ lý AI',
   PROCUREMENT: 'Mua hàng & nhập kho',
+  NOTIFICATION: 'Mẫu email',
 };
+
+/**
+ * Nhóm có giá trị được phép để trống: mẫu email (NOT-02) để trống = dùng nội dung mặc định của API
+ * (`allowEmpty` ở catalog tham số). Nhập nhiều dòng vì đoạn mở đầu giữ xuống dòng.
+ */
+export const EMPTY_ALLOWED_PARAMETER_GROUPS: readonly string[] = ['NOTIFICATION'];
 
 export const parameterGroupLabels: Record<string, string> = groupLabels;
 

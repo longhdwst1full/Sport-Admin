@@ -1,10 +1,10 @@
 # System parameters — maintenance note
 
-> **Document version:** 1.0.1
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-18
+> **Last updated:** 2026-10-02
 >
-> **Change summary:** Bỏ bắt buộc lý do khi sửa/ngừng dùng; vẫn gửi expectedVersion và ghi audit.
+> **Change summary:** Nhóm `NOTIFICATION` (mẫu email NOT-02): giá trị được để trống (= nội dung mặc định), nhập nhiều dòng, hiện mô tả biến được phép. Trước đó: Bỏ bắt buộc lý do khi sửa/ngừng dùng; vẫn gửi expectedVersion và ghi audit.
 
 ## Phạm vi
 
@@ -50,5 +50,6 @@ Sửa xong là có hiệu lực ngay ở lần đọc kế tiếp (backend xoá 
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.1.0 | 2026-10-02 | Nhóm `NOTIFICATION` (mẫu email NOT-02): giá trị được để trống (= nội dung mặc định), nhập nhiều dòng, hiện mô tả biến được phép. |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý tham số. |
 | 1.0.1 | 2026-09-18 | Lý do là tuỳ chọn khi sửa/ngừng dùng; giữ audit. |
