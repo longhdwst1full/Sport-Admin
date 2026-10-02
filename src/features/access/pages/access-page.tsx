@@ -10,6 +10,7 @@ import {
   UserSwitchOutlined,
 } from '@ant-design/icons';
 import { Alert, Avatar, Button, Space, Tabs, Tag, Typography } from 'antd';
+import { useAuth } from '@/core/auth/auth-context';
 import { AdminTable } from '@/foundation/table';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -34,7 +35,7 @@ const userStatuses: Record<UserDtoStatus, { color: string; label: string }> = {
 
 export function AccessPage() {
   const [activeTab, setActiveTab] = useState('users');
-  const [assignmentUser, setAssignmentUser] = useState<UserDto>();
+  const [assignmentUserId, setAssignmentUserId] = useState<string>();
   const [revokeTarget, setRevokeTarget] = useState<{
     user: UserDto;
     assignment: UserRoleAssignmentDto;
@@ -48,6 +49,9 @@ export function AccessPage() {
   const rolesQuery = useListAdminRoles({ query: { enabled: canViewRoles } });
   const permissionsQuery = useListAdminPermissions({ query: { enabled: canViewRoles } });
   const users = usersQuery.data?.items ?? [];
+  // Suy ra từ query để drawer phân quyền thấy ngay assignment vừa thêm/sửa/thu hồi.
+  const assignmentUser = users.find((user) => user.id === assignmentUserId);
+  const { developmentBypass } = useAuth();
   const roles = rolesQuery.data?.items ?? [];
   const permissions = permissionsQuery.data?.items ?? [];
   const loading =
@@ -92,13 +96,15 @@ export function AccessPage() {
           </Button>
         </div>
       )}
-      <Alert
-        className="mb-5"
-        showIcon
-        type="warning"
-        message="Development đang mở bypass ở cả giao diện và API"
-        description="Chỉ dùng cho local development. Staging/production bắt buộc AUTH_BYPASS=false và kiểm tra permission/scope phía server."
-      />
+      {developmentBypass && (
+        <Alert
+          className="mb-5"
+          showIcon
+          type="warning"
+          message="Development đang mở bypass ở cả giao diện và API"
+          description="Chỉ dùng cho local development. Staging/production bắt buộc AUTH_BYPASS=false và kiểm tra permission/scope phía server."
+        />
+      )}
       {hasError && (
         <div className="mb-4">
           <QueryErrorAlert
@@ -219,7 +225,7 @@ export function AccessPage() {
                             return (
                               <TableActions>
                                 {canAssignRoles && !isOwner && (
-                                  <TableActionButton label={`Gán vai trò cho ${user.displayName}`} icon={<UserSwitchOutlined />} onClick={() => setAssignmentUser(user)} />
+                                  <TableActionButton label={`Phân quyền cho ${user.displayName}`} icon={<UserSwitchOutlined />} onClick={() => setAssignmentUserId(user.id)} />
                                 )}
                                 {canManageUsers && !isOwner && user.status === 'ACTIVE' && (
                                   <TableActionButton
@@ -308,7 +314,8 @@ export function AccessPage() {
       <RoleAssignmentDrawer
         user={assignmentUser}
         open={Boolean(assignmentUser)}
-        onClose={() => setAssignmentUser(undefined)}
+        onClose={() => setAssignmentUserId(undefined)}
+        onRevoke={(assignment) => assignmentUser && setRevokeTarget({ user: assignmentUser, assignment })}
       />
       <RoleAssignmentRevokeModal target={revokeTarget} onClose={() => setRevokeTarget(undefined)} />
       <StaffCreationDrawer open={staffCreationOpen} onClose={() => setStaffCreationOpen(false)} />

@@ -1,62 +1,84 @@
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   App,
   Avatar,
   Button,
   Checkbox,
   Drawer,
+  Empty,
   Form,
-  Select,
+  Input,
+  Spin,
   Tag,
 } from 'antd';
 import {
   CheckOutlined,
+  DeleteOutlined,
+  EditOutlined,
   SafetyCertificateOutlined,
-  ShopOutlined,
 } from '@ant-design/icons';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
+import { useCan } from '@/core/auth/permissions';
 import {
   getListAdminUsersQueryKey,
   useAssignAdminUserRole,
   useListAdminRoles,
+  useRevokeAdminUserRoleAssignment,
 } from '@/generated/api/iam/iam';
 import {
   AssignableStaffRoleCode,
   type UserDto,
+  type UserRoleAssignmentDto,
 } from '@/generated/api/iam/iam.schemas';
-import {
-  useSearchActiveAdminBranches,
-} from '@/generated/api/organization/organization';
+import { useListAdminBranches } from '@/generated/api/organization/organization';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
+import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
+import { ASSIGNABLE_ROLE_CODES, ASSIGNABLE_ROLE_PRESENTATION } from '../constants/access.constants';
 import {
   type AssignmentFormValues,
+  assignmentIdentity,
+  isEditableAssignment,
   toAssignUserRoleDto,
+  toAssignmentFormValues,
 } from '../model/role-assignment.mapper';
+import { AccessBranchSelect } from './access-branch-select';
 
 interface RoleAssignmentDrawerProps {
   user?: UserDto;
   open: boolean;
   onClose: () => void;
+  /** Thu hồi đi qua modal xác nhận có lý do của trang (`RoleAssignmentRevokeModal`). */
+  onRevoke: (assignment: UserRoleAssignmentDto) => void;
 }
 
-const schema: yup.ObjectSchema<AssignmentFormValues> = yup.object({
+interface AssignmentEditorValues extends AssignmentFormValues {
+  /** Lý do thu hồi assignment cũ; chỉ bắt buộc khi sửa. */
+  reason: string;
+}
+
+const schema: yup.ObjectSchema<AssignmentEditorValues> = yup.object({
   roleCode: yup
     .mixed<AssignmentFormValues['roleCode']>()
     .oneOf(Object.values(AssignableStaffRoleCode))
     .required('Vui lòng chọn vai trò cần gán'),
-  branchId: yup.string().required('Vui lòng chọn chi nhánh'),
+  branchId: yup.string().matches(ENTITY_ID_PATTERN, 'Chi nhánh không hợp lệ').required('Vui lòng chọn chi nhánh'),
+  reason: yup.string().defined().max(255, 'Tối đa 255 ký tự'),
 });
 
-export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDrawerProps) {
-  const { message } = App.useApp();
+const EMPTY_VALUES: AssignmentEditorValues = { roleCode: 'STAFF', branchId: '', reason: '' };
+
+export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssignmentDrawerProps) {
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
-  const [branchSearch, setBranchSearch] = useState('');
-  const [debouncedBranchSearch] = useDebounce(branchSearch.trim(), 300);
+  const canViewBranches = useCan('org.branch.view');
+  /** Id assignment đang sửa; undefined = chế độ gán mới. */
+  const [editingId, setEditingId] = useState<string>();
+  const [saving, setSaving] = useState(false);
 
   const {
     control,
@@ -65,64 +87,130 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
     setError,
     setValue,
     formState: { errors },
-  } = useForm<AssignmentFormValues>({
+  } = useForm<AssignmentEditorValues>({
     resolver: yupResolver(schema),
-    defaultValues: { roleCode: 'STAFF', branchId: '' },
+    defaultValues: EMPTY_VALUES,
   });
 
   const selectedRole = useWatch({ control, name: 'roleCode' });
 
-  // Fetch real roles from OpenAPI
   const rolesQuery = useListAdminRoles({ query: { enabled: open } });
-  const branchesQuery = useSearchActiveAdminBranches(
-    { search: debouncedBranchSearch || undefined, page: 1, limit: 20 },
-    { query: { ...CACHE_POLICY.REFERENCE, enabled: open } },
-  );
+  // Assignment chỉ trả branchId; tra nhãn chi nhánh khi có quyền xem, không có thì hiện mã.
+  const branchesQuery = useListAdminBranches({
+    query: { ...CACHE_POLICY.REFERENCE, enabled: open && canViewBranches },
+  });
 
   const roles = useMemo(() => rolesQuery.data?.items ?? [], [rolesQuery.data]);
+  const assignableRoles = useMemo(
+    () => roles.filter((r) => (ASSIGNABLE_ROLE_CODES as string[]).includes(r.code)),
+    [roles],
+  );
+  const selectedRoleDto = useMemo(
+    () => roles.find((r) => r.code === selectedRole),
+    [roles, selectedRole],
+  );
+  const branchLabels = useMemo(
+    () => new Map((branchesQuery.data?.items ?? []).map((b) => [b.id, `${b.code} — ${b.name}`])),
+    [branchesQuery.data],
+  );
+  const branchLabel = (branchId?: string) =>
+    branchId ? (branchLabels.get(branchId) ?? `Chi nhánh #${branchId}`) : 'Toàn hệ thống';
+  const roleName = (code: string) => roles.find((r) => r.code === code)?.name ?? code;
 
-  // Filter assignable staff roles: BRANCH_MANAGER and STAFF
-  const assignableRoles = useMemo(() => {
-    return roles.filter((r) => r.code === 'BRANCH_MANAGER' || r.code === 'STAFF');
-  }, [roles]);
+  const assignments = useMemo(() => user?.assignments ?? [], [user]);
+  // Suy ra từ danh sách mới nhất: assignment vừa bị thu hồi ở modal thì tự thoát chế độ sửa.
+  const editing = assignments.find((a) => a.id === editingId);
 
-  const selectedRoleDto = useMemo(() => {
-    return roles.find((r) => r.code === selectedRole);
-  }, [roles, selectedRole]);
+  const assign = useAssignAdminUserRole();
+  const revoke = useRevokeAdminUserRoleAssignment();
 
-  const assignment = useAssignAdminUserRole({
-    mutation: {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: getListAdminUsersQueryKey() });
-        void message.success('Đã gán vai trò cho người dùng thành công.');
-        reset();
-        onClose();
-      },
-      onError: (error) => {
-        const fields = getApiFieldErrors(error);
-        Object.entries(fields).forEach(([field, fieldMessage]) => {
-          if (field in schema.fields) {
-            setError(field as keyof AssignmentFormValues, { message: fieldMessage });
-          }
-        });
-        void message.error(getApiErrorMessage(error, 'Không thể gán vai trò.'));
-      },
-    },
-  });
+  const startAdd = () => {
+    setEditingId(undefined);
+    reset(EMPTY_VALUES);
+  };
+
+  const startEdit = (assignment: UserRoleAssignmentDto) => {
+    setEditingId(assignment.id);
+    reset({ ...toAssignmentFormValues(assignment), reason: '' });
+  };
 
   useEffect(() => {
     if (!open) {
-      reset({ roleCode: 'STAFF', branchId: '' });
-      setBranchSearch('');
+      setEditingId(undefined);
+      reset(EMPTY_VALUES);
     }
   }, [open, reset]);
 
-  const submit = handleSubmit((values) => {
-    if (!user) return;
-    assignment.mutate({
-      userId: user.id,
-      data: toAssignUserRoleDto(values),
+  const applyFieldErrors = (error: unknown) => {
+    Object.entries(getApiFieldErrors(error)).forEach(([field, fieldMessage]) => {
+      if (field in schema.fields) {
+        setError(field as keyof AssignmentEditorValues, { message: fieldMessage });
+      }
     });
+  };
+
+  const refreshUsers = () => queryClient.invalidateQueries({ queryKey: getListAdminUsersQueryKey() });
+
+  const submit = handleSubmit(async (values) => {
+    if (!user) return;
+    const nextIdentity = assignmentIdentity(values.roleCode, values.branchId);
+    if (editing && assignmentIdentity(editing.roleCode, editing.branchId) === nextIdentity) {
+      void message.info('Vai trò và chi nhánh không thay đổi.');
+      return;
+    }
+    const duplicated = assignments.some(
+      (a) => a.id !== editing?.id && assignmentIdentity(a.roleCode, a.branchId) === nextIdentity,
+    );
+    if (duplicated) {
+      setError('branchId', { message: 'Nhân viên đã có vai trò này tại chi nhánh đã chọn.' });
+      return;
+    }
+    const reason = values.reason.trim();
+    if (editing && reason.length < 3) {
+      setError('reason', { message: 'Nhập lý do thay đổi (tối thiểu 3 ký tự)' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Gán mới TRƯỚC, thu hồi cũ SAU: lỗi ở bước gán không làm nhân viên mất quyền đang có.
+      try {
+        await assign.mutateAsync({ userId: user.id, data: toAssignUserRoleDto(values) });
+      } catch (error) {
+        applyFieldErrors(error);
+        void message.error(getApiErrorMessage(error, 'Không thể gán vai trò.'));
+        return;
+      }
+
+      if (!editing) {
+        void message.success('Đã gán vai trò cho người dùng thành công.');
+        startAdd();
+        return;
+      }
+
+      try {
+        await revoke.mutateAsync({
+          userId: user.id,
+          assignmentId: editing.id,
+          data: { reason },
+        });
+        void message.success('Đã cập nhật vai trò và phạm vi chi nhánh.');
+        startAdd();
+      } catch (error) {
+        // Assignment mới đã có hiệu lực; báo rõ để người dùng thu hồi bản cũ thủ công.
+        modal.warning({
+          title: 'Đã gán vai trò mới nhưng chưa thu hồi được vai trò cũ',
+          content: `${editing.roleCode} tại ${branchLabel(editing.branchId)} vẫn còn hiệu lực. ${getApiErrorMessage(
+            error,
+            'Không thể thu hồi vai trò cũ.',
+          )} Hãy thu hồi thủ công trong danh sách vai trò hiện tại.`,
+        });
+        setEditingId(undefined);
+      }
+    } finally {
+      await refreshUsers();
+      setSaving(false);
+    }
   });
 
   return (
@@ -135,9 +223,9 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
             <SafetyCertificateOutlined />
           </div>
           <div>
-            <div className="text-base font-bold text-slate-900">Gán vai trò người dùng</div>
+            <div className="text-base font-bold text-slate-900">Phân quyền người dùng</div>
             <div className="text-xs text-slate-500 font-normal">
-              Phân bổ vai trò và chi nhánh hoạt động theo OpenAPI contract
+              Thêm, sửa, thu hồi vai trò và chi nhánh hoạt động theo OpenAPI contract
             </div>
           </div>
         </div>
@@ -147,15 +235,15 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
       footer={
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} className="!rounded-xl">
-            Hủy
+            Đóng
           </Button>
           <Button
             type="primary"
-            loading={assignment.isPending}
+            loading={saving}
             onClick={() => void submit()}
             className="!rounded-xl !bg-emerald-600 hover:!bg-emerald-500 !font-semibold !px-5"
           >
-            {assignment.isPending ? 'Đang lưu...' : 'Gán vai trò'}
+            {saving ? 'Đang lưu...' : editing ? 'Lưu thay đổi' : 'Gán vai trò'}
           </Button>
         </div>
       }
@@ -177,79 +265,140 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
               </Tag>
             </div>
             <div className="text-xs text-slate-500 truncate mt-0.5">{user.maskedEmail}</div>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {user.assignments?.map((a) => (
-                <Tag key={a.id} className="!mr-0 !text-[10px] !bg-white !border-slate-200">
-                  {a.roleCode} ({a.scopeType})
-                </Tag>
-              ))}
-            </div>
           </div>
         </div>
       )}
 
-      <Form layout="vertical">
-        {/* ── Checkbox Role Selection (From OpenAPI) ─────────────── */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold text-slate-700">
-              Chọn vai trò cần gán <span className="text-red-500">*</span>
-            </label>
-            <span className="text-[11px] text-slate-400">Dạng thẻ Checkbox</span>
-          </div>
-
-          <div className="space-y-2.5">
-            {(assignableRoles.length > 0
-              ? assignableRoles
-              : [
-                  {
-                    code: 'BRANCH_MANAGER',
-                    name: 'Quản lý chi nhánh',
-                    description: 'Toàn quyền điều hành kho, đơn hàng, phân quyền nhân sự chi nhánh',
-                    permissionCodes: [],
-                  },
-                  {
-                    code: 'STAFF',
-                    name: 'Nhân viên vận hành',
-                    description: 'Tiếp nhận đơn hàng, xem tồn kho sản phẩm, xem thông tin khách hàng',
-                    permissionCodes: [],
-                  },
-                ]
-            ).map((r) => {
-              const isSelected = selectedRole === r.code;
+      {/* ── Current assignments: edit / revoke ─────────────────── */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs font-semibold text-slate-700">Vai trò & phạm vi hiện tại</label>
+          {editing && (
+            <Button type="link" size="small" className="!text-xs" onClick={startAdd}>
+              + Gán vai trò mới
+            </Button>
+          )}
+        </div>
+        {assignments.length === 0 ? (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có vai trò nào" />
+        ) : (
+          <div className="space-y-2">
+            {assignments.map((a) => {
+              const editable = isEditableAssignment(a);
+              const isEditing = editing?.id === a.id;
               return (
                 <div
-                  key={r.code}
-                  onClick={() =>
-                    setValue('roleCode', r.code as AssignmentFormValues['roleCode'], {
-                      shouldValidate: true,
-                    })
-                  }
-                  className={`rounded-xl border p-3.5 cursor-pointer transition-all ${
-                    isSelected
-                      ? 'border-emerald-500 bg-emerald-50/40 shadow-xs ring-1 ring-emerald-500/30'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                  key={a.id}
+                  className={`flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 ${
+                    isEditing ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-white'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2.5">
-                      <Checkbox checked={isSelected} className="dctd-role-checkbox" />
-                      <span className="text-sm font-bold text-slate-900">{r.name}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-900">{roleName(a.roleCode)}</span>
+                      <Tag color={a.roleCode === 'BRANCH_MANAGER' ? 'emerald' : 'blue'} className="!mr-0 !text-[10px]">
+                        {a.roleCode}
+                      </Tag>
                     </div>
-                    <Tag
-                      color={r.code === 'BRANCH_MANAGER' ? 'emerald' : 'blue'}
-                      className="!mr-0 !text-[10px] !font-medium"
-                    >
-                      {r.code}
-                    </Tag>
+                    <div className="text-xs text-slate-500 truncate">
+                      {a.scopeType} · {branchLabel(a.branchId)}
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-500 pl-7 m-0">
-                    {r.description || 'Vai trò vận hành hệ thống'}
-                  </p>
+                  {editable && (
+                    <div className="flex shrink-0 gap-1">
+                      <Button
+                        size="small"
+                        type="text"
+                        icon={<EditOutlined />}
+                        disabled={saving}
+                        aria-label={`Sửa ${a.roleCode} tại ${branchLabel(a.branchId)}`}
+                        onClick={() => startEdit(a)}
+                      />
+                      <Button
+                        size="small"
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        disabled={saving}
+                        aria-label={`Thu hồi ${a.roleCode} tại ${branchLabel(a.branchId)}`}
+                        onClick={() => onRevoke(a)}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        )}
+      </div>
+
+      <Form layout="vertical">
+        {editing && (
+          <Alert
+            className="mb-4 !rounded-xl"
+            type="info"
+            showIcon
+            message={`Đang sửa ${editing.roleCode} tại ${branchLabel(editing.branchId)}`}
+            description="Hệ thống gán vai trò/chi nhánh mới trước rồi mới thu hồi assignment cũ (giữ bản REVOKED để audit)."
+          />
+        )}
+
+        {/* ── Checkbox Role Selection (From OpenAPI) ─────────────── */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold text-slate-700">
+              {editing ? 'Vai trò mới' : 'Chọn vai trò cần gán'} <span className="text-red-500">*</span>
+            </label>
+            <span className="text-[11px] text-slate-400">Dạng thẻ Checkbox</span>
+          </div>
+
+          {rolesQuery.isPending ? (
+            <div className="py-6 text-center">
+              <Spin size="small" />
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {assignableRoles.map((r) => {
+                const isSelected = selectedRole === r.code;
+                const presentation = ASSIGNABLE_ROLE_PRESENTATION[r.code as AssignableStaffRoleCode];
+                return (
+                  <div
+                    key={r.code}
+                    onClick={() =>
+                      setValue('roleCode', r.code as AssignmentFormValues['roleCode'], {
+                        shouldValidate: true,
+                      })
+                    }
+                    className={`rounded-xl border p-3.5 cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-50/40 shadow-xs ring-1 ring-emerald-500/30'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2.5">
+                        <Checkbox checked={isSelected} className="dctd-role-checkbox" />
+                        <span className="text-sm font-bold text-slate-900">{r.name}</span>
+                      </div>
+                      <Tag color={presentation.color} className="!mr-0 !text-[10px] !font-medium">
+                        {r.code}
+                      </Tag>
+                    </div>
+                    <p className="text-xs text-slate-500 pl-7 m-0">
+                      {r.description || presentation.fallbackDescription}
+                    </p>
+                  </div>
+                );
+              })}
+              {assignableRoles.length === 0 && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message={rolesQuery.isError ? 'Không tải được danh sách vai trò' : 'Chưa có vai trò gán được'}
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Branch Selection ─────────────────────────────────── */}
@@ -264,23 +413,39 @@ export function RoleAssignmentDrawer({ user, open, onClose }: RoleAssignmentDraw
             name="branchId"
             control={control}
             render={({ field }) => (
-              <Select
-                {...field}
-                showSearch
-                filterOption={false}
-                onSearch={setBranchSearch}
-                loading={branchesQuery.isFetching}
-                options={(branchesQuery.data?.items ?? []).map((item) => ({
-                  value: item.id,
-                  label: `${item.code} — ${item.label}`,
-                }))}
-                placeholder="Tìm và chọn chi nhánh hoạt động"
-                className="w-full"
-                suffixIcon={<ShopOutlined className="text-slate-400" />}
+              <AccessBranchSelect
+                value={field.value}
+                onChange={field.onChange}
+                seedLabel={field.value ? branchLabel(field.value) : undefined}
+                status={errors.branchId ? 'error' : undefined}
               />
             )}
           />
         </Form.Item>
+
+        {editing && (
+          <Form.Item
+            label={<span className="text-xs font-semibold text-slate-700">Lý do thay đổi</span>}
+            required
+            validateStatus={errors.reason ? 'error' : undefined}
+            help={errors.reason?.message}
+            className="mb-4"
+          >
+            <Controller
+              name="reason"
+              control={control}
+              render={({ field }) => (
+                <Input.TextArea
+                  {...field}
+                  rows={2}
+                  maxLength={255}
+                  showCount
+                  placeholder="Ví dụ: Nhân viên chuyển sang chi nhánh khác"
+                />
+              )}
+            />
+          </Form.Item>
+        )}
 
         {/* ── Real Permissions Preview from OpenAPI ────────────── */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">

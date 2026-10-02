@@ -1,10 +1,10 @@
 # Access — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-10-02
 >
-> **Change summary:** Tạo note khi feature chuẩn hoá về khuôn `pages/components/model`.
+> **Change summary:** Thêm/sửa/thu hồi vai trò + chi nhánh ở màn tạo nhân viên và drawer phân quyền; bỏ dữ liệu giả (vai trò fallback, số quyền cứng, cảnh báo bypass luôn hiện).
 
 ## Phạm vi
 
@@ -18,14 +18,27 @@
 - `pages/access-page.tsx` sở hữu tab/search/paging.
 - `components/staff-creation-drawer.tsx`, `role-assignment-drawer.tsx` sở hữu form; `*-modal.tsx` sở hữu xác nhận hành động huỷ/khoá.
 - `model/staff-creation.mapper.ts`, `role-assignment.mapper.ts` là nơi duy nhất đọc tên field của DTO, có unit test đi kèm.
+- `constants/access.constants.ts` chỉ giữ nhãn trình bày vai trò (tag, màu, mô tả dự phòng). Tên vai trò và số quyền luôn đọc từ `listAdminRoles`, không có danh sách vai trò fallback.
+- `components/access-branch-select.tsx` là ô chọn chi nhánh ACTIVE (tìm server, cuộn tải thêm) dùng cho dòng phạm vi bổ sung và drawer phân quyền.
+
+## Luồng phân quyền (không có API nguyên tử mới)
+
+| Thao tác | Gọi API | Ghi chú |
+| --- | --- | --- |
+| Tạo nhân viên nhiều phạm vi | `createAdminStaffUser` (dòng chính) rồi `assignAdminUserRole` tuần tự cho từng dòng bổ sung | Trùng vai trò + chi nhánh bị chặn ở client trước khi tạo. Dòng gán lỗi được báo lại (tài khoản vẫn đã tạo) để gán lại trong drawer phân quyền. |
+| Thêm vai trò cho nhân viên có sẵn | `assignAdminUserRole` | Drawer ở lại mở, danh sách assignment làm mới từ `listAdminUsers`. |
+| Sửa vai trò/chi nhánh | `assignAdminUserRole` (mới) **rồi** `revokeAdminUserRoleAssignment` (cũ, kèm lý do) | Gán trước để lỗi gán không làm mất quyền đang có. Nếu thu hồi lỗi, cảnh báo rõ assignment cũ vẫn hiệu lực. Không nguyên tử: giữa hai lệnh nhân viên tạm có cả hai assignment. |
+| Thu hồi | `revokeAdminUserRoleAssignment` qua `RoleAssignmentRevokeModal` (bắt buộc lý do) | Chỉ assignment BRANCH của BRANCH_MANAGER/STAFF; OWNER không sửa/thu hồi (D35/D42). |
+
+`AccessPage` giữ `assignmentUserId` và suy `UserDto` từ query, nên drawer luôn hiển thị assignment mới nhất.
 
 ## Generated operation
 
-`useListAdminUsers`, `useCreateAdminStaffUser`, `useDeleteAdminStaffUser`, `useLockAdminStaffUser`, `useUnlockAdminStaffUser`, `useListAdminRoles`, `useListAdminPermissions`, `useAssignAdminUserRole`, `useRevokeAdminUserRoleAssignment`, `useSearchActiveAdminBranches` — tất cả từ `src/generated/api/iam` và `organization`.
+`useListAdminUsers`, `useCreateAdminStaffUser`, `useDeleteAdminStaffUser`, `useLockAdminStaffUser`, `useUnlockAdminStaffUser`, `useListAdminRoles`, `useListAdminPermissions`, `useAssignAdminUserRole`, `useRevokeAdminUserRoleAssignment`, `useSearchActiveAdminBranches`/`searchActiveAdminBranches`, `useListAdminBranches` (nhãn chi nhánh của assignment, chỉ khi có `org.branch.view`) — tất cả từ `src/generated/api/iam` và `organization`.
 
 ## Quyền
 
-`useCan` chỉ cải thiện UX. Backend vẫn là nơi quyết định cuối cùng qua `@RequirePermissions` và branch scope (`04-permissions-transitions.md`).
+`useCan` chỉ cải thiện UX. Cảnh báo "Development đang mở bypass" chỉ hiện khi `useAuth().developmentBypass` bật thật. Backend vẫn là nơi quyết định cuối cùng qua `@RequirePermissions` và branch scope (`04-permissions-transitions.md`).
 
 ## Checklist khi sửa
 
@@ -38,3 +51,4 @@
 | Version | Date | Change summary |
 | --- | --- | --- |
 | 1.0.0 | 2026-09-13 | Tạo note cùng đợt chuẩn hoá anatomy. |
+| 1.1.0 | 2026-10-02 | Thêm/sửa/thu hồi vai trò + chi nhánh (tạo nhân viên nhiều phạm vi, drawer phân quyền); bỏ vai trò fallback giả và số quyền cứng 32/18; cảnh báo bypass chỉ hiện khi bypass bật. |
