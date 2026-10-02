@@ -1,10 +1,10 @@
 # Content — maintenance note
 
-> **Document version:** 3.0.0
+> **Document version:** 3.1.0
 >
-> **Last updated:** 2026-09-29
+> **Last updated:** 2026-10-02
 >
-> **Change summary:** `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
+> **Change summary:** Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. Trước đó: `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
 
 ## Phạm vi
 
@@ -43,6 +43,14 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 Đừng mô tả màn này là đã có quy trình duyệt bài; nó mới là CRUD trên dữ liệu bền.
 
+## Banner (`/banners`)
+
+- `pages/banners-page.tsx`, `components/banner-editor-drawer.tsx`, `components/banner-status-modal.tsx`, hook
+  `use-banner-commands.ts`; generated operation `listAdminBanners`, `getAdminBanner`, `createAdminBanner`,
+  `updateAdminBanner`, `setAdminBannerStatus`. Đọc `cms.content.view`, ghi `cms.content.manage`.
+- Ảnh chọn qua `ImageUploadField` (media asset id); API từ chối ảnh không ACTIVE. ARCHIVED là trạng thái cuối.
+- 409 `CMS_BANNER_VERSION_STALE` → tải lại banner. Storefront chỉ hiện banner PUBLISHED trong khung giờ.
+
 ## Checklist khi sửa
 
 - [ ] Ảnh bìa đi qua `features/media`, không nhập URL tự do.
@@ -54,6 +62,7 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.1.0 | 2026-10-02 | Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. |
 | 1.0.0 | 2026-09-13 | Tạo note, cảnh báo CMS in-memory. |
 | 2.0.0 | 2026-09-21 | Gỡ cảnh báo in-memory; ghi lại vòng đời bài viết hiện có và phần còn thiếu. |
 | 3.0.0 | 2026-09-29 | `listAdminPosts` phân trang server-side, list item chỉ còn summary; form sửa bài tải đầy đủ qua `getAdminPost`. |
