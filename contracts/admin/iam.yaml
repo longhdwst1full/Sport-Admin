@@ -651,6 +651,7 @@ paths:
       x-required-permissions:
         - iam.role.manage
     delete:
+      description: "Vai trò hệ thống hoặc mang quyền quản trị (iam.user.manage, iam.user.mfa.manage, iam.role.manage, iam.assignment.manage, system.parameter.manage) trả 403 IAM_ROLE_PROTECTED. Mỗi assignment ACTIVE còn hiệu lực được kết thúc (REVOKED) và thay bằng STAFF cùng phạm vi (đã có thì dùng lại); permissionVersion của người bị ảnh hưởng tăng. Còn lịch sử assignment thì vai trò chuyển INACTIVE (outcome DEACTIVATED), không thì xoá hẳn (DELETED). Lặp lại: 404 sau DELETED, no-op sau DEACTIVATED."
       operationId: deleteAdminRole
       parameters:
         - name: roleId
@@ -665,8 +666,12 @@ paths:
             schema:
               $ref: "#/components/schemas/DeleteRoleDto"
       responses:
-        "204":
+        "200":
           description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteRoleResultDto"
         "400":
           description: ""
           content:
@@ -680,26 +685,26 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
-          description: OWNER cannot be deactivated or deleted
+          description: IAM_ROLE_PROTECTED (system/admin role), non-GLOBAL actor, or actor lacks STAFF permissions
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
-          description: ""
+          description: Role not found (or already deleted)
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: Role is still assigned
+          description: IAM_ROLE_VERSION_CONFLICT (stale expectedVersion) or IAM_ROLE_FALLBACK_UNAVAILABLE (STAFF inactive)
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Deactivate a system role or delete an unassigned custom role
+      summary: Delete a custom role and move its active assignments to STAFF with the same scope
       tags:
         - Admin IAM
       x-required-permissions:
@@ -965,6 +970,27 @@ components:
       required:
         - expectedVersion
         - reason
+    DeleteRoleResultDto:
+      type: object
+      properties:
+        outcome:
+          description: "DELETED: xoá hẳn (không còn assignment nào tham chiếu). DEACTIVATED: còn lịch sử nên chuyển INACTIVE."
+          allOf:
+            - $ref: "#/components/schemas/RoleDeleteOutcome"
+        movedAssignments:
+          type: number
+          example: 2
+          minimum: 0
+          description: Số assignment ACTIVE đã kết thúc và chuyển về STAFF cùng phạm vi
+        affectedUsers:
+          type: number
+          example: 2
+          minimum: 0
+          description: Số nhân viên bị ảnh hưởng (permissionVersion đã tăng)
+      required:
+        - outcome
+        - movedAssignments
+        - affectedUsers
     LockStaffUserDto:
       type: object
       properties:
@@ -1017,6 +1043,12 @@ components:
           maxLength: 255
       required:
         - reason
+    RoleDeleteOutcome:
+      type: string
+      enum:
+        - DELETED
+        - DEACTIVATED
+      description: "DELETED: xoá hẳn (không còn assignment nào tham chiếu). DEACTIVATED: còn lịch sử nên chuyển INACTIVE."
     RoleDto:
       type: object
       properties:
@@ -1044,6 +1076,15 @@ components:
         version:
           type: number
           example: 0
+        activeAssignmentCount:
+          type: number
+          example: 3
+          minimum: 0
+          description: Số assignment ACTIVE còn hiệu lực; xoá vai trò sẽ chuyển chừng đó assignment về STAFF cùng phạm vi
+        canDelete:
+          type: boolean
+          example: true
+          description: "Server tính: false với vai trò hệ thống, vai trò mang quyền quản trị (IAM_ROLE_PROTECTED) hoặc vai trò đã ngừng không còn gì để xoá. Chỉ là gợi ý UX; DELETE vẫn tự kiểm."
       required:
         - id
         - code
@@ -1052,6 +1093,8 @@ components:
         - system
         - permissionCodes
         - version
+        - activeAssignmentCount
+        - canDelete
     RoleListDto:
       type: object
       properties:

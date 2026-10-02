@@ -1,11 +1,11 @@
 import { Tag, Tree, Typography } from 'antd';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
-import { DeleteOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
-import { permissionActionLabels, ROOT_ROLE_CODE } from '../constants/role.constants';
+import { permissionActionLabels } from '../constants/role.constants';
 import { buildPermissionTree } from '../model/permission-tree';
-import { getRoleRemovalMode } from '../model/role-lifecycle.policy';
+import { getRoleDeleteState } from '../model/role-lifecycle.policy';
 import { buildMenuVisibility } from '../model/menu-visibility';
 
 /** Xem trước menu vai trò sẽ thấy — cùng hàm lọc với sidebar nên không lệch thực tế. */
@@ -136,26 +136,15 @@ export function RoleTable({
           fixed: 'right',
           align: 'right',
           render: (_value, row) => {
-            const removalMode = getRoleRemovalMode(row);
+            const deleteState = getRoleDeleteState(row);
             return (
               <TableActions>
               <TableActionButton label={`Sửa vai trò ${row.name}`} icon={<EditOutlined />} disabled={!canManage} onClick={() => onEdit(row)} />
               <TableActionButton
-                label={
-                  row.code === ROOT_ROLE_CODE
-                    ? 'OWNER phải luôn hoạt động để tránh khóa toàn hệ thống'
-                    : row.system
-                      ? removalMode === 'BLOCKED'
-                        ? 'Vai trò đã ngừng; dùng Sửa để kích hoạt lại'
-                        : 'Ngừng sử dụng vai trò hệ thống'
-                      : 'Xóa vai trò tự tạo chưa được gán'
-                }
+                  label={deleteState.label}
                   danger
-                  icon={row.system ? <StopOutlined /> : <DeleteOutlined />}
-                  disabled={
-                    !canManage
-                    || removalMode === 'BLOCKED'
-                  }
+                  icon={<DeleteOutlined />}
+                  disabled={!canManage || !deleteState.allowed}
                   onClick={() => onDelete(row)}
                 />
               </TableActions>

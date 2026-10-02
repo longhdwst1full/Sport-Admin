@@ -1,10 +1,10 @@
 # Roles — maintenance note
 
-> **Document version:** 1.2.0
+> **Document version:** 1.3.0
 >
-> **Last updated:** 2026-10-02
+> **Last updated:** 2026-10-03
 >
-> **Change summary:** Vai trò quyết định cả menu hiển thị: tab "Menu hiển thị" bật/tắt từng mục menu (= cấp/gỡ quyền xem của màn), bảng xem trước menu của vai trò; không có màn quản lý menu riêng.
+> **Change summary:** Xoá vai trò theo API D98: nút Xoá bật theo `canDelete` của server, hộp xác nhận nêu `activeAssignmentCount` sẽ chuyển về Nhân viên, toast theo `affectedUsers`, map lỗi `IAM_ROLE_*`; bỏ thao tác "ngừng vai trò hệ thống" qua DELETE.
 
 ## Phạm vi
 
@@ -18,7 +18,7 @@ Tạo / sửa / xoá vai trò và gán tập quyền cho vai trò. **Không** g�
 | `listAdminPermissions` | cây quyền trong drawer |
 | `createAdminRole` | nút Tạo vai trò |
 | `updateAdminRole` | drawer sửa — đổi tên, mô tả, trạng thái, tập quyền |
-| `deleteAdminRole` | nút xoá, kèm lý do |
+| `deleteAdminRole` | nút Xoá, kèm lý do; trả `{ outcome, movedAssignments, affectedUsers }` |
 
 `listAdminRoles` (chỉ `ACTIVE`) và `searchActiveAdminRoles` thuộc màn `access`, không dùng ở đây.
 
@@ -38,13 +38,13 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 ## Bất biến nghiệp vụ
 
 - **OWNER không xoá/ngừng được.** Đây là vai trò quản trị gốc duy nhất; khóa nó có thể khiến toàn hệ thống không còn người quản trị.
-- **DELETE BRANCH_MANAGER/STAFF là ngừng hoạt động, không xóa vật lý.** Người đang được gán mất quyền ngay qua `permissionVersion`; lịch sử vẫn giữ và Admin có thể kích hoạt lại bằng màn Sửa.
-- **Vai trò tự tạo chỉ xóa vật lý khi chưa từng được gán.** Backend kiểm tra assignment và optimistic version trước khi xóa.
+- **Vai trò hệ thống và vai trò quản trị không xoá được (D98).** API trả 403 `IAM_ROLE_PROTECTED`; UI khoá nút theo `canDelete` server tính, không tự suy luật. Ngừng vai trò hệ thống làm ở màn Sửa (trạng thái).
+- **Xoá vai trò tự tạo chuyển người đang giữ về Nhân viên.** Mỗi phân quyền đang hoạt động được chuyển về STAFF cùng chi nhánh/phạm vi; hộp xác nhận hiện `activeAssignmentCount`, toast "Đã chuyển n nhân viên về vai trò Nhân viên" đếm theo `affectedUsers` (một người có thể giữ vai trò ở nhiều chi nhánh). Còn lịch sử phân quyền thì API chỉ chuyển vai trò sang INACTIVE.
+- Lỗi xoá map theo mã (`model/role-lifecycle.policy.ts`); 404, `IAM_ROLE_VERSION_CONFLICT`, `IAM_ROLE_PROTECTED` tải lại danh sách.
 - **Mã vai trò không đổi sau khi tạo.** Ô mã bị khoá ở chế độ sửa.
 - **Không cho tự nâng quyền.** Backend từ chối cấp quyền mà chính người thao tác không có; UI khoá sẵn các ô đó kèm tooltip. Quyền vai trò *đang có sẵn* được giữ lại trong tập cấp được, để người sửa không cần toàn quyền chỉ để đổi tên.
 - **Chỉ phạm vi GLOBAL mới quản lý được vai trò.** Quản lý chi nhánh không tạo được vai trò.
 - **Mọi lần ghi gửi `expectedVersion`.** Hai người cùng sửa thì người sau nhận 409.
-- **Xoá vai trò tự tạo chỉ khi chưa gán cho ai.** Backend đếm `user_role_assignments` trước khi xoá, và câu lệnh xoá còn kèm `assignments: { none: {} }` để chặn race.
 - Đổi tập quyền làm tăng `permissionVersion` của mọi người đang giữ vai trò đó ⇒ phiên đang đăng nhập phải lấy token mới.
 
 ## Checklist khi sửa
@@ -62,4 +62,5 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý vai trò. |
 | 1.0.1 | 2026-09-18 | Cho phép thu gọn cây quyền và ghi rõ cách nhóm theo màn hình. |
 | 1.1.0 | 2026-09-19 | Thêm lifecycle an toàn cho vai trò hệ thống, xác nhận theo hậu quả và cây quyền mở rộng trong bảng. |
+| 1.3.0 | 2026-10-03 | Xoá vai trò theo API D98: `canDelete`, `activeAssignmentCount` trong xác nhận, toast `affectedUsers`, lỗi `IAM_ROLE_*`. |
 | 1.2.0 | 2026-10-02 | Thêm tab "Menu hiển thị" và xem trước menu theo vai trò (suy ra từ quyền, không có màn menu); gắn họ quyền nhập hàng/NCC và `catalog.review.reply` vào màn có sẵn. |

@@ -16,7 +16,12 @@ import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { RoleFormDrawer, type RoleFormValues } from '../components/role-form-drawer';
 import { RoleTable } from '../components/role-table';
-import { getRoleRemovalMode } from '../model/role-lifecycle.policy';
+import {
+  describeRoleDeleteImpact,
+  describeRoleDeleteResult,
+  roleDeleteErrorMessage,
+  shouldReloadAfterRoleDeleteError,
+} from '../model/role-lifecycle.policy';
 
 export function RolesPage() {
   const { message, modal } = App.useApp();
@@ -78,27 +83,23 @@ export function RolesPage() {
   const deleteMutation = useMutation({
     mutationFn: ({ row, reason }: { row: RoleDto; reason: string }) =>
       deleteAdminRole(row.id, { expectedVersion: row.version, reason }),
-    onSuccess: async (_data, { row }) => {
+    onSuccess: async (result) => {
       await refresh();
-      void message.success(row.system ? 'Đã ngừng sử dụng vai trò' : 'Đã xoá vai trò');
+      void message.success(describeRoleDeleteResult(result));
     },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+    onError: async (error: unknown) => {
+      void message.error(roleDeleteErrorMessage(error, getApiErrorMessage(error)));
+      if (shouldReloadAfterRoleDeleteError(error)) await refresh();
+    },
   });
 
   function confirmDelete(row: RoleDto) {
     let reason = '';
-    const deactivateSystemRole = getRoleRemovalMode(row) === 'DEACTIVATE';
     modal.confirm({
-      title: deactivateSystemRole
-        ? `Ngừng sử dụng vai trò ${row.code}?`
-        : `Xoá vai trò ${row.code}?`,
+      title: `Xoá vai trò ${row.code}?`,
       content: (
         <div className="space-y-2">
-          <p className="text-sm text-slate-500">
-            {deactivateSystemRole
-              ? 'Nhân viên đang giữ vai trò này sẽ mất quyền ngay. Vai trò và lịch sử phân quyền vẫn được giữ lại, và có thể kích hoạt lại ở màn Sửa.'
-              : 'Chỉ xoá được khi vai trò chưa gán cho người dùng nào. Thao tác không hoàn tác được.'}
-          </p>
+          <p className="text-sm text-slate-500">{describeRoleDeleteImpact(row)}</p>
           <Input.TextArea
             rows={2}
             placeholder="Lý do (tối thiểu 3 ký tự)"
@@ -108,7 +109,7 @@ export function RolesPage() {
           />
         </div>
       ),
-      okText: deactivateSystemRole ? 'Ngừng sử dụng' : 'Xoá',
+      okText: 'Xoá',
       okButtonProps: { danger: true },
       cancelText: 'Hủy',
       onOk: () => {
