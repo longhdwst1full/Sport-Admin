@@ -36,6 +36,7 @@ import { setSidebarCollapsed, toggleSidebar } from '@/app/store/layout.slice';
 import { usePermissions } from '@/core/auth/permissions';
 import { useAuth } from '@/core/auth/auth-context';
 import { CopilotLauncher, CopilotPageContextProvider } from '@/features/assistant-copilot';
+import { MfaSelfEnrollmentEntry } from '@/features/auth';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { PageContainer } from '@/foundation/layout/page-container';
 import { NavigationTabs } from '@/layouts/components/navigation-tabs';
@@ -353,6 +354,8 @@ export function AdminLayout() {
                     className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
                   />
                 </Tooltip>
+
+                <MfaSelfEnrollmentEntry />
 
                 {/* User avatar & info in Header (satisfies UI-SHELL-05 & provides sleek header identity) */}
                 <div className="flex items-center gap-2 pl-2 border-l border-slate-300/80">

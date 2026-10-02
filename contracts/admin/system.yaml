@@ -172,11 +172,18 @@ paths:
         - system.parameter.manage
   /api/v1/admin/system/parameters/{code}:
     patch:
+      description: Tham số bí mật (isSecret) và ADMIN_MFA_ENFORCED cần header x-mfa-code = mã TOTP hiện tại của người sửa (dùng một lần); thiếu/sai trả 403 MFA_CODE_REQUIRED / MFA_CODE_INVALID (MFA_NOT_ENROLLED nếu người sửa chưa bật 2FA). Tài khoản break-glass được miễn.
       operationId: updateAdminSystemParameter
       parameters:
         - name: code
           required: true
           in: path
+          schema:
+            type: string
+        - name: x-mfa-code
+          in: header
+          description: Bắt buộc với tham số bí mật và ADMIN_MFA_ENFORCED
+          required: false
           schema:
             type: string
       requestBody:
@@ -229,6 +236,12 @@ paths:
         - name: code
           required: true
           in: path
+          schema:
+            type: string
+        - name: x-mfa-code
+          in: header
+          description: Bắt buộc với tham số bí mật
+          required: false
           schema:
             type: string
       requestBody:
@@ -541,6 +554,7 @@ components:
         - INTEGRATION
         - ASSISTANT
         - NOTIFICATION
+        - SECURITY
     SystemParameterListDto:
       type: object
       properties:

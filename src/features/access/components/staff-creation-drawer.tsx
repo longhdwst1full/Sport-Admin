@@ -36,11 +36,17 @@ import {
   AssignableStaffRoleCode,
   CreateStaffUserDtoRoleCode,
   type CreateStaffUserDtoRoleCode as StaffRoleCode,
+  type CreateStaffUserResponseDto,
+  type MfaProvisioningDto,
   type PermissionDto,
 } from '@/generated/api/iam/iam.schemas';
 import { useSearchActiveAdminBranches } from '@/generated/api/organization/organization';
-import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
-import { ASSIGNABLE_ROLE_CODES, ASSIGNABLE_ROLE_PRESENTATION } from '../constants/access.constants';
+import { getApiErrorMessage, getApiErrorPayload, getApiFieldErrors } from '@/lib/api/error';
+import {
+  ASSIGNABLE_ROLE_CODES,
+  ASSIGNABLE_ROLE_PRESENTATION,
+  STAFF_CREATION_ERROR_MESSAGES,
+} from '../constants/access.constants';
 import { type AssignmentFormValues, assignmentIdentity } from '../model/role-assignment.mapper';
 import {
   type StaffCreationFormValues,
@@ -93,7 +99,16 @@ const MODULE_TRANSLATIONS: Record<string, { label: string; icon: string }> = {
   System: { label: 'Hệ thống (System)', icon: '⚙️' },
 };
 
-export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function StaffCreationDrawer({
+  open,
+  onClose,
+  onMfaProvisioned,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** API chỉ trả `mfa` khi người tạo giữ iam.user.mfa.manage; trang hiển thị QR ngay sau khi tạo. */
+  onMfaProvisioned?: (displayName: string, mfa: MfaProvisioningDto) => void;
+}) {
   const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const [branchSearch, setBranchSearch] = useState('');
@@ -193,14 +208,22 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
     setSubmitting(true);
     try {
       let userId: string;
+      let created: CreateStaffUserResponseDto;
       try {
-        userId = (await createStaff.mutateAsync({ data: toCreateStaffUserDto(values) })).id;
+        created = await createStaff.mutateAsync({ data: toCreateStaffUserDto(values) });
+        userId = created.id;
       } catch (error) {
         Object.entries(getApiFieldErrors(error)).forEach(([field, fieldMessage]) => {
           if (field in schema.fields) {
             setError(field as keyof StaffCreationFormValues, { message: fieldMessage });
           }
         });
+        const reservedMessage = STAFF_CREATION_ERROR_MESSAGES[getApiErrorPayload(error)?.code ?? ''];
+        if (reservedMessage) {
+          setError('email', { message: reservedMessage });
+          void message.error(reservedMessage);
+          return;
+        }
         void message.error(getApiErrorMessage(error, 'Không thể tạo nhân viên.'));
         return;
       }
@@ -226,6 +249,7 @@ export function StaffCreationDrawer({ open, onClose }: { open: boolean; onClose:
       }
       reset(EMPTY_FORM);
       onClose();
+      if (created.mfa) onMfaProvisioned?.(created.displayName, created.mfa);
     } finally {
       setSubmitting(false);
     }

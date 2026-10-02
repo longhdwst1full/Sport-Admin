@@ -22,8 +22,14 @@ describe('Làm mới quyền sau khi thay đổi phân quyền', () => {
       Array.from(sdk.matchAll(/const mutationKey = \['(\w+)'\]/g), (match) => match[1]),
     );
 
-    // Tạo nhân viên mới không đổi quyền của chính người đang thao tác.
-    const notAffectingSelf = new Set(['createAdminStaffUser']);
+    // Tạo nhân viên mới / xem, cấp lại hay đặt lại 2FA của nhân viên không đổi quyền của chính người
+    // đang thao tác (2FA không phải permission; API chỉ cho thao tác trên tài khoản nhân viên).
+    const notAffectingSelf = new Set([
+      'createAdminStaffUser',
+      'revealAdminStaffMfa',
+      'reissueAdminStaffMfa',
+      'resetAdminStaffMfa',
+    ]);
     const missing = [...generated].filter(
       (operation) =>
         !PERMISSION_CHANGING_OPERATIONS.has(operation) && !notAffectingSelf.has(operation),

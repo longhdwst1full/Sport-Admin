@@ -27,3 +27,12 @@ export const ASSIGNABLE_ROLE_PRESENTATION: Record<
 };
 
 export const ASSIGNABLE_ROLE_CODES = Object.values(AssignableStaffRoleCode);
+
+/** Mã lỗi tạo nhân viên cần thông báo riêng (API trả 409). */
+export const STAFF_CREATION_ERROR_CODE = {
+  EMAIL_RESERVED: 'IAM_EMAIL_RESERVED',
+} as const;
+
+export const STAFF_CREATION_ERROR_MESSAGES: Record<string, string> = {
+  [STAFF_CREATION_ERROR_CODE.EMAIL_RESERVED]: 'Email này dành cho tài khoản quản trị gốc.',
+};

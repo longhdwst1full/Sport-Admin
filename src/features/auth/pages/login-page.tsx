@@ -1,21 +1,25 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { App, Button, Checkbox, Form, Input, Tooltip } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
-import { useLoginAdmin } from '@/generated/api/auth/auth';
-import type { LoginDto } from '@/generated/api/auth/auth.schemas';
+import { startAdminMfaEnrollment, useLoginAdmin } from '@/generated/api/auth/auth';
+import type { AdminLoginResponseDto, LoginDto, TokenPairDto } from '@/generated/api/auth/auth.schemas';
 import { useAuth } from '@/core/auth/auth-context';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { consumeExpiredSessionFlash } from '@/core/auth/auth-session-expiry';
+import { SessionEndReason, consumeExpiredSessionReason } from '@/core/auth/auth-session-expiry';
 import {
   forgetIdentifier,
   readRememberedIdentifier,
   rememberIdentifier,
 } from '../model/remembered-identifier';
+import { resolveLoginStep } from '../model/login-step';
+import { MFA_REQUIRED_SESSION_MESSAGE } from '../constants/mfa.constants';
+import { getMfaErrorMessage } from '../model/mfa-error';
+import { LoginMfaStep, type LoginMfaChallenge } from '../components/login-mfa-step';
 
 const schema: yup.ObjectSchema<LoginDto> = yup.object({
   identifier: yup.string().trim().required('Vui lòng nhập email hoặc số điện thoại').max(255),
@@ -38,31 +42,73 @@ export function LoginPage() {
   });
 
   useEffect(() => {
-    if (consumeExpiredSessionFlash()) {
+    const reason = consumeExpiredSessionReason();
+    if (reason === SessionEndReason.MFA_REQUIRED) {
+      void message.warning(MFA_REQUIRED_SESSION_MESSAGE, 8);
+    } else if (reason) {
       void message.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
     }
   }, [message]);
 
+  // Bước 2FA sau mật khẩu; undefined = đang ở bước mật khẩu.
+  const [challenge, setChallenge] = useState<LoginMfaChallenge>();
+  const [preparingChallenge, setPreparingChallenge] = useState(false);
+
+  const completeLogin = async (tokens: TokenPairDto) => {
+    try {
+      const currentUser = await auth.establishSession(tokens, remember);
+      if (currentUser.mustChangePassword) {
+        navigate('/change-password', { replace: true });
+        return;
+      }
+      const from = (location.state as { from?: string } | null)?.from ?? '/';
+      navigate(from, { replace: true });
+    } catch (error) {
+      void message.error(
+        getApiErrorMessage(error, 'Đăng nhập thành công nhưng không thể tải phiên quản trị.'),
+      );
+    }
+  };
+
+  const restartLogin = useCallback(
+    (reason?: { type: 'warning' | 'error'; message: string }) => {
+      setChallenge(undefined);
+      // SECURITY: quay về bước mật khẩu thì xoá mật khẩu đã nhập, tên đăng nhập giữ nguyên.
+      form.setValue('password', '');
+      if (reason) void message[reason.type](reason.message);
+    },
+    [form, message],
+  );
+
+  const handleLoginResponse = async (response: AdminLoginResponseDto) => {
+    const step = resolveLoginStep(response);
+    if (step.kind === 'AUTHENTICATED') {
+      await completeLogin(step.tokens);
+      return;
+    }
+    if (step.kind === 'MFA_ENROLLMENT_REQUIRED') {
+      // Gọi ngay theo sự kiện đăng nhập (không qua effect) để mỗi challenge chỉ sinh một secret.
+      setPreparingChallenge(true);
+      try {
+        const provisioning = await startAdminMfaEnrollment({ challengeToken: step.challengeToken });
+        setChallenge({ ...step, provisioning });
+      } finally {
+        setPreparingChallenge(false);
+      }
+      return;
+    }
+    setChallenge(step);
+  };
+
   const login = useLoginAdmin({
     mutation: {
-      onSuccess: (tokens) => {
-        void auth
-          .establishSession(tokens, remember)
-          .then((currentUser) => {
-            if (currentUser.mustChangePassword) {
-              navigate('/change-password', { replace: true });
-              return;
-            }
-            const from = (location.state as { from?: string } | null)?.from ?? '/';
-            navigate(from, { replace: true });
-          })
-          .catch((error: unknown) => {
-            void message.error(
-              getApiErrorMessage(error, 'Đăng nhập thành công nhưng không thể tải phiên quản trị.'),
-            );
-          });
+      onSuccess: (response) => {
+        void handleLoginResponse(response).catch((error: unknown) => {
+          setChallenge(undefined);
+          void message.error(getMfaErrorMessage(error, 'Đăng nhập thất bại.'));
+        });
       },
-      onError: (error) => void message.error(getApiErrorMessage(error, 'Đăng nhập thất bại.')),
+      onError: (error) => void message.error(getMfaErrorMessage(error, 'Đăng nhập thất bại.')),
     },
   });
 
@@ -114,14 +160,25 @@ export function LoginPage() {
           {/* Form Header */}
           <div className="mb-6 text-center">
             <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-              Đăng nhập
+              {challenge ? 'Xác thực 2 lớp' : 'Đăng nhập'}
             </h1>
             <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">
-              Nhập thông tin xác thực để truy cập bảng điều khiển
+              {challenge?.kind === 'MFA_ENROLLMENT_REQUIRED'
+                ? 'Thiết lập Google Authenticator cho tài khoản của bạn'
+                : challenge
+                  ? 'Nhập mã từ ứng dụng Google Authenticator'
+                  : 'Nhập thông tin xác thực để truy cập bảng điều khiển'}
             </p>
           </div>
 
-          {/* Form */}
+          {challenge ? (
+            <LoginMfaStep
+              key={challenge.challengeToken}
+              challenge={challenge}
+              onAuthenticated={completeLogin}
+              onRestart={restartLogin}
+            />
+          ) : (
           <Form
             layout="vertical"
             requiredMark={false}
@@ -210,12 +267,13 @@ export function LoginPage() {
               size="large"
               type="primary"
               htmlType="submit"
-              loading={login.isPending}
+              loading={login.isPending || preparingChallenge}
               className="!h-11 !rounded-xl !bg-gradient-to-r !from-emerald-600 !to-teal-600 !text-sm !font-semibold !shadow-md !shadow-emerald-600/20 hover:!from-emerald-500 hover:!to-teal-500 active:scale-[0.99] transition-all"
             >
-              {login.isPending ? 'Đang xác thực...' : 'Đăng nhập vào hệ thống'}
+              {login.isPending || preparingChallenge ? 'Đang xác thực...' : 'Đăng nhập vào hệ thống'}
             </Button>
           </Form>
+          )}
         </div>
 
         {/* Footer info */}

@@ -14,6 +14,11 @@ export const AuthRefreshErrorCode = {
   MISSING: 'AUTH_REFRESH_MISSING',
   /** Một lần xoay khác của cùng phiên đang chạy; tạm thời, được phép thử lại. */
   CONFLICT: 'AUTH_REFRESH_CONFLICT',
+  /**
+   * Phiên bị thu hồi vì 2FA vừa thành bắt buộc mà tài khoản chưa bật: kết luận, đăng xuất một lần
+   * và đưa về đăng nhập để thiết lập 2FA.
+   */
+  MFA_REQUIRED: 'AUTH_MFA_REQUIRED',
   /** Mã 401 chung của Backend trước khi có các mã riêng ở trên. */
   LEGACY_UNAUTHORIZED: 'UNAUTHORIZED',
 } as const;
@@ -25,6 +30,7 @@ export const TERMINAL_REFRESH_ERROR_CODES: ReadonlySet<string> = new Set([
   AuthRefreshErrorCode.INVALID,
   AuthRefreshErrorCode.REUSED,
   AuthRefreshErrorCode.MISSING,
+  AuthRefreshErrorCode.MFA_REQUIRED,
   AuthRefreshErrorCode.LEGACY_UNAUTHORIZED,
 ]);
 

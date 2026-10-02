@@ -18,6 +18,7 @@ import type {
 import { useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { getMfaErrorMessage, isMfaCodeCancelled, useMfaCode, type MfaRequestOptions } from '@/features/auth';
 import {
   SystemParameterFormModal,
   type ParameterFormValues,
@@ -27,6 +28,7 @@ import {
   SYSTEM_PARAMETER_PAGE_SIZE,
   parameterGroupLabels,
 } from '../constants/system-parameter.constants';
+import { requiresMfaCode } from '../model/system-parameter-mfa.policy';
 
 export function SystemParametersPage() {
   const { message, modal } = App.useApp();
@@ -38,6 +40,7 @@ export function SystemParametersPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SystemParameterDto>();
   const [debouncedSearch] = useDebounce(search.trim(), 350);
+  const { withMfaCode, mfaModal } = useMfaCode();
   const [page, setPage] = useListPageReset([debouncedSearch, groupCode, status]);
 
   const parameters = useListAdminSystemParameters({
@@ -56,10 +59,22 @@ export function SystemParametersPage() {
   const saveMutation = useMutation({
     mutationFn: (values: ParameterFormValues) => {
       if (editing) {
-        return updateAdminSystemParameter(editing.code, {
-          expectedVersion: editing.version,
-          value: values.value!,
-          ...(values.reason?.trim() ? { reason: values.reason.trim() } : {}),
+        const update = (options?: MfaRequestOptions) =>
+          updateAdminSystemParameter(
+            editing.code,
+            {
+              expectedVersion: editing.version,
+              value: values.value!,
+              ...(values.reason?.trim() ? { reason: values.reason.trim() } : {}),
+            },
+            options,
+          );
+        if (!requiresMfaCode(editing)) return update();
+        return withMfaCode({
+          title: `Xác thực để lưu ${editing.code}`,
+          description: 'Tham số bảo mật: cần mã xác thực 2 lớp hiện tại của bạn để lưu thay đổi.',
+          okText: 'Xác thực & lưu',
+          run: update,
         });
       }
       return createAdminSystemParameter({
@@ -81,20 +96,37 @@ export function SystemParametersPage() {
       setEditing(undefined);
       void message.success(editing ? 'Đã lưu giá trị mới' : 'Đã tạo tham số');
     },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+    onError: (error: unknown) => {
+      if (!isMfaCodeCancelled(error)) void message.error(getMfaErrorMessage(error));
+    },
   });
 
   const deactivateMutation = useMutation({
-    mutationFn: ({ row, reason }: { row: SystemParameterDto; reason?: string }) =>
-      deleteAdminSystemParameter(row.code, {
-        expectedVersion: row.version,
-        ...(reason?.trim() ? { reason: reason.trim() } : {}),
-      }),
+    mutationFn: ({ row, reason }: { row: SystemParameterDto; reason?: string }) => {
+      const remove = (options?: MfaRequestOptions) =>
+        deleteAdminSystemParameter(
+          row.code,
+          {
+            expectedVersion: row.version,
+            ...(reason?.trim() ? { reason: reason.trim() } : {}),
+          },
+          options,
+        );
+      if (!requiresMfaCode(row)) return remove();
+      return withMfaCode({
+        title: `Xác thực để ngừng dùng ${row.code}`,
+        okText: 'Xác thực & ngừng dùng',
+        danger: true,
+        run: remove,
+      });
+    },
     onSuccess: async () => {
       await refresh();
       void message.success('Đã ngừng dùng tham số');
     },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+    onError: (error: unknown) => {
+      if (!isMfaCodeCancelled(error)) void message.error(getMfaErrorMessage(error));
+    },
   });
 
   function confirmDeactivate(row: SystemParameterDto) {
@@ -122,6 +154,11 @@ export function SystemParametersPage() {
         if (reason.trim().length > 0) {
           void message.error('Nếu nhập lý do');
           return Promise.reject(new Error('reason-too-short'));
+        }
+        if (requiresMfaCode(row)) {
+          // Đóng hộp xác nhận rồi mới hỏi mã 2FA: hai modal chồng nhau dễ che mất ô nhập mã.
+          deactivateMutation.mutate({ row, reason: reason.trim() });
+          return undefined;
         }
         return deactivateMutation.mutateAsync({ row, reason: reason.trim() });
       },
@@ -235,6 +272,7 @@ export function SystemParametersPage() {
         }}
         onSubmit={(values) => saveMutation.mutate(values)}
       />
+      {mfaModal}
     </>
   );
 }

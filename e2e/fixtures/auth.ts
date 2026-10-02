@@ -40,6 +40,16 @@ export function tokenPairBody(mustChangePassword = false) {
   };
 }
 
+/** Phản hồi `loginAdmin` (AdminLoginResponseDto) khi không cần bước 2FA. */
+export function loginAuthenticatedBody(mustChangePassword = false) {
+  return { status: 'AUTHENTICATED', ...tokenPairBody(mustChangePassword) };
+}
+
+/** Phản hồi `loginAdmin` khi tài khoản đã bật 2FA và cần nhập OTP. */
+export function loginMfaRequiredBody() {
+  return { status: 'MFA_REQUIRED', challengeToken: 'e2e-challenge', challengeExpiresIn: 300 };
+}
+
 /**
  * Nạp thẳng cookie token + stub `/auth/me` để test vào app đã đăng nhập mà
  * không phải đi qua form login ở mọi spec (login có spec riêng).
@@ -51,6 +61,13 @@ export async function seedSession(page: Page, options: SessionOptions = {}): Pro
     { name: COOKIE.refreshToken, value: 'e2e-refresh-token', url: origin },
   ]);
   await mockJson(page, '**/api/v1/admin/auth/me', currentUserBody(options));
+  // Đã bật 2FA: thanh tiêu đề không hiện lối vào "Bật xác thực 2 lớp", shell giữ nguyên.
+  await mockJson(page, '**/api/v1/admin/auth/mfa', mfaStatusBody());
+}
+
+/** `getAdminMfaStatus` (MfaStatusDto). */
+export function mfaStatusBody(overrides: Partial<{ status: string; enforced: boolean; exempt: boolean }> = {}) {
+  return { status: 'ACTIVE', enforced: true, exempt: false, confirmedAt: '2026-10-01T00:00:00.000Z', ...overrides };
 }
 
 export function permissionsOf(name: PermissionSetName): readonly string[] {

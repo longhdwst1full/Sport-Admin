@@ -2,8 +2,11 @@ import { useState } from 'react';
 import {
   DeleteOutlined,
   LockOutlined,
+  KeyOutlined,
   PlusOutlined,
+  QrcodeOutlined,
   SafetyCertificateOutlined,
+  StopOutlined,
   TeamOutlined,
   UnlockOutlined,
   UserOutlined,
@@ -26,6 +29,7 @@ import { RoleAssignmentDrawer } from '../components/role-assignment-drawer';
 import { RoleAssignmentRevokeModal } from '../components/role-assignment-revoke-modal';
 import { StaffCreationDrawer } from '../components/staff-creation-drawer';
 import { StaffLifecycleModal, type StaffLifecycleAction } from '../components/staff-lifecycle-modal';
+import { useStaffMfaActions } from '../hooks/use-staff-mfa-actions';
 
 const userStatuses: Record<UserDtoStatus, { color: string; label: string }> = {
   ACTIVE: { color: 'green', label: 'Hoạt động' },
@@ -45,6 +49,8 @@ export function AccessPage() {
   const canViewRoles = useCan('iam.role.view');
   const canAssignRoles = useCan('iam.assignment.manage');
   const canManageUsers = useCan('iam.user.manage');
+  const canManageMfa = useCan('iam.user.mfa.manage');
+  const staffMfa = useStaffMfaActions();
   const usersQuery = useListAdminUsers();
   const rolesQuery = useListAdminRoles({ query: { enabled: canViewRoles } });
   const permissionsQuery = useListAdminPermissions({ query: { enabled: canViewRoles } });
@@ -211,12 +217,12 @@ export function AccessPage() {
                       <StatusTag status={value} presentations={userStatuses} />
                     ),
                   },
-                  ...(canAssignRoles || canManageUsers
+                  ...(canAssignRoles || canManageUsers || canManageMfa
                     ? [
                         {
                           title: '',
                           key: 'actions',
-                          width: 130,
+                          width: canManageMfa ? 200 : 130,
                           fixed: 'right' as const,
                           render: (_: unknown, user: UserDto) => {
                             const isOwner = user.assignments.some(
@@ -226,6 +232,26 @@ export function AccessPage() {
                               <TableActions>
                                 {canAssignRoles && !isOwner && (
                                   <TableActionButton label={`Phân quyền cho ${user.displayName}`} icon={<UserSwitchOutlined />} onClick={() => setAssignmentUserId(user.id)} />
+                                )}
+                                {canManageMfa && !isOwner && user.userType === 'STAFF' && (
+                                  <>
+                                    <TableActionButton
+                                      label={`Xem QR 2FA của ${user.displayName}`}
+                                      icon={<QrcodeOutlined />}
+                                      onClick={() => staffMfa.viewQr(user)}
+                                    />
+                                    <TableActionButton
+                                      label={`Cấp lại QR 2FA cho ${user.displayName}`}
+                                      icon={<KeyOutlined />}
+                                      onClick={() => staffMfa.reissueQr(user)}
+                                    />
+                                    <TableActionButton
+                                      label={`Đặt lại 2FA của ${user.displayName}`}
+                                      danger
+                                      icon={<StopOutlined />}
+                                      onClick={() => staffMfa.resetMfa(user)}
+                                    />
+                                  </>
                                 )}
                                 {canManageUsers && !isOwner && user.status === 'ACTIVE' && (
                                   <TableActionButton
@@ -318,7 +344,14 @@ export function AccessPage() {
         onRevoke={(assignment) => assignmentUser && setRevokeTarget({ user: assignmentUser, assignment })}
       />
       <RoleAssignmentRevokeModal target={revokeTarget} onClose={() => setRevokeTarget(undefined)} />
-      <StaffCreationDrawer open={staffCreationOpen} onClose={() => setStaffCreationOpen(false)} />
+      <StaffCreationDrawer
+        open={staffCreationOpen}
+        onClose={() => setStaffCreationOpen(false)}
+        onMfaProvisioned={(displayName, provisioning) =>
+          staffMfa.showProvisionedQr({ title: 'QR xác thực 2 lớp cho nhân viên mới', displayName, provisioning })
+        }
+      />
+      {staffMfa.modals}
       <StaffLifecycleModal
         action={lifecycle?.action}
         user={lifecycle?.user}

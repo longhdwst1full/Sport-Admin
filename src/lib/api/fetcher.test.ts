@@ -2,11 +2,13 @@
 import type { AxiosAdapter, InternalAxiosRequestConfig } from 'axios';
 import axios, { AxiosError, AxiosHeaders } from 'axios';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiFetcher, isCredentialEndpoint } from './fetcher';
+import { apiFetcher, isCredentialEndpoint, isTerminalRefreshFailure } from './fetcher';
 import { clearAuthTokens, getAccessToken, saveAuthTokens } from '@/core/auth/auth-token.store';
 import {
   AUTH_SESSION_EXPIRED_EVENT,
+  SessionEndReason,
   consumeExpiredSessionFlash,
+  consumeExpiredSessionReason,
 } from '@/core/auth/auth-session-expiry';
 import {
   AUTH_REFRESH_LOCK_NAME,
@@ -124,6 +126,14 @@ describe('apiFetcher', () => {
     expect(isCredentialEndpoint('/api/v1/admin/auth/login')).toBe(true);
     expect(isCredentialEndpoint('/api/v1/admin/auth/refresh')).toBe(true);
     expect(isCredentialEndpoint('/api/v1/admin/auth/logout')).toBe(true);
+    // Bước 2FA khi đăng nhập cấp token từ challenge: 401 (mã sai, khoá) không được kích hoạt refresh.
+    expect(isCredentialEndpoint('/api/v1/admin/auth/mfa/verify')).toBe(true);
+    expect(isCredentialEndpoint('/api/v1/admin/auth/mfa/enroll')).toBe(true);
+    expect(isCredentialEndpoint('/api/v1/admin/auth/mfa/enroll/confirm')).toBe(true);
+  });
+
+  it('trạng thái 2FA của người đăng nhập vẫn là tài nguyên được bảo vệ', () => {
+    expect(isCredentialEndpoint('/api/v1/admin/auth/mfa')).toBe(false);
   });
 
   it('tài nguyên thường vẫn được xoay token', () => {
@@ -197,6 +207,35 @@ describe('apiFetcher', () => {
     ).rejects.toMatchObject({ status: 401 });
     expect(expiredEvents).toBe(1);
     expect(consumeExpiredSessionFlash()).toBe(true);
+  });
+
+  it('AUTH_MFA_REQUIRED khi refresh: đăng xuất đúng một lần với lý do phải bật 2FA', async () => {
+    clearAuthTokens();
+    let expiredEvents = 0;
+    const onExpired = () => {
+      expiredEvents += 1;
+    };
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, onExpired);
+    let refreshCalls = 0;
+    mockRefresh(async () => {
+      refreshCalls += 1;
+      throw httpError(401, AuthRefreshErrorCode.MFA_REQUIRED);
+    });
+    const adapter: AxiosAdapter = async (config) => {
+      throw unauthorized(config);
+    };
+
+    await expect(
+      apiFetcher({ url: '/api/v1/admin/reports/top-products', method: 'GET' }, { adapter }),
+    ).rejects.toMatchObject({ status: 401 });
+    window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, onExpired);
+    expect(refreshCalls).toBe(1);
+    expect(expiredEvents).toBe(1);
+    expect(consumeExpiredSessionReason()).toBe(SessionEndReason.MFA_REQUIRED);
+  });
+
+  it('AUTH_MFA_REQUIRED là mã refresh kết luận dù status không phải 401', () => {
+    expect(isTerminalRefreshFailure(httpError(403, AuthRefreshErrorCode.MFA_REQUIRED))).toBe(true);
   });
 
   /**

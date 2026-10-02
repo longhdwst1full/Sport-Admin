@@ -57,6 +57,15 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
       failAdminReturnRefund: withOptions,
     };
   }
+  if (domain === 'iam') {
+    // SECURITY: thao tác 2FA của nhân viên cần header x-mfa-code (mã TOTP hiện tại của người thao tác);
+    // contract không khai header nên override để caller truyền theo từng lần bấm.
+    return { revealAdminStaffMfa: withOptions, reissueAdminStaffMfa: withOptions, resetAdminStaffMfa: withOptions };
+  }
+  if (domain === 'system') {
+    // SECURITY: sửa/ngừng tham số bí mật và ADMIN_MFA_ENFORCED cần header x-mfa-code.
+    return { updateAdminSystemParameter: withOptions, deleteAdminSystemParameter: withOptions };
+  }
   if (domain === 'support') {
     // IDEMPOTENCY: lệnh trên ticket gửi Idempotency-Key theo từng lần bấm (API replay/409 theo key + payload).
     return {

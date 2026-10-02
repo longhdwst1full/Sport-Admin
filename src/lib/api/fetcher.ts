@@ -10,7 +10,7 @@ import {
   waitForPeerAccessToken,
 } from '@/core/auth/auth-token.store';
 import type { TokenPairDto } from '@/generated/api/auth/auth.schemas';
-import { expireAdminSession } from '@/core/auth/auth-session-expiry';
+import { SessionEndReason, expireAdminSession } from '@/core/auth/auth-session-expiry';
 import {
   AUTH_REFRESH_LOCK_NAME,
   AUTH_PEER_TOKEN_WAIT_MS,
@@ -70,7 +70,11 @@ export function rotateTokens(): Promise<TokenPairDto> {
     .catch((error: unknown) => {
       if (isTerminalRefreshFailure(error)) {
         clearAuthTokens();
-        expireAdminSession();
+        expireAdminSession(
+          errorCode(error) === AuthRefreshErrorCode.MFA_REQUIRED
+            ? SessionEndReason.MFA_REQUIRED
+            : SessionEndReason.EXPIRED,
+        );
       }
       throw error;
     })
@@ -181,6 +185,10 @@ const CREDENTIAL_ENDPOINTS = [
   '/admin/auth/login',
   '/admin/auth/refresh',
   '/admin/auth/logout',
+  // Bước 2FA khi đăng nhập: cấp token từ challenge, chưa có phiên để xoay. 401 ở đây (mã sai,
+  // ACCOUNT_LOCKED, challenge hết hạn) là kết quả nghiệp vụ, không được kích hoạt refresh/đăng xuất.
+  '/admin/auth/mfa/enroll',
+  '/admin/auth/mfa/verify',
 ];
 
 export function isCredentialEndpoint(url: string | undefined): boolean {

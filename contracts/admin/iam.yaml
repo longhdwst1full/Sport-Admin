@@ -42,7 +42,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserDto"
+                $ref: "#/components/schemas/CreateStaffUserResponseDto"
         "400":
           description: ""
           content:
@@ -68,7 +68,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: Email already exists
+          description: Email already exists, hoặc IAM_EMAIL_RESERVED (email break-glass)
           content:
             application/json:
               schema:
@@ -80,6 +80,159 @@ paths:
         - Admin IAM
       x-required-permissions:
         - iam.user.manage
+  /api/v1/admin/iam/users/{userId}/mfa/reveal:
+    post:
+      operationId: revealAdminStaffMfa
+      parameters:
+        - name: userId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: x-mfa-code
+          in: header
+          description: Mã TOTP hiện tại của người thao tác (dùng một lần)
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMfaDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: MFA_CODE_REQUIRED / MFA_CODE_INVALID / MFA_CODE_ALREADY_USED (thiếu/sai/đã dùng mã x-mfa-code), MFA_NOT_ENROLLED (người thao tác chưa bật 2FA), MFA_TARGET_NOT_STAFF, hoặc thiếu quyền iam.user.mfa.manage
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: Staff user not found, hoặc MFA_NOT_ENROLLED
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: "MFA_SECRET_UNREADABLE: hãy cấp lại QR"
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xem lại QR 2FA hiện hành của nhân viên (cần x-mfa-code, mỗi lần xem đều ghi audit)
+      tags:
+        - Admin IAM
+      x-required-permissions:
+        - iam.user.mfa.manage
+  /api/v1/admin/iam/users/{userId}/mfa/reissue:
+    post:
+      operationId: reissueAdminStaffMfa
+      parameters:
+        - name: userId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: x-mfa-code
+          in: header
+          description: Mã TOTP hiện tại của người thao tác (dùng một lần)
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMfaReissueDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: MFA_CODE_REQUIRED / MFA_CODE_INVALID / MFA_CODE_ALREADY_USED (thiếu/sai/đã dùng mã x-mfa-code), MFA_NOT_ENROLLED (người thao tác chưa bật 2FA), MFA_TARGET_NOT_STAFF, hoặc thiếu quyền iam.user.mfa.manage
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: Staff user not found
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Cấp QR 2FA mới cho nhân viên: secret cũ hết hiệu lực, mọi phiên của nhân viên bị thu hồi"
+      tags:
+        - Admin IAM
+      x-required-permissions:
+        - iam.user.mfa.manage
+  /api/v1/admin/iam/users/{userId}/mfa/reset:
+    post:
+      operationId: resetAdminStaffMfa
+      parameters:
+        - name: userId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: x-mfa-code
+          in: header
+          description: Mã TOTP hiện tại của người thao tác (dùng một lần)
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMfaResetDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: MFA_CODE_REQUIRED / MFA_CODE_INVALID / MFA_CODE_ALREADY_USED (thiếu/sai/đã dùng mã x-mfa-code), MFA_NOT_ENROLLED (người thao tác chưa bật 2FA), MFA_TARGET_NOT_STAFF, hoặc thiếu quyền iam.user.mfa.manage
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: Staff user not found
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: MFA_NOT_ENROLLED
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xoá 2FA của nhân viên và thu hồi phiên; nhân viên tự quét QR lại ở lần đăng nhập kế tiếp
+      tags:
+        - Admin IAM
+      x-required-permissions:
+        - iam.user.mfa.manage
   /api/v1/admin/iam/users/{userId}/lock:
     post:
       operationId: lockAdminStaffUser
@@ -739,6 +892,63 @@ components:
         - email
         - roleCode
         - branchId
+    CreateStaffUserResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        displayName:
+          type: string
+          example: Long Hoàng
+        maskedEmail:
+          type: string
+          example: lo***@dctd.vn
+        userType:
+          type: string
+          enum:
+            - STAFF
+            - SYSTEM
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - LOCKED
+            - INACTIVE
+        permissionVersion:
+          type: number
+          example: 1
+        failedLoginAttempts:
+          type: number
+          example: 0
+          minimum: 0
+        mustChangePassword:
+          type: boolean
+          example: false
+        lockedAt:
+          type: string
+          format: date-time
+        lockReason:
+          type: string
+        assignments:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRoleAssignmentDto"
+        mfa:
+          description: "Chỉ có khi người tạo giữ iam.user.mfa.manage: QR Google Authenticator (PENDING) để nhân viên quét; kích hoạt ở lần nhập OTP đúng đầu tiên khi đăng nhập"
+          allOf:
+            - $ref: ./_components.yaml#/components/schemas/MfaProvisioningDto
+      required:
+        - id
+        - displayName
+        - maskedEmail
+        - userType
+        - status
+        - permissionVersion
+        - failedLoginAttempts
+        - mustChangePassword
+        - assignments
     DeleteRoleDto:
       type: object
       properties:
@@ -864,6 +1074,57 @@ components:
       enum:
         - GLOBAL
         - BRANCH
+    StaffMfaDto:
+      type: object
+      properties:
+        otpauthUri:
+          type: string
+          example: otpauth://totp/DCTD%20Admin:an%40example.com?secret=JBSWY3DPEHPK3PXP&period=30&digits=6&algorithm=SHA1&issuer=DCTD%20Admin
+          description: Dựng QR từ chuỗi này để quét bằng Google Authenticator
+        secret:
+          type: string
+          example: JBSWY3DPEHPK3PXP
+          description: Secret base32 để nhập tay khi không quét được QR
+        status:
+          allOf:
+            - $ref: ./_components.yaml#/components/schemas/MfaEnrollmentState
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - otpauthUri
+        - secret
+        - status
+        - confirmedAt
+    StaffMfaReissueDto:
+      type: object
+      properties:
+        otpauthUri:
+          type: string
+          example: otpauth://totp/DCTD%20Admin:an%40example.com?secret=JBSWY3DPEHPK3PXP&period=30&digits=6&algorithm=SHA1&issuer=DCTD%20Admin
+          description: Dựng QR từ chuỗi này để quét bằng Google Authenticator
+        secret:
+          type: string
+          example: JBSWY3DPEHPK3PXP
+          description: Secret base32 để nhập tay khi không quét được QR
+        revokedSessionCount:
+          type: number
+          example: 2
+          minimum: 0
+      required:
+        - otpauthUri
+        - secret
+        - revokedSessionCount
+    StaffMfaResetDto:
+      type: object
+      properties:
+        revokedSessionCount:
+          type: number
+          example: 2
+          minimum: 0
+      required:
+        - revokedSessionCount
     UpdateRoleDto:
       type: object
       properties:

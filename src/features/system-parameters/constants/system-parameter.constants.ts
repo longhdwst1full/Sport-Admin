@@ -17,6 +17,7 @@ const groupLabels: Record<SystemParameterGroup, string> = {
   ASSISTANT: 'Trợ lý AI',
   PROCUREMENT: 'Mua hàng & nhập kho',
   NOTIFICATION: 'Mẫu email',
+  SECURITY: 'Bảo mật',
 };
 
 /**

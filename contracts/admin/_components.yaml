@@ -144,6 +144,26 @@ components:
       type: string
       enum:
         - CLOUDINARY
+    MfaEnrollmentState:
+      type: string
+      enum:
+        - NONE
+        - PENDING
+        - ACTIVE
+    MfaProvisioningDto:
+      type: object
+      properties:
+        otpauthUri:
+          type: string
+          example: otpauth://totp/DCTD%20Admin:an%40example.com?secret=JBSWY3DPEHPK3PXP&period=30&digits=6&algorithm=SHA1&issuer=DCTD%20Admin
+          description: Dựng QR từ chuỗi này để quét bằng Google Authenticator
+        secret:
+          type: string
+          example: JBSWY3DPEHPK3PXP
+          description: Secret base32 để nhập tay khi không quét được QR
+      required:
+        - otpauthUri
+        - secret
     PageMetaDto:
       type: object
       properties:

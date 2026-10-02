@@ -11,6 +11,7 @@ servers:
 paths:
   /api/v1/admin/auth/login:
     post:
+      description: "CONTRACT (breaking, Admin 2FA): trả `status`. AUTHENTICATED kèm token như trước (cookie/body transport không đổi). MFA_REQUIRED / MFA_ENROLLMENT_REQUIRED chỉ kèm `challengeToken` — chưa có phiên."
       operationId: loginAdmin
       parameters: []
       requestBody:
@@ -25,14 +26,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokenPairDto"
+                $ref: "#/components/schemas/AdminLoginResponseDto"
         "401":
           description: Invalid credentials, or ACCOUNT_LOCKED after five failed attempts
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
-      summary: Authenticate staff by email or phone
+      summary: Authenticate staff by email or phone; may require a 2FA step before a session is issued
       tags:
         - Admin Auth
   /api/v1/admin/auth/refresh:
@@ -131,8 +132,249 @@ paths:
       summary: Get verified user context
       tags:
         - Admin Auth
+  /api/v1/admin/auth/mfa/enroll:
+    post:
+      operationId: startAdminMfaEnrollment
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaChallengeDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/MfaProvisioningDto
+        "401":
+          description: MFA_CHALLENGE_INVALID (challenge hết hạn/đã dùng/sai mục đích — đăng nhập lại), MFA_CODE_INVALID, MFA_CODE_ALREADY_USED (mã đúng nhưng đã dùng — chờ mã mới, không đếm), ACCOUNT_LOCKED (mã sai chung bộ đếm 5 lần với mật khẩu)
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: MFA_ALREADY_ENROLLED
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      summary: Sinh QR Google Authenticator cho nhân viên chưa có 2FA (sau MFA_ENROLLMENT_REQUIRED)
+      tags:
+        - Admin Auth
+  /api/v1/admin/auth/mfa/enroll/confirm:
+    post:
+      operationId: confirmAdminMfaEnrollment
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmMfaEnrollmentDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPairDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: MFA_CHALLENGE_INVALID (challenge hết hạn/đã dùng/sai mục đích — đăng nhập lại), MFA_CODE_INVALID, MFA_CODE_ALREADY_USED (mã đúng nhưng đã dùng — chờ mã mới, không đếm), ACCOUNT_LOCKED (mã sai chung bộ đếm 5 lần với mật khẩu)
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: MFA_ENROLLMENT_NOT_STARTED, MFA_ALREADY_ENROLLED, MFA_SECRET_UNREADABLE
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      summary: "Xác nhận mã OTP đầu tiên: bật 2FA và cấp phiên"
+      tags:
+        - Admin Auth
+  /api/v1/admin/auth/mfa/verify:
+    post:
+      operationId: verifyAdminMfaLogin
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyMfaLoginDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPairDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: MFA_CHALLENGE_INVALID (challenge hết hạn/đã dùng/sai mục đích — đăng nhập lại), MFA_CODE_INVALID, MFA_CODE_ALREADY_USED (mã đúng nhưng đã dùng — chờ mã mới, không đếm), ACCOUNT_LOCKED (mã sai chung bộ đếm 5 lần với mật khẩu)
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: "MFA_SECRET_UNREADABLE: Admin cần cấp lại QR"
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      summary: Hoàn tất đăng nhập bằng mã OTP (sau MFA_REQUIRED); QR do Admin cấp được kích hoạt ở mã đúng đầu tiên
+      tags:
+        - Admin Auth
+  /api/v1/admin/auth/mfa:
+    get:
+      operationId: getAdminMfaStatus
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaStatusDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Trạng thái 2FA của chính mình
+      tags:
+        - Admin Auth
+  /api/v1/admin/auth/mfa/self-enroll:
+    post:
+      operationId: startAdminMfaSelfEnrollment
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/MfaProvisioningDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: MFA_ALREADY_ENROLLED (đổi 2FA đang dùng phải qua Admin), MFA_EXEMPT_ACCOUNT (tài khoản break-glass)
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Nhân viên đang đăng nhập tự sinh QR 2FA cho chính mình (chưa có 2FA ACTIVE)
+      tags:
+        - Admin Auth
+  /api/v1/admin/auth/mfa/self-enroll/confirm:
+    post:
+      operationId: confirmAdminMfaSelfEnrollment
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaCodeDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaStatusDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ACCOUNT_LOCKED sau 5 lần sai (phiên bị thu hồi)
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: MFA_CODE_INVALID (đếm vào bộ khoá), MFA_CODE_ALREADY_USED (chờ mã mới, không đếm)
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: MFA_ENROLLMENT_NOT_STARTED, MFA_ALREADY_ENROLLED, MFA_EXEMPT_ACCOUNT, MFA_SECRET_UNREADABLE
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xác nhận mã OTP đầu tiên để bật 2FA cho chính mình
+      tags:
+        - Admin Auth
 components:
   schemas:
+    AdminLoginResponseDto:
+      type: object
+      properties:
+        status:
+          description: "AUTHENTICATED: đã cấp phiên (các trường token có mặt). MFA_REQUIRED: gọi verifyAdminMfaLogin. MFA_ENROLLMENT_REQUIRED: gọi startAdminMfaEnrollment rồi confirmAdminMfaEnrollment."
+          allOf:
+            - $ref: "#/components/schemas/AdminLoginStatus"
+        challengeToken:
+          type: string
+          description: Có khi status khác AUTHENTICATED; dùng cho bước 2FA kế tiếp
+        challengeExpiresIn:
+          type: number
+          example: 300
+          description: Số giây challengeToken còn hiệu lực
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+          description: Returned only in BODY transport; COOKIE transport uses an HttpOnly cookie
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: number
+          example: 900
+        mustChangePassword:
+          type: boolean
+          example: false
+      required:
+        - status
+    AdminLoginStatus:
+      type: string
+      enum:
+        - AUTHENTICATED
+        - MFA_REQUIRED
+        - MFA_ENROLLMENT_REQUIRED
+      description: "AUTHENTICATED: đã cấp phiên (các trường token có mặt). MFA_REQUIRED: gọi verifyAdminMfaLogin. MFA_ENROLLMENT_REQUIRED: gọi startAdminMfaEnrollment rồi confirmAdminMfaEnrollment."
     AuthScopeDto:
       type: object
       properties:
@@ -165,6 +407,19 @@ components:
       required:
         - currentPassword
         - newPassword
+    ConfirmMfaEnrollmentDto:
+      type: object
+      properties:
+        challengeToken:
+          type: string
+          description: challengeToken nhận từ loginAdmin
+        code:
+          type: string
+          example: "123456"
+          pattern: ^\d{6}$
+      required:
+        - challengeToken
+        - code
     CurrentUserDto:
       type: object
       properties:
@@ -218,6 +473,44 @@ components:
       required:
         - identifier
         - password
+    MfaChallengeDto:
+      type: object
+      properties:
+        challengeToken:
+          type: string
+          description: challengeToken nhận từ loginAdmin
+      required:
+        - challengeToken
+    MfaCodeDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "123456"
+          pattern: ^\d{6}$
+      required:
+        - code
+    MfaStatusDto:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: ./_components.yaml#/components/schemas/MfaEnrollmentState
+        enforced:
+          type: boolean
+          description: ADMIN_MFA_ENFORCED hiện hành
+        exempt:
+          type: boolean
+          description: "Tài khoản break-glass: không cần OTP, kể cả x-mfa-code"
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - status
+        - enforced
+        - exempt
+        - confirmedAt
     RefreshTokenDto:
       type: object
       properties:
@@ -246,6 +539,19 @@ components:
         - tokenType
         - expiresIn
         - mustChangePassword
+    VerifyMfaLoginDto:
+      type: object
+      properties:
+        challengeToken:
+          type: string
+          description: challengeToken nhận từ loginAdmin
+        code:
+          type: string
+          example: "123456"
+          pattern: ^\d{6}$
+      required:
+        - challengeToken
+        - code
   securitySchemes:
     bearer:
       scheme: bearer
