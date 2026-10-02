@@ -60,6 +60,11 @@ const FAMILY_LABELS: Record<string, string> = {
   'report.operation': 'Báo cáo vận hành',
   'report.revenue': 'Báo cáo doanh thu',
   'report.inventory': 'Báo cáo tồn kho',
+  'purchase.order': 'Đơn nhập hàng',
+  'purchase.order.approve': 'Duyệt đơn nhập (tài chính)',
+  'purchase.receipt': 'Phiếu nhập kho',
+  'purchase.return': 'Trả hàng NCC',
+  supplier: 'Nhà cung cấp',
 };
 
 /** Họ quyền dùng chung một màn hình dù menu chỉ trỏ tới một mã. */
@@ -73,6 +78,13 @@ const FAMILY_TO_SCREEN_PERMISSION: Record<string, string> = {
   // Hoàn tiền và nhận trả quá hạn đều thao tác trên màn Đổi trả, không có màn riêng.
   'payment.refund': 'return.view',
   'return.window': 'return.view',
+  // Màn Nhập hàng & NCC gom đơn nhập, phiếu nhập, trả NCC và danh bạ NCC.
+  'purchase.order.approve': 'purchase.order.view',
+  'purchase.receipt': 'purchase.order.view',
+  'purchase.return': 'purchase.order.view',
+  supplier: 'purchase.order.view',
+  // Menu Đánh giá mở bằng `catalog.review.moderate` (không có `catalog.review.view`).
+  'catalog.review': 'catalog.review.moderate',
 };
 
 export function permissionFamily(code: string): string {

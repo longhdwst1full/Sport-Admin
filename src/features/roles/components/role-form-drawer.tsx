@@ -3,7 +3,7 @@ import { canEditRolePermissions } from '../model/role-lifecycle.policy';
 import { Alert, Drawer, Form, Input, Select, Space, Button } from 'antd';
 import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
 import { ROOT_ROLE_CODE } from '../constants/role.constants';
-import { PermissionPicker } from './permission-picker';
+import { RolePermissionEditor } from './role-permission-editor';
 
 export interface RoleFormValues {
   code?: string;
@@ -130,7 +130,7 @@ export function RoleFormDrawer({
 
         <Form.Item
           name="permissionCodes"
-          label="Quyền của vai trò"
+          label="Quyền & menu của vai trò"
           rules={[
             {
               validator: (_rule, value: string[] | undefined) =>
@@ -145,7 +145,7 @@ export function RoleFormDrawer({
             nhất, thu hẹp quyền của nó là tự khoá mình ra khỏi hệ thống. Khoá luôn ở form thay vì
             để người dùng bỏ tick rồi mới nhận 403: thao tác hỏng được biết trước khi bấm Lưu.
           */}
-          <PermissionPicker
+          <RolePermissionEditor
             permissions={permissions}
             grantableCodes={grantableCodes}
             disabled={!canEditRolePermissions(editing)}

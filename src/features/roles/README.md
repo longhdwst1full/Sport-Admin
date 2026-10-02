@@ -1,10 +1,10 @@
 # Roles — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-09-19
+> **Last updated:** 2026-10-02
 >
-> **Change summary:** Cho phép sửa lifecycle vai trò hệ thống an toàn: OWNER bất biến; BRANCH_MANAGER/STAFF được ngừng dùng và kích hoạt lại; bảng hiển thị cây quyền theo màn hình.
+> **Change summary:** Vai trò quyết định cả menu hiển thị: tab "Menu hiển thị" bật/tắt từng mục menu (= cấp/gỡ quyền xem của màn), bảng xem trước menu của vai trò; không có màn quản lý menu riêng.
 
 ## Phạm vi
 
@@ -21,6 +21,17 @@ Tạo / sửa / xoá vai trò và gán tập quyền cho vai trò. **Không** g�
 | `deleteAdminRole` | nút xoá, kèm lý do |
 
 `listAdminRoles` (chỉ `ACTIVE`) và `searchActiveAdminRoles` thuộc màn `access`, không dùng ở đây.
+
+## Menu theo vai trò (không có màn quản lý menu)
+
+Menu **suy ra từ quyền**, không lưu riêng — giống `admin-client` (menu lọc theo quyền `*_view` của route). Nguồn duy nhất là `NAVIGATION_ITEMS_DATA` (`shared/constants/navigation.ts`): mỗi mục khai mã quyền làm nó hiện, sidebar/`PermissionRoute` và màn này cùng dùng `canSeeNavigationItem`.
+
+- Drawer có hai tab cùng ghi field `permissionCodes`: **Menu hiển thị** (`components/menu-access-panel.tsx`) và **Chi tiết quyền** (`PermissionPicker`).
+- Bật một mục = thêm mã xem của nó (chỉ mã người thao tác cấp được). Tắt = bỏ mọi mã xem của mục; quyền thao tác `*.manage`... giữ nguyên.
+- Mục dùng chung mã (Sản phẩm/Thuộc tính → `catalog.product.view`; Tham số hệ thống/Thông báo email → `system.parameter.view`) được gắn tag "Chung quyền": bật/tắt một mục đổi cả mục kia.
+- Bảng vai trò, khi mở dòng, hiện "Menu sẽ hiển thị".
+- Panel cảnh báo nếu menu khai mã không có trong catalog `listAdminPermissions`.
+- Logic thuần nằm ở `model/menu-visibility.ts`.
 
 Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhóm/màn hình có thể thu gọn; lọc theo chữ mở lại các kết quả khớp. Chỉ mã quyền ở lá được gửi lên API.
 
@@ -41,6 +52,8 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 - [ ] Thêm module quyền mới ở BE phải bổ sung nhãn vào `constants/role.constants.ts`, nếu không cây quyền hiện mã thô.
 - [ ] Không bỏ `grantableCodes` khỏi `PermissionPicker` — đó là lớp UI của quy tắc chống leo thang đặc quyền.
 - [ ] Không thêm ô cho phép sửa `code`.
+- [ ] Thêm/sửa mục menu chỉ ở `NAVIGATION_ITEMS_DATA`; không tạo danh sách menu thứ hai trong feature này.
+- [ ] Họ quyền mới thuộc một màn có sẵn phải khai `FAMILY_TO_SCREEN_PERMISSION`, nếu không rơi vào "Chưa có màn hình".
 
 ## Revision history
 
@@ -49,3 +62,4 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý vai trò. |
 | 1.0.1 | 2026-09-18 | Cho phép thu gọn cây quyền và ghi rõ cách nhóm theo màn hình. |
 | 1.1.0 | 2026-09-19 | Thêm lifecycle an toàn cho vai trò hệ thống, xác nhận theo hậu quả và cây quyền mở rộng trong bảng. |
+| 1.2.0 | 2026-10-02 | Thêm tab "Menu hiển thị" và xem trước menu theo vai trò (suy ra từ quyền, không có màn menu); gắn họ quyền nhập hàng/NCC và `catalog.review.reply` vào màn có sẵn. |

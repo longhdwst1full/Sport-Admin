@@ -6,6 +6,24 @@ import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
 import { permissionActionLabels, ROOT_ROLE_CODE } from '../constants/role.constants';
 import { buildPermissionTree } from '../model/permission-tree';
 import { getRoleRemovalMode } from '../model/role-lifecycle.policy';
+import { buildMenuVisibility } from '../model/menu-visibility';
+
+/** Xem trước menu vai trò sẽ thấy — cùng hàm lọc với sidebar nên không lệch thực tế. */
+function RoleMenuPreview({ row }: { row: RoleDto }) {
+  const items = buildMenuVisibility(new Set(row.permissionCodes)).flatMap((group) =>
+    group.items.filter((item) => item.visible),
+  );
+  if (items.length === 0) {
+    return <Typography.Text type="secondary">Không thấy mục menu nào</Typography.Text>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {items.map((item) => (
+        <Tag key={item.path}>{item.label}</Tag>
+      ))}
+    </div>
+  );
+}
 
 function rolePermissionTree(row: RoleDto, permissions: PermissionDto[]): DataNode[] {
   const selected = new Set(row.permissionCodes);
@@ -57,6 +75,12 @@ export function RoleTable({
       expandable={{
         expandedRowRender: (row) => (
           <div className="rounded-lg border border-slate-100 bg-slate-50/70 px-4 py-3">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Menu sẽ hiển thị
+            </div>
+            <div className="mb-3">
+              <RoleMenuPreview row={row} />
+            </div>
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
               Quyền theo màn hình
             </div>
