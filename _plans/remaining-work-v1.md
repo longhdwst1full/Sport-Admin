@@ -1,10 +1,26 @@
 # Phương án cho phần việc còn lại
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-14
+> **Last updated:** 2026-10-02
 >
-> **Change summary:** Chốt thứ tự cho 4 nhóm việc còn tồn sau khi đóng refactor base, Sprint 4/5 và S6.4 Flash Sale.
+> **Change summary:** Cập nhật trạng thái 2026-10-02 (không viết lại lịch sử): Return/Refund, banner CMS-02, thư viện ảnh, template email (D90) đã xong; SMS/in-app bỏ và CMS-03 hoãn (D91); Serial/Warranty V2 bị chủ dự án đưa ra khỏi phạm vi. Trước đó: Chốt thứ tự cho 4 nhóm việc còn tồn sau khi đóng refactor base, Sprint 4/5 và S6.4 Flash Sale.
+
+## Cập nhật trạng thái 2026-10-02
+
+Nội dung bên dưới là kế hoạch gốc 2026-09-14, giữ nguyên làm lịch sử. Trạng thái hiện tại (đã kiểm theo thư mục tính năng trong mã nguồn):
+
+| Hạng mục | Trạng thái | Bằng chứng |
+| --- | --- | --- |
+| W2 Return/Refund (S6.1-S6.3) | Xong | `api/src/modules/return`, `admin/src/features/returns`, `client/src/features/returns` |
+| Banner trang chủ (CMS-02, phần W4 Marketing) | Xong | `api/src/modules/cms/banners`, `admin/src/features/content` (banner-actions/form), `client/src/features/home` |
+| Thư viện ảnh (MED-02/MED-03) | Xong | `api/src/modules/media/media-library.service.ts`, `admin/src/features/media` |
+| Template email (NOT-02) | Xong qua tham số hệ thống (D90) | `admin/src/features/system-parameters` (nhóm NOTIFICATION) |
+| SMS / in-app (NOT-01) | Bỏ khỏi V1 (D91) | `api/document/08-open-decisions.csv` |
+| CMS-03 (danh mục/thẻ nội dung) | Hoãn (D91) | `api/document/08-open-decisions.csv` |
+| V2 Serial/Warranty | Chủ dự án đưa ra khỏi phạm vi (theo chỉ đạo, chưa thấy ghi trong D-number) | Nhóm W4 "Bảo hành" không còn thuộc kế hoạch |
+
+W1, W3 và các nhóm W4 còn lại (Thông báo) chưa được rà lại trong lần cập nhật này.
 
 ## Nguyên tắc xếp thứ tự
 
@@ -138,4 +154,5 @@ W1 làm trước vì đang là lỗ hổng mở. W3 có thể chen vào lúc ch�
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-10-02 | Thêm mục cập nhật trạng thái; giữ nguyên kế hoạch gốc. | Rà soát mã nguồn 2026-10-02 |
 | 1.0.0 | 2026-09-14 | Chốt phương án cho 4 nhóm việc còn tồn. | Execution review |
