@@ -1,6 +1,6 @@
 import { Table } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
+import { isValidElement, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import type { TableProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTableSurface, type TableSurface } from './table-surface';
@@ -36,6 +36,53 @@ export interface AdminTableProps<RecordType extends object>
    * Có tên thực thể thì câu trống mới nói đúng việc; bỏ trống sẽ rơi về câu chung.
    */
   emptyEntity?: string;
+}
+
+/** Số dòng tối đa một ô hiển thị; dài hơn thì cắt bằng "…". */
+const ADMIN_TABLE_CELL_MAX_LINES = 3;
+
+// Inline style để số dòng đi theo hằng số thay vì một class Tailwind viết cứng `line-clamp-3`.
+const CELL_CLAMP_STYLE = {
+  display: '-webkit-box',
+  WebkitBoxOrient: 'vertical',
+  WebkitLineClamp: ADMIN_TABLE_CELL_MAX_LINES,
+  overflow: 'hidden',
+} as const;
+
+function isCellObject(value: unknown): value is { children: ReactNode; props?: object } {
+  return Boolean(value) && typeof value === 'object' && !isValidElement(value) && 'children' in (value as object);
+}
+
+/**
+ * Bọc nội dung mọi ô trong khung giới hạn {@link ADMIN_TABLE_CELL_MAX_LINES} dòng, kể cả column group
+ * lồng nhau. Ô chỉ là chữ/số thì có `title` để rê chuột xem đủ; double-click vẫn sao chép toàn văn vì
+ * `innerText` của ô không bị cắt. Cột đã tự khai `ellipsis` của antd giữ nguyên hành vi của nó.
+ */
+function withCellLineClamp<RecordType extends object>(
+  columns: ColumnsType<RecordType> | undefined,
+): ColumnsType<RecordType> | undefined {
+  return columns?.map((column) => {
+    if ('children' in column && column.children) {
+      return { ...column, children: withCellLineClamp(column.children) };
+    }
+    if (column.ellipsis) return column;
+    const originalRender = column.render;
+    return {
+      ...column,
+      render: (value: unknown, record: RecordType, index: number) => {
+        const rendered = originalRender ? originalRender(value, record, index) : (value as ReactNode);
+        // Cách render cũ của antd trả `{ children, props }` để đặt rowSpan/colSpan: chỉ bọc phần children.
+        const content: ReactNode = isCellObject(rendered) ? rendered.children : (rendered as ReactNode);
+        const plain = typeof content === 'string' || typeof content === 'number' ? String(content) : undefined;
+        const clamped = (
+          <div className="break-words" style={{ ...CELL_CLAMP_STYLE }} title={plain}>
+            {content}
+          </div>
+        );
+        return isCellObject(rendered) ? { ...rendered, children: clamped } : clamped;
+      },
+    };
+  });
 }
 
 /**
@@ -94,7 +141,7 @@ export function AdminTable<RecordType extends object>({
       <Table<RecordType>
         size={size ?? TABLE_DENSITY_SIZE[density]}
         {...props}
-        columns={withFixedColumnWidths(columns, defaultColumnWidth)}
+        columns={withCellLineClamp(withFixedColumnWidths(columns, defaultColumnWidth))}
         tableLayout={tableLayout}
         scroll={{
           ...scroll,

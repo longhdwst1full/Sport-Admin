@@ -1,10 +1,10 @@
 # Admin table foundation
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-09-19
+> **Last updated:** 2026-10-02
 >
-> **Change summary:** Đổi pagination mặc định thành 30 dòng và mở lựa chọn 10/20/30/50/100.
+> **Change summary:** Mọi ô của `AdminTable` giới hạn 3 dòng, dài hơn cắt bằng "…" (rê chuột xem đủ với ô chữ thuần; double-click vẫn copy toàn văn). Cột tự khai `ellipsis` giữ hành vi antd. Trước đó: Đổi pagination mặc định thành 30 dòng và mở lựa chọn 10/20/30/50/100.
 
 ## Trách nhiệm
 
@@ -33,5 +33,6 @@
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.2.0 | 2026-10-02 | Mọi ô của `AdminTable` giới hạn 3 dòng, dài hơn cắt bằng "…" (rê chuột xem đủ với ô chữ thuần; double-click vẫn copy toàn văn). Cột tự khai `ellipsis` giữ hành vi antd. |
 | 1.1.0 | 2026-09-19 | Mặc định 30 dòng, bổ sung lựa chọn số dòng/trang 10/20/30/50/100. |
 | 1.0.0 | 2026-09-19 | Tạo foundation table theo pattern table/action-cell của admin-client, giữ Ant Design và TanStack Query hiện tại. |
