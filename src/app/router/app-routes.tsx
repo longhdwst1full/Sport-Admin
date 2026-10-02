@@ -51,6 +51,9 @@ const ContentPage = lazy(() =>
     default: module.ContentPage,
   })),
 );
+const BannersPage = lazy(() =>
+  import('@/features/content').then((module) => ({ default: module.BannersPage })),
+);
 const ReviewsPage = lazy(() =>
   import('@/features/reviews').then((module) => ({
     default: module.ReviewsPage,
@@ -207,6 +210,14 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="cms.content.view">
               <ContentPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="banners"
+          element={
+            <PermissionRoute permission="cms.content.view">
+              <BannersPage />
             </PermissionRoute>
           }
         />

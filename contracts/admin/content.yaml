@@ -258,6 +258,324 @@ paths:
         - Admin Content
       x-required-permissions:
         - cms.content.manage
+  /api/v1/admin/content/banners:
+    get:
+      operationId: listAdminBanners
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+        - name: search
+          required: false
+          in: query
+          description: Tìm theo mã hoặc tiêu đề (không phân biệt hoa thường).
+          schema:
+            maxLength: 100
+            type: string
+        - name: placement
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/BannerPlacement"
+        - name: status
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/BannerStatus"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BannerListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Danh sách banner, lọc vị trí/trạng thái, tìm theo mã/tiêu đề
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.view
+    post:
+      description: Mã do backend sinh. 400 CMS_BANNER_INVALID_WINDOW / CMS_BANNER_CATEGORY_NOT_ALLOWED; 404 CMS_BANNER_CATEGORY_NOT_FOUND; 409 CMS_BANNER_MEDIA_INACTIVE khi ảnh không ACTIVE.
+      operationId: createAdminBanner
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBannerDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BannerDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Tạo banner (trạng thái DRAFT)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.manage
+  /api/v1/admin/content/banners/{id}:
+    get:
+      operationId: getAdminBanner
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BannerDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết banner
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.view
+    patch:
+      description: PATCH từng phần; gửi null để xoá trường tuỳ chọn. Không đổi mã/trạng thái. 409 CMS_BANNER_VERSION_STALE khi expectedVersion cũ, CMS_BANNER_ARCHIVED khi đã lưu trữ.
+      operationId: updateAdminBanner
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBannerDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BannerDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Cập nhật banner
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.manage
+  /api/v1/admin/content/banners/{id}/status:
+    post:
+      description: ARCHIVED là trạng thái cuối (409 CMS_BANNER_ARCHIVED). Đặt lại đúng trạng thái hiện tại là no-op. Xuất bản kiểm lại ảnh còn ACTIVE (409 CMS_BANNER_MEDIA_INACTIVE).
+      operationId: setAdminBannerStatus
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetBannerStatusDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BannerDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xuất bản, gỡ về nháp hoặc lưu trữ banner
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.manage
 components:
   schemas:
     ArchiveContentPostDto:
@@ -274,6 +592,133 @@ components:
       required:
         - expectedVersion
         - reason
+    BannerDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        code:
+          type: string
+          example: BNR-20261002-7K3F9Q2A
+        placement:
+          allOf:
+            - $ref: "#/components/schemas/BannerPlacement"
+        title:
+          type: string
+          nullable: true
+        subtitle:
+          type: string
+          nullable: true
+        ctaText:
+          type: string
+          nullable: true
+        targetUrl:
+          type: string
+          nullable: true
+        desktopAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        desktopImageUrl:
+          type: string
+        mobileAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        mobileImageUrl:
+          type: string
+          nullable: true
+        categoryId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        startsAt:
+          type: string
+          format: date-time
+          nullable: true
+        endsAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          allOf:
+            - $ref: "#/components/schemas/BannerStatus"
+        isLive:
+          type: boolean
+          description: PUBLISHED và thời điểm hiện tại nằm trong khung hiệu lực.
+        sortOrder:
+          type: number
+        version:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        createdByDisplayName:
+          type: string
+        updatedByDisplayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - code
+        - placement
+        - title
+        - subtitle
+        - ctaText
+        - targetUrl
+        - desktopAssetId
+        - desktopImageUrl
+        - mobileAssetId
+        - mobileImageUrl
+        - categoryId
+        - categoryName
+        - startsAt
+        - endsAt
+        - status
+        - isLive
+        - sortOrder
+        - version
+        - createdByDisplayName
+        - updatedByDisplayName
+        - createdAt
+        - updatedAt
+    BannerListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BannerDto"
+        meta:
+          $ref: ./_components.yaml#/components/schemas/PageMetaDto
+      required:
+        - items
+        - meta
+    BannerPlacement:
+      type: string
+      enum:
+        - HOME_HERO
+        - HOME_PROMO
+        - FOOTER
+        - CATEGORY_TOP
+    BannerStatus:
+      type: string
+      enum:
+        - DRAFT
+        - PUBLISHED
+        - ARCHIVED
     ContentPostDto:
       type: object
       properties:
@@ -399,6 +844,59 @@ components:
         - PRODUCT_GUIDE
         - ABOUT
         - POLICY
+    CreateBannerDto:
+      type: object
+      properties:
+        placement:
+          allOf:
+            - $ref: "#/components/schemas/BannerPlacement"
+        title:
+          type: string
+          maxLength: 255
+        subtitle:
+          type: string
+          maxLength: 500
+        ctaText:
+          type: string
+          maxLength: 64
+          example: Mua ngay
+        targetUrl:
+          type: string
+          maxLength: 2000
+          pattern: ^(?:\/(?![/\\])\S*|https:\/\/\S+)$
+          example: /danh-muc/giay-chay-bo
+          description: Đường dẫn nội bộ bắt đầu bằng "/" (không phải "//") hoặc URL https.
+        desktopAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Ảnh desktop (bắt buộc), phải ACTIVE trong thư viện media.
+        mobileAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Ảnh mobile; bỏ trống thì storefront dùng ảnh desktop.
+        categoryId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Chỉ dùng với CATEGORY_TOP; bỏ trống = hiển thị ở mọi danh mục.
+        startsAt:
+          type: string
+          format: date-time
+          description: Bỏ trống = hiệu lực ngay khi xuất bản.
+        endsAt:
+          type: string
+          format: date-time
+          description: Bỏ trống = không hết hạn.
+        sortOrder:
+          type: number
+          default: 0
+          minimum: 0
+          maximum: 100000
+      required:
+        - placement
+        - desktopAssetId
     CreateContentPostDto:
       type: object
       properties:
@@ -428,6 +926,82 @@ components:
         - excerpt
         - body
         - coverUrl
+    SetBannerStatusDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        status:
+          allOf:
+            - $ref: "#/components/schemas/BannerStatus"
+        reason:
+          type: string
+          maxLength: 500
+          description: Lý do đổi trạng thái; ghi vào audit.
+      required:
+        - expectedVersion
+        - status
+    UpdateBannerDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          example: "0"
+          description: Current optimistic-lock version
+        placement:
+          allOf:
+            - $ref: "#/components/schemas/BannerPlacement"
+        title:
+          type: string
+          maxLength: 255
+          nullable: true
+        subtitle:
+          type: string
+          maxLength: 500
+          nullable: true
+        ctaText:
+          type: string
+          maxLength: 64
+          nullable: true
+        targetUrl:
+          type: string
+          maxLength: 2000
+          pattern: ^(?:\/(?![/\\])\S*|https:\/\/\S+)$
+          example: /danh-muc/giay-chay-bo
+          description: Đường dẫn nội bộ bắt đầu bằng "/" (không phải "//") hoặc URL https.
+          nullable: true
+        desktopAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        mobileAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        categoryId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        startsAt:
+          type: string
+          format: date-time
+          nullable: true
+        endsAt:
+          type: string
+          format: date-time
+          nullable: true
+        sortOrder:
+          type: number
+          minimum: 0
+          maximum: 100000
+      required:
+        - expectedVersion
     UpdateContentPostDto:
       type: object
       properties:

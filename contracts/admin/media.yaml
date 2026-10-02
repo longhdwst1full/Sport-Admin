@@ -566,6 +566,7 @@ components:
         - CUSTOMER_AVATAR
         - PAYMENT_EVIDENCE
         - PRODUCT_REVIEW
+        - BANNER
   securitySchemes:
     bearer:
       scheme: bearer
