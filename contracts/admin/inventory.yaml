@@ -1271,7 +1271,7 @@ paths:
         - inventory.stocktake.manage
   /api/v1/admin/inventory/stocktakes/{id}/approve:
     post:
-      description: "Không thể hoàn tác: inventory_movements là append-only. Dòng không lệch không sinh movement. 409 STOCKTAKE_BELOW_RESERVED khi số đếm thấp hơn lượng đang giữ cho đơn chờ giao."
+      description: "Không thể hoàn tác: inventory_movements là append-only. Dòng không lệch không sinh movement. 409 STOCKTAKE_BELOW_RESERVED khi số đếm thấp hơn lượng đang giữ cho đơn chờ giao. 403 STOCKTAKE_SELF_APPROVAL khi người duyệt là người tạo phiếu mà không giữ vai trò OWNER hoặc BRANCH_MANAGER phủ chi nhánh của kho (D96)."
       operationId: approveStocktake
       parameters:
         - name: id
@@ -1305,7 +1305,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
-          description: ""
+          description: "STOCKTAKE_SELF_APPROVAL: người tạo phiếu không được tự duyệt (trừ OWNER/BRANCH_MANAGER của chi nhánh); STOCKTAKE_OUT_OF_SCOPE: kho ngoài phạm vi chi nhánh."
           content:
             application/json:
               schema:
@@ -2205,6 +2205,9 @@ components:
           type: number
           nullable: true
           description: Số dòng có phát sinh kho sau lúc đếm. Ẩn khi DRAFT. Lớn hơn 0 nên soát lại trước khi duyệt.
+        canApprove:
+          type: boolean
+          description: "Người đang xem có duyệt được phiếu này không: phiếu SUBMITTED, có quyền duyệt trong phạm vi chi nhánh và không vướng luật người tạo không tự duyệt (D96; OWNER/BRANCH_MANAGER phủ chi nhánh được miễn). Chỉ để ẩn/hiện nút Duyệt; approveStocktake vẫn kiểm lại và trả 403 STOCKTAKE_SELF_APPROVAL."
       required:
         - id
         - stocktakeNo
@@ -2218,6 +2221,7 @@ components:
         - snapshotAt
         - createdAt
         - items
+        - canApprove
     StocktakeItemDto:
       type: object
       properties:

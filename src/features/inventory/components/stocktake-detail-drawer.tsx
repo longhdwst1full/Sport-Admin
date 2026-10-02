@@ -14,8 +14,12 @@ import {
   useGetStocktake,
   useSubmitStocktake,
 } from '@/generated/api/inventory/inventory';
-import { getApiErrorMessage } from '@/lib/api/error';
-import { availableStocktakeActions } from '../model/stocktake-actions.policy';
+import {
+  availableStocktakeActions,
+  getStocktakeErrorMessage,
+  isSelfApprovalError,
+  stocktakeApproveGate,
+} from '../model/stocktake-actions.policy';
 import { formatStocktakeTime, stocktakeScopeLabel, stocktakeStatusMeta } from '../model/stocktake-display';
 import { StocktakeCountDrawer } from './stocktake-count-drawer';
 
@@ -32,6 +36,7 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
   const stocktake = detail.data;
   const permissions = usePermissions();
   const actions = stocktake ? availableStocktakeActions(stocktake.status, permissions) : [];
+  const approveGate = stocktakeApproveGate(stocktake?.status ?? 'DRAFT', stocktake?.canApprove);
   const [countOpen, setCountOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -47,7 +52,11 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
 
   const handler = (fallback: string) => ({
     onSuccess: async (result: { id: string }) => { await refresh(result.id); },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error, fallback)),
+    onError: (error: unknown) => {
+      void message.error(getStocktakeErrorMessage(error, fallback));
+      // Quyền duyệt đã đổi so với bản đang xem: tải lại để nút phản ánh canApprove mới.
+      if (isSelfApprovalError(error) && id) void refresh(id);
+    },
   });
 
   const submit = useSubmitStocktake({
@@ -132,9 +141,11 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
               </Tooltip>
             )}
             {actions.includes('approve') && (
-              <Button type="primary" loading={approve.isPending} disabled={pending} onClick={confirmApprove}>
-                Duyệt và ghi sổ
-              </Button>
+              <Tooltip title={approveGate.tooltip}>
+                <Button type="primary" loading={approve.isPending} disabled={pending || approveGate.disabled} onClick={confirmApprove}>
+                  Duyệt và ghi sổ
+                </Button>
+              </Tooltip>
             )}
           </Space>
         )}

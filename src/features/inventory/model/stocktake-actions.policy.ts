@@ -1,4 +1,5 @@
 import type { StocktakeStatus } from '@/generated/api/inventory/inventory.schemas';
+import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 
 export type StocktakeAction = 'count' | 'submit' | 'approve' | 'cancel';
 
@@ -19,4 +20,29 @@ export function availableStocktakeActions(
   if (status === 'DRAFT') return ['cancel', 'count', 'submit'];
   if (status === 'SUBMITTED') return ['cancel', 'approve'];
   return [];
+}
+
+export const STOCKTAKE_SELF_APPROVAL_CODE = 'STOCKTAKE_SELF_APPROVAL';
+export const STOCKTAKE_SELF_APPROVAL_TOOLTIP = 'Người tạo phiếu không được tự duyệt — cần người khác duyệt.';
+export const STOCKTAKE_SELF_APPROVAL_MESSAGE = 'Người tạo phiếu kiểm kê không được tự duyệt.';
+
+/**
+ * Nút Duyệt: bật chỉ khi API báo `canApprove`; phiếu SUBMITTED mà `canApprove=false` thì khoá kèm
+ * lý do (người tạo không được tự duyệt, D96). API vẫn kiểm lại và trả 403 STOCKTAKE_SELF_APPROVAL.
+ */
+export function stocktakeApproveGate(
+  status: StocktakeStatus,
+  canApprove: boolean | undefined,
+): { disabled: boolean; tooltip?: string } {
+  if (status !== 'SUBMITTED' || canApprove) return { disabled: false };
+  return { disabled: true, tooltip: STOCKTAKE_SELF_APPROVAL_TOOLTIP };
+}
+
+export function isSelfApprovalError(error: unknown): boolean {
+  return getApiErrorPayload(error)?.code === STOCKTAKE_SELF_APPROVAL_CODE;
+}
+
+/** Thông điệp tiếng Việt cố định cho STOCKTAKE_SELF_APPROVAL; lỗi khác dùng message của API. */
+export function getStocktakeErrorMessage(error: unknown, fallback: string): string {
+  return isSelfApprovalError(error) ? STOCKTAKE_SELF_APPROVAL_MESSAGE : getApiErrorMessage(error, fallback);
 }
