@@ -25,6 +25,15 @@ export const COPILOT_LIMITS = {
   REJECT_REASON_MAX: 500,
 } as const;
 
+/**
+ * IDEMPOTENCY: `ASSISTANT_TURN_IN_PROGRESS` = lượt cùng khoá đang chạy ở API. Giữ khoá, hỏi lại lịch sử định kỳ tới
+ * trần chờ rồi gửi lại CÙNG khoá (API replay lượt gốc, hoặc chạy lại lượt kẹt sau `TURN_REDRIVE_AFTER_MS` = 120 giây).
+ */
+export const COPILOT_TURN_POLL = {
+  INTERVAL_MS: 3_000,
+  MAX_WAIT_MS: 120_000,
+} as const;
+
 /** Mã lỗi hội thoại (`api/src/modules/assistant/assistant.constants.ts`, `admin/admin-copilot.constants.ts`). */
 export const COPILOT_ERROR_CODE = {
   UNAVAILABLE: 'ASSISTANT_UNAVAILABLE',
