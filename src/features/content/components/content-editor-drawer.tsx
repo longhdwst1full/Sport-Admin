@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   createAdminPost,
   getListAdminPostsQueryKey,
+  getListAdminSocialPostsQueryKey,
   updateAdminPost,
   useGetAdminPost,
 } from '@/generated/api/content/content';
@@ -23,7 +24,7 @@ export function ContentEditorDrawer({
 }: {
   open: boolean;
   /** Bỏ trống là soạn bài mới; có giá trị (từ list, chỉ có summary) là sửa bài đã đăng. */
-  editing?: ContentPostSummaryDto;
+  editing?: Pick<ContentPostSummaryDto, 'id' | 'slug' | 'version'>;
   onClose: () => void;
 }) {
   const { message } = App.useApp();
@@ -73,7 +74,11 @@ export function ContentEditorDrawer({
           })
         : createAdminPost(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() });
+      // Màn bài viết đọc danh sách gộp (`listAdminSocialPosts`); vẫn invalidate list website cho màn khác.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListAdminSocialPostsQueryKey() }),
+      ]);
       void message.success(editing ? 'Đã cập nhật bài viết' : 'Đã tạo và xuất bản bài viết');
       onClose();
     },

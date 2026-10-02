@@ -37,4 +37,5 @@ export const mediaUsageLabels: Record<MediaUsageType, string> = {
   PAYMENT_EVIDENCE: 'Bằng chứng thanh toán',
   PRODUCT_REVIEW: 'Đánh giá sản phẩm',
   BANNER: 'Banner',
+  FACEBOOK_POST: 'Bài Facebook',
 };

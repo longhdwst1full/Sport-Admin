@@ -567,6 +567,7 @@ components:
         - PAYMENT_EVIDENCE
         - PRODUCT_REVIEW
         - BANNER
+        - FACEBOOK_POST
   securitySchemes:
     bearer:
       scheme: bearer

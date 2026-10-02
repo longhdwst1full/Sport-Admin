@@ -576,8 +576,936 @@ paths:
         - Admin Content
       x-required-permissions:
         - cms.content.manage
+  /api/v1/admin/content/social/posts:
+    get:
+      operationId: listAdminSocialPosts
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+        - name: channel
+          required: false
+          in: query
+          description: FACEBOOK = chỉ bài có bản đăng Facebook (tab "Facebook"). Bỏ trống = mọi bài (tab "Tất cả").
+          schema:
+            type: string
+            enum:
+              - FACEBOOK
+        - name: fbStatus
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/FacebookPublicationStatus"
+        - name: postType
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/AnyContentPostType"
+        - name: origin
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/FacebookPublicationOrigin"
+        - name: from
+          required: false
+          in: query
+          description: "Từ thời điểm (bao gồm). Có channel/fbStatus/origin: lọc theo fbPublishAt; không có: theo publishedAt."
+          schema:
+            format: date-time
+            type: string
+        - name: to
+          required: false
+          in: query
+          description: Tới thời điểm (không bao gồm).
+          schema:
+            format: date-time
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Tìm trong tiêu đề và nội dung (caption).
+          schema:
+            maxLength: 100
+            type: string
+        - name: sort
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SocialPostSort"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Danh sách bài cho tab "Tất cả" (mặc định) và "Facebook" (channel=FACEBOOK), kèm reach/engagements
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.view
+    post:
+      description: 400 SOCIAL_MEDIA_INVALID; 409 SOCIAL_MEDIA_NOT_FOUND khi media không ACTIVE/không tồn tại.
+      operationId: createAdminSocialPost
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSocialPostDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Tạo bài chỉ đăng Facebook (SOCIAL) ở trạng thái DRAFT
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/posts/{id}:
+    get:
+      operationId: getAdminSocialPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết bài kèm bản đăng Facebook, media và chỉ số
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.view
+  /api/v1/admin/content/social/posts/{id}/facebook:
+    post:
+      description: 409 SOCIAL_ALREADY_FACEBOOK_POST / SOCIAL_POST_ARCHIVED / SOCIAL_VERSION_STALE.
+      operationId: createAdminFacebookDraft
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFacebookDraftDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Mở bản nháp Facebook cho bài website (hoặc đăng lại bài đã DELETED); caption = nội dung bài
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+    patch:
+      operationId: updateAdminFacebookDraft
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFacebookDraftDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Sửa bản nháp Facebook (DRAFT): media; tiêu đề/caption chỉ với bài SOCIAL"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/posts/{id}/facebook/submit:
+    post:
+      operationId: submitAdminFacebookPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VersionedSocialCommandDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Gửi duyệt: DRAFT → PENDING_APPROVAL"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/posts/{id}/facebook/approve:
+    post:
+      description: Trả 200 với fbStatus PUBLISHED/SCHEDULED/FAILED/UNCERTAIN (UNCERTAIN = phải đối soát, không đăng lại). 409 SOCIAL_SELF_APPROVAL / SOCIAL_IDEMPOTENCY_CONFLICT / SOCIAL_INVALID_TRANSITION; 400 SOCIAL_SCHEDULE_OUT_OF_WINDOW; 503 SOCIAL_FACEBOOK_NOT_CONFIGURED.
+      operationId: approveAdminFacebookPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-150 ký tự. Cùng khoá + cùng payload trả kết quả hiện tại (không gọi Facebook lại); khác payload → 409.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Duyệt và đăng ngay hoặc hẹn giờ trên Facebook (người duyệt khác người gửi)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/facebook/reject:
+    post:
+      operationId: rejectAdminFacebookPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Từ chối: PENDING_APPROVAL/FAILED → DRAFT, kèm lý do"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/facebook/retry:
+    post:
+      operationId: retryAdminFacebookPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-150 ký tự. Cùng khoá + cùng payload trả kết quả hiện tại (không gọi Facebook lại); khác payload → 409.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Đăng lại bài FAILED (không áp dụng cho UNCERTAIN — phải đối soát trước)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/facebook/reconcile:
+    post:
+      description: 409 SOCIAL_RECONCILE_INCONCLUSIVE khi không tự kết luận được; SOCIAL_RECONCILE_TOO_EARLY khi lần đăng còn chạy.
+      operationId: reconcileAdminFacebookPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconcileFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Đối soát bài UNCERTAIN với Page: tự tìm, nhập ID bài, hoặc xác nhận chưa đăng"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/facebook/cancel:
+    post:
+      operationId: cancelAdminFacebookPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Huỷ bản đăng chưa lên Page (DRAFT/PENDING_APPROVAL/FAILED → DELETED)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/posts/{id}/facebook/delete:
+    post:
+      description: 409 SOCIAL_PAGE_MISMATCH khi bài thuộc Page khác; 502 SOCIAL_FACEBOOK_ERROR khi Facebook từ chối.
+      operationId: deleteAdminFacebookPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-150 ký tự. Cùng khoá + cùng payload trả kết quả hiện tại (không gọi Facebook lại); khác payload → 409.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xoá bài trên Facebook (PUBLISHED/SCHEDULED → DELETED); bài website không bị ảnh hưởng
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/facebook/caption:
+    post:
+      operationId: updateAdminFacebookCaption
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditLiveFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Sửa caption bài đã đăng/hẹn giờ trên Facebook (bài SOCIAL ghi caption mới vào nội dung)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
 components:
   schemas:
+    AnyContentPostType:
+      type: string
+      enum:
+        - NEWS
+        - TRAINING_GUIDE
+        - PRODUCT_GUIDE
+        - ABOUT
+        - POLICY
+        - SOCIAL
+    ApproveFacebookDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        scheduledAt:
+          type: string
+          format: date-time
+          description: Hẹn giờ đăng (Facebook tự đăng), cách hiện tại 10 phút – 30 ngày. Bỏ trống = đăng ngay.
+        asReel:
+          type: boolean
+          default: false
+          description: Đăng video dạng Reel (chỉ khi bài có đúng một video); không lưu
+      required:
+        - expectedVersion
     ArchiveContentPostDto:
       type: object
       properties:
@@ -719,6 +1647,18 @@ components:
         - DRAFT
         - PUBLISHED
         - ARCHIVED
+    CancelFacebookDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        reason:
+          type: string
+          maxLength: 500
+      required:
+        - expectedVersion
     ContentPostDto:
       type: object
       properties:
@@ -926,6 +1866,220 @@ components:
         - excerpt
         - body
         - coverUrl
+    CreateFacebookDraftDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        mediaAssetIds:
+          maxItems: 10
+          description: Caption = nội dung bài
+          type: array
+          items:
+            type: string
+      required:
+        - expectedVersion
+    CreateSocialPostDto:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: Tiêu đề nội bộ; trống thì lấy dòng đầu caption
+        body:
+          type: string
+          maxLength: 63206
+          description: Caption Facebook (lưu vào body); link đặt trong caption
+        mediaAssetIds:
+          maxItems: 10
+          description: Id media_assets theo thứ tự. Không media = bài chữ, 1-10 ảnh, hoặc đúng 1 video.
+          type: array
+          items:
+            type: string
+      required:
+        - body
+    DeleteFacebookDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+      required:
+        - expectedVersion
+        - reason
+    EditLiveFacebookDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        body:
+          type: string
+          maxLength: 63206
+          description: "Bài SOCIAL: caption mới (ghi vào body). Bỏ trống = đẩy nội dung bài hiện tại lên Facebook."
+      required:
+        - expectedVersion
+    FacebookMetricsDto:
+      type: object
+      properties:
+        reach:
+          type: number
+          nullable: true
+          description: NULL = Meta không trả chỉ số hoặc chưa đồng bộ
+        engagements:
+          type: number
+          nullable: true
+          description: reactions + comments + shares
+      required:
+        - reach
+        - engagements
+    FacebookPublicationDto:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationStatus"
+        publishType:
+          description: "Suy từ media (không lưu): FEED/PHOTOS/VIDEO. Reel đã đăng hiển thị là VIDEO."
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublishType"
+        origin:
+          description: "Suy ra: bài SOCIAL không có người soạn = nhập từ Page."
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationOrigin"
+        postId:
+          type: string
+          example: 1234567890_9876543210
+        publishAt:
+          type: string
+          format: date-time
+          description: Giờ hẹn (SCHEDULED) hoặc giờ đăng (PUBLISHED)
+        lastError:
+          type: string
+          description: '"CODE: message" của lỗi gần nhất'
+        mediaCount:
+          type: number
+          minimum: 0
+        metrics:
+          $ref: "#/components/schemas/FacebookMetricsDto"
+        media:
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialMediaDto"
+        submittedBy:
+          description: Người soạn/gửi duyệt (người duyệt chỉ có trong audit)
+          allOf:
+            - $ref: "#/components/schemas/SocialActorDto"
+      required:
+        - status
+        - publishType
+        - origin
+        - mediaCount
+        - metrics
+        - media
+    FacebookPublicationOrigin:
+      type: string
+      enum:
+        - ADMIN
+        - FACEBOOK_IMPORT
+    FacebookPublicationStatus:
+      type: string
+      enum:
+        - DRAFT
+        - PENDING_APPROVAL
+        - SCHEDULED
+        - PUBLISHING
+        - UNCERTAIN
+        - PUBLISHED
+        - FAILED
+        - DELETED
+    FacebookPublicationSummaryDto:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationStatus"
+        publishType:
+          description: "Suy từ media (không lưu): FEED/PHOTOS/VIDEO. Reel đã đăng hiển thị là VIDEO."
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublishType"
+        origin:
+          description: "Suy ra: bài SOCIAL không có người soạn = nhập từ Page."
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationOrigin"
+        postId:
+          type: string
+          example: 1234567890_9876543210
+        publishAt:
+          type: string
+          format: date-time
+          description: Giờ hẹn (SCHEDULED) hoặc giờ đăng (PUBLISHED)
+        lastError:
+          type: string
+          description: '"CODE: message" của lỗi gần nhất'
+        mediaCount:
+          type: number
+          minimum: 0
+        metrics:
+          $ref: "#/components/schemas/FacebookMetricsDto"
+      required:
+        - status
+        - publishType
+        - origin
+        - mediaCount
+        - metrics
+    FacebookPublishType:
+      type: string
+      enum:
+        - FEED
+        - PHOTOS
+        - VIDEO
+        - REEL
+      description: "Suy từ media (không lưu): FEED/PHOTOS/VIDEO. Reel đã đăng hiển thị là VIDEO."
+    FacebookReconcileResolution:
+      type: string
+      enum:
+        - NOT_PUBLISHED
+      description: NOT_PUBLISHED = Admin đã kiểm Page và xác nhận bài chưa lên → FAILED (cho phép retry)
+    ReconcileFacebookDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        externalPostId:
+          type: string
+          example: 1234567890_9876543210
+          description: ID bài Admin tìm thấy trên Page
+        resolution:
+          description: NOT_PUBLISHED = Admin đã kiểm Page và xác nhận bài chưa lên → FAILED (cho phép retry)
+          allOf:
+            - $ref: "#/components/schemas/FacebookReconcileResolution"
+      required:
+        - expectedVersion
+    RejectFacebookDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+      required:
+        - expectedVersion
+        - reason
     SetBannerStatusDto:
       type: object
       properties:
@@ -944,6 +2098,165 @@ components:
       required:
         - expectedVersion
         - status
+    SocialActorDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        displayName:
+          type: string
+      required:
+        - id
+        - displayName
+    SocialMediaDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        kind:
+          type: string
+          enum:
+            - IMAGE
+            - VIDEO
+          nullable: true
+        url:
+          type: string
+          nullable: true
+          description: NULL = asset đã không còn trong thư viện
+        thumbnailUrl:
+          type: string
+        active:
+          type: boolean
+          description: false = asset không còn ACTIVE; duyệt/đăng sẽ bị từ chối
+      required:
+        - id
+        - kind
+        - url
+        - active
+    SocialPostDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        postType:
+          allOf:
+            - $ref: "#/components/schemas/AnyContentPostType"
+        title:
+          type: string
+        excerpt:
+          type: string
+        slug:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/ContentPostStatus"
+        isPublished:
+          type: boolean
+          description: Hiển thị trên website; bài SOCIAL luôn false
+        publishedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        version:
+          type: number
+          minimum: 0
+        coverUrl:
+          type: string
+          description: Ảnh bìa (bài website/bài nhập); ảnh Facebook lấy ở chi tiết
+        body:
+          type: string
+          description: Nội dung bài = caption Facebook (link đặt trong nội dung)
+        facebook:
+          description: Không có = bài chưa đăng Facebook
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationDto"
+      required:
+        - id
+        - postType
+        - title
+        - excerpt
+        - slug
+        - status
+        - isPublished
+        - publishedAt
+        - updatedAt
+        - version
+        - body
+    SocialPostListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialPostSummaryDto"
+        meta:
+          $ref: ./_components.yaml#/components/schemas/PageMetaDto
+      required:
+        - items
+        - meta
+    SocialPostSort:
+      type: string
+      enum:
+        - RECENT
+        - REACH
+        - ENGAGEMENTS
+    SocialPostSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        postType:
+          allOf:
+            - $ref: "#/components/schemas/AnyContentPostType"
+        title:
+          type: string
+        excerpt:
+          type: string
+        slug:
+          type: string
+        status:
+          allOf:
+            - $ref: "#/components/schemas/ContentPostStatus"
+        isPublished:
+          type: boolean
+          description: Hiển thị trên website; bài SOCIAL luôn false
+        publishedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        version:
+          type: number
+          minimum: 0
+        coverUrl:
+          type: string
+          description: Ảnh bìa (bài website/bài nhập); ảnh Facebook lấy ở chi tiết
+        facebook:
+          description: Không có = bài chưa đăng Facebook
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationSummaryDto"
+      required:
+        - id
+        - postType
+        - title
+        - excerpt
+        - slug
+        - status
+        - isPublished
+        - publishedAt
+        - updatedAt
+        - version
     UpdateBannerDto:
       type: object
       properties:
@@ -1027,6 +2340,37 @@ components:
         isPublished:
           type: boolean
           description: Bật/tắt hiển thị trên website; không đổi status
+      required:
+        - expectedVersion
+    UpdateFacebookDraftDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        title:
+          type: string
+          maxLength: 255
+          description: Chỉ bài SOCIAL
+        body:
+          type: string
+          maxLength: 63206
+          description: Chỉ bài SOCIAL (caption). Bài website sửa nội dung ở màn bài viết.
+        mediaAssetIds:
+          maxItems: 10
+          type: array
+          items:
+            type: string
+      required:
+        - expectedVersion
+    VersionedSocialCommandDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
       required:
         - expectedVersion
   securitySchemes:
