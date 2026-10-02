@@ -12,6 +12,7 @@ import {
   InboxOutlined,
   KeyOutlined,
   MailOutlined,
+  PictureOutlined,
   PartitionOutlined,
   ProfileOutlined,
   RobotOutlined,
@@ -66,6 +67,7 @@ const NAVIGATION_ICONS: Record<string, ReactNode> = {
   '/roles': <KeyOutlined />,
   '/system-parameters': <ControlOutlined />,
   '/notifications': <MailOutlined />,
+  '/media': <PictureOutlined />,
   '/audit': <AuditOutlined />,
 };
 

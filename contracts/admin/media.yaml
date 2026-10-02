@@ -9,6 +9,194 @@ servers:
   - url: http://localhost:4000
     description: Local
 paths:
+  /api/v1/admin/media:
+    get:
+      operationId: listAdminMediaAssets
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+        - name: search
+          required: false
+          in: query
+          description: Tìm theo public id, thư mục hoặc alt text
+          schema:
+            maxLength: 100
+            type: string
+        - name: status
+          required: false
+          in: query
+          description: Bỏ trống = ACTIVE. INACTIVE là ảnh đã xoá khỏi provider, chỉ còn dòng lịch sử.
+          schema:
+            $ref: "#/components/schemas/MediaAssetStatus"
+        - name: unusedOnly
+          required: false
+          in: query
+          description: "true: chỉ ảnh không còn được nghiệp vụ nào dùng (ứng viên dọn)"
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaAssetListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Thư viện ảnh: tìm, lọc trạng thái, lọc ảnh không còn dùng; mỗi dòng kèm số nơi đang dùng"
+      tags:
+        - Admin Media
+      x-required-permissions:
+        - media.asset.view
+  /api/v1/admin/media/{id}:
+    get:
+      operationId: getAdminMediaAsset
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaAssetDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Chi tiết ảnh và danh sách nơi đang dùng
+      tags:
+        - Admin Media
+      x-required-permissions:
+        - media.asset.view
+    delete:
+      description: 409 MEDIA_ASSET_IN_USE kèm `details` là các nơi đang dùng; 409 MEDIA_ASSET_VERSION_STALE khi expectedVersion cũ; 409 MEDIA_ASSET_NOT_DELETABLE khi ảnh không còn ACTIVE; 503 MEDIA_PROVIDER_DELETE_FAILED khi Cloudinary lỗi (ảnh được khôi phục về ACTIVE).
+      operationId: deleteAdminMediaAsset
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteMediaAssetDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaAssetDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xoá ảnh khỏi Cloudinary (giữ dòng lịch sử ở INACTIVE)
+      tags:
+        - Admin Media
+      x-required-permissions:
+        - media.asset.manage
   /api/v1/admin/media/uploads/signature:
     post:
       operationId: createAdminMediaUpload
@@ -113,6 +301,21 @@ paths:
         - media.asset.upload
 components:
   schemas:
+    DeleteMediaAssetDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: Version ảnh mà Admin đang xem
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 255
+          example: Ảnh trùng, không còn dùng
+      required:
+        - expectedVersion
+        - reason
     FinalizeMediaUploadDto:
       type: object
       properties:
@@ -128,6 +331,77 @@ components:
         - publicId
         - version
         - signature
+    MediaAssetDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        publicId:
+          type: string
+        folder:
+          type: string
+          nullable: true
+        secureUrl:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        mimeType:
+          type: string
+          nullable: true
+          example: image/webp
+        width:
+          type: number
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        sizeBytes:
+          type: number
+          nullable: true
+        altText:
+          type: string
+          nullable: true
+        status:
+          allOf:
+            - $ref: "#/components/schemas/MediaAssetStatus"
+        version:
+          type: number
+          minimum: 0
+        usageCount:
+          type: number
+          minimum: 0
+          description: Số nơi đang dùng ảnh; > 0 thì không xoá được
+        uploadedByDisplayName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        usages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaAssetUsageDto"
+      required:
+        - id
+        - publicId
+        - folder
+        - secureUrl
+        - thumbnailUrl
+        - mimeType
+        - width
+        - height
+        - sizeBytes
+        - altText
+        - status
+        - version
+        - usageCount
+        - uploadedByDisplayName
+        - createdAt
+        - usages
     MediaAssetDto:
       type: object
       properties:
@@ -180,6 +454,118 @@ components:
         - format
         - providerVersion
         - status
+    MediaAssetListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaAssetSummaryDto"
+        meta:
+          $ref: ./_components.yaml#/components/schemas/PageMetaDto
+      required:
+        - items
+        - meta
+    MediaAssetStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - DELETE_PENDING
+        - INACTIVE
+    MediaAssetSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        publicId:
+          type: string
+        folder:
+          type: string
+          nullable: true
+        secureUrl:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        mimeType:
+          type: string
+          nullable: true
+          example: image/webp
+        width:
+          type: number
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        sizeBytes:
+          type: number
+          nullable: true
+        altText:
+          type: string
+          nullable: true
+        status:
+          allOf:
+            - $ref: "#/components/schemas/MediaAssetStatus"
+        version:
+          type: number
+          minimum: 0
+        usageCount:
+          type: number
+          minimum: 0
+          description: Số nơi đang dùng ảnh; > 0 thì không xoá được
+        uploadedByDisplayName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - publicId
+        - folder
+        - secureUrl
+        - thumbnailUrl
+        - mimeType
+        - width
+        - height
+        - sizeBytes
+        - altText
+        - status
+        - version
+        - usageCount
+        - uploadedByDisplayName
+        - createdAt
+    MediaAssetUsageDto:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: "#/components/schemas/MediaUsageType"
+        entityId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Id của bản ghi đang dùng ảnh (sản phẩm, bài viết...)
+        label:
+          type: string
+          example: Tạ tay 5kg
+      required:
+        - type
+        - entityId
+        - label
+    MediaUsageType:
+      type: string
+      enum:
+        - PRODUCT
+        - BRAND_LOGO
+        - CATEGORY_IMAGE
+        - CONTENT_POST
+        - CUSTOMER_AVATAR
+        - PAYMENT_EVIDENCE
+        - PRODUCT_REVIEW
   securitySchemes:
     bearer:
       scheme: bearer

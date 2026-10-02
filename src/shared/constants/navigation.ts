@@ -130,6 +130,12 @@ export const NAVIGATION_ITEMS_DATA: NavigationItemData[] = [
     permission: 'cms.content.view',
   },
   {
+    path: '/media',
+    label: 'Thư viện ảnh',
+    group: 'experience',
+    permission: 'media.asset.view',
+  },
+  {
     path: '/assistant-knowledge',
     label: 'Tri thức trợ lý',
     group: 'experience',

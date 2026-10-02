@@ -107,6 +107,9 @@ const RolesPage = lazy(() =>
 const AuditPage = lazy(() =>
   import('@/features/audit').then((module) => ({ default: module.AuditPage })),
 );
+const MediaLibraryPage = lazy(() =>
+  import('@/features/media').then((module) => ({ default: module.MediaLibraryPage })),
+);
 const NotificationsPage = lazy(() =>
   import('@/features/notifications').then((module) => ({
     default: module.NotificationsPage,
@@ -317,6 +320,14 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="iam.audit.view">
               <AuditPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="media"
+          element={
+            <PermissionRoute permission="media.asset.view">
+              <MediaLibraryPage />
             </PermissionRoute>
           }
         />
