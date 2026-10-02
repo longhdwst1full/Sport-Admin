@@ -45,6 +45,9 @@ function splitCsvRow(row: string, delimiter: string): string[] {
   return cells.map((cell) => cell.trim());
 }
 
+const INTEGER_QUANTITY = /^\d+$/;
+const GROUPED_QUANTITY = /^\d{1,3}(\.\d{3})+$/;
+
 export function parseOpeningStockCsv(text: string): OpeningStockParseResult {
   const rows = text.replace(/^\uFEFF/, '').split(/\r?\n/);
   const firstContent = rows.find((row) => row.trim()) ?? '';
@@ -63,8 +66,12 @@ export function parseOpeningStockCsv(text: string): OpeningStockParseResult {
       errors.push({ row, message: 'Thiếu SKU' });
       return;
     }
-    const quantity = Number(rawQuantity.replace(/[.\s]/g, ''));
-    if (!Number.isInteger(quantity) || quantity <= 0) {
+    // Chỉ nhận số nguyên thuần ("1500") hoặc nhóm nghìn bằng dấu chấm ("1.500"). Bỏ dấu chấm tùy tiện
+    // từng biến "1.5" thành 15; mọi dạng khác (thập phân, dấu phẩy, khoảng trắng) là lỗi dòng.
+    const quantity = INTEGER_QUANTITY.test(rawQuantity) || GROUPED_QUANTITY.test(rawQuantity)
+      ? Number(rawQuantity.replace(/\./g, ''))
+      : Number.NaN;
+    if (!Number.isSafeInteger(quantity) || quantity <= 0) {
       errors.push({ row, message: `Số lượng "${rawQuantity}" phải là số nguyên dương` });
       return;
     }

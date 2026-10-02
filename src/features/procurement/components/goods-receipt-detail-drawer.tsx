@@ -10,7 +10,7 @@ import {
   useGetGoodsReceipt,
 } from '@/generated/api/procurement/procurement';
 import type { GoodsReceiptDetailDto } from '@/generated/api/procurement/procurement.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, isStaleWriteError, STALE_WRITE_RELOADED_MESSAGE } from '@/lib/api/error';
 import { actorAt, costAllocationOptions, directReceiptReasonOptions, goodsReceiptTypeOptions, moneyFormatter, optionLabel, partyLabel, receiptCostTypeOptions, statusLabel } from '../constants/procurement.constants';
 import { goodsReceiptActions } from '../model/procurement-actions.policy';
 
@@ -24,13 +24,21 @@ export function GoodsReceiptDetailDrawer({ id, onClose, onEdit }: { id?: string;
     if (!detail) return;
     await Promise.all([queryClient.invalidateQueries({ queryKey: getListGoodsReceiptsQueryKey() }), queryClient.invalidateQueries({ queryKey: getGetGoodsReceiptQueryKey(detail.id) })]);
   };
-  const post = () => detail && modal.confirm({ title: `Ghi sổ ${detail.receiptNo}?`, content: 'Thao tác sẽ cộng tồn và cập nhật giá vốn bình quân, không thể hoàn tác.', okText: 'Ghi sổ', onOk: async () => postGoodsReceipt(detail.id, { expectedVersion: detail.version }).then(refresh).catch((error) => { void message.error(getApiErrorMessage(error)); throw error; }) });
+  // CONTRACT: 409 VERSION_STALE/CONCURRENT_UPDATE → tải lại chi tiết để thao tác tiếp trên version mới.
+  const fail = (error: unknown) => {
+    if (isStaleWriteError(error)) {
+      void refresh();
+      void message.warning(STALE_WRITE_RELOADED_MESSAGE);
+    } else void message.error(getApiErrorMessage(error));
+    throw error;
+  };
+  const post = () => detail && modal.confirm({ title: `Ghi sổ ${detail.receiptNo}?`, content: 'Thao tác sẽ cộng tồn và cập nhật giá vốn bình quân, không thể hoàn tác.', okText: 'Ghi sổ', onOk: async () => postGoodsReceipt(detail.id, { expectedVersion: detail.version }).then(refresh).catch(fail) });
   const cancel = () => {
     if (!detail) return;
     let reason = '';
     modal.confirm({ title: `Huỷ ${detail.receiptNo}?`, content: <textarea className="mt-3 min-h-24 w-full rounded-lg border border-slate-300 p-3" placeholder="Lý do huỷ" onChange={(event) => { reason = event.target.value; }} />, okText: 'Huỷ phiếu', okButtonProps: { danger: true }, onOk: async () => {
       if (reason.trim().length < 3) throw new Error('Nhập lý do tối thiểu 3 ký tự');
-      await cancelGoodsReceipt(detail.id, { expectedVersion: detail.version, reason: reason.trim() }).then(refresh).catch((error) => { void message.error(getApiErrorMessage(error)); throw error; });
+      await cancelGoodsReceipt(detail.id, { expectedVersion: detail.version, reason: reason.trim() }).then(refresh).catch(fail);
     } });
   };
   return <Drawer title={detail?.receiptNo ?? 'Chi tiết phiếu nhập'} width="min(1050px, 96vw)" open={Boolean(id)} loading={query.isLoading} onClose={onClose} extra={detail && <Space>

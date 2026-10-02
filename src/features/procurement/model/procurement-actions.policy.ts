@@ -41,6 +41,19 @@ export function purchaseOrderActions(input: PurchaseOrderActionInput | string): 
   return [];
 }
 
+/**
+ * SECURITY (maker-checker): người tạo PO không được tự duyệt. Chỉ là affordance — API vẫn chặn; UI disable
+ * nút kèm lý do để không dẫn người dùng vào 403/409 chắc chắn. Trả `null` khi được phép.
+ * Phiếu trả NCC chưa áp dụng được vì DTO chỉ có `createdByDisplayName`, không có id người tạo.
+ */
+export function purchaseOrderApprovalBlockedReason(
+  po: { createdBy?: { id: string } | null },
+  currentUserId: string | undefined,
+): string | null {
+  if (!currentUserId || !po.createdBy?.id) return null;
+  return po.createdBy.id === currentUserId ? 'Người tạo đơn không được tự duyệt' : null;
+}
+
 export function goodsReceiptActions(status: string): ProcurementAction[] {
   return status === GoodsReceiptStatus.DRAFT ? ['edit', 'post', 'cancel'] : [];
 }

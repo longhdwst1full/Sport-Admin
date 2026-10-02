@@ -1,5 +1,6 @@
-import { App, Button, Descriptions, Drawer, Space, Tag } from 'antd';
+import { App, Button, Descriptions, Drawer, Space, Tag, Tooltip } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/core/auth/auth-context';
 import { PermissionGate } from '@/core/auth/permissions';
 import { AdminTable } from '@/foundation/table';
 import {
@@ -15,7 +16,7 @@ import {
 import { PurchaseOrderApprovalLevel, type PurchaseOrderDetailDto, type PurchaseOrderUserDto } from '@/generated/api/procurement/procurement.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { actorAt, formatDate, formatDateTime, moneyFormatter, partyLabel, statusLabel } from '../constants/procurement.constants';
-import { purchaseOrderActions, type ProcurementAction } from '../model/procurement-actions.policy';
+import { purchaseOrderActions, purchaseOrderApprovalBlockedReason, type ProcurementAction } from '../model/procurement-actions.policy';
 
 const actionLabel: Record<Exclude<ProcurementAction, 'edit' | 'post' | 'ship'>, string> = {
   submit: 'Nộp duyệt', approve: 'Duyệt', approveFinance: 'Duyệt tài chính', close: 'Đóng PO', cancel: 'Huỷ PO',
@@ -27,6 +28,8 @@ export function PurchaseOrderDetailDrawer({ id, onClose, onEdit }: { id?: string
   const { message, modal } = App.useApp();
   const detail = query.data;
   const actions = detail ? purchaseOrderActions(detail) : [];
+  const { currentUser } = useAuth();
+  const approvalBlocked = detail ? purchaseOrderApprovalBlockedReason(detail, currentUser?.userId) : null;
 
   const run = (action: ProcurementAction) => {
     if (!detail || action === 'edit' || action === 'post' || action === 'ship') return;
@@ -67,7 +70,11 @@ export function PurchaseOrderDetailDrawer({ id, onClose, onEdit }: { id?: string
   return (
     <Drawer title={detail ? detail.poNo : 'Chi tiết đơn mua hàng'} width="min(1050px, 96vw)" open={Boolean(id)} onClose={onClose} loading={query.isLoading} extra={detail && <Space wrap>
       {actions.includes('edit') && <PermissionGate permission="purchase.order.create"><Button onClick={() => onEdit(detail)}>Sửa</Button></PermissionGate>}
-      {actions.filter((action) => action !== 'edit').map((action) => <PermissionGate key={action} permission={action === 'approveFinance' ? 'purchase.order.approve.finance' : action === 'approve' || action === 'close' ? 'purchase.order.approve' : 'purchase.order.create'}><Button danger={action === 'cancel'} type={action === 'submit' || action === 'approve' ? 'primary' : 'default'} onClick={() => run(action)}>{actionLabel[action as keyof typeof actionLabel]}</Button></PermissionGate>)}
+      {actions.filter((action) => action !== 'edit').map((action) => <PermissionGate key={action} permission={action === 'approveFinance' ? 'purchase.order.approve.finance' : action === 'approve' || action === 'close' ? 'purchase.order.approve' : 'purchase.order.create'}>{(() => {
+        const blocked = action === 'approve' || action === 'approveFinance' ? approvalBlocked : null;
+        const button = <Button disabled={Boolean(blocked)} danger={action === 'cancel'} type={action === 'submit' || action === 'approve' ? 'primary' : 'default'} onClick={() => run(action)}>{actionLabel[action as keyof typeof actionLabel]}</Button>;
+        return blocked ? <Tooltip title={blocked}>{button}</Tooltip> : button;
+      })()}</PermissionGate>)}
     </Space>}>
       {query.isError && <div className="text-red-600">{getApiErrorMessage(query.error)}</div>}
       {detail && <div className="space-y-5">

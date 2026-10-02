@@ -45,3 +45,15 @@ export function getApiFieldErrors(error: unknown): Record<string, string> {
       .map((detail) => [detail.field, detail.message]),
   );
 }
+
+/** Thông báo chung khi chứng từ đã bị người khác đổi và UI vừa tải lại bản mới. */
+export const STALE_WRITE_RELOADED_MESSAGE = 'Dữ liệu đã thay đổi, đã tải lại';
+
+/**
+ * 409 do ghi trên bản cũ (`*_VERSION_STALE`) hoặc xung đột đồng thời (`*_CONCURRENT_UPDATE`).
+ * Caller nên refetch chi tiết thay vì chỉ báo lỗi, vì thử lại với cùng version chắc chắn lại 409.
+ */
+export function isStaleWriteError(error: unknown): boolean {
+  const payload = getApiErrorPayload(error);
+  return payload?.statusCode === 409 && /(_VERSION_STALE|_CONCURRENT_UPDATE)$/.test(payload.code);
+}

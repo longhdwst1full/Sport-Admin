@@ -19,7 +19,7 @@ import {
   useSubmitStockTransfer,
 } from '@/generated/api/inventory/inventory';
 import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, isStaleWriteError, STALE_WRITE_RELOADED_MESSAGE } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { StockTransferCreateDrawer } from './stock-transfer-create-drawer';
 import { availableStockTransferActions } from '../model/stock-transfer-actions.policy';
@@ -87,7 +87,15 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
     void refresh(result.id);
     void message.success(text);
   };
-  const failure = (error: unknown, fallback: string) => void message.error(getApiErrorMessage(error, fallback));
+  // CONTRACT: 409 STOCK_TRANSFER_VERSION_STALE/CONCURRENT_UPDATE → tải lại phiếu để thao tác tiếp trên version mới.
+  const failure = (error: unknown, fallback: string) => {
+    if (transfer && isStaleWriteError(error)) {
+      void refresh(transfer.id);
+      void message.warning(STALE_WRITE_RELOADED_MESSAGE);
+      return;
+    }
+    void message.error(getApiErrorMessage(error, fallback));
+  };
   const submitMutation = useSubmitStockTransfer({ mutation: {
     onSuccess: (result) => success(result, `Đã gửi duyệt phiếu ${result.transferNo}.`),
     onError: (error) => failure(error, 'Không thể gửi phiếu chuyển kho.'),

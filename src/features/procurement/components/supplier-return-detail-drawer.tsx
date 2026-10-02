@@ -8,7 +8,7 @@ import {
   shipSupplierReturn, useGetSupplierReturn,
 } from '@/generated/api/procurement/procurement';
 import type { SupplierReturnDetailDto } from '@/generated/api/procurement/procurement.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, isStaleWriteError, STALE_WRITE_RELOADED_MESSAGE } from '@/lib/api/error';
 import { actorAt, formatDateTime, moneyFormatter, partyLabel, statusLabel } from '../constants/procurement.constants';
 import { supplierReturnActions, type ProcurementAction } from '../model/procurement-actions.policy';
 
@@ -16,6 +16,14 @@ export function SupplierReturnDetailDrawer({ id, onClose, onEdit }: { id?: strin
   const query = useGetSupplierReturn(id ?? '', { query: { enabled: Boolean(id) } }); const detail = query.data;
   const queryClient = useQueryClient(); const { message, modal } = App.useApp();
   const refresh = async () => detail && Promise.all([queryClient.invalidateQueries({ queryKey: getListSupplierReturnsQueryKey() }), queryClient.invalidateQueries({ queryKey: getGetSupplierReturnQueryKey(detail.id) })]);
+  // CONTRACT: 409 VERSION_STALE/CONCURRENT_UPDATE → tải lại chi tiết để thao tác tiếp trên version mới.
+  const fail = (error: unknown) => {
+    if (isStaleWriteError(error)) {
+      void refresh();
+      void message.warning(STALE_WRITE_RELOADED_MESSAGE);
+    } else void message.error(getApiErrorMessage(error));
+    throw error;
+  };
   const run = (action: ProcurementAction) => {
     if (!detail || action === 'edit' || action === 'post' || action === 'submit' || action === 'approveFinance') return;
     let reason = '';
@@ -24,7 +32,7 @@ export function SupplierReturnDetailDrawer({ id, onClose, onEdit }: { id?: strin
       if (action === 'cancel' && reason.trim().length < 3) throw new Error('Nhập lý do tối thiểu 3 ký tự');
       const body = { expectedVersion: detail.version };
       const task = action === 'approve' ? approveSupplierReturn(detail.id, body) : action === 'ship' ? shipSupplierReturn(detail.id, body) : action === 'close' ? closeSupplierReturn(detail.id, body) : cancelSupplierReturn(detail.id, { ...body, reason: reason.trim() });
-      await task.then(refresh).catch((error) => { void message.error(getApiErrorMessage(error)); throw error; });
+      await task.then(refresh).catch(fail);
     } });
   };
   const actions = detail ? supplierReturnActions(detail.status) : [];
