@@ -18,6 +18,7 @@ import { availableSocialActions, type SocialAction } from '../model/social-actio
 import { socialCommandErrorMessage } from '../model/social-command-error';
 import { SocialActionModal, type SocialModalAction } from './social-action-modal';
 import { SocialPostEditorDrawer, type SocialEditorTarget } from './social-post-editor-drawer';
+import { IMAGE_FALLBACK_SRC } from '@/features/media';
 
 const metricValue = (value: number | null | undefined) => (value == null ? '—' : value);
 
@@ -153,7 +154,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
                   {facebook.media.map((item) => (
                     <div key={item.id} className="relative overflow-hidden rounded-xl border border-slate-200">
                       {item.url ? (
-                        <Image width={92} height={92} src={item.thumbnailUrl ?? item.url} className="object-cover" />
+                        <Image fallback={IMAGE_FALLBACK_SRC} width={92} height={92} src={item.thumbnailUrl ?? item.url} className="object-cover" />
                       ) : (
                         <div className="flex h-[92px] w-[92px] items-center justify-center text-[11px] text-slate-400">Đã gỡ</div>
                       )}

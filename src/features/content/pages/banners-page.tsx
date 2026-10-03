@@ -37,6 +37,7 @@ import {
   bannerStatusPresentation,
 } from '../constants/banner.constants';
 import { availableBannerActions, type BannerAction } from '../model/banner-actions.policy';
+import { IMAGE_FALLBACK_SRC } from '@/features/media';
 
 function parseEnum<T extends string>(values: Record<string, T>, value: string | null): T | undefined {
   return value && value in values ? (value as T) : undefined;
@@ -173,6 +174,7 @@ export function BannersPage() {
               render: (_: unknown, row: BannerDto) => (
                 <div className="flex items-center gap-3">
                   <Image
+                    fallback={IMAGE_FALLBACK_SRC}
                     width={96}
                     height={40}
                     src={row.desktopImageUrl}

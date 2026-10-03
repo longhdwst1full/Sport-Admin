@@ -16,6 +16,7 @@ import {
   MEDIA_PERMISSION,
   mediaStatusOptions,
   mediaStatusPresentation,
+  IMAGE_FALLBACK_SRC,
 } from '../constants/media-library.constants';
 import { formatAssetSize } from '../model/media-format';
 
@@ -120,6 +121,7 @@ export function MediaLibraryPage() {
             fixed: 'left',
             render: (_value, row) => (
               <Image
+                fallback={IMAGE_FALLBACK_SRC}
                 src={row.thumbnailUrl}
                 alt={row.altText ?? row.publicId}
                 width={56}

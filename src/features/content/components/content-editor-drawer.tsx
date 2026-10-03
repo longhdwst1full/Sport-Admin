@@ -16,6 +16,7 @@ import {
 import { ImageUploadField } from '@/features/media';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { toCoverPayload } from '../model/content-post-cover';
 
 export function ContentEditorDrawer({
   open,
@@ -33,6 +34,7 @@ export function ContentEditorDrawer({
   const [postType, setPostType] = useState<PostType>(ContentPostType.NEWS);
   const [excerpt, setExcerpt] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
+  const [coverAssetId, setCoverAssetId] = useState<string | undefined>();
   const [relatedProducts, setRelatedProducts] = useState('');
   const [body, setBody] = useState('');
 
@@ -52,6 +54,7 @@ export function ContentEditorDrawer({
     setPostType((editingFull?.postType as PostType) ?? ContentPostType.NEWS);
     setExcerpt(editingFull?.excerpt ?? '');
     setCoverUrl(editingFull?.coverUrl ?? '');
+    setCoverAssetId(editingFull?.coverAssetId ?? undefined);
     setRelatedProducts((editingFull?.relatedProductSlugs ?? []).join(', '));
     setBody(editingFull?.body ?? '');
   }, [open, editing, editingFull]);
@@ -61,7 +64,8 @@ export function ContentEditorDrawer({
       title: string;
       postType: PostType;
       excerpt: string;
-      coverUrl: string;
+      coverUrl?: string;
+      coverAssetId?: string;
       body: string;
       relatedProductSlugs: string[];
     }) =>
@@ -97,7 +101,7 @@ export function ContentEditorDrawer({
       title: title.trim(),
       postType,
       excerpt: excerpt.trim(),
-      coverUrl: coverUrl.trim(),
+      ...toCoverPayload({ coverUrl, coverAssetId }, editingFull),
       body,
       relatedProductSlugs: relatedProducts
         .split(',')
@@ -150,7 +154,13 @@ export function ContentEditorDrawer({
           />
         </Form.Item>
         <Form.Item label="Ảnh bìa" required>
-          <ImageUploadField value={coverUrl} onChange={setCoverUrl} />
+          <ImageUploadField
+            value={coverUrl}
+            onChange={(url, assetId) => {
+              setCoverUrl(url);
+              setCoverAssetId(assetId);
+            }}
+          />
         </Form.Item>
         <Form.Item label="Slug sản phẩm liên quan" extra="Phân tách bằng dấu phẩy">
           <Input

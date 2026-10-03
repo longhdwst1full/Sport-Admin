@@ -67,6 +67,7 @@ paths:
       x-required-permissions:
         - cms.content.view
     post:
+      description: "Ảnh bìa: coverAssetId (ưu tiên, URL lấy từ asset) hoặc coverUrl. 400 CMS_COVER_URL_NOT_ALLOWED khi URL không phải https hoặc host ngoài allowlist; 409 CMS_COVER_MEDIA_INVALID khi asset không ACTIVE/không phải ảnh."
       operationId: createAdminPost
       parameters: []
       requestBody:
@@ -82,6 +83,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ContentPostDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
@@ -89,6 +96,12 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
           description: ""
           content:
             application/json:
@@ -149,6 +162,7 @@ paths:
       x-required-permissions:
         - cms.content.view
     patch:
+      description: "Gửi coverAssetId hoặc coverUrl mới đổi ảnh bìa (cùng luật createAdminPost: 400 CMS_COVER_URL_NOT_ALLOWED, 409 CMS_COVER_MEDIA_INVALID); không gửi thì giữ nguyên."
       operationId: updateAdminPost
       parameters:
         - name: id
@@ -169,6 +183,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ContentPostDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "401":
           description: ""
           content:
@@ -1680,6 +1700,12 @@ components:
         coverUrl:
           type: string
           format: uri
+        coverAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+          description: Asset thư viện đang làm ảnh bìa; null khi ảnh bìa là URL ngoài thư viện.
         publishedAt:
           type: string
           format: date-time
@@ -1708,6 +1734,7 @@ components:
         - title
         - excerpt
         - coverUrl
+        - coverAssetId
         - publishedAt
         - status
         - version
@@ -1751,6 +1778,12 @@ components:
         coverUrl:
           type: string
           format: uri
+        coverAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+          description: Asset thư viện đang làm ảnh bìa; null khi ảnh bìa là URL ngoài thư viện.
         publishedAt:
           type: string
           format: date-time
@@ -1773,6 +1806,7 @@ components:
         - title
         - excerpt
         - coverUrl
+        - coverAssetId
         - publishedAt
         - status
         - version
@@ -1856,6 +1890,12 @@ components:
         coverUrl:
           type: string
           format: uri
+          description: "URL https ảnh bìa, host thuộc: images.unsplash.com, res.cloudinary.com, baoansport.vn, www.baoansport.vn (400 CMS_COVER_URL_NOT_ALLOWED). Bị bỏ qua khi có coverAssetId — URL lúc đó lấy từ asset. Bắt buộc khi không có coverAssetId."
+        coverAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Ảnh bìa từ thư viện media (phải ACTIVE và là ảnh, 409 CMS_COVER_MEDIA_INVALID). Backend đặt coverUrl = secure_url của asset.
         relatedProductSlugs:
           type: array
           items:
@@ -1865,7 +1905,6 @@ components:
         - title
         - excerpt
         - body
-        - coverUrl
     CreateFacebookDraftDto:
       type: object
       properties:
@@ -2333,6 +2372,12 @@ components:
         coverUrl:
           type: string
           format: uri
+          description: "URL https ảnh bìa, host thuộc: images.unsplash.com, res.cloudinary.com, baoansport.vn, www.baoansport.vn (400 CMS_COVER_URL_NOT_ALLOWED). Bị bỏ qua khi có coverAssetId — URL lúc đó lấy từ asset."
+        coverAssetId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Ảnh bìa từ thư viện media (phải ACTIVE và là ảnh, 409 CMS_COVER_MEDIA_INVALID). Backend đặt coverUrl = secure_url của asset.
         relatedProductSlugs:
           type: array
           items:

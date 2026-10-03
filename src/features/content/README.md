@@ -1,10 +1,10 @@
 # Content — maintenance note
 
-> **Document version:** 3.1.0
+> **Document version:** 3.2.0
 >
-> **Last updated:** 2026-10-02
+> **Last updated:** 2026-10-03
 >
-> **Change summary:** Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. Trước đó: `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
+> **Change summary:** Ảnh bìa bài viết gửi `coverAssetId` khi là asset thư viện (`model/content-post-cover.ts`), ảnh lỗi/rỗng hiện `IMAGE_FALLBACK_SRC`, ẩn loại đăng Video/Reel khi soạn bài Facebook. Trước đó: Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. Trước đó: `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
 
 ## Phạm vi
 
@@ -51,6 +51,15 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 - Ảnh chọn qua `ImageUploadField` (media asset id); API từ chối ảnh không ACTIVE. ARCHIVED là trạng thái cuối.
 - 409 `CMS_BANNER_VERSION_STALE` → tải lại banner. Storefront chỉ hiện banner PUBLISHED trong khung giờ.
 
+## Ảnh bìa và ảnh Facebook
+
+- `toCoverPayload`: ảnh vừa upload (có asset id) gửi `coverAssetId`, API tự lấy URL của asset; URL dán tay gửi `coverUrl`
+  (API chỉ nhận https trên host storefront render được — 400 `CMS_COVER_URL_NOT_ALLOWED`). Sửa bài mà ảnh bìa không
+  đổi thì không gửi trường ảnh.
+- Mọi `Image` của antd ở content/media dùng `fallback={IMAGE_FALLBACK_SRC}` (export từ `features/media`).
+- Soạn bài Facebook chỉ chọn được Bài viết/Ảnh (`composablePublishTypeOptions`) vì upload media chỉ nhận ảnh; bài đang là
+  Video/Reel vẫn hiện đúng loại. Mở lại Video/Reel khi có upload video.
+
 ## Checklist khi sửa
 
 - [ ] Ảnh bìa đi qua `features/media`, không nhập URL tự do.
@@ -62,6 +71,7 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.2.0 | 2026-10-03 | `coverAssetId` cho ảnh bìa, fallback ảnh lỗi, ẩn Video/Reel khi soạn bài Facebook. |
 | 3.1.0 | 2026-10-02 | Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. |
 | 1.0.0 | 2026-09-13 | Tạo note, cảnh báo CMS in-memory. |
 | 2.0.0 | 2026-09-21 | Gỡ cảnh báo in-memory; ghi lại vòng đời bài viết hiện có và phần còn thiếu. |

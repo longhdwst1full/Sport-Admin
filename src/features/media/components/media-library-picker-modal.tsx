@@ -8,6 +8,7 @@ import { useListAdminMediaAssets } from '@/generated/api/media/media';
 import type { MediaAssetSummaryDto } from '@/generated/api/media/media.schemas';
 import { uploadImage } from '@/lib/media/upload-image';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
+import { IMAGE_FALLBACK_SRC } from '../constants/media-library.constants';
 
 const PICKER_PAGE_SIZE = 24;
 
@@ -143,7 +144,7 @@ export function MediaLibraryPickerModal({
                   order >= 0 ? 'border-blue-500' : 'border-transparent'
                 } ${allowed ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
               >
-                <Image preview={false} width="100%" height={96} src={asset.thumbnailUrl} className="object-cover" />
+                <Image fallback={IMAGE_FALLBACK_SRC} preview={false} width="100%" height={96} src={asset.thumbnailUrl} className="object-cover" />
                 {kind === 'VIDEO' && (
                   <PlayCircleOutlined className="absolute left-1 top-1 rounded-full bg-black/50 p-1 text-white" />
                 )}

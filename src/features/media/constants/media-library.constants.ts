@@ -39,3 +39,14 @@ export const mediaUsageLabels: Record<MediaUsageType, string> = {
   BANNER: 'Banner',
   FACEBOOK_POST: 'Bài Facebook',
 };
+
+/**
+ * Ảnh thay thế khi URL ảnh rỗng hoặc tải lỗi (antd `Image fallback`): khung xám có biểu tượng ảnh, nhúng sẵn
+ * dạng data URI để không phụ thuộc mạng/CDN.
+ */
+export const IMAGE_FALLBACK_SRC =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#f1f5f9"/>' +
+      '<path d="M18 44l10-12 8 9 6-7 8 10z" fill="#cbd5e1"/><circle cx="40" cy="24" r="4" fill="#cbd5e1"/></svg>',
+  );

@@ -16,6 +16,7 @@ import {
   MEDIA_ERROR_CODE,
   mediaStatusPresentation,
   mediaUsageLabels,
+  IMAGE_FALLBACK_SRC,
 } from '../constants/media-library.constants';
 import { formatAssetSize } from '../model/media-format';
 
@@ -83,7 +84,7 @@ export function MediaAssetDrawer({
       {data && (
         <div className="flex flex-col gap-5">
           <div className="flex justify-center rounded-lg bg-slate-50 p-3">
-            <Image src={data.secureUrl} alt={data.altText ?? data.publicId} className="max-h-72 object-contain" />
+            <Image fallback={IMAGE_FALLBACK_SRC} src={data.secureUrl} alt={data.altText ?? data.publicId} className="max-h-72 object-contain" />
           </div>
           <Descriptions column={1} size="small" bordered>
             <Descriptions.Item label="Trạng thái">

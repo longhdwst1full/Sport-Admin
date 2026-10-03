@@ -71,6 +71,15 @@ export const fbPublishTypeOptions = Object.values(FacebookPublishType).map((valu
   label: fbPublishTypeLabels[value],
 }));
 
+/**
+ * Loại đăng chọn được khi soạn. Upload media hiện chỉ nhận ảnh, nên Video/Reel bị ẩn tới khi có upload video;
+ * bài đang là Video/Reel (vd. nhập từ Page) vẫn thấy đúng loại của nó. API không đổi.
+ */
+const COMPOSABLE_PUBLISH_TYPES: readonly FacebookPublishType[] = [FacebookPublishType.FEED, FacebookPublishType.PHOTOS];
+
+export const composablePublishTypeOptions = (current?: FacebookPublishType) =>
+  fbPublishTypeOptions.filter((option) => COMPOSABLE_PUBLISH_TYPES.includes(option.value) || option.value === current);
+
 export const fbOriginLabels: Record<FacebookPublicationOrigin, string> = {
   [FacebookPublicationOrigin.ADMIN]: 'Admin',
   [FacebookPublicationOrigin.FACEBOOK_IMPORT]: 'Nhập từ Facebook',

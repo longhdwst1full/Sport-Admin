@@ -3,7 +3,7 @@ import { Alert, App, Button, Drawer, Form, Input, Radio, Skeleton, Typography } 
 import { useGetAdminSocialPost } from '@/generated/api/content/content';
 import { AnyContentPostType, FacebookPublishType } from '@/generated/api/content/content.schemas';
 import { getApiErrorPayload, getApiFieldErrors } from '@/lib/api/error';
-import { fbPublishTypeOptions, SOCIAL_LIMITS, SOCIAL_STALE_ERROR_CODES } from '../constants/social.constants';
+import { composablePublishTypeOptions, SOCIAL_LIMITS, SOCIAL_STALE_ERROR_CODES } from '../constants/social.constants';
 import { useSaveSocialPost, type SocialSaveTarget } from '../hooks/use-social-commands';
 import { isFacebookNotConfigured, socialCommandErrorMessage } from '../model/social-command-error';
 import {
@@ -131,7 +131,7 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
             >
               <Radio.Group
                 optionType="button"
-                options={fbPublishTypeOptions}
+                options={composablePublishTypeOptions(editing?.facebook?.publishType)}
                 onChange={() => form.setFieldValue('media', [])}
               />
             </Form.Item>

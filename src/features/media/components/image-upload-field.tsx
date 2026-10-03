@@ -3,6 +3,7 @@ import { App, Button, Image, Input, Space, Upload } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import { uploadImage } from '@/lib/media/upload-image';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
+import { IMAGE_FALLBACK_SRC } from '../constants/media-library.constants';
 
 interface ImageUploadFieldProps {
   value: string;
@@ -19,7 +20,7 @@ export function ImageUploadField({ value, onChange, disabled }: ImageUploadField
 
   return (
     <Space.Compact block>
-      {value ? <Image width={40} height={32} src={value} className="object-cover" /> : null}
+      {value ? <Image fallback={IMAGE_FALLBACK_SRC} width={40} height={32} src={value} className="object-cover" /> : null}
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
