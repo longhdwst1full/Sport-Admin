@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { UploadProps } from 'antd';
+import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 
 type CustomRequestOptions = Parameters<NonNullable<UploadProps['customRequest']>>[0];
 
@@ -19,6 +21,7 @@ interface ImageUploadHandlers<T> {
  */
 export function useImageUpload<T>(upload: (file: File, signal?: AbortSignal) => Promise<T>) {
   const [uploading, setUploading] = useState(false);
+  const queryClient = useQueryClient();
 
   function customRequest(options: CustomRequestOptions, handlers: ImageUploadHandlers<T> = {}): void {
     const { file, onError, onSuccess } = options;
@@ -31,6 +34,8 @@ export function useImageUpload<T>(upload: (file: File, signal?: AbortSignal) => 
     setUploading(true);
     void upload(file)
       .then((result) => {
+        // Ảnh mới nằm trong Thư viện media mà picker cache lâu: đánh dấu cũ để lần mở sau thấy ngay.
+        void invalidateReferenceData(queryClient, 'media');
         onSuccess?.(result);
         handlers.onSuccess?.(result);
       })

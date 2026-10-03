@@ -5,7 +5,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createAdminRole,
   deleteAdminRole,
-  getListAdminAllRolesQueryKey,
   updateAdminRole,
   useListAdminAllRoles,
   useListAdminPermissions,
@@ -14,6 +13,7 @@ import type { RoleDto } from '@/generated/api/iam/iam.schemas';
 import { useCan, usePermissions } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 import { RoleFormDrawer, type RoleFormValues } from '../components/role-form-drawer';
 import { RoleTable } from '../components/role-table';
 import {
@@ -50,7 +50,8 @@ export function RolesPage() {
   }, [permissionItems, actorPermissions, editing]);
 
   async function refresh() {
-    await queryClient.invalidateQueries({ queryKey: getListAdminAllRolesQueryKey() });
+    // Mọi danh sách vai trò (cache dài), không chỉ bảng của trang này: gọi hàm API trực tiếp nên không có mutationKey.
+    await invalidateReferenceData(queryClient, 'roles');
   }
 
   const saveMutation = useMutation({

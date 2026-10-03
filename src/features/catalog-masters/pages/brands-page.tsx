@@ -17,7 +17,6 @@ import { ManagementPage } from '@/foundation/management';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import {
-  getListAdminBrandsQueryKey,
   deleteAdminBrand,
   useActivateAdminBrand,
   useDeactivateAdminBrand,
@@ -25,6 +24,7 @@ import {
 } from '@/generated/api/catalog/catalog';
 import type { BrandDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 import { BrandFormDrawer } from '../components/master-data-form-drawers';
 import { masterCodeColumn, masterStatusColumn } from '../components/master-columns';
 import { filterCatalogMasters } from '../model/catalog-masters.mapper';
@@ -43,7 +43,8 @@ export function BrandsPage() {
     [brandsQuery.data?.items, debouncedSearch],
   );
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getListAdminBrandsQueryKey() });
+  // Gồm cả danh sách chọn thương hiệu đang hoạt động (cache dài): xoá thẳng bằng hàm API không có mutationKey.
+  const refresh = () => invalidateReferenceData(queryClient, 'brands');
 
   const lifecycleOptions = {
     mutation: {

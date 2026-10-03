@@ -10,7 +10,8 @@ import { useCan } from '@/core/auth/permissions';
 export function useBannerCategoryOptions(enabled: boolean) {
   const canView = useCan('catalog.category.view');
   const categories = useListAdminCategories({
-    query: { enabled: enabled && canView, retry: false, staleTime: 5 * 60_000 },
+    // staleTime theo chính sách chung của danh mục (`REFERENCE_DATA.categories`).
+    query: { enabled: enabled && canView, retry: false },
   });
   const options = useMemo(
     () =>

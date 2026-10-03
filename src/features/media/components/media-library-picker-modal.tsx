@@ -100,8 +100,8 @@ export function MediaLibraryPickerModal({
             disabled={uploading || !canUpload}
             customRequest={(options) =>
               customRequest(options, {
+                // Danh sách tự tải lại: `useImageUpload` đã làm mới thư viện media.
                 onSuccess: (asset) => {
-                  void assets.refetch();
                   toggle({ id: asset.id, url: asset.secureUrl, kind: 'IMAGE' });
                 },
                 onError: (error) => void message.error(error.message),
