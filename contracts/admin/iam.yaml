@@ -68,7 +68,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: Email already exists, hoặc IAM_EMAIL_RESERVED (email break-glass)
+          description: Email already exists, IAM_EMAIL_RESERVED (email break-glass), hoặc IAM_ROLE_NOT_ACTIVE (vai trò vừa ngừng/xoá)
           content:
             application/json:
               schema:
@@ -744,7 +744,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: The same assignment already exists
+          description: The same assignment already exists, hoặc IAM_ROLE_NOT_ACTIVE (vai trò vừa ngừng/xoá)
           content:
             application/json:
               schema:

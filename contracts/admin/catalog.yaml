@@ -2865,6 +2865,7 @@ components:
           nullable: true
         description:
           type: string
+          description: Mô tả chi tiết dạng HTML đã làm sạch theo allowlist phía server (an toàn để render HTML). Văn bản thuần cũ được bọc mỗi dòng thành <p>.
         variants:
           type: array
           items:
