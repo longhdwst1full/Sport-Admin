@@ -37,7 +37,7 @@ export function CustomerDetailDrawer({
 
       {customer && (
         <>
-          <Descriptions column={2} size="small" bordered>
+          <Descriptions column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 2 }} size="small" bordered>
             <Descriptions.Item label="Mã khách">
               <span className="font-mono">{customer.customerNo}</span>
             </Descriptions.Item>

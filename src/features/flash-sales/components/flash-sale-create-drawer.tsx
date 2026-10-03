@@ -124,7 +124,7 @@ export function FlashSaleCreateDrawer({
           <Button
             type="primary"
             loading={submitting}
-            onClick={() => void form.validateFields().then((values) => onSubmit(values, items))}
+            onClick={() => void form.validateFields().then((values) => onSubmit(values, items)).catch(() => undefined)}
           >
             Tạo chiến dịch{items.length > 0 ? ` + ${items.length} suất` : ''}
           </Button>

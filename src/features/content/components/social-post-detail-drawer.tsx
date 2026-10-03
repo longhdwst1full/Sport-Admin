@@ -108,7 +108,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
             <Alert className="mb-3" type="error" showIcon message="Lỗi gần nhất từ Facebook" description={facebook.lastError} />
           )}
 
-          <Descriptions size="small" column={2} bordered className="mb-4">
+          <Descriptions size="small" column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 2 }} bordered className="mb-4">
             <Descriptions.Item label="Loại bài">{postTypeLabels[post.postType]}</Descriptions.Item>
             <Descriptions.Item label="Website">
               {post.isPublished ? <Tag color="green">Đang hiển thị</Tag> : <Tag>Không hiển thị</Tag>}

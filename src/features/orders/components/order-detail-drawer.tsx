@@ -515,7 +515,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
 
           {/* Sticky Bottom Action Footer */}
           {canManage && (
-            <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between z-10 shadow-lg">
+            <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur-md px-6 py-4 flex flex-wrap items-center justify-between gap-2 z-10 shadow-lg">
               <Button
                 danger
                 disabled={!canCancel}
@@ -524,7 +524,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
               >
                 Hủy đơn
               </Button>
-              <Space>
+              <Space wrap>
                 <Button onClick={closeDrawer}>Đóng</Button>
                 <Button
                   disabled={!canConfirm}

@@ -60,7 +60,7 @@ export function ReviewDetailDrawer({
     >
       {review && (
         <>
-          <Descriptions bordered size="small" column={2}>
+          <Descriptions bordered size="small" column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 2 }}>
             <Descriptions.Item label="Khách hàng">{review.customerDisplayName}</Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
               <Tag color={status?.color ?? 'default'}>{status?.label ?? review.status}</Tag>
