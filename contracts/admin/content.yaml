@@ -979,14 +979,14 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: "Gửi duyệt: DRAFT → PENDING_APPROVAL"
+      summary: "Gửi duyệt (tuỳ chọn): DRAFT → PENDING_APPROVAL"
       tags:
         - Admin Content
       x-required-permissions:
         - social.post.manage
   /api/v1/admin/content/social/posts/{id}/facebook/approve:
     post:
-      description: Trả 200 với fbStatus PUBLISHED/SCHEDULED/FAILED/UNCERTAIN (UNCERTAIN = phải đối soát, không đăng lại). 409 SOCIAL_SELF_APPROVAL / SOCIAL_IDEMPOTENCY_CONFLICT / SOCIAL_INVALID_TRANSITION; 400 SOCIAL_SCHEDULE_OUT_OF_WINDOW; 503 SOCIAL_FACEBOOK_NOT_CONFIGURED.
+      description: '"Duyệt là đăng": đi được từ DRAFT (đăng một bước) hoặc PENDING_APPROVAL; người giữ social.post.publish được đăng bài của chính mình (không maker-checker). Trả 200 với fbStatus PUBLISHED/SCHEDULED/FAILED/UNCERTAIN (UNCERTAIN = phải đối soát, không đăng lại). 409 SOCIAL_IDEMPOTENCY_CONFLICT / SOCIAL_INVALID_TRANSITION; 400 SOCIAL_SCHEDULE_OUT_OF_WINDOW; 503 SOCIAL_FACEBOOK_NOT_CONFIGURED.'
       operationId: approveAdminFacebookPost
       parameters:
         - name: id
@@ -1051,7 +1051,7 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Duyệt và đăng ngay hoặc hẹn giờ trên Facebook (người duyệt khác người gửi)
+      summary: Duyệt và đăng ngay hoặc hẹn giờ trên Facebook (từ DRAFT hoặc PENDING_APPROVAL)
       tags:
         - Admin Content
       x-required-permissions:

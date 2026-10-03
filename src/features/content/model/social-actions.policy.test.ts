@@ -7,7 +7,6 @@ import {
 import {
   availableSocialActions,
   needsAttention,
-  SELF_APPROVAL_REASON,
   type SocialActionContext,
 } from './social-actions.policy';
 
@@ -17,7 +16,6 @@ const base: SocialActionContext = {
   fbStatus: null,
   canManage: true,
   canPublish: true,
-  currentUserId: '7',
 };
 
 const actionsOf = (context: Partial<SocialActionContext>) =>
@@ -26,7 +24,7 @@ const actionsOf = (context: Partial<SocialActionContext>) =>
 describe('availableSocialActions — transition matrix', () => {
   it.each([
     [null, ['createDraft']],
-    [S.DRAFT, ['editDraft', 'submit', 'cancel']],
+    [S.DRAFT, ['editDraft', 'approve', 'cancel']],
     [S.PENDING_APPROVAL, ['approve', 'reject', 'cancel']],
     [S.FAILED, ['retry', 'reject', 'cancel']],
     [S.UNCERTAIN, ['reconcile']],
@@ -51,22 +49,17 @@ describe('availableSocialActions — permission gating', () => {
   });
 
   it('social.post.publish only: approve/reject/retry/delete, no drafting', () => {
-    expect(actionsOf({ canManage: false, fbStatus: S.DRAFT })).toEqual([]);
+    expect(actionsOf({ canManage: false, fbStatus: S.DRAFT })).toEqual(['approve']);
     expect(actionsOf({ canManage: false, fbStatus: S.PENDING_APPROVAL })).toEqual(['approve', 'reject']);
     expect(actionsOf({ canManage: false, fbStatus: null })).toEqual([]);
   });
 
-  it('disables approve and retry for the submitter (maker-checker) with a reason', () => {
-    const pending = availableSocialActions({ ...base, fbStatus: S.PENDING_APPROVAL, submittedById: '7' });
-    expect(pending.find((item) => item.action === 'approve')?.disabledReason).toBe(SELF_APPROVAL_REASON);
-    expect(pending.find((item) => item.action === 'reject')?.disabledReason).toBeUndefined();
-    const failed = availableSocialActions({ ...base, fbStatus: S.FAILED, submittedById: '7' });
-    expect(failed.find((item) => item.action === 'retry')?.disabledReason).toBe(SELF_APPROVAL_REASON);
-  });
-
-  it('keeps approve enabled for another user or an unknown submitter', () => {
-    expect(availableSocialActions({ ...base, fbStatus: S.PENDING_APPROVAL, submittedById: '8' })[0]).toEqual({ action: 'approve' });
+  it('publisher posts straight from DRAFT (no Gửi duyệt step, no maker-checker)', () => {
+    const draft = actionsOf({ fbStatus: S.DRAFT });
+    expect(draft).toContain('approve');
+    expect(draft).not.toContain('submit');
     expect(availableSocialActions({ ...base, fbStatus: S.PENDING_APPROVAL })[0]).toEqual({ action: 'approve' });
+    expect(availableSocialActions({ ...base, fbStatus: S.FAILED })[0]).toEqual({ action: 'retry' });
   });
 });
 

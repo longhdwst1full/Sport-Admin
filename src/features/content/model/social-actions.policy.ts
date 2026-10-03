@@ -23,17 +23,19 @@ export type SocialPermissionLevel = 'manage' | 'publish';
 /**
  * INVARIANT: bản sao ma trận `FB_TRANSITIONS` của API (`cms/social/social.policy.ts`); `null` = bài chưa
  * có bản đăng Facebook. Chỉ là affordance — API vẫn trả 409 SOCIAL_INVALID_TRANSITION nếu hai bên lệch.
+ * "Duyệt là đăng" (D97, owner 2026-10-03): không maker-checker; approve đi từ DRAFT hoặc PENDING_APPROVAL.
+ * `hideForPublisher`: người có quyền đăng không cần gửi duyệt — đăng thẳng từ nháp.
  */
 export const SOCIAL_ACTION_RULES: Record<
   SocialAction,
-  { from: ReadonlyArray<FacebookPublicationStatus | null>; permission: SocialPermissionLevel; makerChecker?: boolean }
+  { from: ReadonlyArray<FacebookPublicationStatus | null>; permission: SocialPermissionLevel; hideForPublisher?: boolean }
 > = {
   createDraft: { from: [null, FbStatus.DELETED], permission: 'manage' },
   editDraft: { from: [FbStatus.DRAFT], permission: 'manage' },
-  submit: { from: [FbStatus.DRAFT], permission: 'manage' },
-  approve: { from: [FbStatus.PENDING_APPROVAL], permission: 'publish', makerChecker: true },
+  submit: { from: [FbStatus.DRAFT], permission: 'manage', hideForPublisher: true },
+  approve: { from: [FbStatus.DRAFT, FbStatus.PENDING_APPROVAL], permission: 'publish' },
   reject: { from: [FbStatus.PENDING_APPROVAL, FbStatus.FAILED], permission: 'publish' },
-  retry: { from: [FbStatus.FAILED], permission: 'publish', makerChecker: true },
+  retry: { from: [FbStatus.FAILED], permission: 'publish' },
   reconcile: { from: [FbStatus.UNCERTAIN, FbStatus.PUBLISHING], permission: 'publish' },
   cancel: { from: [FbStatus.DRAFT, FbStatus.PENDING_APPROVAL, FbStatus.FAILED], permission: 'manage' },
   delete: { from: [FbStatus.PUBLISHED, FbStatus.SCHEDULED], permission: 'publish' },
@@ -54,40 +56,30 @@ const ACTION_ORDER: SocialAction[] = [
   'delete',
 ];
 
-export const SELF_APPROVAL_REASON = 'Bạn là người gửi duyệt bài này; người duyệt/đăng phải là người khác.';
-
 export interface SocialActionContext {
   postType: AnyContentPostType;
   postStatus: ContentPostStatus;
   fbStatus: FacebookPublicationStatus | null;
-  /** Id người gửi duyệt (chỉ có ở chi tiết); undefined = không biết → không chặn, API vẫn kiểm. */
-  submittedById?: string;
-  currentUserId?: string;
   canManage: boolean;
   canPublish: boolean;
 }
 
 export interface AvailableSocialAction {
   action: SocialAction;
-  /** Có giá trị = hiện nút nhưng khoá, kèm tooltip giải thích (maker-checker). */
-  disabledReason?: string;
 }
 
 /**
- * Hành động khả dụng cho một bài theo trạng thái Facebook + quyền. Thiếu quyền thì ẩn hẳn; người gửi duyệt
- * vẫn thấy Duyệt/Đăng lại nhưng bị khoá (maker-checker D97) để hiểu vì sao không thao tác được.
+ * Hành động khả dụng cho một bài theo trạng thái Facebook + quyền. Thiếu quyền thì ẩn hẳn. Người có
+ * `social.post.publish` thấy "Đăng ngay / Hẹn giờ" ngay trên nháp; người chỉ có `social.post.manage` thấy "Gửi duyệt".
  */
 export function availableSocialActions(context: SocialActionContext): AvailableSocialAction[] {
   if (context.postStatus === ContentPostStatus.ARCHIVED) return [];
-  const isSubmitter =
-    Boolean(context.submittedById) && Boolean(context.currentUserId) && context.submittedById === context.currentUserId;
-
   return ACTION_ORDER.flatMap((action) => {
     const rule = SOCIAL_ACTION_RULES[action];
     if (!rule.from.includes(context.fbStatus)) return [];
     const allowed = rule.permission === 'manage' ? context.canManage : context.canPublish;
     if (!allowed) return [];
-    if (rule.makerChecker && isSubmitter) return [{ action, disabledReason: SELF_APPROVAL_REASON }];
+    if (rule.hideForPublisher && context.canPublish) return [];
     return [{ action }];
   });
 }

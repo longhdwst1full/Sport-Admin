@@ -13,8 +13,7 @@ describe('socialCommandErrorMessage', () => {
     }
   });
 
-  it('explains maker-checker and reload cases', () => {
-    expect(socialCommandErrorMessage(apiError(SOCIAL_ERROR_CODE.SELF_APPROVAL))).toContain('người khác');
+  it('explains reload cases', () => {
     expect(socialCommandErrorMessage(apiError(SOCIAL_ERROR_CODE.VERSION_STALE))).toContain('tải lại');
   });
 

@@ -9,7 +9,6 @@ const MESSAGES: Record<string, string> = {
   [SOCIAL_ERROR_CODE.INVALID_TRANSITION]:
     'Trạng thái bài Facebook vừa thay đổi nên thao tác này không còn hợp lệ. Dữ liệu đã tải lại.',
   [SOCIAL_ERROR_CODE.VERSION_STALE]: 'Bài viết vừa được người khác thay đổi. Dữ liệu đã tải lại, vui lòng xem lại rồi thao tác.',
-  [SOCIAL_ERROR_CODE.SELF_APPROVAL]: 'Bạn là người gửi duyệt bài này. Người duyệt/đăng phải là người khác.',
   [SOCIAL_ERROR_CODE.IDEMPOTENCY_KEY_INVALID]: 'Yêu cầu thiếu khoá chống gửi trùng. Vui lòng thử lại.',
   [SOCIAL_ERROR_CODE.IDEMPOTENCY_CONFLICT]: 'Yêu cầu trùng với một lệnh khác vừa gửi. Dữ liệu đã tải lại, vui lòng thử lại.',
   [SOCIAL_ERROR_CODE.MEDIA_INVALID]: 'Ảnh/video không khớp loại bài đăng (bài chữ không media, 1–10 ảnh, hoặc đúng 1 video).',

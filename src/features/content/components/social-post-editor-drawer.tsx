@@ -116,8 +116,8 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
             <Alert className="mb-3" type="error" showIcon message="Không lưu được" description={socialCommandErrorMessage(save.error)} />
           )}
           <Typography.Paragraph type="secondary" className="text-xs">
-            Bài được lưu ở trạng thái Nháp. Gửi duyệt rồi người có quyền đăng (khác người gửi) mới duyệt, đăng ngay
-            hoặc hẹn giờ.
+            Bài được lưu ở trạng thái Nháp. Người có quyền đăng bấm "Đăng ngay / Hẹn giờ"; người chỉ có quyền soạn
+            bấm "Gửi duyệt" để người có quyền đăng duyệt.
           </Typography.Paragraph>
           <Form form={form} layout="vertical" onFinish={submit} disabled={save.isPending} initialValues={EMPTY_SOCIAL_FORM}>
             <Form.Item

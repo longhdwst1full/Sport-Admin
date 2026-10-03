@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { PlayCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import { Alert, Button, Descriptions, Drawer, Empty, Image, Skeleton, Statistic, Tag, Tooltip, Typography } from 'antd';
-import { useAuth } from '@/core/auth/auth-context';
+import { Alert, Button, Descriptions, Drawer, Empty, Image, Skeleton, Statistic, Tag, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
 import { useGetAdminSocialPost } from '@/generated/api/content/content';
@@ -24,11 +23,10 @@ const metricValue = (value: number | null | undefined) => (value == null ? '—'
 
 /**
  * Chi tiết bài + bản đăng Facebook: media, chỉ số, lỗi gần nhất và mọi lệnh khả dụng.
- * PERMISSION: nút theo `social.post.manage`/`social.post.publish`; Duyệt/Đăng lại khoá với người gửi duyệt
- * (maker-checker) — API vẫn trả 409 SOCIAL_SELF_APPROVAL nếu UI lệch.
+ * PERMISSION: nút theo `social.post.manage`/`social.post.publish`. "Duyệt là đăng" (D97, 2026-10-03): không
+ * maker-checker, người có quyền đăng đăng thẳng từ nháp.
  */
 export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; onClose: () => void }) {
-  const { currentUser } = useAuth();
   const canManage = useCan(SOCIAL_PERMISSION.MANAGE);
   const canPublish = useCan(SOCIAL_PERMISSION.PUBLISH);
   const detail = useGetAdminSocialPost(postId, { query: { retry: false } });
@@ -42,8 +40,6 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
         postType: post.postType,
         postStatus: post.status,
         fbStatus: facebook?.status ?? null,
-        submittedById: facebook?.submittedBy?.id,
-        currentUserId: currentUser?.userId,
         canManage,
         canPublish,
       })
@@ -78,20 +74,18 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
         <>
           {actions.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
-              {actions.map(({ action, disabledReason }) => {
+              {actions.map(({ action }) => {
                 const button = SOCIAL_ACTION_BUTTON[action];
                 return (
-                  <Tooltip key={action} title={disabledReason}>
-                    <Button
-                      icon={button.icon}
-                      danger={button.danger}
-                      type={button.primary ? 'primary' : 'default'}
-                      disabled={Boolean(disabledReason)}
-                      onClick={() => runAction(action)}
-                    >
-                      {button.label}
-                    </Button>
-                  </Tooltip>
+                  <Button
+                    key={action}
+                    icon={button.icon}
+                    danger={button.danger}
+                    type={button.primary ? 'primary' : 'default'}
+                    onClick={() => runAction(action)}
+                  >
+                    {button.label}
+                  </Button>
                 );
               })}
             </div>

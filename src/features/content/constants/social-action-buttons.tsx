@@ -18,7 +18,7 @@ export const SOCIAL_ACTION_BUTTON: Record<SocialAction, { label: string; icon: R
   createDraft: { label: 'Đăng Facebook', icon: <FacebookOutlined />, primary: true },
   editDraft: { label: 'Sửa nháp', icon: <EditOutlined /> },
   submit: { label: 'Gửi duyệt', icon: <SendOutlined />, primary: true },
-  approve: { label: 'Duyệt / Hẹn giờ', icon: <CheckOutlined />, primary: true },
+  approve: { label: 'Đăng ngay / Hẹn giờ', icon: <CheckOutlined />, primary: true },
   retry: { label: 'Đăng lại', icon: <RedoOutlined />, primary: true },
   reconcile: { label: 'Đối soát', icon: <SyncOutlined />, primary: true },
   editCaption: { label: 'Sửa nội dung trên FB', icon: <CloudUploadOutlined /> },

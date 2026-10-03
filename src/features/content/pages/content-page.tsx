@@ -73,7 +73,7 @@ const metric = (value: number | null | undefined) => (value == null ? '—' : va
  * Màn bài viết: tab "Tất cả" (bài website + bài chỉ Facebook) và "Facebook" (bài có bản đăng Facebook).
  * Tab và bộ lọc nằm trên URL; ô tìm kiếm debounce. Phân trang/lọc chạy ở server (`listAdminSocialPosts`).
  * Hành động trên bài website (sửa, ẩn/hiện, lưu trữ) giữ như cũ; lệnh Facebook nằm ở drawer chi tiết
- * vì chỉ chi tiết mới có người gửi duyệt (maker-checker).
+ * (kèm modal xác nhận đăng/hẹn giờ).
  */
 export function ContentPage() {
   const { message } = App.useApp();
@@ -212,10 +212,10 @@ export function ContentPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-wrap gap-3">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <Input.Search
               allowClear
-              className="min-w-64 flex-1"
+              className="w-full"
               value={search}
               maxLength={SOCIAL_LIMITS.SEARCH_MAX}
               onChange={(event) => setSearch(event.target.value)}
@@ -223,7 +223,7 @@ export function ContentPage() {
             />
             <Select
               allowClear
-              className="min-w-40"
+              className="w-full"
               value={filters.fbStatus}
               onChange={(value?: string) => updateParams({ fbStatus: value })}
               placeholder="Trạng thái Facebook"
@@ -231,7 +231,7 @@ export function ContentPage() {
             />
             <Select
               allowClear
-              className="min-w-44"
+              className="w-full"
               value={filters.postType}
               onChange={(value?: string) => updateParams({ postType: value })}
               placeholder="Loại bài"
@@ -239,13 +239,15 @@ export function ContentPage() {
             />
             <Select
               allowClear
-              className="min-w-40"
+              className="w-full"
               value={filters.origin}
               onChange={(value?: string) => updateParams({ origin: value })}
               placeholder="Nguồn"
               options={fbOriginOptions}
             />
             <DatePicker.RangePicker
+              className="w-full"
+              style={{ width: '100%' }}
               format="DD/MM/YYYY"
               allowEmpty={[true, true]}
               value={[filters.from ? dayjs(filters.from) : null, filters.to ? dayjs(filters.to) : null]}
@@ -426,7 +428,7 @@ export function ContentPage() {
               align: 'right' as const,
               render: (_: unknown, row: SocialPostSummaryDto) => {
                 const isSocial = row.postType === AnyContentPostType.SOCIAL;
-                // Chỉ lệnh mở drawer soạn ở hàng; lệnh duyệt/đăng cần người gửi duyệt nên nằm ở chi tiết.
+                // Chỉ lệnh mở drawer soạn ở hàng; lệnh duyệt/đăng (có modal xác nhận) nằm ở chi tiết.
                 const quick = availableSocialActions({
                   postType: row.postType,
                   postStatus: row.status,

@@ -69,17 +69,27 @@ test.describe('CONTENT — Quản lý bài viết & CMS', () => {
     await expect(page).toHaveURL(/tab=facebook/);
   });
 
-  test('CMS-05: Người gửi duyệt thấy nút Duyệt bị khoá (maker-checker)', async ({ page }) => {
+  test('CMS-05: Người gửi duyệt tự đăng được (duyệt là đăng, không maker-checker)', async ({ page }) => {
     await mockJson(page, '**/api/v1/admin/content/social/posts/2', socialPostDetail());
     const shell = new AdminShellPage(page);
     await shell.open('/content');
 
     await page.getByRole('button', { name: 'Flash sale cuối tuần', exact: true }).click();
-    await expect(page.getByRole('button', { name: /Duyệt \/ Hẹn giờ/ })).toBeDisabled();
+    await expect(page.getByRole('button', { name: /Đăng ngay \/ Hẹn giờ/ })).toBeEnabled();
     await expect(page.getByRole('button', { name: /Từ chối/ })).toBeEnabled();
   });
 
-  test('CMS-06: Duyệt khi chưa cấu hình Facebook -> gợi ý Tham số hệ thống', async ({ page }) => {
+  test('CMS-05b: Bản nháp hiện Đăng ngay / Hẹn giờ cho người có quyền đăng, không cần Gửi duyệt', async ({ page }) => {
+    await mockJson(page, '**/api/v1/admin/content/social/posts/2', socialPostDetail({}, { status: 'DRAFT' }));
+    const shell = new AdminShellPage(page);
+    await shell.open('/content');
+
+    await page.getByRole('button', { name: 'Flash sale cuối tuần', exact: true }).click();
+    await expect(page.getByRole('button', { name: /Đăng ngay \/ Hẹn giờ/ })).toBeEnabled();
+    await expect(page.getByRole('button', { name: /Gửi duyệt/ })).toHaveCount(0);
+  });
+
+  test('CMS-06: Đăng khi chưa cấu hình Facebook -> gợi ý Tham số hệ thống', async ({ page }) => {
     await mockJson(
       page,
       '**/api/v1/admin/content/social/posts/2',
@@ -98,8 +108,8 @@ test.describe('CONTENT — Quản lý bài viết & CMS', () => {
     const approve = page.waitForRequest(
       (req) => req.url().endsWith('/facebook/approve') && Boolean(req.headers()['idempotency-key']),
     );
-    await page.getByRole('button', { name: /Duyệt \/ Hẹn giờ/ }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Duyệt', exact: true }).click();
+    await page.getByRole('button', { name: /Đăng ngay \/ Hẹn giờ/ }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Đăng', exact: true }).click();
     await approve;
     await expect(page.getByText('Chưa cấu hình Facebook Page')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Tham số hệ thống' })).toBeVisible();

@@ -32,11 +32,11 @@ const ACTION_META: Record<SocialModalAction, { title: string; okText: string; co
   submit: {
     title: 'Gửi duyệt bài Facebook',
     okText: 'Gửi duyệt',
-    consequence: 'Bài chuyển sang Chờ duyệt; người có quyền đăng (khác bạn) sẽ duyệt, đăng ngay hoặc hẹn giờ.',
+    consequence: 'Bài chuyển sang Chờ duyệt; người có quyền đăng sẽ duyệt, đăng ngay hoặc hẹn giờ.',
   },
   approve: {
-    title: 'Duyệt và đăng Facebook',
-    okText: 'Duyệt',
+    title: 'Đăng bài lên Facebook',
+    okText: 'Đăng',
     consequence: 'Bài được đăng lên Facebook Page ngay hoặc vào giờ hẹn. Bài đã đăng sẽ công khai với mọi người.',
   },
   retry: {

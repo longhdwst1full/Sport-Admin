@@ -8,7 +8,7 @@ import {
 
 export const SOCIAL_PAGE_SIZE = 20;
 
-/** PERMISSION: chỉ điều khiển affordance; API kiểm lại quyền + maker-checker ở mọi lệnh (D97). */
+/** PERMISSION: chỉ điều khiển affordance; API kiểm lại quyền ở mọi lệnh (D97, không maker-checker). */
 export const SOCIAL_PERMISSION = {
   VIEW: 'cms.content.view',
   MANAGE: 'social.post.manage',
@@ -103,7 +103,6 @@ export const SOCIAL_ERROR_CODE = {
   POST_ARCHIVED: 'SOCIAL_POST_ARCHIVED',
   INVALID_TRANSITION: 'SOCIAL_INVALID_TRANSITION',
   VERSION_STALE: 'SOCIAL_VERSION_STALE',
-  SELF_APPROVAL: 'SOCIAL_SELF_APPROVAL',
   IDEMPOTENCY_KEY_INVALID: 'SOCIAL_IDEMPOTENCY_KEY_INVALID',
   IDEMPOTENCY_CONFLICT: 'SOCIAL_IDEMPOTENCY_CONFLICT',
   MEDIA_INVALID: 'SOCIAL_MEDIA_INVALID',
