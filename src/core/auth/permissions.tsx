@@ -40,7 +40,8 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
   const permissions = createPermissionSet(
     currentUserPermissions.length > 0
       ? currentUserPermissions.join(',')
-      : import.meta.env.VITE_DEV_PERMISSIONS ?? '',
+      : // SECURITY: quyền giả lập chỉ cho máy dev; production không bao giờ lấy quyền từ biến build.
+        import.meta.env.DEV ? (import.meta.env.VITE_DEV_PERMISSIONS ?? '') : '',
     developmentBypass,
   );
   return <PermissionContext.Provider value={permissions}>{children}</PermissionContext.Provider>;
