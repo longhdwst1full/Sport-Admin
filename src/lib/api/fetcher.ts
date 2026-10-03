@@ -19,7 +19,9 @@ import {
   TERMINAL_REFRESH_ERROR_CODES,
 } from '@/core/auth/auth-refresh.constants';
 
-const configuredApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// Production không bao giờ rơi về localhost: thiếu VITE_API_URL thì gọi cùng origin qua rewrite /api.
+const configuredApiUrl =
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? globalThis.location.origin : 'http://localhost:4000');
 const useProductionCookieProxy =
   import.meta.env.PROD && import.meta.env.VITE_AUTH_TOKEN_TRANSPORT === 'COOKIE';
 
