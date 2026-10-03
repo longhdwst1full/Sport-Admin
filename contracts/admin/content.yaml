@@ -1331,7 +1331,7 @@ paths:
         - social.post.manage
   /api/v1/admin/content/social/posts/{id}/facebook/delete:
     post:
-      description: 409 SOCIAL_PAGE_MISMATCH khi bài thuộc Page khác; 502 SOCIAL_FACEBOOK_ERROR khi Facebook từ chối.
+      description: "PUBLISHED/SCHEDULED: xoá trên Facebook rồi DELETED; cần thêm social.post.publish (403 SOCIAL_PUBLISH_PERMISSION_REQUIRED) và lý do (400 SOCIAL_DELETE_REASON_REQUIRED); 409 SOCIAL_PAGE_MISMATCH, 502 SOCIAL_FACEBOOK_ERROR, 503 chưa cấu hình Page. DRAFT/PENDING_APPROVAL/FAILED: không gọi Facebook, lý do tuỳ chọn. Bài SOCIAL → lưu trữ (status ARCHIVED, fb_status DELETED, ẩn khỏi danh sách, nhả media); bài website → bỏ bản Facebook (fb_status NULL), bài website giữ nguyên. DELETED/không có bản Facebook: không đổi gì, trả bài hiện tại. PUBLISHING/UNCERTAIN: 409 SOCIAL_DELETE_NEEDS_RECONCILE (đối soát trước)."
       operationId: deleteAdminFacebookPost
       parameters:
         - name: id
@@ -1402,11 +1402,11 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Xoá bài trên Facebook (PUBLISHED/SCHEDULED → DELETED); bài website không bị ảnh hưởng
+      summary: "Xoá bài Facebook ở mọi trạng thái (đã đăng: xoá trên Page; chưa đăng: chỉ xoá trong hệ thống)"
       tags:
         - Admin Content
       x-required-permissions:
-        - social.post.publish
+        - social.post.manage
   /api/v1/admin/content/social/posts/{id}/facebook/caption:
     post:
       operationId: updateAdminFacebookCaption
@@ -1911,9 +1911,9 @@ components:
           type: string
           minLength: 3
           maxLength: 500
+          description: Bắt buộc với bài đã lên Facebook (PUBLISHED/SCHEDULED); tuỳ chọn với bài chưa đăng.
       required:
         - expectedVersion
-        - reason
     EditLiveFacebookDto:
       type: object
       properties:

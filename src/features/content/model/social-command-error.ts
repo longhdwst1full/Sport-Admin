@@ -21,6 +21,9 @@ const MESSAGES: Record<string, string> = {
   [SOCIAL_ERROR_CODE.RECONCILE_TOO_EARLY]: 'Lần đăng vẫn đang chạy. Đợi vài phút rồi đối soát lại.',
   [SOCIAL_ERROR_CODE.RECONCILE_INCONCLUSIVE]:
     'Không tự xác định được bài đã lên Page hay chưa. Kiểm tra trên Page rồi nhập ID bài, hoặc xác nhận "chưa đăng".',
+  [SOCIAL_ERROR_CODE.DELETE_NEEDS_RECONCILE]: 'Chưa rõ bài đã lên Facebook chưa — hãy Đối soát trước khi xoá',
+  [SOCIAL_ERROR_CODE.DELETE_REASON_REQUIRED]: 'Cần nhập lý do khi xoá bài đã lên Facebook.',
+  [SOCIAL_ERROR_CODE.PUBLISH_PERMISSION_REQUIRED]: 'Xoá bài đã lên Facebook cần quyền đăng bài Facebook.',
   [SOCIAL_ERROR_CODE.STORAGE_DISABLED]: 'Chức năng tạm thời không khả dụng.',
 };
 

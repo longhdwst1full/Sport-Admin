@@ -35,6 +35,7 @@ import {
 } from '@/generated/api/content/content.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDate, formatDateTime } from '@/lib/format/datetime';
+import { SocialActionModal } from '../components/social-action-modal';
 import { SocialPostDetailDrawer } from '../components/social-post-detail-drawer';
 import { SocialPostEditorDrawer, type SocialEditorTarget } from '../components/social-post-editor-drawer';
 import { FacebookSettingsHint } from '../components/facebook-settings-hint';
@@ -94,6 +95,7 @@ export function ContentPage() {
   const [websiteEditor, setWebsiteEditor] = useState<{ open: boolean; post?: SocialPostSummaryDto }>({ open: false });
   const [socialEditor, setSocialEditor] = useState<SocialEditorTarget>();
   const [detailId, setDetailId] = useState<string>();
+  const [socialDeleteRow, setSocialDeleteRow] = useState<SocialPostSummaryDto>();
   const canManageWebsite = useCan('cms.content.manage');
   const canManageSocial = useCan(SOCIAL_PERMISSION.MANAGE);
   const canPublishSocial = useCan(SOCIAL_PERMISSION.PUBLISH);
@@ -424,18 +426,20 @@ export function ContentPage() {
             {
               title: '',
               key: 'actions',
-              width: 170,
+              width: 200,
               align: 'right' as const,
               render: (_: unknown, row: SocialPostSummaryDto) => {
                 const isSocial = row.postType === AnyContentPostType.SOCIAL;
-                // Chỉ lệnh mở drawer soạn ở hàng; lệnh duyệt/đăng (có modal xác nhận) nằm ở chi tiết.
-                const quick = availableSocialActions({
+                // Ở hàng: lệnh mở drawer soạn + Xoá (modal xác nhận); lệnh duyệt/đăng nằm ở chi tiết.
+                const available = availableSocialActions({
                   postType: row.postType,
                   postStatus: row.status,
                   fbStatus: row.facebook?.status ?? null,
                   canManage: canManageSocial,
                   canPublish: canPublishSocial,
-                }).filter(({ action }) => action === 'createDraft' || action === 'editDraft');
+                });
+                const quick = available.filter(({ action }) => action === 'createDraft' || action === 'editDraft');
+                const canDeleteFacebook = available.some(({ action }) => action === 'delete');
                 return (
                   <TableActions>
                     <TableActionButton label={`Chi tiết ${row.title}`} icon={<EyeOutlined />} onClick={() => setDetailId(row.id)} />
@@ -453,6 +457,14 @@ export function ContentPage() {
                         }
                       />
                     ))}
+                    {canDeleteFacebook && (
+                      <TableActionButton
+                        label={`Xoá bài Facebook ${row.title}`}
+                        icon={SOCIAL_ACTION_BUTTON.delete.icon}
+                        danger
+                        onClick={() => setSocialDeleteRow(row)}
+                      />
+                    )}
                     {!isSocial && (
                       <PermissionGate permission="cms.content.manage">
                         <TableActionButton
@@ -501,6 +513,11 @@ export function ContentPage() {
         )}
         {socialEditor && <SocialPostEditorDrawer target={socialEditor} onClose={() => setSocialEditor(undefined)} />}
         {detailId && <SocialPostDetailDrawer postId={detailId} onClose={() => setDetailId(undefined)} />}
+        <SocialActionModal
+          post={socialDeleteRow}
+          action={socialDeleteRow ? 'delete' : undefined}
+          onClose={() => setSocialDeleteRow(undefined)}
+        />
       </ManagementPage>
     </PageTransition>
   );

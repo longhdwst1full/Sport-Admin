@@ -8,15 +8,25 @@ import {
   FacebookPublishType,
   FacebookReconcileResolution,
   type SocialPostDetailDto,
+  type SocialPostSummaryDto,
 } from '@/generated/api/content/content.schemas';
 import { fbPublishTypeLabels, fbStatusPresentation, FB_POST_ID_PATTERN, SOCIAL_LIMITS } from '../constants/social.constants';
 import { useSocialPostCommand, type SocialCommand } from '../hooks/use-social-commands';
-import type { SocialAction } from '../model/social-actions.policy';
+import { socialDeleteMode, type SocialAction, type SocialDeleteMode } from '../model/social-actions.policy';
 import { isFacebookNotConfigured, socialCommandErrorMessage } from '../model/social-command-error';
 import { scheduleWindowError } from '../model/social-post-form.mapper';
 import { FacebookSettingsHint } from './facebook-settings-hint';
 
 export type SocialModalAction = Exclude<SocialAction, 'createDraft' | 'editDraft'>;
+
+/**
+ * Bài cho modal: chi tiết (drawer) hoặc dòng danh sách (nút Xoá ở hàng). Dòng danh sách không có `body`/media —
+ * chỉ lệnh không cần chúng (xoá) được mở từ hàng.
+ */
+export type SocialActionModalPost = Pick<SocialPostDetailDto, 'id' | 'version' | 'title' | 'postType'> & {
+  body?: string;
+  facebook?: SocialPostSummaryDto['facebook'];
+};
 
 interface ActionFormValues {
   timing?: 'now' | 'schedule';
@@ -75,6 +85,23 @@ const ACTION_META: Record<SocialModalAction, { title: string; okText: string; co
   },
 };
 
+/** Lệnh xoá đổi tiêu đề/hệ quả theo nhánh (owner 2026-10-03: xoá được mọi trạng thái). */
+const DELETE_META: Record<Exclude<SocialDeleteMode, 'FACEBOOK' | 'NONE'>, { title: string; okText: string; consequence: string; danger?: boolean }> = {
+  LOCAL: {
+    title: 'Xoá bài (chưa đăng lên Facebook)',
+    okText: 'Xoá bài',
+    consequence:
+      'Bài chưa lên Facebook Page nên chỉ bị xoá trong hệ thống. Bài chỉ đăng Facebook sẽ biến khỏi danh sách và nhả ảnh/video; bài website giữ nguyên, chỉ bỏ bản đăng Facebook.',
+    danger: true,
+  },
+  RECONCILE_FIRST: {
+    title: 'Xoá bài trên Facebook',
+    okText: 'Xoá',
+    consequence: 'Chưa rõ bài đã lên Facebook chưa — hãy Đối soát trước khi xoá',
+    danger: true,
+  },
+};
+
 const REASON_RULES = [
   { required: true, whitespace: true, message: 'Nhập lý do (ghi vào nhật ký)' },
   { min: SOCIAL_LIMITS.REASON_MIN, message: `Lý do tối thiểu ${SOCIAL_LIMITS.REASON_MIN} ký tự` },
@@ -95,8 +122,9 @@ function toCommand(action: SocialModalAction, values: ActionFormValues, isSocial
         },
       };
     case 'reject':
-    case 'delete':
       return { action, body: { reason: values.reason?.trim() ?? '' } };
+    case 'delete':
+      return { action, body: { reason: values.reason?.trim() || undefined } };
     case 'cancel':
       return { action, body: { reason: values.reason?.trim() || undefined } };
     case 'reconcile':
@@ -124,7 +152,7 @@ export function SocialActionModal({
   action,
   onClose,
 }: {
-  post?: SocialPostDetailDto;
+  post?: SocialActionModalPost;
   action?: SocialModalAction;
   onClose: () => void;
 }) {
@@ -145,12 +173,17 @@ export function SocialActionModal({
 
   if (!post?.facebook || !action) return null;
   const facebook = post.facebook;
-  const meta = ACTION_META[action];
+  const deleteMode = action === 'delete' ? socialDeleteMode(facebook.status) : undefined;
+  const meta =
+    deleteMode === 'LOCAL' || deleteMode === 'RECONCILE_FIRST' ? DELETE_META[deleteMode] : ACTION_META[action];
+  // INVARIANT: PUBLISHING/UNCERTAIN không gửi lệnh xoá (API 409) — modal chỉ nhắc Đối soát.
+  const blocked = deleteMode === 'RECONCILE_FIRST';
   const isSocial = post.postType === AnyContentPostType.SOCIAL;
   const canReel =
     facebook.publishType === FacebookPublishType.VIDEO || facebook.publishType === FacebookPublishType.REEL;
 
   const submit = (values: ActionFormValues) => {
+    if (blocked) return;
     command.mutate(toCommand(action, values, isSocial), {
       onSuccess: (saved) => {
         const status = saved.facebook?.status;
@@ -172,7 +205,7 @@ export function SocialActionModal({
       title={meta.title}
       okText={meta.okText}
       cancelText="Đóng"
-      okButtonProps={{ danger: meta.danger }}
+      okButtonProps={{ danger: meta.danger, hidden: blocked }}
       confirmLoading={command.isPending}
       onOk={() => form.submit()}
       onCancel={onClose}
@@ -185,7 +218,11 @@ export function SocialActionModal({
           <StatusTag status={facebook.status} presentations={fbStatusPresentation} />
         </Descriptions.Item>
       </Descriptions>
-      <Typography.Paragraph type="secondary">{meta.consequence}</Typography.Paragraph>
+      {blocked ? (
+        <Alert className="mb-3" type="warning" showIcon message={meta.consequence} />
+      ) : (
+        <Typography.Paragraph type="secondary">{meta.consequence}</Typography.Paragraph>
+      )}
       {isFacebookNotConfigured(command.error) && <FacebookSettingsHint />}
       {Boolean(command.error) && !isFacebookNotConfigured(command.error) && (
         <Alert className="mb-3" type="error" showIcon message="Không thực hiện được" description={socialCommandErrorMessage(command.error)} />
@@ -226,13 +263,17 @@ export function SocialActionModal({
             )}
           </>
         )}
-        {(action === 'reject' || action === 'delete') && (
+        {(action === 'reject' || deleteMode === 'FACEBOOK') && (
           <Form.Item name="reason" label="Lý do" rules={REASON_RULES}>
             <Input.TextArea rows={3} maxLength={SOCIAL_LIMITS.REASON_MAX} showCount />
           </Form.Item>
         )}
-        {action === 'cancel' && (
-          <Form.Item name="reason" label="Lý do (tuỳ chọn)">
+        {(action === 'cancel' || deleteMode === 'LOCAL') && (
+          <Form.Item
+            name="reason"
+            label="Lý do (tuỳ chọn)"
+            rules={deleteMode === 'LOCAL' ? [{ min: SOCIAL_LIMITS.REASON_MIN, message: `Lý do tối thiểu ${SOCIAL_LIMITS.REASON_MIN} ký tự` }] : undefined}
+          >
             <Input.TextArea rows={3} maxLength={SOCIAL_LIMITS.REASON_MAX} showCount />
           </Form.Item>
         )}

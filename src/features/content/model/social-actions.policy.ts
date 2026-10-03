@@ -28,7 +28,13 @@ export type SocialPermissionLevel = 'manage' | 'publish';
  */
 export const SOCIAL_ACTION_RULES: Record<
   SocialAction,
-  { from: ReadonlyArray<FacebookPublicationStatus | null>; permission: SocialPermissionLevel; hideForPublisher?: boolean }
+  {
+    from: ReadonlyArray<FacebookPublicationStatus | null>;
+    permission: SocialPermissionLevel;
+    hideForPublisher?: boolean;
+    /** Từ các trạng thái này lệnh còn cần thêm quyền đăng (xoá bài đã lên Page). */
+    alsoPublishFrom?: ReadonlyArray<FacebookPublicationStatus>;
+  }
 > = {
   createDraft: { from: [null, FbStatus.DELETED], permission: 'manage' },
   editDraft: { from: [FbStatus.DRAFT], permission: 'manage' },
@@ -38,7 +44,22 @@ export const SOCIAL_ACTION_RULES: Record<
   retry: { from: [FbStatus.FAILED], permission: 'publish' },
   reconcile: { from: [FbStatus.UNCERTAIN, FbStatus.PUBLISHING], permission: 'publish' },
   cancel: { from: [FbStatus.DRAFT, FbStatus.PENDING_APPROVAL, FbStatus.FAILED], permission: 'manage' },
-  delete: { from: [FbStatus.PUBLISHED, FbStatus.SCHEDULED], permission: 'publish' },
+  // Owner 2026-10-03: xoá được mọi trạng thái còn bản Facebook. PUBLISHING/UNCERTAIN vẫn hiện nút nhưng modal chỉ
+  // nhắc Đối soát (API trả 409 SOCIAL_DELETE_NEEDS_RECONCILE). Guard API là `social.post.manage`; bài đã lên Page
+  // còn cần `social.post.publish` (kiểm trong service).
+  delete: {
+    from: [
+      FbStatus.DRAFT,
+      FbStatus.PENDING_APPROVAL,
+      FbStatus.FAILED,
+      FbStatus.PUBLISHING,
+      FbStatus.UNCERTAIN,
+      FbStatus.PUBLISHED,
+      FbStatus.SCHEDULED,
+    ],
+    permission: 'manage',
+    alsoPublishFrom: [FbStatus.PUBLISHED, FbStatus.SCHEDULED],
+  },
   editCaption: { from: [FbStatus.PUBLISHED, FbStatus.SCHEDULED], permission: 'publish' },
 };
 
@@ -79,9 +100,33 @@ export function availableSocialActions(context: SocialActionContext): AvailableS
     if (!rule.from.includes(context.fbStatus)) return [];
     const allowed = rule.permission === 'manage' ? context.canManage : context.canPublish;
     if (!allowed) return [];
+    if (context.fbStatus && rule.alsoPublishFrom?.includes(context.fbStatus) && !context.canPublish) return [];
     if (rule.hideForPublisher && context.canPublish) return [];
     return [{ action }];
   });
+}
+
+/**
+ * Nhánh của lệnh xoá (khớp `classifyDelete` của API): FACEBOOK = gỡ bài trên Page; LOCAL = bài chưa lên Page,
+ * chỉ xoá trong hệ thống; RECONCILE_FIRST = chưa rõ đã lên Page chưa, phải đối soát trước; NONE = không còn gì để xoá.
+ */
+export type SocialDeleteMode = 'FACEBOOK' | 'LOCAL' | 'RECONCILE_FIRST' | 'NONE';
+
+export function socialDeleteMode(fbStatus: FacebookPublicationStatus | null | undefined): SocialDeleteMode {
+  switch (fbStatus) {
+    case FbStatus.PUBLISHED:
+    case FbStatus.SCHEDULED:
+      return 'FACEBOOK';
+    case FbStatus.DRAFT:
+    case FbStatus.PENDING_APPROVAL:
+    case FbStatus.FAILED:
+      return 'LOCAL';
+    case FbStatus.PUBLISHING:
+    case FbStatus.UNCERTAIN:
+      return 'RECONCILE_FIRST';
+    default:
+      return 'NONE';
+  }
 }
 
 /** Trạng thái cần người xử lý tay: lỗi (đăng lại/từ chối) hoặc chưa rõ kết quả (đối soát). */

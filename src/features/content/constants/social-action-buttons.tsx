@@ -24,6 +24,6 @@ export const SOCIAL_ACTION_BUTTON: Record<SocialAction, { label: string; icon: R
   editCaption: { label: 'Sửa nội dung trên FB', icon: <CloudUploadOutlined /> },
   reject: { label: 'Từ chối', icon: <CloseOutlined />, danger: true },
   cancel: { label: 'Huỷ bản đăng', icon: <StopOutlined />, danger: true },
-  delete: { label: 'Xoá trên Facebook', icon: <DeleteOutlined />, danger: true },
+  delete: { label: 'Xoá', icon: <DeleteOutlined />, danger: true },
 };
 

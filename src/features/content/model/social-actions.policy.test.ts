@@ -7,6 +7,7 @@ import {
 import {
   availableSocialActions,
   needsAttention,
+  socialDeleteMode,
   type SocialActionContext,
 } from './social-actions.policy';
 
@@ -24,11 +25,11 @@ const actionsOf = (context: Partial<SocialActionContext>) =>
 describe('availableSocialActions — transition matrix', () => {
   it.each([
     [null, ['createDraft']],
-    [S.DRAFT, ['editDraft', 'approve', 'cancel']],
-    [S.PENDING_APPROVAL, ['approve', 'reject', 'cancel']],
-    [S.FAILED, ['retry', 'reject', 'cancel']],
-    [S.UNCERTAIN, ['reconcile']],
-    [S.PUBLISHING, ['reconcile']],
+    [S.DRAFT, ['editDraft', 'approve', 'cancel', 'delete']],
+    [S.PENDING_APPROVAL, ['approve', 'reject', 'cancel', 'delete']],
+    [S.FAILED, ['retry', 'reject', 'cancel', 'delete']],
+    [S.UNCERTAIN, ['reconcile', 'delete']],
+    [S.PUBLISHING, ['reconcile', 'delete']],
     [S.PUBLISHED, ['editCaption', 'delete']],
     [S.SCHEDULED, ['editCaption', 'delete']],
     [S.DELETED, ['createDraft']],
@@ -42,15 +43,19 @@ describe('availableSocialActions — transition matrix', () => {
 });
 
 describe('availableSocialActions — permission gating', () => {
-  it('social.post.manage only: draft/submit/cancel, no publish commands', () => {
-    expect(actionsOf({ canPublish: false, fbStatus: S.DRAFT })).toEqual(['editDraft', 'submit', 'cancel']);
-    expect(actionsOf({ canPublish: false, fbStatus: S.PENDING_APPROVAL })).toEqual(['cancel']);
+  it('social.post.manage only: draft/submit/cancel + local delete, no publish commands', () => {
+    expect(actionsOf({ canPublish: false, fbStatus: S.DRAFT })).toEqual(['editDraft', 'submit', 'cancel', 'delete']);
+    expect(actionsOf({ canPublish: false, fbStatus: S.PENDING_APPROVAL })).toEqual(['cancel', 'delete']);
+    expect(actionsOf({ canPublish: false, fbStatus: S.FAILED })).toEqual(['cancel', 'delete']);
+    expect(actionsOf({ canPublish: false, fbStatus: S.UNCERTAIN })).toEqual(['delete']);
+    // Xoá bài đã lên Page cần thêm social.post.publish.
     expect(actionsOf({ canPublish: false, fbStatus: S.PUBLISHED })).toEqual([]);
   });
 
-  it('social.post.publish only: approve/reject/retry/delete, no drafting', () => {
+  it('social.post.publish only: approve/reject/retry/caption, no drafting and no delete (API guard is manage)', () => {
     expect(actionsOf({ canManage: false, fbStatus: S.DRAFT })).toEqual(['approve']);
     expect(actionsOf({ canManage: false, fbStatus: S.PENDING_APPROVAL })).toEqual(['approve', 'reject']);
+    expect(actionsOf({ canManage: false, fbStatus: S.PUBLISHED })).toEqual(['editCaption']);
     expect(actionsOf({ canManage: false, fbStatus: null })).toEqual([]);
   });
 
@@ -60,6 +65,22 @@ describe('availableSocialActions — permission gating', () => {
     expect(draft).not.toContain('submit');
     expect(availableSocialActions({ ...base, fbStatus: S.PENDING_APPROVAL })[0]).toEqual({ action: 'approve' });
     expect(availableSocialActions({ ...base, fbStatus: S.FAILED })[0]).toEqual({ action: 'retry' });
+  });
+});
+
+describe('socialDeleteMode — matches API classifyDelete', () => {
+  it.each([
+    [S.PUBLISHED, 'FACEBOOK'],
+    [S.SCHEDULED, 'FACEBOOK'],
+    [S.DRAFT, 'LOCAL'],
+    [S.PENDING_APPROVAL, 'LOCAL'],
+    [S.FAILED, 'LOCAL'],
+    [S.PUBLISHING, 'RECONCILE_FIRST'],
+    [S.UNCERTAIN, 'RECONCILE_FIRST'],
+    [S.DELETED, 'NONE'],
+    [null, 'NONE'],
+  ])('%s → %s', (fbStatus, mode) => {
+    expect(socialDeleteMode(fbStatus)).toBe(mode);
   });
 });
 

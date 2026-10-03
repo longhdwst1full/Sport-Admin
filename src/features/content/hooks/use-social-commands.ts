@@ -35,7 +35,7 @@ export type SocialCommand =
   | { action: 'reject'; body: { reason: string } }
   | { action: 'reconcile'; body: { externalPostId?: string; resolution?: FacebookReconcileResolution } }
   | { action: 'cancel'; body: { reason?: string } }
-  | { action: 'delete'; body: { reason: string } }
+  | { action: 'delete'; body: { reason?: string } }
   | { action: 'editCaption'; body: { body?: string } };
 
 /** Lệnh gọi Facebook và bắt buộc `Idempotency-Key` theo contract. */
