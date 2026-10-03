@@ -1,20 +1,14 @@
 import { useMemo, useState } from 'react';
 import { KeyOutlined, PlusOutlined, ReloadOutlined, SafetyOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Input, Tooltip } from 'antd';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  createAdminRole,
-  deleteAdminRole,
-  updateAdminRole,
-  useListAdminAllRoles,
-  useListAdminPermissions,
-} from '@/generated/api/iam/iam';
+import { useQueryClient } from '@tanstack/react-query';
+import { useListAdminAllRoles, useListAdminPermissions } from '@/generated/api/iam/iam';
 import type { RoleDto } from '@/generated/api/iam/iam.schemas';
 import { useCan, usePermissions } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
-import { RoleFormDrawer, type RoleFormValues } from '../components/role-form-drawer';
+import { RoleFormDrawer } from '../components/role-form-drawer';
 import { RoleTable } from '../components/role-table';
 import {
   describeRoleDeleteImpact,
@@ -22,6 +16,7 @@ import {
   roleDeleteErrorMessage,
   shouldReloadAfterRoleDeleteError,
 } from '../model/role-lifecycle.policy';
+import { useRoleMutations } from '../model/use-role-mutations';
 
 export function RolesPage() {
   const { message, modal } = App.useApp();
@@ -50,45 +45,24 @@ export function RolesPage() {
   }, [permissionItems, actorPermissions, editing]);
 
   async function refresh() {
-    // Mọi danh sách vai trò (cache dài), không chỉ bảng của trang này: gọi hàm API trực tiếp nên không có mutationKey.
+    // Mọi danh sách vai trò (cache dài), không chỉ bảng của trang này. Quyền của chính người thao
+    // tác (`/auth/me`) do AuthProvider làm mới theo mutationKey của hook SDK.
     await invalidateReferenceData(queryClient, 'roles');
   }
 
-  const saveMutation = useMutation({
-    mutationFn: (values: RoleFormValues) => {
-      if (editing) {
-        return updateAdminRole(editing.id, {
-          name: values.name,
-          description: values.description,
-          status: values.status,
-          permissionCodes: values.permissionCodes,
-          expectedVersion: editing.version,
-        });
-      }
-      return createAdminRole({
-        code: values.code!.trim().toUpperCase(),
-        name: values.name,
-        description: values.description,
-        permissionCodes: values.permissionCodes,
-      });
-    },
-    onSuccess: async () => {
+  const roleMutations = useRoleMutations({
+    onSaved: async (mode) => {
       await refresh();
-      void message.success(editing ? 'Đã cập nhật vai trò' : 'Đã tạo vai trò');
+      void message.success(mode === 'update' ? 'Đã cập nhật vai trò' : 'Đã tạo vai trò');
       setFormOpen(false);
       setEditing(undefined);
     },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: ({ row, reason }: { row: RoleDto; reason: string }) =>
-      deleteAdminRole(row.id, { expectedVersion: row.version, reason }),
-    onSuccess: async (result) => {
+    onSaveError: (error) => void message.error(getApiErrorMessage(error)),
+    onDeleted: async (result) => {
       await refresh();
       void message.success(describeRoleDeleteResult(result));
     },
-    onError: async (error: unknown) => {
+    onDeleteError: async (error) => {
       void message.error(roleDeleteErrorMessage(error, getApiErrorMessage(error)));
       if (shouldReloadAfterRoleDeleteError(error)) await refresh();
     },
@@ -118,7 +92,7 @@ export function RolesPage() {
           void message.error('Vui lòng nhập lý do tối thiểu 3 ký tự');
           return Promise.reject(new Error('reason-required'));
         }
-        return deleteMutation.mutateAsync({ row, reason: reason.trim() });
+        return roleMutations.deleteRole(row, reason.trim());
       },
     });
   }
@@ -197,12 +171,12 @@ export function RolesPage() {
         editing={editing}
         permissions={permissionItems}
         grantableCodes={grantableCodes}
-        submitting={saveMutation.isPending}
+        submitting={roleMutations.saving}
         onCancel={() => {
           setFormOpen(false);
           setEditing(undefined);
         }}
-        onSubmit={(values) => saveMutation.mutate(values)}
+        onSubmit={(values) => roleMutations.save(values, editing)}
       />
     </>
   );
