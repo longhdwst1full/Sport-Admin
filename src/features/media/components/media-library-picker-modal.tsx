@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircleFilled, PlayCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, PlayCircleOutlined, UploadOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import { App, Button, Empty, Image, Input, Modal, Pagination, Skeleton, Typography, Upload } from 'antd';
 import { useDebounce } from 'use-debounce';
 import { useCan } from '@/core/auth/permissions';
@@ -9,6 +9,7 @@ import type { MediaAssetSummaryDto } from '@/generated/api/media/media.schemas';
 import { uploadImage } from '@/lib/media/upload-image';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
 import { IMAGE_FALLBACK_SRC } from '../constants/media-library.constants';
+import { VideoUploadButton } from './video-upload-button';
 
 const PICKER_PAGE_SIZE = 24;
 
@@ -20,20 +21,23 @@ export interface PickedMediaAsset {
   kind: PickedMediaKind;
 }
 
-const kindOf = (asset: Pick<MediaAssetSummaryDto, 'mimeType'>): PickedMediaKind =>
-  asset.mimeType?.startsWith('video/') ? 'VIDEO' : 'IMAGE';
+/** CONTRACT: `resourceType` là trường API mới thêm; đọc tuỳ chọn tới khi SDK sinh lại, thiếu thì suy từ MIME. */
+const kindOf = (asset: Pick<MediaAssetSummaryDto, 'mimeType'> & { resourceType?: PickedMediaKind }): PickedMediaKind =>
+  asset.resourceType ?? (asset.mimeType?.startsWith('video/') ? 'VIDEO' : 'IMAGE');
 
 /**
  * Chọn nhiều media ACTIVE từ Thư viện ảnh (kèm tải ảnh mới lên ngay trong modal).
  *
  * `allowedKinds` lọc thứ được chọn (ví dụ bài Video chỉ nhận video); media khác loại vẫn hiện nhưng
  * khoá, để người dùng không tưởng thư viện trống. Chọn theo thứ tự bấm; `max` chặn chọn thêm.
+ * `allowVideo` (mặc định tắt) hiện thêm nút tải video khi `allowedKinds` có VIDEO; các picker chỉ ảnh không đổi.
  * PERMISSION: danh sách cần `media.asset.view`, tải lên cần `media.asset.upload`; API kiểm lại.
  */
 export function MediaLibraryPickerModal({
   open,
   max,
   allowedKinds,
+  allowVideo = false,
   initialSelected = [],
   onCancel,
   onConfirm,
@@ -41,6 +45,7 @@ export function MediaLibraryPickerModal({
   open: boolean;
   max: number;
   allowedKinds: readonly PickedMediaKind[];
+  allowVideo?: boolean;
   initialSelected?: PickedMediaAsset[];
   onCancel: () => void;
   onConfirm: (selected: PickedMediaAsset[]) => void;
@@ -114,6 +119,12 @@ export function MediaLibraryPickerModal({
             </Button>
           </Upload>
         )}
+        {allowVideo && allowedKinds.includes('VIDEO') && (
+          <VideoUploadButton
+            disabled={!canUpload}
+            onUploaded={(asset) => toggle({ id: asset.id, url: asset.thumbnailUrl || asset.secureUrl, kind: 'VIDEO' })}
+          />
+        )}
       </div>
       <Typography.Paragraph type="secondary" className="!mb-3 text-xs">
         Thứ tự bấm chọn là thứ tự hiển thị trên Facebook.
@@ -144,7 +155,13 @@ export function MediaLibraryPickerModal({
                   order >= 0 ? 'border-blue-500' : 'border-transparent'
                 } ${allowed ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
               >
-                <Image fallback={IMAGE_FALLBACK_SRC} preview={false} width="100%" height={96} src={asset.thumbnailUrl} className="object-cover" />
+                {kind === 'VIDEO' && !asset.thumbnailUrl ? (
+                  <span className="flex h-24 w-full items-center justify-center bg-slate-800 text-3xl text-white">
+                    <VideoCameraOutlined />
+                  </span>
+                ) : (
+                  <Image fallback={IMAGE_FALLBACK_SRC} preview={false} width="100%" height={96} src={asset.thumbnailUrl} className="object-cover" />
+                )}
                 {kind === 'VIDEO' && (
                   <PlayCircleOutlined className="absolute left-1 top-1 rounded-full bg-black/50 p-1 text-white" />
                 )}

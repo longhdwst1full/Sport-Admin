@@ -72,10 +72,15 @@ export const fbPublishTypeOptions = Object.values(FacebookPublishType).map((valu
 }));
 
 /**
- * Loại đăng chọn được khi soạn. Upload media hiện chỉ nhận ảnh, nên Video/Reel bị ẩn tới khi có upload video;
- * bài đang là Video/Reel (vd. nhập từ Page) vẫn thấy đúng loại của nó. API không đổi.
+ * Loại đăng chọn được khi soạn. Video/Reel dùng video tải lên ngay trong picker (tải theo phần);
+ * `current` giữ lại loại của bài đang sửa nếu sau này có loại bị ẩn khỏi danh sách soạn.
  */
-const COMPOSABLE_PUBLISH_TYPES: readonly FacebookPublishType[] = [FacebookPublishType.FEED, FacebookPublishType.PHOTOS];
+const COMPOSABLE_PUBLISH_TYPES: readonly FacebookPublishType[] = [
+  FacebookPublishType.FEED,
+  FacebookPublishType.PHOTOS,
+  FacebookPublishType.VIDEO,
+  FacebookPublishType.REEL,
+];
 
 export const composablePublishTypeOptions = (current?: FacebookPublishType) =>
   fbPublishTypeOptions.filter((option) => COMPOSABLE_PUBLISH_TYPES.includes(option.value) || option.value === current);

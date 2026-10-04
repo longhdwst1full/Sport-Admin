@@ -76,6 +76,7 @@ export function SocialMediaField({
           open
           max={max}
           allowedKinds={allowedKindsFor(publishType)}
+          allowVideo
           initialSelected={value}
           onCancel={() => setPickerOpen(false)}
           onConfirm={(selected) => {
