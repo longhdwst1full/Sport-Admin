@@ -82,11 +82,14 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
     return { sendAdminChatMessage: withOptions, confirmAdminActionDraft: withOptions };
   }
   if (domain === 'content') {
-    // IDEMPOTENCY: duyệt/đăng lại/xoá bài Facebook bắt buộc header Idempotency-Key (8-150 ký tự, D97).
+    // IDEMPOTENCY: duyệt/đăng lại/xoá bài Facebook và TikTok bắt buộc header Idempotency-Key (8-150 ký tự, D97).
     return {
       approveAdminFacebookPost: withOptions,
       retryAdminFacebookPost: withOptions,
       deleteAdminFacebookPost: withOptions,
+      approveAdminTikTokPost: withOptions,
+      retryAdminTikTokPost: withOptions,
+      deleteAdminTikTokPost: withOptions,
     };
   }
   if (domain === 'procurement') {

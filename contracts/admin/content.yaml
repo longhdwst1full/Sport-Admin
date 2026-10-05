@@ -618,11 +618,15 @@ paths:
         - name: channel
           required: false
           in: query
-          description: FACEBOOK = chỉ bài có bản đăng Facebook (tab "Facebook"). Bỏ trống = mọi bài (tab "Tất cả").
+          description: FACEBOOK/TIKTOK = chỉ bài có bản đăng kênh đó (tab theo kênh; khoảng ngày theo giờ đăng của kênh). ALL = bài có ít nhất một bản đăng. Bỏ trống = mọi bài (tab "Tất cả").
           schema:
-            type: string
-            enum:
-              - FACEBOOK
+            $ref: "#/components/schemas/SocialChannelFilter"
+        - name: tiktokStatus
+          required: false
+          in: query
+          description: Trạng thái bản đăng TikTok
+          schema:
+            $ref: "#/components/schemas/FacebookPublicationStatus"
         - name: fbStatus
           required: false
           in: query
@@ -690,20 +694,20 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Danh sách bài cho tab "Tất cả" (mặc định) và "Facebook" (channel=FACEBOOK), kèm reach/engagements
+      summary: Danh sách bài cho tab "Tất cả" (mặc định), "Facebook"/"TikTok" (channel=FACEBOOK|TIKTOK) hoặc mọi bài đã chọn kênh (ALL), kèm chỉ số
       tags:
         - Admin Content
       x-required-permissions:
         - cms.content.view
     post:
-      description: 400 SOCIAL_MEDIA_INVALID; 409 SOCIAL_MEDIA_NOT_FOUND khi media không ACTIVE/không tồn tại.
+      description: 400 SOCIAL_MEDIA_INVALID (TIKTOK cần 0 hoặc 1 video, không ảnh); 409 SOCIAL_MEDIA_NOT_FOUND khi media không ACTIVE/không tồn tại.
       operationId: createAdminSocialPost
       parameters: []
       requestBody:
@@ -744,14 +748,14 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Tạo bài chỉ đăng Facebook (SOCIAL) ở trạng thái DRAFT
+      summary: Tạo bài mạng xã hội (SOCIAL) ở DRAFT trên các kênh chọn trong `channels` (mặc định FACEBOOK)
       tags:
         - Admin Content
       x-required-permissions:
@@ -797,14 +801,14 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Chi tiết bài kèm bản đăng Facebook, media và chỉ số
+      summary: Chi tiết bài kèm bản đăng Facebook/TikTok, media và chỉ số
       tags:
         - Admin Content
       x-required-permissions:
@@ -863,7 +867,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -927,7 +931,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -992,7 +996,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1064,7 +1068,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1129,7 +1133,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1200,7 +1204,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1272,7 +1276,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1337,7 +1341,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1415,7 +1419,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1486,7 +1490,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "503":
-          description: Chưa cấu hình Facebook Page hoặc chưa bật DB
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
           content:
             application/json:
               schema:
@@ -1498,6 +1502,986 @@ paths:
         - Admin Content
       x-required-permissions:
         - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/tiktok:
+    post:
+      description: 400 SOCIAL_MEDIA_INVALID (chỉ 0–1 video); 409 SOCIAL_ALREADY_TIKTOK_POST / SOCIAL_POST_ARCHIVED / SOCIAL_VERSION_STALE.
+      operationId: createAdminTikTokDraft
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTikTokDraftDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Mở bản nháp TikTok cho bài (website hoặc SOCIAL) hoặc mở lại sau DELETED; caption = nội dung bài
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+    patch:
+      description: 400 SOCIAL_CONTENT_EDIT_NOT_ALLOWED khi bài website hoặc bản Facebook đã rời nháp (caption dùng chung).
+      operationId: updateAdminTikTokDraft
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTikTokDraftDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Sửa bản nháp TikTok (DRAFT): video, tuỳ chọn privacy/bình luận/duet/stitch; tiêu đề/caption chỉ bài SOCIAL"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/posts/{id}/tiktok/submit:
+    post:
+      operationId: submitAdminTikTokPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VersionedSocialCommandDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Gửi duyệt bản TikTok (tuỳ chọn): DRAFT → PENDING_APPROVAL"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/posts/{id}/tiktok/approve:
+    post:
+      description: Kiểm tuỳ chọn với creator_info của tài khoản (privacy trong danh sách cho phép, video không dài hơn giới hạn) rồi ghi PUBLISHING; video được đẩy nền (thử ngay vài giây, phần còn lại do job social-sync) → PUBLISHED/FAILED. Không hẹn giờ. 400 SOCIAL_TIKTOK_OPTIONS_INVALID / SOCIAL_MEDIA_INVALID / SOCIAL_TIKTOK_CAPTION_TOO_LONG; 409 SOCIAL_IDEMPOTENCY_CONFLICT / SOCIAL_INVALID_TRANSITION; 503 SOCIAL_TIKTOK_NOT_CONNECTED / SOCIAL_TIKTOK_NOT_CONFIGURED; 502 SOCIAL_TIKTOK_ERROR.
+      operationId: approveAdminTikTokPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-150 ký tự. Cùng khoá + cùng payload trả kết quả hiện tại (không gọi Facebook lại); khác payload → 409.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VersionedSocialCommandDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Duyệt và đăng TikTok (Direct Post, đúng một video) từ DRAFT/PENDING_APPROVAL
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/tiktok/reject:
+    post:
+      operationId: rejectAdminTikTokPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Từ chối bản TikTok: PENDING_APPROVAL/FAILED → DRAFT, kèm lý do"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/tiktok/retry:
+    post:
+      operationId: retryAdminTikTokPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-150 ký tự. Cùng khoá + cùng payload trả kết quả hiện tại (không gọi Facebook lại); khác payload → 409.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VersionedSocialCommandDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Đăng lại bản TikTok FAILED (publish mới; UNCERTAIN phải đối soát trước)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/tiktok/reconcile:
+    post:
+      description: 409 SOCIAL_RECONCILE_INCONCLUSIVE khi TikTok vẫn chưa kết luận; 409 SOCIAL_VERSION_STALE.
+      operationId: reconcileAdminTikTokPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconcileTikTokDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Đối soát bản TikTok UNCERTAIN: hỏi lại TikTok, nhập id video, hoặc xác nhận chưa đăng"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/posts/{id}/tiktok/cancel:
+    post:
+      operationId: cancelAdminTikTokPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Huỷ bản TikTok chưa đăng (DRAFT/PENDING_APPROVAL/FAILED → DELETED)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/posts/{id}/tiktok/delete:
+    post:
+      description: "PUBLISHED → DELETED (thôi theo dõi, cần social.post.publish + lý do; xoá trên TikTok phải làm trong app). DRAFT/PENDING_APPROVAL/FAILED: bài SOCIAL không còn kênh nào → lưu trữ; còn kênh khác → chỉ bỏ bản TikTok; bài website → xoá bản TikTok. PUBLISHING/UNCERTAIN: 409 SOCIAL_DELETE_NEEDS_RECONCILE. DELETED/không có: trả bài hiện tại."
+      operationId: deleteAdminTikTokPost
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          in: header
+          description: 8-150 ký tự. Cùng khoá + cùng payload trả kết quả hiện tại (không gọi Facebook lại); khác payload → 409.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteFacebookDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialPostDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình Facebook Page/TikTok, chưa kết nối TikTok hoặc chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Xoá bản TikTok trong hệ thống (TikTok không có API xoá: bài đã đăng vẫn còn trên TikTok)"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/tiktok/account:
+    get:
+      operationId: getAdminTikTokAccount
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TikTokAccountDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình app TikTok / chưa kết nối / chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Trạng thái tài khoản TikTok đã kết nối (tên, scope, hạn token)
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/tiktok/account/connect:
+    post:
+      description: 503 SOCIAL_TIKTOK_NOT_CONFIGURED khi thiếu client key/secret/redirect URI.
+      operationId: startAdminTikTokConnect
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TikTokConnectStartDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình app TikTok / chưa kết nối / chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Bắt đầu kết nối TikTok: trả URL authorize (state ký HMAC, hạn 10 phút, gắn với người bấm)"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/tiktok/account/callback:
+    post:
+      description: 400 SOCIAL_TIKTOK_STATE_INVALID (sai chữ ký/hết hạn/khác người bấm); 400 SOCIAL_TIKTOK_OPTIONS_INVALID; 502 SOCIAL_TIKTOK_ERROR; 503 SOCIAL_TIKTOK_NOT_CONFIGURED. Kết nối tài khoản khác thay thế tài khoản cũ.
+      operationId: completeAdminTikTokConnect
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteTikTokConnectDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TikTokAccountDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình app TikTok / chưa kết nối / chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Hoàn tất kết nối: trang Admin tại TIKTOK_REDIRECT_URI gửi code + state TikTok trả về"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/tiktok/account/disconnect:
+    post:
+      operationId: disconnectAdminTikTokAccount
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisconnectTikTokDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TikTokAccountDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình app TikTok / chưa kết nối / chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Ngắt kết nối TikTok: xoá token đã lưu (không thu hồi phía TikTok; bài đang PUBLISHING dừng ở lượt job sau)"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
+  /api/v1/admin/content/social/tiktok/creator-info:
+    get:
+      description: Gọi TikTok trực tiếp (20 request/phút); không cache. 503 SOCIAL_TIKTOK_NOT_CONNECTED; 502 SOCIAL_TIKTOK_ERROR.
+      operationId: getAdminTikTokCreatorInfo
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TikTokCreatorInfoDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "502":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa cấu hình app TikTok / chưa kết nối / chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: creator_info của tài khoản (privacy cho phép, tương tác bị tắt, thời lượng video tối đa) cho màn soạn
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
+  /api/v1/admin/content/social/dashboard:
+    get:
+      description: Số theo ngày là mức tăng tính từ metrics_daily (giờ VN); ngày không có dữ liệu = 0. 400 SOCIAL_DASHBOARD_RANGE_INVALID.
+      operationId: getAdminSocialDashboard
+      parameters:
+        - name: from
+          required: true
+          in: query
+          description: Ngày bắt đầu (bao gồm), lịch Asia/Ho_Chi_Minh
+          schema:
+            example: 2026-09-06
+            type: string
+        - name: to
+          required: true
+          in: query
+          description: Ngày kết thúc (bao gồm). Tối đa 90 ngày tính cả hai đầu.
+          schema:
+            example: 2026-10-05
+            type: string
+        - name: channel
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SocialChannelFilter"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialDashboardDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: KPI theo kênh và chuỗi theo ngày (lượt xem/thích/bình luận/chia sẻ/reach) trong khoảng ≤ 90 ngày
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.view
+  /api/v1/admin/content/social/dashboard/top-posts:
+    get:
+      operationId: listAdminSocialTopPosts
+      parameters:
+        - name: from
+          required: true
+          in: query
+          description: Ngày bắt đầu (bao gồm), lịch Asia/Ho_Chi_Minh
+          schema:
+            example: 2026-09-06
+            type: string
+        - name: to
+          required: true
+          in: query
+          description: Ngày kết thúc (bao gồm). Tối đa 90 ngày tính cả hai đầu.
+          schema:
+            example: 2026-10-05
+            type: string
+        - name: channel
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SocialChannelFilter"
+        - name: sort
+          required: false
+          in: query
+          schema:
+            $ref: "#/components/schemas/SocialTopPostSort"
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 10
+            type: number
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialTopPostListDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Top bài đã đăng trong khoảng theo lượt xem/thích/bình luận (tối đa 50), kèm permalink
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - cms.content.view
 components:
   schemas:
     AnyContentPostType:
@@ -1679,6 +2663,18 @@ components:
           maxLength: 500
       required:
         - expectedVersion
+    CompleteTikTokConnectDto:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 2048
+        state:
+          type: string
+          maxLength: 1024
+      required:
+        - code
+        - state
     ContentPostDto:
       type: object
       properties:
@@ -1937,8 +2933,36 @@ components:
           type: array
           items:
             type: string
+        channels:
+          type: array
+          default:
+            - FACEBOOK
+          description: Kênh mở bản nháp cùng lúc (mặc định chỉ FACEBOOK như trước). TIKTOK cần 0 hoặc 1 video.
+          items:
+            $ref: "#/components/schemas/SocialChannel"
+        tiktok:
+          description: Tuỳ chọn TikTok khi channels có TIKTOK
+          allOf:
+            - $ref: "#/components/schemas/TikTokOptionsInputDto"
       required:
         - body
+    CreateTikTokDraftDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        mediaAssetIds:
+          maxItems: 1
+          description: Đúng một video (có thể bổ sung trước khi duyệt). Caption = nội dung bài.
+          type: array
+          items:
+            type: string
+        options:
+          $ref: "#/components/schemas/TikTokOptionsInputDto"
+      required:
+        - expectedVersion
     DeleteFacebookDto:
       type: object
       properties:
@@ -1953,6 +2977,12 @@ components:
           description: Bắt buộc với bài đã lên Facebook (PUBLISHED/SCHEDULED); tuỳ chọn với bài chưa đăng.
       required:
         - expectedVersion
+    DisconnectTikTokDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
     EditLiveFacebookDto:
       type: object
       properties:
@@ -1977,6 +3007,25 @@ components:
           type: number
           nullable: true
           description: reactions + comments + shares
+        likes:
+          type: number
+          nullable: true
+          description: Tổng reactions (mọi loại)
+        comments:
+          type: number
+          nullable: true
+        shares:
+          type: number
+          nullable: true
+        views:
+          type: number
+          nullable: true
+          description: Lượt xem video/reel; NULL với bài không phải video
+        syncedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Lần job đồng bộ chỉ số gần nhất
       required:
         - reach
         - engagements
@@ -2125,6 +3174,23 @@ components:
             - $ref: "#/components/schemas/FacebookReconcileResolution"
       required:
         - expectedVersion
+    ReconcileTikTokDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        externalPostId:
+          type: string
+          example: "7300000000000000000"
+          description: Id video Admin thấy trên TikTok → PUBLISHED
+        resolution:
+          description: NOT_PUBLISHED = Admin kiểm tra tài khoản TikTok và xác nhận chưa đăng → FAILED (cho phép retry)
+          allOf:
+            - $ref: "#/components/schemas/FacebookReconcileResolution"
+      required:
+        - expectedVersion
     RejectFacebookDto:
       type: object
       properties:
@@ -2169,6 +3235,110 @@ components:
       required:
         - id
         - displayName
+    SocialChannel:
+      type: string
+      enum:
+        - FACEBOOK
+        - TIKTOK
+      description: Kênh mở bản nháp cùng lúc (mặc định chỉ FACEBOOK như trước). TIKTOK cần 0 hoặc 1 video.
+    SocialChannelFilter:
+      type: string
+      enum:
+        - FACEBOOK
+        - TIKTOK
+        - ALL
+    SocialChannelKpiDto:
+      type: object
+      properties:
+        channel:
+          allOf:
+            - $ref: "#/components/schemas/SocialChannel"
+        posts:
+          type: number
+          minimum: 0
+          description: Bản đăng PUBLISHED có giờ đăng trong khoảng
+        videos:
+          type: number
+          minimum: 0
+          description: "Trong số đó là video (TikTok: mọi bài)"
+        views:
+          type: number
+          description: Mức tăng trong khoảng (tổng delta theo ngày từ metrics_daily)
+        likes:
+          type: number
+        comments:
+          type: number
+        shares:
+          type: number
+        reach:
+          type: number
+          description: "Tổng delta reach (xấp xỉ: reach là người xem duy nhất tích luỹ). TikTok luôn 0."
+      required:
+        - channel
+        - posts
+        - videos
+        - views
+        - likes
+        - comments
+        - shares
+        - reach
+    SocialChannelSeriesDto:
+      type: object
+      properties:
+        channel:
+          allOf:
+            - $ref: "#/components/schemas/SocialChannel"
+        points:
+          description: Đủ mọi ngày trong khoảng (ngày không có dữ liệu = 0)
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialDailyPointDto"
+      required:
+        - channel
+        - points
+    SocialDailyPointDto:
+      type: object
+      properties:
+        date:
+          type: string
+          example: 2026-10-05
+        views:
+          type: number
+        likes:
+          type: number
+        comments:
+          type: number
+        shares:
+          type: number
+        reach:
+          type: number
+      required:
+        - date
+        - views
+        - likes
+        - comments
+        - shares
+        - reach
+    SocialDashboardDto:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        totals:
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialChannelKpiDto"
+        daily:
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialChannelSeriesDto"
+      required:
+        - from
+        - to
+        - totals
+        - daily
     SocialMediaDto:
       type: object
       properties:
@@ -2232,11 +3402,15 @@ components:
           description: Ảnh bìa (bài website/bài nhập); ảnh Facebook lấy ở chi tiết
         body:
           type: string
-          description: Nội dung bài = caption Facebook (link đặt trong nội dung)
+          description: Nội dung bài = caption Facebook/TikTok (link đặt trong nội dung)
         facebook:
           description: Không có = bài chưa đăng Facebook
           allOf:
             - $ref: "#/components/schemas/FacebookPublicationDto"
+        tiktok:
+          description: Không có = bài chưa đăng TikTok
+          allOf:
+            - $ref: "#/components/schemas/TikTokPublicationDto"
       required:
         - id
         - postType
@@ -2305,6 +3479,10 @@ components:
           description: Không có = bài chưa đăng Facebook
           allOf:
             - $ref: "#/components/schemas/FacebookPublicationSummaryDto"
+        tiktok:
+          description: Không có = bài chưa đăng TikTok
+          allOf:
+            - $ref: "#/components/schemas/TikTokPublicationSummaryDto"
       required:
         - id
         - postType
@@ -2316,6 +3494,334 @@ components:
         - publishedAt
         - updatedAt
         - version
+    SocialTopPostDto:
+      type: object
+      properties:
+        postId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        channel:
+          allOf:
+            - $ref: "#/components/schemas/SocialChannel"
+        title:
+          type: string
+        permalinkUrl:
+          type: string
+          format: uri
+        publishAt:
+          type: string
+          format: date-time
+        views:
+          type: number
+          nullable: true
+        likes:
+          type: number
+          nullable: true
+        comments:
+          type: number
+          nullable: true
+        shares:
+          type: number
+          nullable: true
+      required:
+        - postId
+        - channel
+        - title
+        - publishAt
+        - views
+        - likes
+        - comments
+        - shares
+    SocialTopPostListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialTopPostDto"
+        limit:
+          type: number
+          minimum: 1
+          maximum: 50
+          description: "Số dòng tối đa đã áp (không phân trang: bảng xếp hạng)"
+      required:
+        - items
+        - limit
+    SocialTopPostSort:
+      type: string
+      enum:
+        - VIEWS
+        - LIKES
+        - COMMENTS
+    TikTokAccountDto:
+      type: object
+      properties:
+        appConfigured:
+          type: boolean
+          description: Đã cấu hình client key/secret/redirect URI
+        connected:
+          type: boolean
+          description: Có token đã lưu
+        reconnectRequired:
+          type: boolean
+          description: "Refresh token hết hạn/không có: phải kết nối lại"
+        accountName:
+          type: string
+        openId:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        accessExpiresAt:
+          type: string
+          format: date-time
+        refreshExpiresAt:
+          type: string
+          format: date-time
+      required:
+        - appConfigured
+        - connected
+        - reconnectRequired
+        - scopes
+    TikTokConnectStartDto:
+      type: object
+      properties:
+        authorizeUrl:
+          type: string
+          format: uri
+          description: Mở trong trình duyệt; TikTok chuyển về TIKTOK_REDIRECT_URI (trang Admin) kèm code + state
+        expiresAt:
+          type: string
+          format: date-time
+          description: Hạn của state
+      required:
+        - authorizeUrl
+        - expiresAt
+    TikTokCreatorInfoDto:
+      type: object
+      properties:
+        nickname:
+          type: string
+        username:
+          type: string
+        avatarUrl:
+          type: string
+          description: TTL 2 giờ theo TikTok; không lưu
+        privacyLevelOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TikTokPrivacyLevel"
+        commentDisabled:
+          type: boolean
+        duetDisabled:
+          type: boolean
+        stitchDisabled:
+          type: boolean
+        maxVideoPostDurationSec:
+          type: number
+          minimum: 1
+      required:
+        - privacyLevelOptions
+        - commentDisabled
+        - duetDisabled
+        - stitchDisabled
+    TikTokMetricsDto:
+      type: object
+      properties:
+        views:
+          type: number
+          nullable: true
+          description: NULL = chưa đồng bộ (cần post id công khai)
+        likes:
+          type: number
+          nullable: true
+        comments:
+          type: number
+          nullable: true
+        shares:
+          type: number
+          nullable: true
+        syncedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - views
+        - likes
+        - comments
+        - shares
+        - syncedAt
+    TikTokOptionsInputDto:
+      type: object
+      properties:
+        privacyLevel:
+          description: Bắt buộc trước khi duyệt; phải nằm trong privacyLevelOptions của getAdminTikTokCreatorInfo
+          allOf:
+            - $ref: "#/components/schemas/TikTokPrivacyLevel"
+        disableComment:
+          type: boolean
+        disableDuet:
+          type: boolean
+        disableStitch:
+          type: boolean
+    TikTokPrivacyLevel:
+      type: string
+      enum:
+        - PUBLIC_TO_EVERYONE
+        - MUTUAL_FOLLOW_FRIENDS
+        - FOLLOWER_OF_CREATOR
+        - SELF_ONLY
+      description: Bắt buộc trước khi duyệt; phải nằm trong privacyLevelOptions của getAdminTikTokCreatorInfo
+    TikTokPublicationDto:
+      type: object
+      properties:
+        status:
+          description: Cùng tập trạng thái với Facebook (không dùng SCHEDULED)
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationStatus"
+        privacyLevel:
+          type: string
+          enum:
+            - PUBLIC_TO_EVERYONE
+            - MUTUAL_FOLLOW_FRIENDS
+            - FOLLOWER_OF_CREATOR
+            - SELF_ONLY
+          nullable: true
+        disableComment:
+          type: boolean
+        disableDuet:
+          type: boolean
+        disableStitch:
+          type: boolean
+        postId:
+          type: string
+          description: Id video công khai trên TikTok (chỉ có khi bài công khai và đã qua kiểm duyệt)
+        publishId:
+          type: string
+          description: publish_id của lần đăng (đối soát với TikTok support)
+        publishAt:
+          type: string
+          format: date-time
+          description: Giờ TikTok báo đăng xong
+        lastError:
+          type: string
+          description: '"CODE: message" của lỗi gần nhất (khi PUBLISHING: lỗi tạm, job thử lại)'
+        permalinkUrl:
+          type: string
+          format: uri
+          description: share_url TikTok trả (cần post id công khai)
+        progress:
+          description: Chỉ có khi PUBLISHING
+          allOf:
+            - $ref: "#/components/schemas/TikTokUploadProgressDto"
+        mediaCount:
+          type: number
+          minimum: 0
+          maximum: 1
+        metrics:
+          $ref: "#/components/schemas/TikTokMetricsDto"
+        media:
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialMediaDto"
+        submittedBy:
+          $ref: "#/components/schemas/SocialActorDto"
+      required:
+        - status
+        - privacyLevel
+        - disableComment
+        - disableDuet
+        - disableStitch
+        - mediaCount
+        - metrics
+        - media
+    TikTokPublicationSummaryDto:
+      type: object
+      properties:
+        status:
+          description: Cùng tập trạng thái với Facebook (không dùng SCHEDULED)
+          allOf:
+            - $ref: "#/components/schemas/FacebookPublicationStatus"
+        privacyLevel:
+          type: string
+          enum:
+            - PUBLIC_TO_EVERYONE
+            - MUTUAL_FOLLOW_FRIENDS
+            - FOLLOWER_OF_CREATOR
+            - SELF_ONLY
+          nullable: true
+        disableComment:
+          type: boolean
+        disableDuet:
+          type: boolean
+        disableStitch:
+          type: boolean
+        postId:
+          type: string
+          description: Id video công khai trên TikTok (chỉ có khi bài công khai và đã qua kiểm duyệt)
+        publishId:
+          type: string
+          description: publish_id của lần đăng (đối soát với TikTok support)
+        publishAt:
+          type: string
+          format: date-time
+          description: Giờ TikTok báo đăng xong
+        lastError:
+          type: string
+          description: '"CODE: message" của lỗi gần nhất (khi PUBLISHING: lỗi tạm, job thử lại)'
+        permalinkUrl:
+          type: string
+          format: uri
+          description: share_url TikTok trả (cần post id công khai)
+        progress:
+          description: Chỉ có khi PUBLISHING
+          allOf:
+            - $ref: "#/components/schemas/TikTokUploadProgressDto"
+        mediaCount:
+          type: number
+          minimum: 0
+          maximum: 1
+        metrics:
+          $ref: "#/components/schemas/TikTokMetricsDto"
+      required:
+        - status
+        - privacyLevel
+        - disableComment
+        - disableDuet
+        - disableStitch
+        - mediaCount
+        - metrics
+    TikTokPublishPhase:
+      type: string
+      enum:
+        - INIT
+        - UPLOADING
+        - PROCESSING
+    TikTokUploadProgressDto:
+      type: object
+      properties:
+        phase:
+          allOf:
+            - $ref: "#/components/schemas/TikTokPublishPhase"
+        uploadedChunks:
+          type: number
+          minimum: 0
+          description: Số chunk đã gửi
+        totalChunks:
+          type: number
+          minimum: 0
+          description: 0 = chưa init
+        initCount:
+          type: number
+          minimum: 0
+          description: "Số lần init (tối đa 3: 1 + 2 lần init lại khi upload_url hết hạn)"
+      required:
+        - phase
+        - uploadedChunks
+        - totalChunks
+        - initCount
     UpdateBannerDto:
       type: object
       properties:
@@ -2427,6 +3933,31 @@ components:
           type: array
           items:
             type: string
+      required:
+        - expectedVersion
+    UpdateTikTokDraftDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        mediaAssetIds:
+          maxItems: 1
+          description: Đúng một video (có thể bổ sung trước khi duyệt). Caption = nội dung bài.
+          type: array
+          items:
+            type: string
+        options:
+          $ref: "#/components/schemas/TikTokOptionsInputDto"
+        title:
+          type: string
+          maxLength: 255
+          description: Chỉ bài SOCIAL
+        body:
+          type: string
+          maxLength: 2200
+          description: Chỉ bài SOCIAL (caption chung các kênh)
       required:
         - expectedVersion
     VersionedSocialCommandDto:

@@ -136,6 +136,13 @@ export const NAVIGATION_ITEMS_DATA: NavigationItemData[] = [
     permission: 'cms.content.view',
   },
   {
+    path: '/social-dashboard',
+    label: 'Dashboard mạng xã hội',
+    group: 'experience',
+    // Contract dashboard (getAdminSocialDashboard/listAdminSocialTopPosts) dùng cms.content.view.
+    permission: 'cms.content.view',
+  },
+  {
     path: '/media',
     label: 'Thư viện ảnh',
     group: 'experience',

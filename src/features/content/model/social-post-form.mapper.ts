@@ -4,8 +4,13 @@ import {
   SocialMediaDtoKind,
   type CreateFacebookDraftDto,
   type CreateSocialPostDto,
+  type CreateTikTokDraftDto,
+  type SocialChannel as ApiSocialChannel,
+  type SocialMediaDto,
   type SocialPostDetailDto,
+  type TikTokOptionsInputDto,
   type UpdateFacebookDraftDto,
+  type UpdateTikTokDraftDto,
 } from '@/generated/api/content/content.schemas';
 import { SOCIAL_LIMITS } from '../constants/social.constants';
 
@@ -74,11 +79,44 @@ export function composeCaption(body: string, link?: string): string {
 
 const optionalText = (value?: string) => value?.trim() || undefined;
 
-export function toCreateSocialPostDto(values: SocialPostFormValues): CreateSocialPostDto {
+/** Tạo bài SOCIAL đa kênh: `tiktok` chỉ gửi khi có kênh TIKTOK. */
+export function toCreateSocialPostDto(
+  values: SocialPostFormValues,
+  channels: ApiSocialChannel[] = [],
+  tiktok?: TikTokOptionsInputDto,
+): CreateSocialPostDto {
   return {
     title: optionalText(values.title),
     body: composeCaption(values.body, values.link),
     mediaAssetIds: values.media.map((item) => item.id),
+    ...(channels.length ? { channels } : {}),
+    ...(tiktok && channels.includes('TIKTOK') ? { tiktok } : {}),
+  };
+}
+
+export function toCreateTikTokDraftDto(
+  values: SocialPostFormValues,
+  expectedVersion: number,
+  options: TikTokOptionsInputDto,
+): CreateTikTokDraftDto {
+  return { expectedVersion, mediaAssetIds: values.media.map((item) => item.id), options };
+}
+
+/**
+ * CONTRACT: tiêu đề/caption chỉ gửi với bài SOCIAL và khi caption chung chưa bị khoá (bản Facebook còn nháp);
+ * bài website chỉ đổi video + thiết lập.
+ */
+export function toUpdateTikTokDraftDto(
+  values: SocialPostFormValues,
+  expectedVersion: number,
+  editsCaption: boolean,
+  options: TikTokOptionsInputDto,
+): UpdateTikTokDraftDto {
+  return {
+    expectedVersion,
+    ...(editsCaption ? { title: optionalText(values.title), body: composeCaption(values.body, values.link) } : {}),
+    mediaAssetIds: values.media.map((item) => item.id),
+    options,
   };
 }
 
@@ -90,10 +128,12 @@ export function toUpdateFacebookDraftDto(
   values: SocialPostFormValues,
   expectedVersion: number,
   isSocial: boolean,
+  captionLocked = false,
 ): UpdateFacebookDraftDto {
   return {
     expectedVersion,
-    ...(isSocial ? { title: optionalText(values.title), body: composeCaption(values.body, values.link) } : {}),
+    ...(isSocial ? { title: optionalText(values.title) } : {}),
+    ...(isSocial && !captionLocked ? { body: composeCaption(values.body, values.link) } : {}),
     mediaAssetIds: values.media.map((item) => item.id),
   };
 }
@@ -102,18 +142,31 @@ export function toCreateFacebookDraftDto(values: SocialPostFormValues, expectedV
   return { expectedVersion, mediaAssetIds: values.media.map((item) => item.id) };
 }
 
-/** API suy loại đăng từ media (Reel đã lưu hiển thị là VIDEO); media đã gỡ khỏi thư viện bị bỏ khỏi form. */
-export function toSocialFormValues(detail: SocialPostDetailDto): SocialPostFormValues {
-  const media = (detail.facebook?.media ?? []).flatMap((item): SocialMediaValue[] =>
+const toMediaValues = (media: SocialMediaDto[]) =>
+  media.flatMap((item): SocialMediaValue[] =>
     item.url
       ? [{ id: item.id, url: item.thumbnailUrl ?? item.url, kind: item.kind === SocialMediaDtoKind.VIDEO ? 'VIDEO' : 'IMAGE' }]
       : [],
   );
+
+/**
+ * API suy loại đăng từ media (Reel đã lưu hiển thị là VIDEO); media đã gỡ khỏi thư viện bị bỏ khỏi form.
+ * `channel = 'tiktok'`: media của bản TikTok, loại đăng cố định Video.
+ */
+export function toSocialFormValues(detail: SocialPostDetailDto, channel: 'facebook' | 'tiktok' = 'facebook'): SocialPostFormValues {
+  if (channel === 'tiktok') {
+    return {
+      title: detail.title,
+      body: detail.body,
+      publishType: FacebookPublishType.VIDEO,
+      media: toMediaValues(detail.tiktok?.media ?? []),
+    };
+  }
   return {
     title: detail.title,
     body: detail.body,
     publishType: detail.facebook?.publishType ?? FacebookPublishType.FEED,
-    media,
+    media: toMediaValues(detail.facebook?.media ?? []),
   };
 }
 

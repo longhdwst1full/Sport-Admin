@@ -613,6 +613,7 @@ components:
         - PRODUCT_REVIEW
         - BANNER
         - FACEBOOK_POST
+        - TIKTOK_POST
   securitySchemes:
     bearer:
       scheme: bearer

@@ -94,16 +94,88 @@ export interface AvailableSocialAction {
  * `social.post.publish` thấy "Đăng ngay / Hẹn giờ" ngay trên nháp; người chỉ có `social.post.manage` thấy "Gửi duyệt".
  */
 export function availableSocialActions(context: SocialActionContext): AvailableSocialAction[] {
+  return availableFrom(SOCIAL_ACTION_RULES, context.fbStatus, context);
+}
+
+type ActionRules = Partial<Record<SocialAction, (typeof SOCIAL_ACTION_RULES)[SocialAction]>>;
+
+function availableFrom(
+  rules: ActionRules,
+  status: FacebookPublicationStatus | null,
+  context: Pick<SocialActionContext, 'postStatus' | 'canManage' | 'canPublish'>,
+): AvailableSocialAction[] {
   if (context.postStatus === ContentPostStatus.ARCHIVED) return [];
   return ACTION_ORDER.flatMap((action) => {
-    const rule = SOCIAL_ACTION_RULES[action];
-    if (!rule.from.includes(context.fbStatus)) return [];
+    const rule = rules[action];
+    if (!rule || !rule.from.includes(status)) return [];
     const allowed = rule.permission === 'manage' ? context.canManage : context.canPublish;
     if (!allowed) return [];
-    if (context.fbStatus && rule.alsoPublishFrom?.includes(context.fbStatus) && !context.canPublish) return [];
+    if (status && rule.alsoPublishFrom?.includes(status) && !context.canPublish) return [];
     if (rule.hideForPublisher && context.canPublish) return [];
     return [{ action }];
   });
+}
+
+/** Lệnh TikTok (không có sửa caption sau khi đăng — TikTok không cho sửa). */
+export type TikTokAction = Exclude<SocialAction, 'editCaption'>;
+
+/**
+ * INVARIANT: bản sao `TT_TRANSITIONS` của API (`cms/social/social-tiktok.policy.ts`); `null` = bài chưa có bản
+ * đăng TikTok. Khác Facebook: không SCHEDULED, đối soát chỉ từ UNCERTAIN, xoá luôn cục bộ (TikTok không có API
+ * xoá — bài PUBLISHED chỉ thôi theo dõi, cần thêm quyền đăng + lý do). PUBLISHING/UNCERTAIN vẫn hiện nút Xoá nhưng
+ * modal chỉ nhắc Đối soát (API 409 SOCIAL_DELETE_NEEDS_RECONCILE).
+ */
+export const TIKTOK_ACTION_RULES: Record<TikTokAction, (typeof SOCIAL_ACTION_RULES)[SocialAction]> = {
+  createDraft: { from: [null, FbStatus.DELETED], permission: 'manage' },
+  editDraft: { from: [FbStatus.DRAFT], permission: 'manage' },
+  submit: { from: [FbStatus.DRAFT], permission: 'manage', hideForPublisher: true },
+  approve: { from: [FbStatus.DRAFT, FbStatus.PENDING_APPROVAL], permission: 'publish' },
+  reject: { from: [FbStatus.PENDING_APPROVAL, FbStatus.FAILED], permission: 'publish' },
+  retry: { from: [FbStatus.FAILED], permission: 'publish' },
+  reconcile: { from: [FbStatus.UNCERTAIN], permission: 'publish' },
+  cancel: { from: [FbStatus.DRAFT, FbStatus.PENDING_APPROVAL, FbStatus.FAILED], permission: 'manage' },
+  delete: {
+    from: [
+      FbStatus.DRAFT,
+      FbStatus.PENDING_APPROVAL,
+      FbStatus.FAILED,
+      FbStatus.PUBLISHING,
+      FbStatus.UNCERTAIN,
+      FbStatus.PUBLISHED,
+    ],
+    permission: 'manage',
+    alsoPublishFrom: [FbStatus.PUBLISHED],
+  },
+};
+
+export interface TikTokActionContext extends Omit<SocialActionContext, 'fbStatus'> {
+  tiktokStatus: FacebookPublicationStatus | null;
+}
+
+export function availableTikTokActions(context: TikTokActionContext): Array<{ action: TikTokAction }> {
+  return availableFrom(TIKTOK_ACTION_RULES, context.tiktokStatus, context) as Array<{ action: TikTokAction }>;
+}
+
+/**
+ * Nhánh xoá TikTok (khớp `classifyTikTokDelete` của API): LIVE = video đã lên TikTok — chỉ thôi theo dõi trong hệ
+ * thống, video vẫn còn trên TikTok; LOCAL = chưa đăng, xoá trong hệ thống; RECONCILE_FIRST = đang đăng/chưa rõ.
+ */
+export type TikTokDeleteMode = 'LIVE' | 'LOCAL' | 'RECONCILE_FIRST' | 'NONE';
+
+export function tiktokDeleteMode(status: FacebookPublicationStatus | null | undefined): TikTokDeleteMode {
+  switch (status) {
+    case FbStatus.PUBLISHED:
+      return 'LIVE';
+    case FbStatus.DRAFT:
+    case FbStatus.PENDING_APPROVAL:
+    case FbStatus.FAILED:
+      return 'LOCAL';
+    case FbStatus.PUBLISHING:
+    case FbStatus.UNCERTAIN:
+      return 'RECONCILE_FIRST';
+    default:
+      return 'NONE';
+  }
 }
 
 /**

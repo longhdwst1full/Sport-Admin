@@ -1,5 +1,5 @@
 import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
-import { SOCIAL_ERROR_CODE } from '../constants/social.constants';
+import { SOCIAL_CONTENT_EDIT_DETAIL, SOCIAL_ERROR_CODE } from '../constants/social.constants';
 
 const MESSAGES: Record<string, string> = {
   [SOCIAL_ERROR_CODE.POST_NOT_FOUND]: 'Bài viết không còn tồn tại. Danh sách đã được tải lại.',
@@ -25,11 +25,38 @@ const MESSAGES: Record<string, string> = {
   [SOCIAL_ERROR_CODE.DELETE_REASON_REQUIRED]: 'Cần nhập lý do khi xoá bài đã lên Facebook.',
   [SOCIAL_ERROR_CODE.PUBLISH_PERMISSION_REQUIRED]: 'Xoá bài đã lên Facebook cần quyền đăng bài Facebook.',
   [SOCIAL_ERROR_CODE.STORAGE_DISABLED]: 'Chức năng tạm thời không khả dụng.',
+  [SOCIAL_ERROR_CODE.CONTENT_EDIT_NOT_ALLOWED]:
+    'Không sửa được nội dung ở đây: bài website sửa nội dung ở màn bài viết; ở đây chỉ đổi media/thiết lập đăng.',
+  [SOCIAL_ERROR_CODE.ALREADY_TIKTOK_POST]: 'Bài viết đã có bản đăng TikTok đang dùng.',
+  [SOCIAL_ERROR_CODE.TIKTOK_NOT_CONFIGURED]:
+    'Chưa cấu hình app TikTok (TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET, TIKTOK_REDIRECT_URI) trong Tham số hệ thống.',
+  [SOCIAL_ERROR_CODE.TIKTOK_NOT_CONNECTED]:
+    'Chưa kết nối tài khoản TikTok hoặc phiên kết nối đã hết hạn. Kết nối lại tài khoản TikTok ở tab Mạng xã hội.',
+  [SOCIAL_ERROR_CODE.TIKTOK_ERROR]: 'TikTok từ chối hoặc không phản hồi yêu cầu. Thử lại sau ít phút.',
+  [SOCIAL_ERROR_CODE.TIKTOK_STATE_INVALID]:
+    'Phiên kết nối TikTok không hợp lệ hoặc đã hết hạn (chỉ người bấm "Kết nối" mới hoàn tất được). Bấm kết nối lại.',
+  [SOCIAL_ERROR_CODE.TIKTOK_OPTIONS_INVALID]:
+    'Thiết lập TikTok không còn hợp lệ với tài khoản (quyền riêng tư, tương tác hoặc thời lượng video). Sửa nháp TikTok rồi thử lại.',
+  [SOCIAL_ERROR_CODE.TIKTOK_CAPTION_TOO_LONG]: 'Nội dung bài (caption TikTok) tối đa 2.200 ký tự.',
+  [SOCIAL_ERROR_CODE.DASHBOARD_RANGE_INVALID]: 'Khoảng ngày không hợp lệ: ngày bắt đầu không sau ngày kết thúc, tối đa 90 ngày.',
+};
+
+/** Caption dùng chung các kênh: kênh còn lại đã rời nháp thì không sửa caption được. */
+const CONTENT_EDIT_DETAIL_MESSAGES: Record<string, string> = {
+  [SOCIAL_CONTENT_EDIT_DETAIL.FACEBOOK_NOT_DRAFT]:
+    'Bản Facebook đã rời nháp nên nội dung (caption chung) không sửa được nữa. Chỉ đổi video/thiết lập TikTok.',
+  [SOCIAL_CONTENT_EDIT_DETAIL.TIKTOK_NOT_DRAFT]:
+    'Bản TikTok đã rời nháp nên nội dung (caption chung) không sửa được nữa. Chỉ đổi media Facebook.',
 };
 
 /** UX: mã lỗi ổn định → thông điệp tiếng Việt; mã lạ dùng thông điệp của API. */
 export function socialCommandErrorMessage(error: unknown): string {
-  const code = getApiErrorPayload(error)?.code;
+  const payload = getApiErrorPayload(error);
+  const code = payload?.code;
+  if (code === SOCIAL_ERROR_CODE.CONTENT_EDIT_NOT_ALLOWED) {
+    const detail = payload?.details?.find((item) => CONTENT_EDIT_DETAIL_MESSAGES[item.code]);
+    if (detail) return CONTENT_EDIT_DETAIL_MESSAGES[detail.code];
+  }
   return (code && MESSAGES[code]) || getApiErrorMessage(error);
 }
 

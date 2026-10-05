@@ -38,6 +38,7 @@ export const mediaUsageLabels: Record<MediaUsageType, string> = {
   PRODUCT_REVIEW: 'Đánh giá sản phẩm',
   BANNER: 'Banner',
   FACEBOOK_POST: 'Bài Facebook',
+  TIKTOK_POST: 'Bài TikTok',
 };
 
 /**

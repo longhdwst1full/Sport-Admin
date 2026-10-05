@@ -54,6 +54,12 @@ const ContentPage = lazy(() =>
 const BannersPage = lazy(() =>
   import('@/features/content').then((module) => ({ default: module.BannersPage })),
 );
+const SocialDashboardPage = lazy(() =>
+  import('@/features/content').then((module) => ({ default: module.SocialDashboardPage })),
+);
+const TikTokCallbackPage = lazy(() =>
+  import('@/features/content').then((module) => ({ default: module.TikTokCallbackPage })),
+);
 const ReviewsPage = lazy(() =>
   import('@/features/reviews').then((module) => ({
     default: module.ReviewsPage,
@@ -218,6 +224,23 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission="cms.content.view">
               <BannersPage />
+            </PermissionRoute>
+          }
+        />
+        {/* Redirect OAuth của TikTok (TIKTOK_REDIRECT_URI = origin Admin + TIKTOK_CALLBACK_PATH). */}
+        <Route
+          path="content/social/tiktok/callback"
+          element={
+            <PermissionRoute permission="social.post.publish">
+              <TikTokCallbackPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="social-dashboard"
+          element={
+            <PermissionRoute permission="cms.content.view">
+              <SocialDashboardPage />
             </PermissionRoute>
           }
         />

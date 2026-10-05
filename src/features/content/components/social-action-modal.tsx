@@ -10,9 +10,24 @@ import {
   type SocialPostDetailDto,
   type SocialPostSummaryDto,
 } from '@/generated/api/content/content.schemas';
-import { fbPublishTypeLabels, fbStatusPresentation, FB_POST_ID_PATTERN, SOCIAL_LIMITS } from '../constants/social.constants';
+import {
+  fbPublishTypeLabels,
+  fbStatusPresentation,
+  FB_POST_ID_PATTERN,
+  SOCIAL_CHANNEL,
+  SOCIAL_LIMITS,
+  type SocialChannel,
+  TIKTOK_POST_ID_PATTERN,
+  tiktokPrivacyLabels,
+} from '../constants/social.constants';
 import { useSocialPostCommand, type SocialCommand } from '../hooks/use-social-commands';
-import { socialDeleteMode, type SocialAction, type SocialDeleteMode } from '../model/social-actions.policy';
+import {
+  socialDeleteMode,
+  tiktokDeleteMode,
+  type SocialAction,
+  type SocialDeleteMode,
+  type TikTokDeleteMode,
+} from '../model/social-actions.policy';
 import { isFacebookNotConfigured, socialCommandErrorMessage } from '../model/social-command-error';
 import { scheduleWindowError } from '../model/social-post-form.mapper';
 import { FacebookSettingsHint } from './facebook-settings-hint';
@@ -26,7 +41,10 @@ export type SocialModalAction = Exclude<SocialAction, 'createDraft' | 'editDraft
 export type SocialActionModalPost = Pick<SocialPostDetailDto, 'id' | 'version' | 'title' | 'postType'> & {
   body?: string;
   facebook?: SocialPostSummaryDto['facebook'];
+  tiktok?: SocialPostSummaryDto['tiktok'];
 };
+
+type ActionMeta = { title: string; okText: string; consequence: string; danger?: boolean };
 
 interface ActionFormValues {
   timing?: 'now' | 'schedule';
@@ -85,6 +103,73 @@ const ACTION_META: Record<SocialModalAction, { title: string; okText: string; co
   },
 };
 
+/** Lệnh TikTok: không hẹn giờ/Reel, không sửa caption; xoá chỉ là thôi theo dõi (TikTok không có API xoá). */
+const TIKTOK_ACTION_META: Record<Exclude<SocialModalAction, 'editCaption'>, ActionMeta> = {
+  submit: {
+    title: 'Gửi duyệt bài TikTok',
+    okText: 'Gửi duyệt',
+    consequence: 'Bản TikTok chuyển sang Chờ duyệt; người có quyền đăng sẽ duyệt và đăng.',
+  },
+  approve: {
+    title: 'Đăng video lên TikTok',
+    okText: 'Đăng ngay',
+    consequence:
+      'Video được tải lên tài khoản TikTok và đăng ngay (TikTok không hỗ trợ hẹn giờ). Sau khi đăng không sửa được caption. TikTok có thể mất vài phút để xử lý video.',
+  },
+  retry: {
+    title: 'Đăng lại video TikTok',
+    okText: 'Đăng lại',
+    consequence: 'Gửi lại video lên TikTok. Chỉ dùng khi chắc chắn lần trước chưa lên TikTok.',
+  },
+  reject: {
+    title: 'Từ chối bài TikTok',
+    okText: 'Từ chối',
+    consequence: 'Bản TikTok quay về Nháp để người soạn sửa lại.',
+    danger: true,
+  },
+  reconcile: {
+    title: 'Đối soát với TikTok',
+    okText: 'Đối soát',
+    consequence:
+      'Lần đăng trước không rõ kết quả. Hệ thống hỏi lại TikTok; nếu TikTok chưa kết luận, kiểm tra tài khoản rồi nhập id video hoặc xác nhận chưa đăng.',
+  },
+  cancel: {
+    title: 'Huỷ bản đăng TikTok',
+    okText: 'Huỷ bản đăng',
+    consequence: 'Bản TikTok chưa đăng chuyển sang Đã xoá. Bài website và bản Facebook (nếu có) không bị ảnh hưởng.',
+    danger: true,
+  },
+  delete: {
+    title: 'Xoá bản đăng TikTok',
+    okText: 'Xoá',
+    consequence: 'Bản TikTok bị xoá trong hệ thống.',
+    danger: true,
+  },
+};
+
+const TIKTOK_DELETE_META: Record<Exclude<TikTokDeleteMode, 'NONE'>, ActionMeta> = {
+  LIVE: {
+    title: 'Ngừng theo dõi video TikTok',
+    okText: 'Ngừng theo dõi',
+    consequence:
+      'TikTok không cho xoá video qua API: hệ thống chỉ ngừng theo dõi bài này (không đồng bộ chỉ số nữa). Video VẪN CÒN trên TikTok — chủ tài khoản tự xoá trong ứng dụng TikTok nếu cần.',
+    danger: true,
+  },
+  LOCAL: {
+    title: 'Xoá bản TikTok (chưa đăng)',
+    okText: 'Xoá',
+    consequence:
+      'Video chưa lên TikTok nên chỉ bị xoá trong hệ thống. Bài không còn kênh nào sẽ biến khỏi danh sách; bài website giữ nguyên.',
+    danger: true,
+  },
+  RECONCILE_FIRST: {
+    title: 'Xoá bản đăng TikTok',
+    okText: 'Xoá',
+    consequence: 'Video đang được đăng hoặc chưa rõ đã lên TikTok chưa — đợi hệ thống xử lý xong hoặc Đối soát trước khi xoá.',
+    danger: true,
+  },
+};
+
 /** Lệnh xoá đổi tiêu đề/hệ quả theo nhánh (owner 2026-10-03: xoá được mọi trạng thái). */
 const DELETE_META: Record<Exclude<SocialDeleteMode, 'FACEBOOK' | 'NONE'>, { title: string; okText: string; consequence: string; danger?: boolean }> = {
   LOCAL: {
@@ -108,7 +193,8 @@ const REASON_RULES = [
 ];
 
 /** CONTRACT: bài website bỏ trống `body` khi sửa caption = API đẩy nội dung bài hiện tại lên Facebook. */
-function toCommand(action: SocialModalAction, values: ActionFormValues, isSocial: boolean): SocialCommand {
+function toCommand(action: SocialModalAction, values: ActionFormValues, isSocial: boolean, tiktok: boolean): SocialCommand {
+  if (tiktok && (action === 'approve' || action === 'retry')) return { action, body: {} };
   switch (action) {
     case 'submit':
       return { action };
@@ -150,15 +236,18 @@ function toCommand(action: SocialModalAction, values: ActionFormValues, isSocial
 export function SocialActionModal({
   post,
   action,
+  channel = SOCIAL_CHANNEL.FACEBOOK,
   onClose,
 }: {
   post?: SocialActionModalPost;
   action?: SocialModalAction;
+  /** Kênh của bản đăng nhận lệnh (mặc định Facebook). */
+  channel?: SocialChannel;
   onClose: () => void;
 }) {
   const { message } = App.useApp();
   const [form] = Form.useForm<ActionFormValues>();
-  const command = useSocialPostCommand(post);
+  const command = useSocialPostCommand(post, channel);
   const { reset } = command;
   const timing = Form.useWatch('timing', form);
   const reconcileMode = Form.useWatch('reconcileMode', form);
@@ -171,7 +260,13 @@ export function SocialActionModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ đổ lại khi mở hành động mới
   }, [action, post?.id, form, reset]);
 
-  if (!post?.facebook || !action) return null;
+  if (!post || !action) return null;
+  if (channel === SOCIAL_CHANNEL.TIKTOK) {
+    return post.tiktok && action !== 'editCaption' ? (
+      <TikTokActionContent post={post} tiktok={post.tiktok} action={action} form={form} command={command} onClose={onClose} />
+    ) : null;
+  }
+  if (!post.facebook) return null;
   const facebook = post.facebook;
   const deleteMode = action === 'delete' ? socialDeleteMode(facebook.status) : undefined;
   const meta =
@@ -184,7 +279,7 @@ export function SocialActionModal({
 
   const submit = (values: ActionFormValues) => {
     if (blocked) return;
-    command.mutate(toCommand(action, values, isSocial), {
+    command.mutate(toCommand(action, values, isSocial, false), {
       onSuccess: (saved) => {
         const status = saved.facebook?.status;
         if (status === FacebookPublicationStatus.FAILED) {
@@ -321,6 +416,137 @@ export function SocialActionModal({
               description="Muốn đổi nội dung, sửa bài website trước rồi cập nhật lên Facebook."
             />
           ))}
+      </Form>
+    </Modal>
+  );
+}
+
+type TikTokModalAction = Exclude<SocialModalAction, 'editCaption'>;
+
+/**
+ * Nội dung modal cho lệnh TikTok (dùng chung form/mutation với modal Facebook). Duyệt trả 200 với PUBLISHING —
+ * job tải video lên tiếp, nên báo "đang đăng" thay vì "đã đăng".
+ */
+function TikTokActionContent({
+  post,
+  tiktok,
+  action,
+  form,
+  command,
+  onClose,
+}: {
+  post: SocialActionModalPost;
+  tiktok: NonNullable<SocialActionModalPost['tiktok']>;
+  action: TikTokModalAction;
+  form: ReturnType<typeof Form.useForm<ActionFormValues>>[0];
+  command: ReturnType<typeof useSocialPostCommand>;
+  onClose: () => void;
+}) {
+  const { message } = App.useApp();
+  const reconcileMode = Form.useWatch('reconcileMode', form);
+  const deleteMode = action === 'delete' ? tiktokDeleteMode(tiktok.status) : undefined;
+  const meta = deleteMode && deleteMode !== 'NONE' ? TIKTOK_DELETE_META[deleteMode] : TIKTOK_ACTION_META[action];
+  // Duyệt/đăng cần đúng một video và quyền riêng tư đã chọn (API 400 nếu thiếu) — chặn sớm, chỉ dẫn sửa nháp.
+  const publishBlocker =
+    action === 'approve' || action === 'retry' || action === 'submit'
+      ? tiktok.mediaCount !== 1
+        ? 'Bản TikTok chưa có video. Sửa nháp TikTok và chọn đúng 1 video.'
+        : !tiktok.privacyLevel && action !== 'submit'
+          ? 'Chưa chọn quyền riêng tư TikTok. Sửa nháp TikTok và chọn "Ai có thể xem video này".'
+          : undefined
+      : undefined;
+  const blocked = deleteMode === 'RECONCILE_FIRST' || publishBlocker !== undefined;
+
+  const submit = (values: ActionFormValues) => {
+    if (blocked) return;
+    command.mutate(toCommand(action, values, post.postType === AnyContentPostType.SOCIAL, true), {
+      onSuccess: (saved) => {
+        const status = saved.tiktok?.status;
+        if (status === FacebookPublicationStatus.FAILED) {
+          void message.error(`TikTok chưa nhận video: ${saved.tiktok?.lastError ?? 'lỗi không rõ'}`);
+        } else if (status === FacebookPublicationStatus.UNCERTAIN) {
+          void message.warning('Chưa rõ video đã lên TikTok hay chưa. Đối soát trước khi đăng lại.');
+        } else if (status === FacebookPublicationStatus.PUBLISHING) {
+          void message.success('Đã gửi video lên TikTok. Hệ thống đang tải lên và sẽ cập nhật trạng thái.');
+        } else {
+          void message.success(`${meta.okText} thành công`);
+        }
+        onClose();
+      },
+      onError: (error) => void message.error(socialCommandErrorMessage(error)),
+    });
+  };
+
+  return (
+    <Modal
+      open
+      title={meta.title}
+      okText={meta.okText}
+      cancelText="Đóng"
+      okButtonProps={{ danger: meta.danger, hidden: blocked }}
+      confirmLoading={command.isPending}
+      onOk={() => form.submit()}
+      onCancel={onClose}
+      destroyOnHidden
+    >
+      <Descriptions size="small" column={1} className="mb-3">
+        <Descriptions.Item label="Bài viết">{post.title}</Descriptions.Item>
+        <Descriptions.Item label="Quyền riêng tư">
+          {tiktok.privacyLevel ? tiktokPrivacyLabels[tiktok.privacyLevel] : 'Chưa chọn'}
+        </Descriptions.Item>
+        <Descriptions.Item label="Trạng thái TikTok hiện tại">
+          <StatusTag status={tiktok.status} presentations={fbStatusPresentation} />
+        </Descriptions.Item>
+      </Descriptions>
+      {publishBlocker ? (
+        <Alert className="mb-3" type="warning" showIcon message={publishBlocker} />
+      ) : deleteMode === 'RECONCILE_FIRST' || deleteMode === 'LIVE' ? (
+        <Alert className="mb-3" type="warning" showIcon message={meta.consequence} />
+      ) : (
+        <Typography.Paragraph type="secondary">{meta.consequence}</Typography.Paragraph>
+      )}
+      <Form form={form} layout="vertical" onFinish={submit} disabled={command.isPending}>
+        {(action === 'reject' || deleteMode === 'LIVE') && (
+          <Form.Item name="reason" label="Lý do" rules={REASON_RULES}>
+            <Input.TextArea rows={3} maxLength={SOCIAL_LIMITS.REASON_MAX} showCount />
+          </Form.Item>
+        )}
+        {(action === 'cancel' || deleteMode === 'LOCAL') && (
+          <Form.Item
+            name="reason"
+            label="Lý do (tuỳ chọn)"
+            rules={deleteMode === 'LOCAL' ? [{ min: SOCIAL_LIMITS.REASON_MIN, message: `Lý do tối thiểu ${SOCIAL_LIMITS.REASON_MIN} ký tự` }] : undefined}
+          >
+            <Input.TextArea rows={3} maxLength={SOCIAL_LIMITS.REASON_MAX} showCount />
+          </Form.Item>
+        )}
+        {action === 'reconcile' && (
+          <>
+            <Form.Item name="reconcileMode" label="Cách đối soát">
+              <Radio.Group className="flex flex-col gap-1">
+                <Radio value="auto">Hỏi lại trạng thái đăng từ TikTok</Radio>
+                <Radio value="postId">Video đã lên TikTok — nhập id video</Radio>
+                <Radio value="notPublished">Tôi đã kiểm tra tài khoản — video chưa được đăng</Radio>
+              </Radio.Group>
+            </Form.Item>
+            {reconcileMode === 'postId' && (
+              <Form.Item
+                name="externalPostId"
+                label="Id video TikTok"
+                extra="Số cuối trong link video, ví dụ tiktok.com/@shop/video/7291234567890123456."
+                rules={[
+                  { required: true, message: 'Nhập id video' },
+                  { pattern: TIKTOK_POST_ID_PATTERN, message: 'Id video chỉ gồm chữ số' },
+                ]}
+              >
+                <Input placeholder="7291234567890123456" />
+              </Form.Item>
+            )}
+            {reconcileMode === 'notPublished' && (
+              <Alert type="warning" showIcon className="mb-3" message="Bản TikTok sẽ chuyển sang Lỗi để có thể đăng lại." />
+            )}
+          </>
+        )}
       </Form>
     </Modal>
   );

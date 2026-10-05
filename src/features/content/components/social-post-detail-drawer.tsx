@@ -11,20 +11,29 @@ import {
   fbPublishTypeLabels,
   fbStatusPresentation,
   postTypeLabels,
+  SOCIAL_CHANNEL,
   SOCIAL_PERMISSION,
+  type SocialChannel,
+  TIKTOK_ENABLED,
 } from '../constants/social.constants';
 import { SOCIAL_ACTION_BUTTON } from '../constants/social-action-buttons';
-import { availableSocialActions, type SocialAction } from '../model/social-actions.policy';
+import {
+  availableSocialActions,
+  availableTikTokActions,
+  type SocialAction,
+  type TikTokAction,
+} from '../model/social-actions.policy';
 import { socialCommandErrorMessage } from '../model/social-command-error';
 import { FacebookPermalink, FacebookVideoProcessingTag } from './facebook-publication-badges';
 import { SocialActionModal, type SocialModalAction } from './social-action-modal';
 import { SocialPostEditorDrawer, type SocialEditorTarget } from './social-post-editor-drawer';
+import { TikTokPublicationSection } from './tiktok-publication-section';
 import { IMAGE_FALLBACK_SRC } from '@/features/media';
 
 const metricValue = (value: number | null | undefined) => (value == null ? '—' : value);
 
 /**
- * Chi tiết bài + bản đăng Facebook: media, chỉ số, lỗi gần nhất và mọi lệnh khả dụng.
+ * Chi tiết bài + bản đăng Facebook và TikTok: media, chỉ số, lỗi gần nhất và mọi lệnh khả dụng theo từng kênh.
  * PERMISSION: nút theo `social.post.manage`/`social.post.publish`. "Duyệt là đăng" (D97, 2026-10-03): không
  * maker-checker, người có quyền đăng đăng thẳng từ nháp.
  */
@@ -36,7 +45,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
   const facebook = post?.facebook;
   const permalinkUrl = facebook?.permalinkUrl;
   const videoProcessing = facebook?.videoProcessing === true;
-  const [pendingAction, setPendingAction] = useState<SocialModalAction>();
+  const [pending, setPending] = useState<{ channel: SocialChannel; action: SocialModalAction }>();
   const [editor, setEditor] = useState<SocialEditorTarget>();
 
   const actions = post
@@ -49,11 +58,30 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
       })
     : [];
 
-  const runAction = (action: SocialAction) => {
+  const tiktokActions =
+    post && TIKTOK_ENABLED
+      ? availableTikTokActions({
+          postType: post.postType,
+          postStatus: post.status,
+          tiktokStatus: post.tiktok?.status ?? null,
+          canManage,
+          canPublish,
+        })
+      : [];
+
+  const runAction = (action: SocialAction | TikTokAction, channel: SocialChannel = SOCIAL_CHANNEL.FACEBOOK) => {
     if (!post) return;
-    if (action === 'createDraft') setEditor({ mode: 'createDraft', postId: post.id, version: post.version, title: post.title });
-    else if (action === 'editDraft') setEditor({ mode: 'updateDraft', postId: post.id });
-    else setPendingAction(action);
+    if (action === 'createDraft') {
+      setEditor({
+        mode: 'createDraft',
+        channel,
+        postId: post.id,
+        version: post.version,
+        title: post.title,
+        postType: post.postType,
+      });
+    } else if (action === 'editDraft') setEditor({ mode: 'updateDraft', channel, postId: post.id });
+    else setPending({ channel, action });
   };
 
   return (
@@ -164,8 +192,15 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
                 <Statistic title="Lượt tiếp cận (reach)" value={metricValue(facebook.metrics.reach)} />
                 <Statistic title="Tương tác (cảm xúc + bình luận + chia sẻ)" value={metricValue(facebook.metrics.engagements)} />
               </div>
+              <div className="mb-1 mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Statistic title="Cảm xúc" value={metricValue(facebook.metrics.likes)} />
+                <Statistic title="Bình luận" value={metricValue(facebook.metrics.comments)} />
+                <Statistic title="Chia sẻ" value={metricValue(facebook.metrics.shares)} />
+                <Statistic title="Lượt xem video" value={metricValue(facebook.metrics.views)} />
+              </div>
               <Typography.Paragraph type="secondary" className="text-xs">
                 "—" = Meta không trả chỉ số hoặc chưa đồng bộ; job đồng bộ định kỳ cập nhật chỉ số.
+                {facebook.metrics.syncedAt ? ` Đồng bộ lúc ${formatDateTime(facebook.metrics.syncedAt)}.` : ''}
               </Typography.Paragraph>
 
               <Typography.Title level={5}>Ảnh / video ({facebook.media.length})</Typography.Title>
@@ -195,6 +230,14 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
             </>
           )}
 
+          {TIKTOK_ENABLED && (
+            <TikTokPublicationSection
+              post={post}
+              actions={tiktokActions}
+              onAction={(action) => runAction(action, SOCIAL_CHANNEL.TIKTOK)}
+            />
+          )}
+
           <Typography.Title level={5}>Nội dung</Typography.Title>
           <Typography.Paragraph className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm">
             {post.body || <span className="text-slate-400">(trống)</span>}
@@ -205,7 +248,12 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
         </>
       )}
 
-      <SocialActionModal post={post} action={pendingAction} onClose={() => setPendingAction(undefined)} />
+      <SocialActionModal
+        post={post}
+        action={pending?.action}
+        channel={pending?.channel}
+        onClose={() => setPending(undefined)}
+      />
       {editor && <SocialPostEditorDrawer target={editor} onClose={() => setEditor(undefined)} />}
     </Drawer>
   );

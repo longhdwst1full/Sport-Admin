@@ -7,12 +7,29 @@ import {
   GlobalOutlined,
   PlusOutlined,
   ReloadOutlined,
+  ShareAltOutlined,
+  TikTokOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
-import { App, Avatar, Button, DatePicker, Dropdown, Input, Popconfirm, Select, Skeleton, Switch, Tabs, Tag, Tooltip } from 'antd';
+import {
+  App,
+  Avatar,
+  Button,
+  DatePicker,
+  Dropdown,
+  Input,
+  Popconfirm,
+  Segmented,
+  Select,
+  Skeleton,
+  Switch,
+  Tabs,
+  Tag,
+  Tooltip,
+} from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDebounce } from 'use-debounce';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
@@ -31,6 +48,7 @@ import {
 import {
   AnyContentPostType,
   ContentPostStatus,
+  FacebookPublicationStatus,
   type SocialPostSummaryDto,
 } from '@/generated/api/content/content.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
@@ -40,6 +58,8 @@ import { SocialActionModal } from '../components/social-action-modal';
 import { SocialPostDetailDrawer } from '../components/social-post-detail-drawer';
 import { SocialPostEditorDrawer, type SocialEditorTarget } from '../components/social-post-editor-drawer';
 import { FacebookSettingsHint } from '../components/facebook-settings-hint';
+import { SocialChannelIcons } from '../components/social-channel-icons';
+import { TikTokAccountCard } from '../components/tiktok-account-card';
 import { SOCIAL_ACTION_BUTTON } from '../constants/social-action-buttons';
 import {
   CONTENT_TAB,
@@ -49,15 +69,29 @@ import {
   fbPublishTypeLabels,
   fbStatusOptions,
   fbStatusPresentation,
+  isSocialChannelEnabled,
+  LEGACY_SOCIAL_TAB,
   postTypeLabels,
   postTypeOptions,
   SOCIAL_LIMITS,
   SOCIAL_PAGE_SIZE,
+  SOCIAL_CHANNEL,
   SOCIAL_PERMISSION,
+  socialChannelLabels,
+  TIKTOK_DISABLED_HINT,
+  TIKTOK_ENABLED,
+  tiktokPrivacyLabels,
+  tiktokPublishPhaseLabels,
 } from '../constants/social.constants';
 import { availableSocialActions, needsAttention } from '../model/social-actions.policy';
 import { isFacebookNotConfigured } from '../model/social-command-error';
-import { POST_CHANNEL, parseSocialFilters, postChannels, toSocialListParams } from '../model/social-post-filters';
+import {
+  POST_CHANNEL,
+  parseSocialFilters,
+  postChannels,
+  socialChannels,
+  toSocialListParams,
+} from '../model/social-post-filters';
 
 const ContentEditorDrawer = lazy(() =>
   import('../components/content-editor-drawer').then((module) => ({ default: module.ContentEditorDrawer })),
@@ -69,11 +103,31 @@ const POST_STATUSES = {
   DRAFT: { color: 'gold', label: 'Bản nháp' },
 };
 
+const ALL_CHANNELS = 'all';
+
+/** "Tất cả kênh" + từng kênh; kênh chưa nối API (TikTok) bị khoá kèm tooltip. */
+const channelFilterOptions = [
+  { value: ALL_CHANNELS, label: 'Tất cả kênh' },
+  ...Object.values(SOCIAL_CHANNEL).map((channel) =>
+    isSocialChannelEnabled(channel)
+      ? { value: channel, label: socialChannelLabels[channel] }
+      : {
+          value: channel,
+          disabled: true,
+          label: (
+            <Tooltip title={TIKTOK_DISABLED_HINT}>
+              <span>{socialChannelLabels[channel]}</span>
+            </Tooltip>
+          ),
+        },
+  ),
+];
+
 const metric = (value: number | null | undefined) => (value == null ? '—' : value.toLocaleString('vi-VN'));
 
 /**
- * Màn bài viết: tab "Tất cả" (bài website + bài chỉ Facebook) và "Facebook" (bài có bản đăng Facebook).
- * Tab và bộ lọc nằm trên URL; ô tìm kiếm debounce. Phân trang/lọc chạy ở server (`listAdminSocialPosts`).
+ * Màn bài viết: tab "Tất cả" (bài website + bài chỉ Facebook) và "Mạng xã hội" (bài có bản đăng mạng xã hội,
+ * lọc thêm theo kênh). Tab và bộ lọc nằm trên URL (`?tab=facebook` cũ được đổi sang `social`); ô tìm kiếm debounce. Phân trang/lọc chạy ở server (`listAdminSocialPosts`).
  * Hành động trên bài website (sửa, ẩn/hiện, lưu trữ) giữ như cũ; lệnh Facebook nằm ở drawer chi tiết
  * (kèm modal xác nhận đăng/hẹn giờ).
  */
@@ -82,12 +136,15 @@ export function ContentPage() {
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const filters = parseSocialFilters(params);
+  const legacyTab = params.get('tab') === LEGACY_SOCIAL_TAB;
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search.trim(), 350);
   const [page, setPage] = useListPageReset([
     debouncedSearch,
     filters.tab,
+    filters.channel,
     filters.fbStatus,
+    filters.tiktokStatus,
     filters.postType,
     filters.origin,
     filters.from,
@@ -110,6 +167,14 @@ export function ContentPage() {
     setParams(next, { replace: true });
   };
 
+  // Link cũ `?tab=facebook` → `?tab=social`, giữ nguyên các bộ lọc khác.
+  useEffect(() => {
+    if (!legacyTab) return;
+    const next = new URLSearchParams(params);
+    next.set('tab', CONTENT_TAB.SOCIAL);
+    setParams(next, { replace: true });
+  }, [legacyTab, params, setParams]);
+
   const list = useListAdminSocialPosts(
     toSocialListParams(filters, { page, limit: SOCIAL_PAGE_SIZE, search: debouncedSearch }),
     { query: { retry: false } },
@@ -119,7 +184,7 @@ export function ContentPage() {
   const pageStats = useMemo(
     () => ({
       facebook: rows.filter((row) => row.facebook).length,
-      attention: rows.filter((row) => needsAttention(row.facebook?.status)).length,
+      attention: rows.filter((row) => needsAttention(row.facebook?.status) || needsAttention(row.tiktok?.status)).length,
       website: rows.filter((row) => row.postType !== AnyContentPostType.SOCIAL && row.isPublished).length,
     }),
     [rows],
@@ -154,7 +219,7 @@ export function ContentPage() {
 
   const createItems = [
     ...(canManageWebsite ? [{ key: 'website', icon: <GlobalOutlined />, label: 'Bài viết website' }] : []),
-    ...(canManageSocial ? [{ key: 'social', icon: <FacebookOutlined />, label: 'Bài chỉ đăng Facebook' }] : []),
+    ...(canManageSocial ? [{ key: 'social', icon: <ShareAltOutlined />, label: 'Bài chỉ đăng mạng xã hội' }] : []),
   ];
 
   return (
@@ -162,7 +227,7 @@ export function ContentPage() {
       <ManagementPage
         eyebrow="Quản trị nội dung CMS"
         title="Bài viết & Tin tức"
-        description="Soạn thảo, quản lý bài viết trên storefront và bài đăng Facebook Page."
+        description="Soạn thảo, quản lý bài viết trên storefront và bài đăng Facebook Page, TikTok."
         actions={
           <div className="flex flex-wrap gap-2">
             <Tooltip title="Làm mới dữ liệu">
@@ -215,7 +280,7 @@ export function ContentPage() {
           },
         ]}
         filters={
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <Input.Search
               allowClear
               className="w-full"
@@ -232,6 +297,16 @@ export function ContentPage() {
               placeholder="Trạng thái Facebook"
               options={fbStatusOptions}
             />
+            {TIKTOK_ENABLED && (
+              <Select
+                allowClear
+                className="w-full"
+                value={filters.tiktokStatus}
+                onChange={(value?: string) => updateParams({ tiktokStatus: value })}
+                placeholder="Trạng thái TikTok"
+                options={fbStatusOptions}
+              />
+            )}
             <Select
               allowClear
               className="w-full"
@@ -264,12 +339,27 @@ export function ContentPage() {
           </div>
         }
       >
-        <Tabs
-          activeKey={filters.tab}
-          items={contentTabs.map((item) => ({ key: item.key, label: item.label }))}
-          onChange={(key) => updateParams({ tab: key === CONTENT_TAB.ALL ? undefined : key })}
-          className="mb-3"
-        />
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <Tabs
+            activeKey={filters.tab}
+            items={contentTabs.map((item) => ({ key: item.key, label: item.label }))}
+            onChange={(key) =>
+              updateParams({ tab: key === CONTENT_TAB.ALL ? undefined : key, channel: undefined })
+            }
+            className="min-w-0"
+          />
+          {filters.tab === CONTENT_TAB.SOCIAL && (
+            <div role="group" aria-label="Lọc theo kênh" className="max-w-full overflow-x-auto">
+              <Segmented
+                size="small"
+                value={filters.channel ?? ALL_CHANNELS}
+                options={channelFilterOptions}
+                onChange={(value) => updateParams({ channel: value === ALL_CHANNELS ? undefined : String(value) })}
+              />
+            </div>
+          )}
+        </div>
+        {filters.tab === CONTENT_TAB.SOCIAL && TIKTOK_ENABLED && canManageSocial && <TikTokAccountCard />}
         {isFacebookNotConfigured(list.error) && <FacebookSettingsHint />}
         {list.isError && !isFacebookNotConfigured(list.error) && (
           <QueryErrorAlert error={list.error} message="Không tải được danh sách bài viết" retry={() => void list.refetch()} />
@@ -278,7 +368,7 @@ export function ContentPage() {
           rowKey="id"
           loading={list.isLoading}
           dataSource={rows}
-          scroll={{ x: 1280 }}
+          scroll={{ x: TIKTOK_ENABLED ? 1580 : 1370 }}
           locale={{ emptyText: 'Chưa có bài viết phù hợp bộ lọc.' }}
           pagination={{
             current: page,
@@ -316,6 +406,10 @@ export function ContentPage() {
                           <Tag key={channel} bordered={false} color="geekblue" icon={<GlobalOutlined />}>
                             Website
                           </Tag>
+                        ) : channel === POST_CHANNEL.TIKTOK ? (
+                          <Tag key={channel} bordered={false} icon={<TikTokOutlined />}>
+                            TikTok
+                          </Tag>
                         ) : (
                           <Tag key={channel} bordered={false} color="blue" icon={<FacebookOutlined />}>
                             Facebook
@@ -326,6 +420,13 @@ export function ContentPage() {
                   </div>
                 </div>
               ),
+            },
+            {
+              title: 'Kênh',
+              key: 'channels',
+              width: 90,
+              align: 'center' as const,
+              render: (_: unknown, row: SocialPostSummaryDto) => <SocialChannelIcons channels={socialChannels(row)} />,
             },
             {
               title: 'Loại bài',
@@ -386,6 +487,47 @@ export function ContentPage() {
                   <span className="text-xs text-slate-400">Chưa đăng</span>
                 ),
             },
+            ...(TIKTOK_ENABLED
+              ? [
+                  {
+                    title: 'TikTok',
+                    key: 'tiktok',
+                    width: 200,
+                    render: (_: unknown, row: SocialPostSummaryDto) =>
+                      row.tiktok ? (
+                        <div className="flex flex-col gap-1">
+                          <div className="flex flex-wrap items-center gap-1">
+                            <StatusTag status={row.tiktok.status} presentations={fbStatusPresentation} />
+                            {/* Khi PUBLISHING, `lastError` là lỗi tạm (job tự thử lại), không phải lỗi thật. */}
+                            {row.tiktok.lastError && row.tiktok.status === FacebookPublicationStatus.FAILED && (
+                              <Tooltip title={row.tiktok.lastError}>
+                                <WarningOutlined className="text-rose-500" aria-label="Lỗi gần nhất" />
+                              </Tooltip>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-slate-500">
+                            {row.tiktok.progress
+                              ? tiktokPublishPhaseLabels[row.tiktok.progress.phase]
+                              : row.tiktok.privacyLevel
+                                ? tiktokPrivacyLabels[row.tiktok.privacyLevel]
+                                : 'Chưa chọn quyền riêng tư'}
+                            {row.tiktok.publishAt ? ` · ${formatDateTime(row.tiktok.publishAt)}` : ''}
+                          </span>
+                          {row.tiktok.metrics.views != null && (
+                            <span className="text-[11px] text-slate-500">{metric(row.tiktok.metrics.views)} lượt xem</span>
+                          )}
+                          {row.tiktok.permalinkUrl && (
+                            <a href={row.tiktok.permalinkUrl} target="_blank" rel="noopener noreferrer" className="text-xs">
+                              <TikTokOutlined aria-hidden /> Xem trên TikTok
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">Chưa đăng</span>
+                      ),
+                  },
+                ]
+              : []),
             {
               title: 'Tiếp cận',
               key: 'reach',
@@ -460,7 +602,13 @@ export function ContentPage() {
                         onClick={() =>
                           setSocialEditor(
                             action === 'createDraft'
-                              ? { mode: 'createDraft', postId: row.id, version: row.version, title: row.title }
+                              ? {
+                                  mode: 'createDraft',
+                                  postId: row.id,
+                                  version: row.version,
+                                  title: row.title,
+                                  postType: row.postType,
+                                }
                               : { mode: 'updateDraft', postId: row.id },
                           )
                         }

@@ -4,6 +4,9 @@ import {
   FacebookPublicationOrigin,
   FacebookPublicationStatus,
   FacebookPublishType,
+  SocialChannel as ApiSocialChannel,
+  TikTokPrivacyLevel,
+  TikTokPublishPhase,
 } from '@/generated/api/content/content.schemas';
 
 export const SOCIAL_PAGE_SIZE = 20;
@@ -18,14 +21,74 @@ export const SOCIAL_PERMISSION = {
 /** Tab màn bài viết; giá trị nằm trên URL (`?tab=`). */
 export const CONTENT_TAB = {
   ALL: 'all',
-  FACEBOOK: 'facebook',
+  SOCIAL: 'social',
 } as const;
 export type ContentTab = (typeof CONTENT_TAB)[keyof typeof CONTENT_TAB];
 
+/** Giá trị `?tab=` cũ của tab "Facebook"; link đã gửi trước đây được chuyển sang tab Mạng xã hội. */
+export const LEGACY_SOCIAL_TAB = 'facebook';
+
 export const contentTabs: Array<{ key: ContentTab; label: string }> = [
   { key: CONTENT_TAB.ALL, label: 'Tất cả' },
-  { key: CONTENT_TAB.FACEBOOK, label: 'Facebook' },
+  { key: CONTENT_TAB.SOCIAL, label: 'Mạng xã hội' },
 ];
+
+/**
+ * Công tắc kênh TikTok ở Admin (lọc kênh, soạn bài, dashboard). Contract TikTok đã có (API D99 phase 2b);
+ * giữ hằng này để tắt nhanh UI nếu cần mà không gỡ code.
+ */
+export const TIKTOK_ENABLED = true;
+export const TIKTOK_DISABLED_HINT = 'Kênh TikTok đang tắt';
+
+/** Kênh mạng xã hội; giá trị URL viết thường (`?channel=`). */
+export const SOCIAL_CHANNEL = {
+  FACEBOOK: 'facebook',
+  TIKTOK: 'tiktok',
+} as const;
+export type SocialChannel = (typeof SOCIAL_CHANNEL)[keyof typeof SOCIAL_CHANNEL];
+
+export const socialChannelLabels: Record<SocialChannel, string> = {
+  [SOCIAL_CHANNEL.FACEBOOK]: 'Facebook',
+  [SOCIAL_CHANNEL.TIKTOK]: 'TikTok',
+};
+
+/** Kênh URL (viết thường) → enum kênh của contract. */
+export const API_SOCIAL_CHANNEL: Record<SocialChannel, ApiSocialChannel> = {
+  [SOCIAL_CHANNEL.FACEBOOK]: ApiSocialChannel.FACEBOOK,
+  [SOCIAL_CHANNEL.TIKTOK]: ApiSocialChannel.TIKTOK,
+};
+
+/** Enum kênh của contract → kênh URL (viết thường). */
+export const fromApiSocialChannel = (channel: ApiSocialChannel): SocialChannel =>
+  channel === ApiSocialChannel.TIKTOK ? SOCIAL_CHANNEL.TIKTOK : SOCIAL_CHANNEL.FACEBOOK;
+
+/** Kênh bật được ở thời điểm build; TikTok chỉ có khi `TIKTOK_ENABLED`. */
+export const isSocialChannelEnabled = (channel: SocialChannel) => channel !== SOCIAL_CHANNEL.TIKTOK || TIKTOK_ENABLED;
+
+/** Nhãn quyền riêng tư TikTok (enum `TikTokPrivacyLevel` của contract). */
+export const tiktokPrivacyLabels: Record<TikTokPrivacyLevel, string> = {
+  [TikTokPrivacyLevel.PUBLIC_TO_EVERYONE]: 'Công khai',
+  [TikTokPrivacyLevel.MUTUAL_FOLLOW_FRIENDS]: 'Bạn bè (theo dõi lẫn nhau)',
+  [TikTokPrivacyLevel.FOLLOWER_OF_CREATOR]: 'Người theo dõi',
+  [TikTokPrivacyLevel.SELF_ONLY]: 'Chỉ mình tôi',
+};
+
+export const tiktokPublishPhaseLabels: Record<TikTokPublishPhase, string> = {
+  [TikTokPublishPhase.INIT]: 'Khởi tạo',
+  [TikTokPublishPhase.UPLOADING]: 'Đang tải video lên',
+  [TikTokPublishPhase.PROCESSING]: 'TikTok đang xử lý',
+};
+
+/** Khớp `SOCIAL_TIKTOK_LIMIT`/policy của API. */
+export const TIKTOK_LIMITS = {
+  /** Caption TikTok (posts.body dùng chung các kênh). */
+  CAPTION_MAX: 2200,
+  /** Số lần init tối đa (1 + 2 lần init lại). */
+  MAX_INITS: 3,
+} as const;
+
+/** Id video TikTok nhập tay khi đối soát (chỉ chữ số). */
+export const TIKTOK_POST_ID_PATTERN = /^\d+$/;
 
 /** Khớp `SOCIAL_LIMIT` của API (`cms/social/social.constants.ts`). */
 export const SOCIAL_LIMITS = {
@@ -101,7 +164,7 @@ export const postTypeLabels: Record<AnyContentPostType, string> = {
   [AnyContentPostType.PRODUCT_GUIDE]: 'Hướng dẫn sản phẩm',
   [AnyContentPostType.ABOUT]: 'Giới thiệu',
   [AnyContentPostType.POLICY]: 'Chính sách',
-  [AnyContentPostType.SOCIAL]: 'Chỉ Facebook',
+  [AnyContentPostType.SOCIAL]: 'Chỉ mạng xã hội',
 };
 
 export const postTypeOptions = Object.values(AnyContentPostType).map((value) => ({
@@ -132,6 +195,21 @@ export const SOCIAL_ERROR_CODE = {
   DELETE_REASON_REQUIRED: 'SOCIAL_DELETE_REASON_REQUIRED',
   PUBLISH_PERMISSION_REQUIRED: 'SOCIAL_PUBLISH_PERMISSION_REQUIRED',
   STORAGE_DISABLED: 'SOCIAL_STORAGE_DISABLED',
+  CONTENT_EDIT_NOT_ALLOWED: 'SOCIAL_CONTENT_EDIT_NOT_ALLOWED',
+  ALREADY_TIKTOK_POST: 'SOCIAL_ALREADY_TIKTOK_POST',
+  TIKTOK_NOT_CONFIGURED: 'SOCIAL_TIKTOK_NOT_CONFIGURED',
+  TIKTOK_NOT_CONNECTED: 'SOCIAL_TIKTOK_NOT_CONNECTED',
+  TIKTOK_ERROR: 'SOCIAL_TIKTOK_ERROR',
+  TIKTOK_STATE_INVALID: 'SOCIAL_TIKTOK_STATE_INVALID',
+  TIKTOK_OPTIONS_INVALID: 'SOCIAL_TIKTOK_OPTIONS_INVALID',
+  TIKTOK_CAPTION_TOO_LONG: 'SOCIAL_TIKTOK_CAPTION_TOO_LONG',
+  DASHBOARD_RANGE_INVALID: 'SOCIAL_DASHBOARD_RANGE_INVALID',
+} as const;
+
+/** Mã chi tiết của SOCIAL_CONTENT_EDIT_NOT_ALLOWED: kênh còn lại đã rời nháp nên caption chung bị khoá. */
+export const SOCIAL_CONTENT_EDIT_DETAIL = {
+  FACEBOOK_NOT_DRAFT: 'FACEBOOK_NOT_DRAFT',
+  TIKTOK_NOT_DRAFT: 'TIKTOK_NOT_DRAFT',
 } as const;
 
 /** CONCURRENCY: dữ liệu đang hiển thị đã cũ — tải lại danh sách/chi tiết trước khi cho thao tác tiếp. */
@@ -147,3 +225,14 @@ export const SOCIAL_STALE_ERROR_CODES: ReadonlySet<string> = new Set([
 /** Cấu hình Facebook nằm ở tham số hệ thống (nhóm INTEGRATION), không có màn riêng. */
 export const FACEBOOK_SETTINGS_PATH = '/system-parameters';
 export const FACEBOOK_PARAMETER_CODES = ['FACEBOOK_PAGE_ID', 'FACEBOOK_PAGE_ACCESS_TOKEN'] as const;
+/** App TikTok cấu hình ở Tham số hệ thống; token do API tự ghi khi kết nối. */
+export const TIKTOK_PARAMETER_CODES = ['TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRET', 'TIKTOK_REDIRECT_URI'] as const;
+
+/**
+ * Trang Admin nhận redirect OAuth của TikTok (`code` + `state`). PHẢI trùng tham số `TIKTOK_REDIRECT_URI`
+ * (origin Admin + đường dẫn này) và Redirect URI khai ở TikTok Developer Portal.
+ */
+export const TIKTOK_CALLBACK_PATH = '/content/social/tiktok/callback';
+/** sessionStorage: nơi quay về sau khi kết nối TikTok xong. */
+export const TIKTOK_CONNECT_RETURN_KEY = 'dctd.admin.tiktok-connect-return';
+export const TIKTOK_CONNECT_DEFAULT_RETURN = '/content?tab=social';
