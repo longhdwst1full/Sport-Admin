@@ -31,12 +31,11 @@ export async function uploadVideo(file: File, options: ChunkedUploadOptions = {}
   assertWithinMaxBytes(file, signed.maxBytes, 'Video');
 
   const uploaded = await uploadToCloudinaryChunked(file, signed, options);
-  return finalizeAdminMediaUpload(
-    {
-      publicId: uploaded.public_id,
-      version: uploaded.version,
-      signature: uploaded.signature,
-    },
-    signal,
-  );
+  // Không truyền `signal`: video đã nằm trên Cloudinary, huỷ finalize lúc này (đóng modal/unmount)
+  // sẽ để lại tệp mồ côi không có bản ghi media. Finalize luôn chạy hết; nơi gọi tự bỏ qua kết quả nếu đã huỷ.
+  return finalizeAdminMediaUpload({
+    publicId: uploaded.public_id,
+    version: uploaded.version,
+    signature: uploaded.signature,
+  });
 }

@@ -25,10 +25,12 @@ describe('toCoverPayload', () => {
 });
 
 describe('composablePublishTypeOptions', () => {
-  it('ẩn Video/Reel khi soạn vì upload chỉ nhận ảnh', () => {
+  it('soạn được cả Video/Reel vì picker đã nhận video tải theo phần', () => {
     expect(composablePublishTypeOptions().map((option) => option.value)).toEqual([
       FacebookPublishType.FEED,
       FacebookPublishType.PHOTOS,
+      FacebookPublishType.VIDEO,
+      FacebookPublishType.REEL,
     ]);
   });
 

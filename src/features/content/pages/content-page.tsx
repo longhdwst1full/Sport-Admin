@@ -367,7 +367,8 @@ export function ContentPage() {
                       ) : (
                         <StatusTag status={row.facebook.status} presentations={fbStatusPresentation} />
                       )}
-                      {row.facebook.lastError && (
+                      {/* Khi Facebook đang xử lý video, `lastError` là mã `VIDEO_PROCESSING:` chứ không phải lỗi thật. */}
+                      {row.facebook.lastError && !row.facebook.videoProcessing && (
                         <Tooltip title={row.facebook.lastError}>
                           <WarningOutlined className="text-rose-500" aria-label="Lỗi gần nhất" />
                         </Tooltip>

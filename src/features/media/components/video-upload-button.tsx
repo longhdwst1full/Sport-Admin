@@ -2,14 +2,27 @@ import { useEffect, useRef, useState } from 'react';
 import { VideoCameraAddOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Button, Progress, Upload } from 'antd';
-import { isCancel } from 'axios';
+import { isAxiosError, isCancel } from 'axios';
 import type { MediaAssetDto } from '@/generated/api/media/media.schemas';
+import { getApiErrorMessage } from '@/lib/api/error';
 import { VIDEO_ACCEPT } from '@/lib/media/cloudinary';
 import { uploadVideo } from '@/lib/media/upload-video';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 
 const isAbortError = (error: unknown, signal: AbortSignal) =>
   signal.aborted || isCancel(error) || (error instanceof DOMException && error.name === 'AbortError');
+
+const UPLOAD_VIDEO_FALLBACK = 'Upload video thất bại.';
+
+/** Lỗi phần tải lên Cloudinary là AxiosError thô với body `{ error: { message } }`; lỗi API đi qua `getApiErrorMessage`. */
+function getVideoUploadErrorMessage(error: unknown): string {
+  if (isAxiosError<{ error?: { message?: unknown } }>(error)) {
+    const cloudinaryMessage = error.response?.data?.error?.message;
+    if (typeof cloudinaryMessage === 'string' && cloudinaryMessage) return cloudinaryMessage;
+    return UPLOAD_VIDEO_FALLBACK;
+  }
+  return getApiErrorMessage(error, UPLOAD_VIDEO_FALLBACK);
+}
 
 /**
  * Nút tải một video vào Thư viện media, kèm thanh tiến độ và nút huỷ. Video tải theo phần nên có thể
@@ -40,6 +53,8 @@ export function VideoUploadButton({
     })
       .then((asset) => {
         void invalidateReferenceData(queryClient, 'media');
+        // Đã huỷ (nút Huỷ/unmount) sau khi Cloudinary nhận xong: finalize vẫn chạy hết phía server, bỏ qua UI.
+        if (controller.signal.aborted) return;
         onUploaded(asset);
         void message.success('Đã tải video lên.');
       })
@@ -48,7 +63,7 @@ export function VideoUploadButton({
           void message.info('Đã huỷ tải video.');
           return;
         }
-        void message.error(error instanceof Error ? error.message : 'Upload video thất bại.');
+        void message.error(getVideoUploadErrorMessage(error));
       })
       .finally(() => {
         if (controllerRef.current === controller) controllerRef.current = null;
@@ -75,7 +90,7 @@ export function VideoUploadButton({
       </Upload>
       {uploading && (
         <div className="flex w-full items-center gap-2">
-          <Progress className="!mb-0 flex-1" percent={percent} status="active" />
+          <Progress className="!mb-0 flex-1" percent={percent} status="active" aria-label="Tiến độ tải video" />
           <Button size="small" onClick={() => controllerRef.current?.abort()}>
             Huỷ tải
           </Button>

@@ -118,7 +118,8 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
           {facebook?.status === FacebookPublicationStatus.PUBLISHING && (
             <Alert className="mb-3" type="info" showIcon message="Đang gửi bài lên Facebook" description="Tải lại sau ít phút để xem kết quả." />
           )}
-          {facebook?.lastError && (
+          {/* `lastError` mang mã `VIDEO_PROCESSING:` khi video còn đang xử lý: không phải lỗi thật. */}
+          {facebook?.lastError && !videoProcessing && (
             <Alert className="mb-3" type="error" showIcon message="Lỗi gần nhất từ Facebook" description={facebook.lastError} />
           )}
 

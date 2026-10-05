@@ -121,7 +121,12 @@ export function MediaLibraryPickerModal({
         {allowVideo && allowedKinds.includes('VIDEO') && (
           <VideoUploadButton
             disabled={!canUpload}
-            onUploaded={(asset) => toggle({ id: asset.id, url: asset.thumbnailUrl || asset.secureUrl, kind: 'VIDEO' })}
+            onUploaded={(asset) => {
+              const picked: PickedMediaAsset = { id: asset.id, url: asset.thumbnailUrl || asset.secureUrl, kind: 'VIDEO' };
+              // Chọn một: video vừa tải thay luôn lựa chọn cũ thay vì bị chặn bởi `max`.
+              if (max === 1) setSelected([picked]);
+              else toggle(picked);
+            }}
           />
         )}
       </div>
