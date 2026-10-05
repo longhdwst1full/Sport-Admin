@@ -2,14 +2,14 @@ import {
   createAdminMediaUpload,
   finalizeAdminMediaUpload,
 } from '@/generated/api/media/media';
-import type { ImageMimeType, MediaAssetDto } from '@/generated/api/media/media.schemas';
+import type { MediaAssetDto, MediaUploadMimeType } from '@/generated/api/media/media.schemas';
 import { assertAllowedImageType, assertWithinMaxBytes, uploadToCloudinary } from './cloudinary';
 
 export async function uploadImage(file: File, signal?: AbortSignal): Promise<MediaAssetDto> {
   assertAllowedImageType(file.type);
 
   const signed = await createAdminMediaUpload(
-    { fileName: file.name, contentType: file.type as ImageMimeType, sizeBytes: file.size },
+    { fileName: file.name, contentType: file.type as MediaUploadMimeType, sizeBytes: file.size },
     signal,
   );
   assertWithinMaxBytes(file, signed.maxBytes);

@@ -199,6 +199,7 @@ paths:
         - media.asset.manage
   /api/v1/admin/media/uploads/signature:
     post:
+      description: "Ảnh (≤ 10 MB) hoặc video MP4/MOV (≤ tham số MEDIA_VIDEO_MAX_MB). Video: upload trực tiếp lên `uploadUrl` (`.../video/upload`) theo chunk `chunkSizeBytes`, gửi kèm `eager` và `eager_async` đã ký ở mọi chunk. 400 MEDIA_FILE_TOO_LARGE khi vượt giới hạn theo loại."
       operationId: createAdminMediaUpload
       parameters: []
       requestBody:
@@ -206,7 +207,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: ./_components.yaml#/components/schemas/CreateMediaUploadDto
+              $ref: "#/components/schemas/CreateMediaUploadDto"
       responses:
         "201":
           description: ""
@@ -240,7 +241,7 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Create a short-lived signed Cloudinary image upload
+      summary: Create a short-lived signed Cloudinary image or video upload
       tags:
         - Admin Media
       x-required-permissions:
@@ -294,13 +295,33 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Verify a direct Cloudinary upload and return trusted metadata
+      summary: Verify a direct Cloudinary upload (image or video) and return trusted metadata
       tags:
         - Admin Media
       x-required-permissions:
         - media.asset.upload
 components:
   schemas:
+    CreateMediaUploadDto:
+      type: object
+      properties:
+        fileName:
+          type: string
+          example: product-front.webp
+        contentType:
+          example: image/webp
+          allOf:
+            - $ref: "#/components/schemas/MediaUploadMimeType"
+        sizeBytes:
+          type: number
+          minimum: 1
+          maximum: 2097152000
+          example: 245760
+          description: Ảnh tối đa 10 MB; video tối đa theo tham số MEDIA_VIDEO_MAX_MB (400 MEDIA_FILE_TOO_LARGE khi vượt).
+      required:
+        - fileName
+        - contentType
+        - sizeBytes
     DeleteMediaAssetDto:
       type: object
       properties:
@@ -340,6 +361,9 @@ components:
           example: "1"
         publicId:
           type: string
+        resourceType:
+          allOf:
+            - $ref: ./_components.yaml#/components/schemas/MediaResourceType
         folder:
           type: string
           nullable: true
@@ -349,6 +373,7 @@ components:
         thumbnailUrl:
           type: string
           format: uri
+          description: "Video: khung hình đầu (`so_0`) dạng JPG"
         mimeType:
           type: string
           nullable: true
@@ -388,6 +413,7 @@ components:
       required:
         - id
         - publicId
+        - resourceType
         - folder
         - secureUrl
         - thumbnailUrl
@@ -412,6 +438,9 @@ components:
         provider:
           allOf:
             - $ref: ./_components.yaml#/components/schemas/MediaProvider
+        resourceType:
+          allOf:
+            - $ref: ./_components.yaml#/components/schemas/MediaResourceType
         providerAssetId:
           type: string
         publicId:
@@ -422,6 +451,7 @@ components:
         thumbnailUrl:
           type: string
           format: uri
+          description: "Video: khung hình đầu (`so_0`) dạng JPG"
         mimeType:
           type: string
           example: image/webp
@@ -443,6 +473,7 @@ components:
       required:
         - id
         - provider
+        - resourceType
         - providerAssetId
         - publicId
         - secureUrl
@@ -481,6 +512,9 @@ components:
           example: "1"
         publicId:
           type: string
+        resourceType:
+          allOf:
+            - $ref: ./_components.yaml#/components/schemas/MediaResourceType
         folder:
           type: string
           nullable: true
@@ -490,6 +524,7 @@ components:
         thumbnailUrl:
           type: string
           format: uri
+          description: "Video: khung hình đầu (`so_0`) dạng JPG"
         mimeType:
           type: string
           nullable: true
@@ -525,6 +560,7 @@ components:
       required:
         - id
         - publicId
+        - resourceType
         - folder
         - secureUrl
         - thumbnailUrl
@@ -556,6 +592,15 @@ components:
         - type
         - entityId
         - label
+    MediaUploadMimeType:
+      type: string
+      enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        - image/avif
+        - video/mp4
+        - video/quicktime
     MediaUsageType:
       type: string
       enum:

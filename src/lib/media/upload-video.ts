@@ -1,5 +1,5 @@
 import { createAdminMediaUpload, finalizeAdminMediaUpload } from '@/generated/api/media/media';
-import type { ImageMimeType, MediaAssetDto } from '@/generated/api/media/media.schemas';
+import type { MediaAssetDto, MediaUploadMimeType } from '@/generated/api/media/media.schemas';
 import {
   assertAllowedVideoType,
   assertWithinMaxBytes,
@@ -19,9 +19,8 @@ export async function uploadVideo(file: File, options: ChunkedUploadOptions = {}
   const signed: CloudinarySignedUpload = await createAdminMediaUpload(
     {
       fileName: file.name,
-      // CONTRACT: SDK hiện tại chỉ khai báo MIME ảnh cho `contentType`; API mới nhận thêm video/mp4 và
-      // video/quicktime. Bỏ ép kiểu này sau khi sinh lại SDK (`yarn generate:api`).
-      contentType: file.type as ImageMimeType,
+      // `assertAllowedVideoType` ở trên đã chặn MIME ngoài danh sách; ép kiểu chỉ để thu hẹp `string`.
+      contentType: file.type as MediaUploadMimeType,
       sizeBytes: file.size,
     },
     signal,

@@ -298,7 +298,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: ./_components.yaml#/components/schemas/CreateMediaUploadDto
+              $ref: "#/components/schemas/CreateImageUploadDto"
       responses:
         "201":
           description: ""
@@ -879,7 +879,7 @@ components:
         contentType:
           example: image/webp
           allOf:
-            - $ref: ./_components.yaml#/components/schemas/ImageMimeType
+            - $ref: "#/components/schemas/ImageMimeType"
         sizeBytes:
           type: number
           minimum: 1
@@ -894,6 +894,25 @@ components:
         - contentType
         - sizeBytes
         - orderId
+    CreateImageUploadDto:
+      type: object
+      properties:
+        fileName:
+          type: string
+          example: product-front.webp
+        contentType:
+          example: image/webp
+          allOf:
+            - $ref: "#/components/schemas/ImageMimeType"
+        sizeBytes:
+          type: number
+          minimum: 1
+          maximum: 10485760
+          example: 245760
+      required:
+        - fileName
+        - contentType
+        - sizeBytes
     CreateRefundDto:
       type: object
       properties:
@@ -915,6 +934,13 @@ components:
         - expectedVersion
         - method
         - amount
+    ImageMimeType:
+      type: string
+      enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        - image/avif
     InspectReturnDto:
       type: object
       properties:

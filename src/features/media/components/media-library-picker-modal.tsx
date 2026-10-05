@@ -21,9 +21,8 @@ export interface PickedMediaAsset {
   kind: PickedMediaKind;
 }
 
-/** CONTRACT: `resourceType` là trường API mới thêm; đọc tuỳ chọn tới khi SDK sinh lại, thiếu thì suy từ MIME. */
-const kindOf = (asset: Pick<MediaAssetSummaryDto, 'mimeType'> & { resourceType?: PickedMediaKind }): PickedMediaKind =>
-  asset.resourceType ?? (asset.mimeType?.startsWith('video/') ? 'VIDEO' : 'IMAGE');
+/** Loại media theo `resourceType` của API (nguồn đúng duy nhất; không suy từ MIME). */
+const kindOf = (asset: Pick<MediaAssetSummaryDto, 'resourceType'>): PickedMediaKind => asset.resourceType;
 
 /**
  * Chọn nhiều media ACTIVE từ Thư viện ảnh (kèm tải ảnh mới lên ngay trong modal).

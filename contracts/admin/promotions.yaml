@@ -276,7 +276,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: ""
+          description: FLASH_SALE_QUOTA_BELOW_USED khi quota mới nhỏ hơn đã bán + đang giữ; FLASH_SALE_ITEM_CHANGED khi suất vừa bị sửa song song
           content:
             application/json:
               schema:
@@ -329,6 +329,12 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "404":
           description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: expectedVersion cũ, hoặc FLASH_SALE_ITEM_CHANGED khi suất vừa bị giữ/sửa song song
           content:
             application/json:
               schema:
