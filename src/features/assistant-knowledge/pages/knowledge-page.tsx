@@ -20,7 +20,7 @@ import {
 } from '../constants/knowledge.constants';
 import { useKnowledgeCommand, useKnowledgeDocuments } from '../hooks/use-knowledge-documents';
 import type { KnowledgeAction } from '../model/knowledge-actions.policy';
-import { knowledgeTransitionErrorMessage } from '../model/knowledge-command-error';
+import { attachKnowledgeErrorMessage, knowledgeTransitionErrorMessage } from '../model/knowledge-command-error';
 import type { AttachKnowledgePostInput, KnowledgeDocument } from '../model/knowledge-document.types';
 
 function parseEnum<T extends string>(values: Record<string, T>, value: string | null): T | undefined {
@@ -82,6 +82,9 @@ export function KnowledgePage() {
         void message.success('Đã gắn bài vào kho tri thức (ở trạng thái nháp)');
         command.reset();
         setAttachOpen(false);
+      },
+      onError: (error) => {
+        void message.error(attachKnowledgeErrorMessage(error));
       },
     });
   };
@@ -177,7 +180,6 @@ export function KnowledgePage() {
       <AttachKnowledgePostModal
         open={attachOpen}
         submitting={command.isPending}
-        error={command.variables?.action === 'attach' ? command.error : undefined}
         onSubmit={attach}
         onClose={closeAttach}
       />

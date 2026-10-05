@@ -140,6 +140,7 @@ export function BannerEditorDrawer({
         if (fields.length) form.setFields(fields);
         const code = getApiErrorPayload(error)?.code;
         if (code && BANNER_STALE_ERROR_CODES.has(code)) void message.warning(bannerCommandErrorMessage(error));
+        else void message.error(bannerCommandErrorMessage(error));
       },
     });
   };
@@ -169,9 +170,6 @@ export function BannerEditorDrawer({
         <Skeleton active paragraph={{ rows: 8 }} />
       ) : (
         <>
-          {Boolean(save.error) && (
-            <Alert className="mb-3" type="error" showIcon message="Không lưu được banner" description={bannerCommandErrorMessage(save.error)} />
-          )}
           <Form form={form} layout="vertical" onFinish={submit} disabled={save.isPending} initialValues={EMPTY_BANNER_FORM}>
             <Form.Item name="placement" label="Vị trí hiển thị" rules={[{ required: true, message: 'Chọn vị trí' }]}>
               <Select options={bannerPlacementOptions} />

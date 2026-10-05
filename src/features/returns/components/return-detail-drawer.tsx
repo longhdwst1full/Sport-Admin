@@ -64,6 +64,9 @@ export function ReturnDetailDrawer({ returnId, onClose }: { returnId?: string; o
         command.reset();
         setAction(undefined);
       },
+      onError: (error) => {
+        void message.error(getApiErrorMessage(error));
+      },
     });
   };
 
@@ -113,7 +116,6 @@ export function ReturnDetailDrawer({ returnId, onClose }: { returnId?: string; o
             detail={detail}
             action={action}
             submitting={command.isPending}
-            error={command.error}
             onSubmit={submit}
             onClose={closeAction}
           />

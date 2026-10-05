@@ -196,6 +196,9 @@ export function SocialActionModal({
         }
         onClose();
       },
+      onError: (error) => {
+        if (!isFacebookNotConfigured(error)) void message.error(socialCommandErrorMessage(error));
+      },
     });
   };
 
@@ -224,9 +227,6 @@ export function SocialActionModal({
         <Typography.Paragraph type="secondary">{meta.consequence}</Typography.Paragraph>
       )}
       {isFacebookNotConfigured(command.error) && <FacebookSettingsHint />}
-      {Boolean(command.error) && !isFacebookNotConfigured(command.error) && (
-        <Alert className="mb-3" type="error" showIcon message="Không thực hiện được" description={socialCommandErrorMessage(command.error)} />
-      )}
       <Form form={form} layout="vertical" onFinish={submit} disabled={command.isPending}>
         {(action === 'approve' || action === 'retry') && (
           <>

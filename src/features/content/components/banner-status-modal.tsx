@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Alert, App, Descriptions, Form, Input, Modal, Typography } from 'antd';
+import { App, Descriptions, Form, Input, Modal, Typography } from 'antd';
 import { StatusTag } from '@/foundation/management';
 import type { BannerDto } from '@/generated/api/content/content.schemas';
 import { BANNER_LIMITS, bannerPlacementLabels, bannerStatusPresentation } from '../constants/banner.constants';
@@ -76,6 +76,9 @@ export function BannerStatusModal({
           void message.success(`${meta.okText} banner thành công`);
           onClose();
         },
+        onError: (error) => {
+          void message.error(bannerCommandErrorMessage(error));
+        },
       },
     );
   };
@@ -100,9 +103,6 @@ export function BannerStatusModal({
         </Descriptions.Item>
       </Descriptions>
       <Typography.Paragraph type="secondary">{meta.consequence}</Typography.Paragraph>
-      {Boolean(setStatus.error) && (
-        <Alert className="mb-3" type="error" showIcon message="Không thực hiện được" description={bannerCommandErrorMessage(setStatus.error)} />
-      )}
       <Form form={form} layout="vertical" onFinish={submit} disabled={setStatus.isPending}>
         <Form.Item
           name="reason"

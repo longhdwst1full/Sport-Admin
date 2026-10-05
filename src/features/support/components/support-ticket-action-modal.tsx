@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
-import { Alert, Descriptions, Form, Input, Modal, Select, Typography } from 'antd';
+import { Descriptions, Form, Input, Modal, Select, Typography } from 'antd';
 import { StatusTag } from '@/foundation/management';
-import { supportCommandErrorMessage } from '../model/support-command-error';
 import { SUPPORT_LIMITS, supportTicketStatusPresentation } from '../constants/support.constants';
 import type { SupportTicketCommand } from '../hooks/use-support-ticket-command';
 import { useSupportAssigneeOptions } from '../hooks/use-support-assignee-options';
@@ -39,14 +38,12 @@ export function SupportTicketActionModal({
   ticket,
   action,
   submitting,
-  error,
   onSubmit,
   onClose,
 }: {
   ticket: SupportTicketDetail;
   action?: SupportTicketAction;
   submitting: boolean;
-  error: unknown;
   onSubmit: (command: SupportTicketCommand) => void;
   onClose: () => void;
 }) {
@@ -93,9 +90,6 @@ export function SupportTicketActionModal({
         )}
       </Descriptions>
       <Typography.Paragraph type="secondary">{meta.consequence}</Typography.Paragraph>
-      {Boolean(error) && (
-        <Alert className="mb-3" type="error" showIcon message="Không thực hiện được" description={supportCommandErrorMessage(error)} />
-      )}
       <Form form={form} layout="vertical" onFinish={submit} disabled={submitting}>
         {action === 'assign' && (
           <Form.Item

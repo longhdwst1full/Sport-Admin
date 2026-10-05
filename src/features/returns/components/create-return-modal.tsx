@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert, Checkbox, Form, Input, InputNumber, Modal, Radio, Select, Table, Typography } from 'antd';
+import { Alert, App, Checkbox, Form, Input, InputNumber, Modal, Radio, Select, Table, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import {
@@ -33,6 +33,7 @@ interface CreateReturnModalProps {
  */
 export function CreateReturnModal({ eligibility, open, onClose, onCreated }: CreateReturnModalProps) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
   const canDecide = useCan(RETURN_PERMISSION.DECIDE);
   const [form] = Form.useForm<CreateReturnFormValues>();
   const [images, setImages] = useState<UploadedSignedImage[]>([]);
@@ -60,6 +61,9 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
       ]);
       onCreated(created);
       reset();
+    },
+    onError: (error) => {
+      void message.error(getApiErrorMessage(error));
     },
   });
 
@@ -127,7 +131,6 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
         initialValues={{ quantities: {} }}
         onFinish={(values) => mutation.mutate(values)}
       >
-        {mutation.isError && <Alert className="mb-4" type="error" showIcon message={getApiErrorMessage(mutation.error)} />}
         {eligibility.windowOverrideRequired && (
           <Alert
             className="mb-4"

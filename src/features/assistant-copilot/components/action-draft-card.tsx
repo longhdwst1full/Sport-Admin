@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, Card, Descriptions, Input, Modal, Skeleton, Space, Tooltip, Typography } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Input, Modal, Skeleton, Space, Tooltip, Typography } from 'antd';
 import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { usePermissions } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
@@ -51,6 +51,7 @@ function ActionDraftCardBody({
   refetch: () => Promise<unknown>;
   onAskAgain: (prompt: string) => void;
 }) {
+  const { message } = App.useApp();
   const permissions = usePermissions();
   const command = useActionDraftCommand(draft);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -69,7 +70,9 @@ function ActionDraftCardBody({
   const trimmedReason = rejectReason.trim();
   const reasonInvalid = trimmedReason.length > 0 && trimmedReason.length < COPILOT_LIMITS.REJECT_REASON_MIN;
   const increase = draft.delta > 0;
-  const modalOpen = confirmOpen || rejectOpen;
+  const toastError = (error: unknown) => {
+    void message.error(actionDraftErrorMessage(error));
+  };
 
   return (
     <Card
@@ -126,9 +129,6 @@ function ActionDraftCardBody({
       {affordances.status === 'PENDING' && affordances.confirmBlockedReason && (
         <Alert type="warning" showIcon className="!mb-2" message={affordances.confirmBlockedReason} />
       )}
-      {Boolean(command.error) && !modalOpen && (
-        <Alert type="error" showIcon className="!mt-2" message={actionDraftErrorMessage(command.error)} />
-      )}
 
       <Space className="!mt-3" wrap>
         {affordances.status === 'PENDING' && (
@@ -152,8 +152,7 @@ function ActionDraftCardBody({
         draft={draft}
         open={confirmOpen}
         submitting={command.isPending}
-        error={command.error}
-        onConfirm={() => command.mutate({ action: 'confirm' }, { onSuccess: () => setConfirmOpen(false) })}
+        onConfirm={() => command.mutate({ action: 'confirm' }, { onSuccess: () => setConfirmOpen(false), onError: toastError })}
         onClose={() => setConfirmOpen(false)}
       />
       <Modal
@@ -166,7 +165,7 @@ function ActionDraftCardBody({
         onOk={() =>
           command.mutate(
             { action: 'reject', reason: trimmedReason || undefined },
-            { onSuccess: () => { setRejectOpen(false); setRejectReason(''); } },
+            { onSuccess: () => { setRejectOpen(false); setRejectReason(''); }, onError: toastError },
           )
         }
         onCancel={() => setRejectOpen(false)}
@@ -182,9 +181,6 @@ function ActionDraftCardBody({
           placeholder="Lý do (không bắt buộc, tối thiểu 3 ký tự)"
           status={reasonInvalid ? 'error' : undefined}
         />
-        {Boolean(command.error) && (
-          <Alert className="!mt-3" type="error" showIcon message={actionDraftErrorMessage(command.error)} />
-        )}
       </Modal>
     </Card>
   );

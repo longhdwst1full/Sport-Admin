@@ -16,6 +16,7 @@ import {
   canReplySupportTicket,
   type SupportTicketAction,
 } from '../model/support-ticket-actions.policy';
+import { supportCommandErrorMessage } from '../model/support-command-error';
 import type { SupportTicketDetail } from '../model/support-ticket.types';
 import { SupportReplyBox } from './support-reply-box';
 import { SupportTicketActionModal } from './support-ticket-action-modal';
@@ -35,8 +36,6 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
   const query = useSupportTicket(ticketId);
   const ticket = query.data;
   const command = useSupportTicketCommand(ticket);
-  // Lỗi của ô trả lời và của modal hiển thị riêng chỗ, dù dùng chung một mutation.
-  const replyError = command.variables?.action === 'reply' ? command.error : undefined;
 
   const closeAction = () => {
     if (command.isPending) return;
@@ -55,6 +54,9 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
         command.reset();
         setAction(undefined);
       },
+      onError: (error) => {
+        void message.error(supportCommandErrorMessage(error));
+      },
     });
   };
   const submitReply = async (reply: { body: string; isInternal: boolean }) => {
@@ -63,7 +65,8 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
       void message.success(reply.isInternal ? 'Đã lưu ghi chú nội bộ' : 'Đã gửi trả lời');
       command.reset();
       return true;
-    } catch {
+    } catch (error) {
+      void message.error(supportCommandErrorMessage(error));
       return false;
     }
   };
@@ -97,14 +100,12 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
             disabled={!canReplySupportTicket(ticket, permissions)}
             disabledReason={replyDisabledReason(ticket, permissions)}
             submitting={command.isPending && command.variables?.action === 'reply'}
-            error={replyError}
             onSubmit={submitReply}
           />
           <SupportTicketActionModal
             ticket={ticket}
             action={action}
             submitting={command.isPending}
-            error={command.variables?.action === 'reply' ? undefined : command.error}
             onSubmit={submitAction}
             onClose={closeAction}
           />

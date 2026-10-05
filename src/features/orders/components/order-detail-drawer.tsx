@@ -131,6 +131,9 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
             : 'Đã hoàn tất đơn hàng thành công',
       );
     },
+    onError: (error) => {
+      void message.error(getApiErrorMessage(error, 'Không thực hiện được thao tác đơn hàng.'));
+    },
   });
 
   const canCancel =
@@ -551,11 +554,6 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
         action={action}
         reason={reason}
         pending={actionMutation.isPending}
-        errorMessage={
-          actionMutation.isError
-            ? getApiErrorMessage(actionMutation.error, 'Không thực hiện được thao tác đơn hàng.')
-            : undefined
-        }
         onReasonChange={setReason}
         onCancel={closeAction}
         onConfirm={() => actionMutation.mutate()}

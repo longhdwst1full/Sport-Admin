@@ -79,6 +79,7 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
           if (fields.length) form.setFields(fields);
           const code = getApiErrorPayload(error)?.code;
           if (code && SOCIAL_STALE_ERROR_CODES.has(code)) void message.warning(socialCommandErrorMessage(error));
+          else if (!isFacebookNotConfigured(error)) void message.error(socialCommandErrorMessage(error));
         },
       },
     );
@@ -112,9 +113,6 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
       ) : (
         <>
           {isFacebookNotConfigured(save.error) && <FacebookSettingsHint />}
-          {Boolean(save.error) && !isFacebookNotConfigured(save.error) && (
-            <Alert className="mb-3" type="error" showIcon message="Không lưu được" description={socialCommandErrorMessage(save.error)} />
-          )}
           <Typography.Paragraph type="secondary" className="text-xs">
             Bài được lưu ở trạng thái Nháp. Người có quyền đăng bấm "Đăng ngay / Hẹn giờ"; người chỉ có quyền soạn
             bấm "Gửi duyệt" để người có quyền đăng duyệt.

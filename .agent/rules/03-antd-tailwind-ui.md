@@ -9,3 +9,4 @@
 - Every destructive or irreversible action requires explicit confirmation and a visible result.
 - Keep forms contract-driven: required fields, limits and enum values originate from generated schemas/business policy, not guesses in JSX.
 - Treat CKEditor HTML as untrusted content: sanitize/validate at the API boundary and sanitize again for the eventual rendering context.
+- Operation (mutation/submit) errors are shown as an AntD `message` toast, not an inline `<Alert type="error">`. Keep inline for data-load errors, persisted-state banners, auth/MFA steps and field validation.

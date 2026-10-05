@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { LockOutlined, SendOutlined } from '@ant-design/icons';
 import { Alert, Button, Input, Switch } from 'antd';
-import { supportCommandErrorMessage } from '../model/support-command-error';
 import { SUPPORT_LIMITS } from '../constants/support.constants';
 
 /**
@@ -14,13 +13,11 @@ export function SupportReplyBox({
   disabled,
   disabledReason,
   submitting,
-  error,
   onSubmit,
 }: {
   disabled: boolean;
   disabledReason?: string;
   submitting: boolean;
-  error: unknown;
   onSubmit: (reply: { body: string; isInternal: boolean }) => Promise<boolean>;
 }) {
   const [body, setBody] = useState('');
@@ -35,7 +32,6 @@ export function SupportReplyBox({
   return (
     <div className={`space-y-2 rounded-2xl border p-3 ${internal ? 'border-amber-400 bg-amber-50' : 'border-slate-200'}`}>
       {disabledReason && <Alert type="info" showIcon message={disabledReason} />}
-      {Boolean(error) && <Alert type="error" showIcon message="Không gửi được" description={supportCommandErrorMessage(error)} />}
       <Input.TextArea
         value={body}
         onChange={(event) => setBody(event.target.value)}

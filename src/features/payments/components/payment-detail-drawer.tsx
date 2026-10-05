@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Alert, Button, Descriptions, Drawer, Empty, Form, Image, Input, Modal, Space, Spin, Tag, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Image, Input, Modal, Space, Spin, Tag, Typography } from 'antd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   confirmAdminPayment,
@@ -20,6 +20,7 @@ type Action = 'confirm' | 'reject';
 
 export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string; onClose: () => void }) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
   const [action, setAction] = useState<Action>();
   /**
    * `receivedAmount` giữ dạng SỐ trong form để ô nhập nhóm được hàng nghìn, và chỉ đổi sang chuỗi
@@ -56,6 +57,9 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       await queryClient.invalidateQueries({ queryKey: getGetAdminOrderQueryKey(updated.orderId) });
       await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
       closeAction();
+    },
+    onError: (error) => {
+      void message.error(getApiErrorMessage(error, 'Không cập nhật được thanh toán.'));
     },
   });
   const closeAction = () => {
@@ -105,7 +109,6 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       <Modal open={Boolean(action)} title={action === 'confirm' ? 'Xác nhận thanh toán' : 'Từ chối bằng chứng'} onCancel={closeAction} onOk={() => form.submit()} okButtonProps={{ loading: mutation.isPending }} cancelButtonProps={{ disabled: mutation.isPending }} destroyOnHidden>
         <Form form={form} layout="vertical" onFinish={(values) => mutation.mutate(values)}>
           {action === 'confirm' ? <><Form.Item name="receivedAmount" label="Số tiền thực nhận" rules={[{ required: true, message: 'Vui lòng nhập số tiền thực nhận' }, { type: 'number', min: 1, message: 'Số tiền phải lớn hơn 0' }]}><MoneyInput className="!w-full" /></Form.Item><Form.Item name="reference" label="Mã giao dịch/đối soát" rules={[{ required: true, message: 'Vui lòng nhập mã đối soát' }]}><Input maxLength={255} /></Form.Item><Form.Item name="note" label="Ghi chú"><Input.TextArea rows={3} maxLength={1000} /></Form.Item></> : <Form.Item name="reason" label="Lý do từ chối" rules={[{ required: true, min: 3, message: 'Vui lòng nhập lý do ít nhất 3 ký tự' }]}><Input.TextArea rows={4} maxLength={500} /></Form.Item>}
-          {mutation.isError && <Alert type="error" showIcon message={getApiErrorMessage(mutation.error, 'Không cập nhật được thanh toán.')} />}
         </Form>
       </Modal>
     </>

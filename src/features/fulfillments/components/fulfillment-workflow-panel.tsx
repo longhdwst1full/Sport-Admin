@@ -140,6 +140,9 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       void message.success('Đã cập nhật trạng thái giao vận');
       closeModal();
     },
+    onError: (error) => {
+      void message.error(getApiErrorMessage(error, 'Không cập nhật được giao vận.'));
+    },
   });
 
   const closeModal = () => {
@@ -305,7 +308,6 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
               onChange={(event) => setNote(event.target.value)}
             />
           </div>
-          {mutation.isError && <Alert type="error" showIcon message={getApiErrorMessage(mutation.error, 'Không cập nhật được giao vận.')} />}
         </Space>
       </Modal>
     </Card>

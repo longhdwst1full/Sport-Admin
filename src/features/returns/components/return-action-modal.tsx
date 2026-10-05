@@ -10,7 +10,6 @@ import type {
 } from '@/generated/api/returns/returns.schemas';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { MoneyInput } from '@/foundation/inputs/money-input';
-import { getApiErrorMessage } from '@/lib/api/error';
 import type { UploadedSignedImage } from '@/lib/media/upload-signed-image';
 import {
   inspectionConditionLabels,
@@ -51,7 +50,6 @@ interface ReturnActionModalProps {
   detail: ReturnDetailDto;
   action?: ReturnAction;
   submitting: boolean;
-  error: unknown;
   onSubmit: (command: ReturnCommand) => void;
   onClose: () => void;
 }
@@ -60,7 +58,7 @@ interface ReturnActionModalProps {
  * Một modal cho mọi lệnh trên phiếu trả. Modal chỉ đóng khi lệnh thành công (component cha gọi
  * `onClose`); lỗi giữ nguyên dữ liệu đã nhập để người dùng sửa rồi gửi lại cùng Idempotency-Key.
  */
-export function ReturnActionModal({ detail, action, submitting, error, onSubmit, onClose }: ReturnActionModalProps) {
+export function ReturnActionModal({ detail, action, submitting, onSubmit, onClose }: ReturnActionModalProps) {
   const [form] = Form.useForm<FormValues>();
   const [proofImages, setProofImages] = useState<UploadedSignedImage[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -187,10 +185,6 @@ export function ReturnActionModal({ detail, action, submitting, error, onSubmit,
       destroyOnHidden
     >
       <Form form={form} layout="vertical" onFinish={submit} disabled={submitting}>
-        {Boolean(error) && (
-          <Alert className="mb-4" type="error" showIcon message={getApiErrorMessage(error)} />
-        )}
-
         {action === 'approve' && (
           <>
             <Form.Item

@@ -7,7 +7,6 @@ import {
   CMS_POST_VIEW_PERMISSION,
   knowledgeAudiencePresentation,
 } from '../constants/knowledge.constants';
-import { attachKnowledgeErrorMessage } from '../model/knowledge-command-error';
 import type { AttachKnowledgePostInput } from '../model/knowledge-document.types';
 import { CmsPostSelect } from './cms-post-select';
 import { KnowledgeBranchSelect } from './knowledge-branch-select';
@@ -27,13 +26,11 @@ interface FormValues {
 export function AttachKnowledgePostModal({
   open,
   submitting,
-  error,
   onSubmit,
   onClose,
 }: {
   open: boolean;
   submitting: boolean;
-  error: unknown;
   onSubmit: (input: AttachKnowledgePostInput) => void;
   onClose: () => void;
 }) {
@@ -71,9 +68,6 @@ export function AttachKnowledgePostModal({
           showIcon
           message={`Cần quyền xem bài viết (${CMS_POST_VIEW_PERMISSION}) để chọn bài CMS.`}
         />
-      )}
-      {Boolean(error) && (
-        <Alert className="mb-3" type="error" showIcon message="Không gắn được bài" description={attachKnowledgeErrorMessage(error)} />
       )}
       <Form
         form={form}

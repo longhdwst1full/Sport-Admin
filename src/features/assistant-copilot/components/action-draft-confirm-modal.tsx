@@ -1,25 +1,22 @@
-import { Alert, Descriptions, Modal, Typography } from 'antd';
+import { Descriptions, Modal, Typography } from 'antd';
 import { formatQuantityDelta } from '../model/action-draft.policy';
-import { actionDraftErrorMessage } from '../model/copilot-error';
 import type { StockAdjustmentDraft } from '../model/copilot.types';
 
 /**
  * Nhắc lại hệ quả trước khi xác nhận (`04-permissions-transitions.md`): lệnh tạo phiếu điều chỉnh tồn thật,
  * chạy bằng tài khoản của người bấm, ghi vào sổ kho và không huỷ được bằng nút Từ chối.
- * Modal chỉ đóng khi lệnh thành công; lỗi giữ modal mở kèm thông điệp.
+ * Modal chỉ đóng khi lệnh thành công; lỗi giữ modal mở và báo bằng toast.
  */
 export function ActionDraftConfirmModal({
   draft,
   open,
   submitting,
-  error,
   onConfirm,
   onClose,
 }: {
   draft: StockAdjustmentDraft;
   open: boolean;
   submitting: boolean;
-  error: unknown;
   onConfirm: () => void;
   onClose: () => void;
 }) {
@@ -59,9 +56,6 @@ export function ActionDraftConfirmModal({
         Không hoàn tác được bằng nút Từ chối; muốn đảo lại phải lập phiếu điều chỉnh ngược. Nếu tồn thực tế đã khác{' '}
         {draft.currentOnHand}, hệ thống sẽ từ chối để tránh điều chỉnh sai.
       </Typography.Paragraph>
-      {Boolean(error) && (
-        <Alert type="error" showIcon message="Không thực hiện được" description={actionDraftErrorMessage(error)} />
-      )}
     </Modal>
   );
 }
