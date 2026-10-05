@@ -35,6 +35,7 @@ import {
 } from '@/generated/api/content/content.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDate, formatDateTime } from '@/lib/format/datetime';
+import { FacebookPermalink, FacebookVideoProcessingTag } from '../components/facebook-publication-badges';
 import { SocialActionModal } from '../components/social-action-modal';
 import { SocialPostDetailDrawer } from '../components/social-post-detail-drawer';
 import { SocialPostEditorDrawer, type SocialEditorTarget } from '../components/social-post-editor-drawer';
@@ -361,7 +362,11 @@ export function ContentPage() {
                 row.facebook ? (
                   <div className="flex flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-1">
-                      <StatusTag status={row.facebook.status} presentations={fbStatusPresentation} />
+                      {row.facebook.videoProcessing ? (
+                        <FacebookVideoProcessingTag />
+                      ) : (
+                        <StatusTag status={row.facebook.status} presentations={fbStatusPresentation} />
+                      )}
                       {row.facebook.lastError && (
                         <Tooltip title={row.facebook.lastError}>
                           <WarningOutlined className="text-rose-500" aria-label="Lỗi gần nhất" />
@@ -372,6 +377,9 @@ export function ContentPage() {
                       {fbPublishTypeLabels[row.facebook.publishType]} · {fbOriginLabels[row.facebook.origin]}
                       {row.facebook.publishAt ? ` · ${formatDateTime(row.facebook.publishAt)}` : ''}
                     </span>
+                    {row.facebook.permalinkUrl && (
+                      <FacebookPermalink url={row.facebook.permalinkUrl} />
+                    )}
                   </div>
                 ) : (
                   <span className="text-xs text-slate-400">Chưa đăng</span>

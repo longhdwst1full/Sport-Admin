@@ -2004,6 +2004,15 @@ components:
         lastError:
           type: string
           description: '"CODE: message" của lỗi gần nhất'
+        permalinkUrl:
+          type: string
+          format: uri
+          maxLength: 500
+          example: https://www.facebook.com/1234567890_9876543210
+          description: "Link tuyệt đối (https) tới bài trên Facebook, chỉ có khi PUBLISHED: link Graph trả (video/đối soát/nhập) hoặc suy https://www.facebook.com/{postId}. Video đã đăng: đây là link chuẩn — file nguồn Cloudinary đã được dọn."
+        videoProcessing:
+          type: boolean
+          description: true khi video/reel đã gửi Facebook và Facebook còn đang xử lý (UNCERTAIN + SOCIAL_VIDEO_PROCESSING)
         mediaCount:
           type: number
           minimum: 0
@@ -2021,6 +2030,7 @@ components:
         - status
         - publishType
         - origin
+        - videoProcessing
         - mediaCount
         - metrics
         - media
@@ -2064,6 +2074,15 @@ components:
         lastError:
           type: string
           description: '"CODE: message" của lỗi gần nhất'
+        permalinkUrl:
+          type: string
+          format: uri
+          maxLength: 500
+          example: https://www.facebook.com/1234567890_9876543210
+          description: "Link tuyệt đối (https) tới bài trên Facebook, chỉ có khi PUBLISHED: link Graph trả (video/đối soát/nhập) hoặc suy https://www.facebook.com/{postId}. Video đã đăng: đây là link chuẩn — file nguồn Cloudinary đã được dọn."
+        videoProcessing:
+          type: boolean
+          description: true khi video/reel đã gửi Facebook và Facebook còn đang xử lý (UNCERTAIN + SOCIAL_VIDEO_PROCESSING)
         mediaCount:
           type: number
           minimum: 0
@@ -2073,6 +2092,7 @@ components:
         - status
         - publishType
         - origin
+        - videoProcessing
         - mediaCount
         - metrics
     FacebookPublishType:

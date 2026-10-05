@@ -16,6 +16,7 @@ import {
 import { SOCIAL_ACTION_BUTTON } from '../constants/social-action-buttons';
 import { availableSocialActions, type SocialAction } from '../model/social-actions.policy';
 import { socialCommandErrorMessage } from '../model/social-command-error';
+import { FacebookPermalink, FacebookVideoProcessingTag } from './facebook-publication-badges';
 import { SocialActionModal, type SocialModalAction } from './social-action-modal';
 import { SocialPostEditorDrawer, type SocialEditorTarget } from './social-post-editor-drawer';
 import { IMAGE_FALLBACK_SRC } from '@/features/media';
@@ -33,6 +34,8 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
   const detail = useGetAdminSocialPost(postId, { query: { retry: false } });
   const post = detail.data;
   const facebook = post?.facebook;
+  const permalinkUrl = facebook?.permalinkUrl;
+  const videoProcessing = facebook?.videoProcessing === true;
   const [pendingAction, setPendingAction] = useState<SocialModalAction>();
   const [editor, setEditor] = useState<SocialEditorTarget>();
 
@@ -77,12 +80,14 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
             <div className="mb-4 flex flex-wrap gap-2">
               {actions.map(({ action }) => {
                 const button = SOCIAL_ACTION_BUTTON[action];
+                // Video đang xử lý: hệ thống tự đối soát, nút Đối soát vẫn dùng được nhưng không là hành động chính.
+                const primary = button.primary && !(action === 'reconcile' && videoProcessing);
                 return (
                   <Button
                     key={action}
                     icon={button.icon}
                     danger={button.danger}
-                    type={button.primary ? 'primary' : 'default'}
+                    type={primary ? 'primary' : 'default'}
                     onClick={() => runAction(action)}
                   >
                     {button.label}
@@ -92,7 +97,16 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
             </div>
           )}
 
-          {facebook?.status === FacebookPublicationStatus.UNCERTAIN && (
+          {facebook?.status === FacebookPublicationStatus.UNCERTAIN && videoProcessing && (
+            <Alert
+              className="mb-3"
+              type="info"
+              showIcon
+              message="Facebook đang xử lý video"
+              description="Hệ thống tự kiểm tra mỗi 5 phút và cập nhật khi Facebook xử lý xong. Có thể bấm Đối soát nếu cần kiểm tra ngay; không đăng lại để tránh bài trùng."
+            />
+          )}
+          {facebook?.status === FacebookPublicationStatus.UNCERTAIN && !videoProcessing && (
             <Alert
               className="mb-3"
               type="warning"
@@ -116,7 +130,14 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
             {facebook ? (
               <>
                 <Descriptions.Item label="Facebook">
-                  <StatusTag status={facebook.status} presentations={fbStatusPresentation} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    {videoProcessing ? (
+                      <FacebookVideoProcessingTag />
+                    ) : (
+                      <StatusTag status={facebook.status} presentations={fbStatusPresentation} />
+                    )}
+                    {permalinkUrl && <FacebookPermalink url={permalinkUrl} />}
+                  </div>
                 </Descriptions.Item>
                 <Descriptions.Item label="Loại đăng">{fbPublishTypeLabels[facebook.publishType]}</Descriptions.Item>
                 <Descriptions.Item label="Nguồn">{fbOriginLabels[facebook.origin]}</Descriptions.Item>

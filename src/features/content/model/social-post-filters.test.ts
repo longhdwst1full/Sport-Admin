@@ -52,6 +52,7 @@ describe('postChannels', () => {
     origin: 'ADMIN' as const,
     mediaCount: 0,
     metrics: { reach: null, engagements: null },
+    videoProcessing: false,
   };
 
   it('website-only, both, and Facebook-only posts', () => {
