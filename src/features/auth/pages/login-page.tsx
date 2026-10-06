@@ -11,6 +11,7 @@ import { useAuth } from '@/core/auth/auth-context';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { SessionEndReason, consumeExpiredSessionReason } from '@/core/auth/auth-session-expiry';
+import { consumeReturnPath, safeReturnPath } from '@/core/auth/return-path';
 import {
   forgetIdentifier,
   readRememberedIdentifier,
@@ -61,7 +62,9 @@ export function LoginPage() {
         navigate('/change-password', { replace: true });
         return;
       }
-      const from = (location.state as { from?: string } | null)?.from ?? '/';
+      // SECURITY: chỉ quay về đường dẫn nội bộ; giữ query (vd. callback OAuth TikTok cần `code`/`state`).
+      const stored = consumeReturnPath();
+      const from = safeReturnPath((location.state as { from?: unknown } | null)?.from ?? stored);
       navigate(from, { replace: true });
     } catch (error) {
       void message.error(

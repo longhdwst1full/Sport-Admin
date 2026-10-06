@@ -1,17 +1,20 @@
 import { TikTokOutlined } from '@ant-design/icons';
-import { Alert, Avatar, Select, Skeleton, Switch, Tooltip } from 'antd';
+import { Alert, Avatar, Checkbox, Select, Skeleton, Switch, Tooltip } from 'antd';
 import { useEffect, useId } from 'react';
-import type { TikTokCreatorInfoDto } from '@/generated/api/content/content.schemas';
+import { TikTokPrivacyLevel, type TikTokCreatorInfoDto } from '@/generated/api/content/content.schemas';
 import { tiktokPrivacyLabels } from '../constants/social.constants';
 import { socialCommandErrorMessage } from '../model/social-command-error';
 import {
   applyCreatorConstraints,
+  commercialContentBlocker,
+  TIKTOK_COMMERCIAL_TEXT,
   TIKTOK_PRIVACY_REQUIRED,
   TIKTOK_RULE_HINT,
   type TikTokPostSettingsForm,
 } from '../model/tiktok-post-settings';
+import { TikTokConsentDeclaration } from './tiktok-consent-declaration';
 
-type TikTokToggle = Exclude<keyof TikTokPostSettingsForm, 'privacyLevel'>;
+type TikTokToggle = 'disableComment' | 'disableDuet' | 'disableStitch';
 
 const TOGGLES: Array<{ key: TikTokToggle; creatorKey: 'commentDisabled' | 'duetDisabled' | 'stitchDisabled'; label: string }> = [
   { key: 'disableComment', creatorKey: 'commentDisabled', label: 'Tắt bình luận' },
@@ -60,6 +63,13 @@ export function TikTokSettingsPanel({
 
   const privacyMissing = showPrivacyError && !value.privacyLevel;
   const locked = disabled || !creator;
+  const commercial = value.commercialContent;
+  const brandedSelected = commercial.enabled && commercial.brandedContent;
+  // Guideline: "Branded content" không đi với "Chỉ mình tôi" — khoá lựa chọn còn lại và giải thích khi hover.
+  const brandedBlockedByPrivacy = value.privacyLevel === TikTokPrivacyLevel.SELF_ONLY;
+  const commercialIssue = commercialContentBlocker(value);
+  const setCommercial = (patch: Partial<TikTokPostSettingsForm['commercialContent']>) =>
+    onChange({ ...value, commercialContent: { ...commercial, ...patch } });
 
   return (
     <section aria-labelledby={`${privacyId}-title`} className="mt-2 rounded-lg border border-slate-200 p-4">
@@ -103,7 +113,20 @@ export function TikTokSettingsPanel({
         placeholder="Chọn quyền riêng tư"
         value={value.privacyLevel}
         status={privacyMissing ? 'error' : undefined}
-        options={(creator?.privacyLevelOptions ?? []).map((level) => ({ value: level, label: tiktokPrivacyLabels[level] }))}
+        options={(creator?.privacyLevelOptions ?? []).map((level) => {
+          const blocked = brandedSelected && level === TikTokPrivacyLevel.SELF_ONLY;
+          return {
+            value: level,
+            label: blocked ? (
+              <Tooltip title={TIKTOK_COMMERCIAL_TEXT.BRANDED_PRIVATE}>
+                <span>{tiktokPrivacyLabels[level]}</span>
+              </Tooltip>
+            ) : (
+              tiktokPrivacyLabels[level]
+            ),
+            disabled: blocked,
+          };
+        })}
         disabled={locked}
         onChange={(privacyLevel) => onChange({ ...value, privacyLevel })}
       />
@@ -134,6 +157,76 @@ export function TikTokSettingsPanel({
           );
         })}
       </div>
+      <div className="mt-4 border-t border-slate-100 pt-4">
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-800">
+          <Switch
+            size="small"
+            checked={commercial.enabled}
+            disabled={locked}
+            aria-label="Công bố nội dung thương mại"
+            onChange={(enabled) =>
+              setCommercial(enabled ? { enabled } : { enabled, yourBrand: false, brandedContent: false })
+            }
+          />
+          Công bố nội dung thương mại (Disclose video content)
+        </label>
+        <p className="mb-2 mt-1 text-xs text-slate-500">{TIKTOK_COMMERCIAL_TEXT.TOGGLE_HINT}</p>
+        {commercial.enabled && (
+          <div className="flex flex-col gap-3 pl-1">
+            <div>
+              <Checkbox
+                checked={commercial.yourBrand}
+                disabled={locked}
+                onChange={(event) => setCommercial({ yourBrand: event.target.checked })}
+              >
+                {TIKTOK_COMMERCIAL_TEXT.YOUR_BRAND_TITLE}
+              </Checkbox>
+              <p className="ml-6 text-xs text-slate-500">{TIKTOK_COMMERCIAL_TEXT.YOUR_BRAND_DESCRIPTION}</p>
+            </div>
+            <div>
+              <Tooltip title={brandedBlockedByPrivacy ? TIKTOK_COMMERCIAL_TEXT.BRANDED_PRIVATE : undefined}>
+                <Checkbox
+                  checked={commercial.brandedContent}
+                  disabled={locked || (brandedBlockedByPrivacy && !commercial.brandedContent)}
+                  onChange={(event) => setCommercial({ brandedContent: event.target.checked })}
+                >
+                  {TIKTOK_COMMERCIAL_TEXT.BRANDED_TITLE}
+                </Checkbox>
+              </Tooltip>
+              <p className="ml-6 text-xs text-slate-500">{TIKTOK_COMMERCIAL_TEXT.BRANDED_DESCRIPTION}</p>
+            </div>
+            {(commercial.yourBrand || commercial.brandedContent) && (
+              <Alert
+                type="info"
+                showIcon
+                message={
+                  commercial.brandedContent
+                    ? TIKTOK_COMMERCIAL_TEXT.LABEL_PAID_PARTNERSHIP
+                    : TIKTOK_COMMERCIAL_TEXT.LABEL_PROMOTIONAL
+                }
+              />
+            )}
+          </div>
+        )}
+        {commercialIssue && (
+          <div className="mt-2 text-xs text-rose-600" role="alert">
+            {commercialIssue}
+          </div>
+        )}
+        <Checkbox
+          className="mt-3"
+          checked={value.isAigc}
+          disabled={locked}
+          onChange={(event) => onChange({ ...value, isAigc: event.target.checked })}
+        >
+          {TIKTOK_COMMERCIAL_TEXT.AIGC}
+        </Checkbox>
+      </div>
+      <TikTokConsentDeclaration className="mt-4" brandedContent={brandedSelected} />
+      <p className="mt-1 text-xs text-slate-500">
+        Người duyệt phải tích xác nhận câu trên khi bấm "Đăng ngay"; video có thể mất vài phút để TikTok xử lý và hiện
+        trên trang cá nhân.
+      </p>
     </section>
   );
 }

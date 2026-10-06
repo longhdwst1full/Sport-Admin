@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Alert, App, Button, Checkbox, Drawer, Form, Input, Radio, Skeleton, Tooltip, Typography } from 'antd';
+import { Alert, App, Checkbox, Form, Input, Radio, Skeleton, Tooltip, Typography } from 'antd';
 import { useGetAdminSocialPost, useGetAdminTikTokCreatorInfo } from '@/generated/api/content/content';
 import {
   AnyContentPostType,
   FacebookPublicationStatus,
   FacebookPublishType,
   type SocialPostDetailDto,
+  TikTokPrivacyLevel,
 } from '@/generated/api/content/content.schemas';
 import { getApiErrorPayload, getApiFieldErrors } from '@/lib/api/error';
 import {
@@ -32,6 +33,7 @@ import {
 import {
   applyCreatorConstraints,
   DEFAULT_TIKTOK_SETTINGS,
+  TIKTOK_COMMERCIAL_TEXT,
   nextSelectedChannels,
   tiktokMediaViolation,
   toTikTokOptionsDto,
@@ -41,6 +43,7 @@ import {
 import { FacebookSettingsHint } from './facebook-settings-hint';
 import { SocialMediaField } from './social-media-field';
 import { TikTokSettingsPanel } from './tiktok-settings-panel';
+import { FormDrawer } from '@/foundation/overlay';
 
 /**
  * Drawer mở theo một trong ba ngữ cảnh; chỉ cần id + version, bản đầy đủ được tải lại khi sửa. `channel` (mặc định
@@ -173,6 +176,11 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
       void message.warning('Chọn quyền riêng tư cho video TikTok trước khi lưu.');
       return;
     }
+    // API 400 TIKTOK_BRANDED_CONTENT_PRIVATE ngay cả khi lưu nháp; "bật mà chưa chọn" vẫn lưu nháp được (chặn lúc đăng).
+    if (tiktokSelected && tiktokSettings.privacyLevel === TikTokPrivacyLevel.SELF_ONLY && tiktok?.commercialContent?.brandedContent) {
+      void message.warning(TIKTOK_COMMERCIAL_TEXT.BRANDED_PRIVATE);
+      return;
+    }
     save.mutate(
       {
         values: { ...values, media: values.media ?? [] },
@@ -209,17 +217,15 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
   const captionMax = tiktokSelected ? TIKTOK_LIMITS.CAPTION_MAX : SOCIAL_LIMITS.MESSAGE_MAX;
 
   return (
-    <Drawer
+    <FormDrawer
       title={title}
-      width={720}
       open
       onClose={onClose}
-      destroyOnHidden
-      extra={
-        <Button type="primary" loading={save.isPending} disabled={isUpdate && !editing} onClick={() => form.submit()}>
-          Lưu nháp
-        </Button>
-      }
+      onSubmit={() => form.submit()}
+      submitting={save.isPending}
+      submitDisabled={isUpdate && !editing}
+      submitText="Lưu nháp"
+      isDirty={() => form.isFieldsTouched()}
     >
       {isUpdate && detail.isError && (
         <Alert className="mb-3" type="error" showIcon message="Không tải được bài viết" description={socialCommandErrorMessage(detail.error)} />
@@ -370,6 +376,6 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
           )}
         </>
       )}
-    </Drawer>
+    </FormDrawer>
   );
 }

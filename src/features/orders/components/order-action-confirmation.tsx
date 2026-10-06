@@ -1,4 +1,4 @@
-import { Alert, Input, Modal, Typography } from 'antd';
+import { Input, Modal, Typography } from 'antd';
 
 export type OrderAction = 'confirm' | 'cancel' | 'complete';
 
@@ -6,7 +6,6 @@ interface OrderActionConfirmationProps {
   action?: OrderAction;
   reason: string;
   pending: boolean;
-  errorMessage?: string;
   onReasonChange: (reason: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -16,7 +15,6 @@ export function OrderActionConfirmation({
   action,
   reason,
   pending,
-  errorMessage,
   onReasonChange,
   onCancel,
   onConfirm,
@@ -53,10 +51,8 @@ export function OrderActionConfirmation({
         rows={4}
         maxLength={500}
         showCount
-        status={errorMessage ? 'error' : undefined}
         onChange={(event) => onReasonChange(event.target.value)}
       />
-      {errorMessage && <Alert className="mt-3" type="error" showIcon message={errorMessage} />}
     </Modal>
   );
 }

@@ -212,10 +212,10 @@ function kpiValues(kpi: SocialChannelKpiDto): SocialMetricValues {
   };
 }
 
-/** Điểm theo ngày: API không trả số bài theo ngày → `posts` = null. */
+/** Điểm theo ngày: `posts` = số bản đăng thành công có giờ đăng (giờ VN) trong ngày. */
 function dailyValues(channel: ApiSocialChannel, point: SocialDailyPointDto): SocialMetricValues {
   return {
-    posts: null,
+    posts: point.posts,
     views: point.views,
     likes: point.likes,
     comments: point.comments,
@@ -230,7 +230,7 @@ function toTopPost(item: SocialTopPostDto): SocialTopPost {
     id: `${item.postId}:${item.channel}`,
     channel: fromApiSocialChannel(item.channel),
     title: item.title,
-    thumbnailUrl: null,
+    thumbnailUrl: item.thumbnailUrl ?? null,
     permalinkUrl: item.permalinkUrl ?? null,
     publishedAt: item.publishAt,
     views: item.views,
@@ -241,8 +241,8 @@ function toTopPost(item: SocialTopPostDto): SocialTopPost {
 }
 
 /**
- * API không trả kỳ trước (`previous`) và mốc đồng bộ chung (`syncedAt`) → để trống, trang không vẽ chênh lệch.
- * KPI/chuỗi là mức TĂNG trong khoảng (tổng delta theo ngày), không phải giá trị tích luỹ.
+ * KPI/chuỗi là mức TĂNG trong khoảng (tổng delta theo ngày), không phải giá trị tích luỹ. `previous` = KPI kỳ liền trước
+ * cùng độ dài (`previousTotals`) để tính % chênh lệch; `syncedAt` = lần job ghi chỉ số gần nhất (`lastSyncedAt`).
  */
 export function toSocialDashboardViewModel(
   dashboard: SocialDashboardDto | undefined,
@@ -251,12 +251,15 @@ export function toSocialDashboardViewModel(
   if (!dashboard) return { ...EMPTY_SOCIAL_DASHBOARD, topPosts: (topPosts ?? []).map(toTopPost) };
   return {
     source: SOCIAL_DASHBOARD_SOURCE.API,
-    syncedAt: null,
-    kpis: dashboard.totals.map((kpi) => ({
-      channel: fromApiSocialChannel(kpi.channel),
-      current: kpiValues(kpi),
-      previous: null,
-    })),
+    syncedAt: dashboard.lastSyncedAt,
+    kpis: dashboard.totals.map((kpi) => {
+      const previous = dashboard.previousTotals.find((item) => item.channel === kpi.channel);
+      return {
+        channel: fromApiSocialChannel(kpi.channel),
+        current: kpiValues(kpi),
+        previous: previous ? kpiValues(previous) : null,
+      };
+    }),
     daily: dashboard.daily.flatMap((series) =>
       series.points.map((point) => ({
         date: point.date,

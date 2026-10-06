@@ -10,6 +10,7 @@ import { ManagementPage } from '@/foundation/management';
 import { AdminTable } from '@/foundation/table';
 import { formatDateTime } from '@/lib/format/datetime';
 import { SocialChannelIcons } from '../components/social-channel-icons';
+import { SocialSyncButton } from '../components/social-sync-button';
 import {
   isSocialChannelEnabled,
   SOCIAL_CHANNEL,
@@ -41,14 +42,7 @@ const SocialComparisonChart = lazy(() =>
 
 const ALL_CHANNELS = 'all';
 const KPI_METRICS = Object.values(SOCIAL_METRIC);
-/** API không trả số bài theo ngày nên biểu đồ không có chỉ số "Bài/video". */
-const CHART_METRICS = [
-  SOCIAL_METRIC.VIEWS,
-  SOCIAL_METRIC.LIKES,
-  SOCIAL_METRIC.COMMENTS,
-  SOCIAL_METRIC.SHARES,
-  SOCIAL_METRIC.REACH,
-];
+const CHART_METRICS = Object.values(SOCIAL_METRIC);
 
 const POST_CHANNEL_OF: Record<SocialChannel, (typeof POST_CHANNEL)[keyof typeof POST_CHANNEL]> = {
   [SOCIAL_CHANNEL.FACEBOOK]: POST_CHANNEL.FACEBOOK,
@@ -157,14 +151,17 @@ export function SocialDashboardPage() {
         title="Dashboard mạng xã hội"
         description="Theo dõi hiệu quả bài đăng Facebook và TikTok theo khoảng ngày."
         actions={
-          <Tooltip title="Làm mới dữ liệu">
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={dashboard.refetch}
-              loading={dashboard.isFetching}
-              aria-label="Làm mới"
-            />
-          </Tooltip>
+          <div className="flex flex-wrap gap-2">
+            <Tooltip title="Làm mới dữ liệu">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={dashboard.refetch}
+                loading={dashboard.isFetching}
+                aria-label="Làm mới"
+              />
+            </Tooltip>
+            <SocialSyncButton />
+          </div>
         }
         filters={
           <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -216,7 +213,7 @@ export function SocialDashboardPage() {
           </Typography.Text>
           {data.syncedAt && (
             <Typography.Text type="secondary" className="block text-xs">
-              Đồng bộ gần nhất: {formatDateTime(data.syncedAt)}
+              Đồng bộ lần cuối: {formatDateTime(data.syncedAt)}
             </Typography.Text>
           )}
 

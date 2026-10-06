@@ -30,6 +30,7 @@ import type {
   SocialChannel as ApiSocialChannel,
   SocialPostDetailDto,
   TikTokOptionsInputDto,
+  TikTokPublishConsentDto,
 } from '@/generated/api/content/content.schemas';
 import { getApiErrorPayload } from '@/lib/api/error';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
@@ -43,11 +44,14 @@ import {
   type SocialPostFormValues,
 } from '../model/social-post-form.mapper';
 
+/** Facebook: hẹn giờ/Reel. TikTok: chỉ `consent` (xác nhận Music Usage / Branded Content Policy của người duyệt). */
+type PublishCommandBody = { scheduledAt?: string; asReel?: boolean; consent?: TikTokPublishConsentDto };
+
 /** Nội dung lệnh theo đúng field của DTO; `expectedVersion` do hook gắn từ bài đang hiển thị. */
 export type SocialCommand =
   | { action: 'submit' }
-  | { action: 'approve'; body: { scheduledAt?: string; asReel?: boolean } }
-  | { action: 'retry'; body: { scheduledAt?: string; asReel?: boolean } }
+  | { action: 'approve'; body: PublishCommandBody }
+  | { action: 'retry'; body: PublishCommandBody }
   | { action: 'reject'; body: { reason: string } }
   | { action: 'reconcile'; body: { externalPostId?: string; resolution?: FacebookReconcileResolution } }
   | { action: 'cancel'; body: { reason?: string } }
@@ -144,7 +148,7 @@ export function useSocialPostCommand(
   });
 }
 
-/** TikTok: approve/retry chỉ mang `expectedVersion` (không hẹn giờ/Reel); không có sửa caption. */
+/** TikTok: approve/retry mang `expectedVersion` + `consent` (không hẹn giờ/Reel); không có sửa caption. */
 function runTikTokCommand(
   id: string,
   expectedVersion: number,
@@ -155,9 +159,9 @@ function runTikTokCommand(
     case 'submit':
       return submitAdminTikTokPost(id, { expectedVersion });
     case 'approve':
-      return approveAdminTikTokPost(id, { expectedVersion }, options);
+      return approveAdminTikTokPost(id, { expectedVersion, consent: command.body.consent }, options);
     case 'retry':
-      return retryAdminTikTokPost(id, { expectedVersion }, options);
+      return retryAdminTikTokPost(id, { expectedVersion, consent: command.body.consent }, options);
     case 'reject':
       return rejectAdminTikTokPost(id, { ...command.body, expectedVersion });
     case 'reconcile':

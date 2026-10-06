@@ -1,5 +1,5 @@
 import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
-import { SOCIAL_CONTENT_EDIT_DETAIL, SOCIAL_ERROR_CODE } from '../constants/social.constants';
+import { SOCIAL_CONTENT_EDIT_DETAIL, SOCIAL_ERROR_CODE, TIKTOK_OPTIONS_DETAIL } from '../constants/social.constants';
 
 const MESSAGES: Record<string, string> = {
   [SOCIAL_ERROR_CODE.POST_NOT_FOUND]: 'Bài viết không còn tồn tại. Danh sách đã được tải lại.',
@@ -38,7 +38,10 @@ const MESSAGES: Record<string, string> = {
   [SOCIAL_ERROR_CODE.TIKTOK_OPTIONS_INVALID]:
     'Thiết lập TikTok không còn hợp lệ với tài khoản (quyền riêng tư, tương tác hoặc thời lượng video). Sửa nháp TikTok rồi thử lại.',
   [SOCIAL_ERROR_CODE.TIKTOK_CAPTION_TOO_LONG]: 'Nội dung bài (caption TikTok) tối đa 2.200 ký tự.',
+  [SOCIAL_ERROR_CODE.TIKTOK_CONSENT_REQUIRED]:
+    'Cần tích xác nhận Music Usage Confirmation (và Branded Content Policy nếu có nội dung thương mại) của TikTok trước khi đăng.',
   [SOCIAL_ERROR_CODE.DASHBOARD_RANGE_INVALID]: 'Khoảng ngày không hợp lệ: ngày bắt đầu không sau ngày kết thúc, tối đa 90 ngày.',
+  [SOCIAL_ERROR_CODE.SYNC_RUNNING]: 'Đang có một lượt đồng bộ chạy (lịch tự động hoặc người khác vừa bấm). Thử lại sau ít phút.',
 };
 
 /** Caption dùng chung các kênh: kênh còn lại đã rời nháp thì không sửa caption được. */
@@ -49,6 +52,14 @@ const CONTENT_EDIT_DETAIL_MESSAGES: Record<string, string> = {
     'Bản TikTok đã rời nháp nên nội dung (caption chung) không sửa được nữa. Chỉ đổi media Facebook.',
 };
 
+/** Công bố nội dung thương mại sai luật TikTok (chi tiết của SOCIAL_TIKTOK_OPTIONS_INVALID). */
+const TIKTOK_OPTIONS_DETAIL_MESSAGES: Record<string, string> = {
+  [TIKTOK_OPTIONS_DETAIL.COMMERCIAL_CONTENT_UNSPECIFIED]:
+    'Đã bật "Công bố nội dung thương mại" nhưng chưa chọn "Thương hiệu của bạn" hay "Nội dung có thương hiệu". Sửa nháp TikTok rồi thử lại.',
+  [TIKTOK_OPTIONS_DETAIL.BRANDED_CONTENT_PRIVATE]:
+    'Nội dung có thương hiệu (Branded content) không thể để quyền riêng tư "Chỉ mình tôi". Đổi quyền riêng tư trong nháp TikTok.',
+};
+
 /** UX: mã lỗi ổn định → thông điệp tiếng Việt; mã lạ dùng thông điệp của API. */
 export function socialCommandErrorMessage(error: unknown): string {
   const payload = getApiErrorPayload(error);
@@ -56,6 +67,10 @@ export function socialCommandErrorMessage(error: unknown): string {
   if (code === SOCIAL_ERROR_CODE.CONTENT_EDIT_NOT_ALLOWED) {
     const detail = payload?.details?.find((item) => CONTENT_EDIT_DETAIL_MESSAGES[item.code]);
     if (detail) return CONTENT_EDIT_DETAIL_MESSAGES[detail.code];
+  }
+  if (code === SOCIAL_ERROR_CODE.TIKTOK_OPTIONS_INVALID) {
+    const detail = payload?.details?.find((item) => TIKTOK_OPTIONS_DETAIL_MESSAGES[item.code]);
+    if (detail) return TIKTOK_OPTIONS_DETAIL_MESSAGES[detail.code];
   }
   return (code && MESSAGES[code]) || getApiErrorMessage(error);
 }

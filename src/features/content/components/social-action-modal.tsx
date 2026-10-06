@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, App, Checkbox, DatePicker, Descriptions, Form, Input, Modal, Radio, Typography } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { StatusTag } from '@/foundation/management';
+import { useGetAdminTikTokCreatorInfo } from '@/generated/api/content/content';
 import {
   AnyContentPostType,
   FacebookPublicationStatus,
@@ -30,7 +31,9 @@ import {
 } from '../model/social-actions.policy';
 import { isFacebookNotConfigured, socialCommandErrorMessage } from '../model/social-command-error';
 import { scheduleWindowError } from '../model/social-post-form.mapper';
+import { commercialContentBlocker, effectiveCommercialContent, TIKTOK_COMMERCIAL_TEXT } from '../model/tiktok-post-settings';
 import { FacebookSettingsHint } from './facebook-settings-hint';
+import { TikTokConsentDeclaration } from './tiktok-consent-declaration';
 
 export type SocialModalAction = Exclude<SocialAction, 'createDraft' | 'editDraft'>;
 
@@ -192,9 +195,27 @@ const REASON_RULES = [
   { min: SOCIAL_LIMITS.REASON_MIN, message: `Lý do tối thiểu ${SOCIAL_LIMITS.REASON_MIN} ký tự` },
 ];
 
-/** CONTRACT: bài website bỏ trống `body` khi sửa caption = API đẩy nội dung bài hiện tại lên Facebook. */
-function toCommand(action: SocialModalAction, values: ActionFormValues, isSocial: boolean, tiktok: boolean): SocialCommand {
-  if (tiktok && (action === 'approve' || action === 'retry')) return { action, body: {} };
+/**
+ * CONTRACT: bài website bỏ trống `body` khi sửa caption = API đẩy nội dung bài hiện tại lên Facebook.
+ * TikTok approve/retry chỉ gửi `consent` (người duyệt đã tích câu đồng ý; API trả 400 SOCIAL_TIKTOK_CONSENT_REQUIRED nếu thiếu).
+ */
+function toCommand(
+  action: SocialModalAction,
+  values: ActionFormValues,
+  isSocial: boolean,
+  tiktok?: { brandedContent: boolean },
+): SocialCommand {
+  if (tiktok && (action === 'approve' || action === 'retry')) {
+    return {
+      action,
+      body: {
+        consent: {
+          musicUsageConfirmed: true,
+          ...(tiktok.brandedContent ? { brandedContentPolicyConfirmed: true } : {}),
+        },
+      },
+    };
+  }
   switch (action) {
     case 'submit':
       return { action };
@@ -263,7 +284,15 @@ export function SocialActionModal({
   if (!post || !action) return null;
   if (channel === SOCIAL_CHANNEL.TIKTOK) {
     return post.tiktok && action !== 'editCaption' ? (
-      <TikTokActionContent post={post} tiktok={post.tiktok} action={action} form={form} command={command} onClose={onClose} />
+      <TikTokActionContent
+        key={`${post.id}:${action}`}
+        post={post}
+        tiktok={post.tiktok}
+        action={action}
+        form={form}
+        command={command}
+        onClose={onClose}
+      />
     ) : null;
   }
   if (!post.facebook) return null;
@@ -279,7 +308,7 @@ export function SocialActionModal({
 
   const submit = (values: ActionFormValues) => {
     if (blocked) return;
-    command.mutate(toCommand(action, values, isSocial, false), {
+    command.mutate(toCommand(action, values, isSocial), {
       onSuccess: (saved) => {
         const status = saved.facebook?.status;
         if (status === FacebookPublicationStatus.FAILED) {
@@ -446,35 +475,52 @@ function TikTokActionContent({
   const reconcileMode = Form.useWatch('reconcileMode', form);
   const deleteMode = action === 'delete' ? tiktokDeleteMode(tiktok.status) : undefined;
   const meta = deleteMode && deleteMode !== 'NONE' ? TIKTOK_DELETE_META[deleteMode] : TIKTOK_ACTION_META[action];
-  // Duyệt/đăng cần đúng một video và quyền riêng tư đã chọn (API 400 nếu thiếu) — chặn sớm, chỉ dẫn sửa nháp.
+  const publishing = action === 'approve' || action === 'retry';
+  const commercial = effectiveCommercialContent(tiktok.commercialContent);
+  // Guideline TikTok: trang đăng hiện tên tài khoản sẽ nhận video.
+  const creator = useGetAdminTikTokCreatorInfo({ query: { enabled: publishing, retry: false, staleTime: 60_000 } });
+  // Guideline TikTok: người duyệt đồng ý tường minh trước khi gửi video — nút đăng khoá tới khi tích.
+  const [consented, setConsented] = useState(false);
+  // Duyệt/đăng cần đúng một video, quyền riêng tư đã chọn và phần nội dung thương mại hợp lệ (API 400 nếu thiếu) —
+  // chặn sớm, chỉ dẫn sửa nháp.
+  const commercialIssue = commercialContentBlocker({
+    privacyLevel: tiktok.privacyLevel ?? undefined,
+    commercialContent: commercial,
+  });
   const publishBlocker =
     action === 'approve' || action === 'retry' || action === 'submit'
       ? tiktok.mediaCount !== 1
         ? 'Bản TikTok chưa có video. Sửa nháp TikTok và chọn đúng 1 video.'
         : !tiktok.privacyLevel && action !== 'submit'
           ? 'Chưa chọn quyền riêng tư TikTok. Sửa nháp TikTok và chọn "Ai có thể xem video này".'
-          : undefined
+          : commercialIssue && action !== 'submit'
+            ? `${commercialIssue} Sửa nháp TikTok ở mục "Công bố nội dung thương mại".`
+            : undefined
       : undefined;
   const blocked = deleteMode === 'RECONCILE_FIRST' || publishBlocker !== undefined;
+  const awaitingConsent = publishing && !consented;
 
   const submit = (values: ActionFormValues) => {
-    if (blocked) return;
-    command.mutate(toCommand(action, values, post.postType === AnyContentPostType.SOCIAL, true), {
-      onSuccess: (saved) => {
-        const status = saved.tiktok?.status;
-        if (status === FacebookPublicationStatus.FAILED) {
-          void message.error(`TikTok chưa nhận video: ${saved.tiktok?.lastError ?? 'lỗi không rõ'}`);
-        } else if (status === FacebookPublicationStatus.UNCERTAIN) {
-          void message.warning('Chưa rõ video đã lên TikTok hay chưa. Đối soát trước khi đăng lại.');
-        } else if (status === FacebookPublicationStatus.PUBLISHING) {
-          void message.success('Đã gửi video lên TikTok. Hệ thống đang tải lên và sẽ cập nhật trạng thái.');
-        } else {
-          void message.success(`${meta.okText} thành công`);
-        }
-        onClose();
+    if (blocked || awaitingConsent) return;
+    command.mutate(
+      toCommand(action, values, post.postType === AnyContentPostType.SOCIAL, { brandedContent: commercial.brandedContent }),
+      {
+        onSuccess: (saved) => {
+          const status = saved.tiktok?.status;
+          if (status === FacebookPublicationStatus.FAILED) {
+            void message.error(`TikTok chưa nhận video: ${saved.tiktok?.lastError ?? 'lỗi không rõ'}`);
+          } else if (status === FacebookPublicationStatus.UNCERTAIN) {
+            void message.warning('Chưa rõ video đã lên TikTok hay chưa. Đối soát trước khi đăng lại.');
+          } else if (status === FacebookPublicationStatus.PUBLISHING) {
+            void message.success('Đã gửi video lên TikTok. Hệ thống đang tải lên và sẽ cập nhật trạng thái.');
+          } else {
+            void message.success(`${meta.okText} thành công`);
+          }
+          onClose();
+        },
+        onError: (error) => void message.error(socialCommandErrorMessage(error)),
       },
-      onError: (error) => void message.error(socialCommandErrorMessage(error)),
-    });
+    );
   };
 
   return (
@@ -483,7 +529,7 @@ function TikTokActionContent({
       title={meta.title}
       okText={meta.okText}
       cancelText="Đóng"
-      okButtonProps={{ danger: meta.danger, hidden: blocked }}
+      okButtonProps={{ danger: meta.danger, hidden: blocked, disabled: awaitingConsent }}
       confirmLoading={command.isPending}
       onOk={() => form.submit()}
       onCancel={onClose}
@@ -491,9 +537,27 @@ function TikTokActionContent({
     >
       <Descriptions size="small" column={1} className="mb-3">
         <Descriptions.Item label="Bài viết">{post.title}</Descriptions.Item>
+        {publishing && (
+          <Descriptions.Item label="Đăng lên tài khoản">
+            {creator.data?.nickname ?? creator.data?.username ?? (creator.isLoading ? 'Đang tải…' : 'Không tải được')}
+          </Descriptions.Item>
+        )}
         <Descriptions.Item label="Quyền riêng tư">
           {tiktok.privacyLevel ? tiktokPrivacyLabels[tiktok.privacyLevel] : 'Chưa chọn'}
         </Descriptions.Item>
+        {publishing && (
+          <Descriptions.Item label="Nội dung thương mại">
+            {commercial.enabled
+              ? [
+                  commercial.yourBrand ? TIKTOK_COMMERCIAL_TEXT.YOUR_BRAND_TITLE : undefined,
+                  commercial.brandedContent ? TIKTOK_COMMERCIAL_TEXT.BRANDED_TITLE : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(', ') || 'Chưa chọn'
+              : 'Không'}
+            {tiktok.isAigc ? ' · Video do AI tạo' : ''}
+          </Descriptions.Item>
+        )}
         <Descriptions.Item label="Trạng thái TikTok hiện tại">
           <StatusTag status={tiktok.status} presentations={fbStatusPresentation} />
         </Descriptions.Item>
@@ -504,6 +568,15 @@ function TikTokActionContent({
         <Alert className="mb-3" type="warning" showIcon message={meta.consequence} />
       ) : (
         <Typography.Paragraph type="secondary">{meta.consequence}</Typography.Paragraph>
+      )}
+      {publishing && !publishBlocker && (
+        <TikTokConsentDeclaration
+          className="mb-3"
+          brandedContent={commercial.brandedContent}
+          checked={consented}
+          onCheckedChange={setConsented}
+          disabled={command.isPending}
+        />
       )}
       <Form form={form} layout="vertical" onFinish={submit} disabled={command.isPending}>
         {(action === 'reject' || deleteMode === 'LIVE') && (

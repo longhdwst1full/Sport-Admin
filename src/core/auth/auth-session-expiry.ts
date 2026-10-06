@@ -5,6 +5,8 @@
  * và đưa trình duyệt về login. LoginPage là nơi duy nhất render toast, nên nhiều API
  * cùng 401 không tạo một chuỗi thông báo trùng nhau.
  */
+import { rememberReturnPath, toReturnPath } from './return-path';
+
 export const AUTH_SESSION_EXPIRED_EVENT = 'dctd:auth-session-expired';
 const AUTH_SESSION_EXPIRED_FLASH_KEY = 'dctd.admin.session-expired';
 let redirectStarted = false;
@@ -27,6 +29,8 @@ export function expireAdminSession(reason: SessionEndReason = SessionEndReason.E
   window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
   if (window.location.pathname !== '/login' && !redirectStarted) {
     redirectStarted = true;
+    // Tải lại /login làm mất router state: ghi trang hiện tại (kèm query) để đăng nhập xong quay lại.
+    rememberReturnPath(toReturnPath(window.location));
     window.location.assign('/login');
   }
 }

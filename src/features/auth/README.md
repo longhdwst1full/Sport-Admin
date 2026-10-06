@@ -1,10 +1,11 @@
 # Auth — maintenance note
 
-> **Document version:** 1.4.0
+> **Document version:** 1.5.0
 >
-> **Last updated:** 2026-09-30
+> **Last updated:** 2026-10-06
 >
-> **Change summary:** Dùng same-origin API proxy để refresh cookie không bị chặn và đồng bộ access token trực tiếp giữa các tab COOKIE mode.
+> **Change summary:** Trang quay về sau đăng nhập giữ pathname + query + hash (`core/auth/return-path.ts`, chỉ đường dẫn
+> nội bộ), kể cả khi hết phiên giữa chừng (sessionStorage) — callback OAuth TikTok không mất `code`/`state`. Trước đó: Dùng same-origin API proxy để refresh cookie không bị chặn và đồng bộ access token trực tiếp giữa các tab COOKIE mode.
 
 ## Phạm vi
 
@@ -37,7 +38,13 @@ Login gửi `LoginDto.rememberMe`: `false` tạo refresh cookie theo phiên trì
 - Mã lỗi và tên lock/channel nằm ở `src/core/auth/auth-refresh.constants.ts`.
 - Hẹn giờ xoay chủ động (`auth-context.tsx`) phụ thuộc `tokenVersion` của `auth-token.store`, nên được đặt lại sau mỗi lần lưu token. Token BODY dựng lại từ cookie sau reload có `expiresIn = 0` ⇒ lấy mốc từ claim `exp` của JWT (chỉ để hẹn giờ, không xác minh).
 
-`sessionStorage` chỉ giữ cờ flash một lần, không giữ token.
+`sessionStorage` chỉ giữ cờ flash một lần và trang quay về (`dctd.admin.return-path`), không giữ token.
+
+### Trang quay về sau đăng nhập
+
+`AuthenticatedRoute` chuyển `/login` với `state.from` = pathname + search + hash; hết phiên giữa chừng (`expireAdminSession`
+tải lại `/login`) thì ghi đường dẫn đó vào sessionStorage. LoginPage chỉ điều hướng qua `safeReturnPath` (SECURITY: phải bắt đầu
+bằng một `/`, không `//`, `\`, ký tự điều khiển, cùng origin; không quay về `/login`/`/change-password`, sai thì về `/`).
 
 Đổi mật khẩu bắt buộc khi `mustChangePassword = true` trong `TokenPairDto`.
 
@@ -53,6 +60,7 @@ Login gửi `LoginDto.rememberMe`: `false` tạo refresh cookie theo phiên trì
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.5.0 | 2026-10-06 | Giữ query khi quay về sau đăng nhập (callback OAuth TikTok), chỉ nhận đường dẫn nội bộ. |
 | 1.4.0 | 2026-09-30 | Proxy API cùng origin ở Vercel; BroadcastChannel truyền access token giữa các tab COOKIE mode và chống message cũ ghi đè. |
 | 1.3.0 | 2026-09-26 | Web Lock + BroadcastChannel giữa các tab, retry với token mới hơn, phân loại lỗi refresh (401 đăng xuất, 409 thử lại, mạng/5xx giữ phiên), hẹn giờ xoay luôn đặt lại. |
 | 1.2.0 | 2026-09-21 | Gửi `rememberMe` qua generated LoginDto và giao quyền quản lý persistence cho Backend COOKIE transport. |

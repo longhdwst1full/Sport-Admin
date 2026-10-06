@@ -26,9 +26,3 @@ export const CompleteSameDay: Story = {
     reason: 'Đã giao trực tiếp, khách kiểm đủ hàng và cửa hàng nhận đủ tiền',
   },
 };
-
-export const ServerError: Story = {
-  args: {
-    errorMessage: 'Đơn hàng đã thay đổi; vui lòng tải lại trước khi hủy.',
-  },
-};

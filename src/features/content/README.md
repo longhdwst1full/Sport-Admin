@@ -1,10 +1,14 @@
 # Content — maintenance note
 
-> **Document version:** 3.5.0
+> **Document version:** 3.7.0
 >
-> **Last updated:** 2026-10-05
+> **Last updated:** 2026-10-06
 >
-> **Change summary:** Nối API TikTok + Dashboard mạng xã hội (D99 phase 2b): lọc kênh ALL/FACEBOOK/TIKTOK + `tiktokStatus`, soạn đa kênh, khối TikTok ở chi tiết, thẻ Tài khoản TikTok + trang callback OAuth `/content/social/tiktok/callback`, dashboard dùng query Orval. Trước đó: Chuẩn bị TikTok + Dashboard mạng xã hội (chưa nối API): tab "Mạng xã hội" (`?tab=social`, link cũ `?tab=facebook` tự chuyển), cột Kênh, lọc kênh; mục "Kênh đăng" + panel TikTok trong drawer soạn bài (khoá bởi `TIKTOK_ENABLED`); màn `/social-dashboard` dùng hook placeholder `useSocialDashboard`. Trước đó: Lỗi thao tác banner/social chuyển sang toast AntD; danh sách/chi tiết bài social ẩn "lỗi gần nhất" khi Facebook đang xử lý video. Trước đó: Ảnh bìa bài viết gửi `coverAssetId` khi là asset thư viện (`model/content-post-cover.ts`), ảnh lỗi/rỗng hiện `IMAGE_FALLBACK_SRC`, ẩn loại đăng Video/Reel khi soạn bài Facebook. Trước đó: Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. Trước đó: `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
+> **Change summary:** TikTok theo Content Sharing Guidelines: mục "Công bố nội dung thương mại" (Your brand / Branded content,
+> khoá "Chỉ mình tôi" khi có Branded content) + "Video do AI tạo" trong `TikTokSettingsPanel`; modal Đăng/Đăng lại TikTok hiện
+> tài khoản nhận video và ô xác nhận Music Usage Confirmation/Branded Content Policy (gửi `consent`, khoá nút tới khi tích).
+> Trước đó: Nút "Đồng bộ ngay" (`runAdminSocialSync`) ở dashboard và tab Mạng xã hội; dashboard hiện % so với kỳ trước,
+> "Đồng bộ lần cuối", chỉ số "Bài/video" trên biểu đồ, ảnh nhỏ top bài. Trước đó: Nối API TikTok + Dashboard mạng xã hội (D99 phase 2b): lọc kênh ALL/FACEBOOK/TIKTOK + `tiktokStatus`, soạn đa kênh, khối TikTok ở chi tiết, thẻ Tài khoản TikTok + trang callback OAuth `/content/social/tiktok/callback`, dashboard dùng query Orval. Trước đó: Chuẩn bị TikTok + Dashboard mạng xã hội (chưa nối API): tab "Mạng xã hội" (`?tab=social`, link cũ `?tab=facebook` tự chuyển), cột Kênh, lọc kênh; mục "Kênh đăng" + panel TikTok trong drawer soạn bài (khoá bởi `TIKTOK_ENABLED`); màn `/social-dashboard` dùng hook placeholder `useSocialDashboard`. Trước đó: Lỗi thao tác banner/social chuyển sang toast AntD; danh sách/chi tiết bài social ẩn "lỗi gần nhất" khi Facebook đang xử lý video. Trước đó: Ảnh bìa bài viết gửi `coverAssetId` khi là asset thư viện (`model/content-post-cover.ts`), ảnh lỗi/rỗng hiện `IMAGE_FALLBACK_SRC`, ẩn loại đăng Video/Reel khi soạn bài Facebook. Trước đó: Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. Trước đó: `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
 
 ## Phạm vi
 
@@ -95,13 +99,29 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
   về kèm toast. `TIKTOK_REDIRECT_URI` = origin Admin + đường dẫn này; phải cùng người bấm Kết nối.
 - Dashboard `/social-dashboard` (`cms.content.view`): `useSocialDashboard` gọi `getAdminSocialDashboard` +
   `listAdminSocialTopPosts` (sort VIEWS, 10 bài) và map bằng `toSocialDashboardViewModel` (`source: 'api'`). Khoảng ngày
-  ≤ 90 ngày (`SOCIAL_DASHBOARD_MAX_DAYS`); số liệu là mức tăng trong khoảng; reach TikTok hiện "—"; API không trả kỳ
-  trước/số bài theo ngày nên không có % chênh lệch và biểu đồ không có chỉ số "Bài/video".
+  ≤ 90 ngày (`SOCIAL_DASHBOARD_MAX_DAYS`); số liệu là mức tăng trong khoảng; reach TikTok hiện "—". KPI hiện % so với kỳ
+  liền trước cùng độ dài (`previousTotals`, `formatDelta`; kỳ trước = 0 thì không hiện %), "Đồng bộ lần cuối" từ
+  `lastSyncedAt`, biểu đồ có thêm "Bài/video" (`daily[].points[].posts`), top bài dùng `thumbnailUrl` (lỗi/thiếu →
+  `IMAGE_FALLBACK_SRC`).
+- "Đồng bộ ngay" (`components/social-sync-button.tsx` + `hooks/use-social-sync.ts`, chỉ hiện với `social.post.publish`): ở
+  header dashboard và header trang Bài viết khi đang ở tab Mạng xã hội. Gọi `runAdminSocialSync` (chạy một lượt job, tối đa
+  ~20 giây), toast tóm tắt kết quả (lỗi theo bước → toast cảnh báo; cả hai job tắt → toast info), lỗi 409
+  `SOCIAL_SYNC_RUNNING`/429 → toast lỗi; thành công thì invalidate dashboard, top bài, `listAdminSocialPosts`, `listAdminPosts`.
 - Media: `MediaUsageType.TIKTOK_POST` → nhãn "Bài TikTok".
 - Lỗi mới (`social-command-error.ts`): `SOCIAL_TIKTOK_*`, `SOCIAL_ALREADY_TIKTOK_POST`, `SOCIAL_DASHBOARD_RANGE_INVALID`,
   `SOCIAL_CONTENT_EDIT_NOT_ALLOWED` (details `FACEBOOK_NOT_DRAFT`/`TIKTOK_NOT_DRAFT`) → toast tiếng Việt.
-- Chưa làm: xác nhận "Music Usage Confirmation"/công bố nội dung thương mại theo hướng dẫn UX của TikTok (contract chưa có
-  trường); nút lệnh TikTok chỉ ở drawer chi tiết (hàng trong bảng chỉ có lệnh Facebook).
+- Content Sharing Guidelines (developers.tiktok.com/doc/content-sharing-guidelines): `TikTokSettingsPanel` có công tắc
+  "Công bố nội dung thương mại" (mặc định tắt) → "Thương hiệu của bạn (Your brand)" / "Nội dung có thương hiệu (Branded
+  content)" kèm mô tả + nhãn TikTok sẽ gắn (song ngữ, câu tiếng Anh nguyên văn trong `TIKTOK_COMMERCIAL_TEXT`); Branded
+  content thì option "Chỉ mình tôi" bị khoá (tooltip "Branded content visibility cannot be set to private.") và ngược lại;
+  "Video do AI tạo" → `isAigc`. Câu đồng ý (`TikTokConsentDeclaration`, `tiktokConsentDeclaration`) hiện ở panel và là ô
+  bắt buộc trong modal Đăng/Đăng lại TikTok; modal hiện "Đăng lên tài khoản" (nickname creator_info), nội dung thương mại,
+  chặn khi bật mà chưa chọn/Branded + "Chỉ mình tôi"; gửi `consent` {musicUsageConfirmed, brandedContentPolicyConfirmed}.
+  Lỗi `SOCIAL_TIKTOK_CONSENT_REQUIRED` và chi tiết `TIKTOK_COMMERCIAL_CONTENT_UNSPECIFIED`/`TIKTOK_BRANDED_CONTENT_PRIVATE`
+  → toast tiếng Việt.
+- Callback OAuth khi phiên hết hạn: route đăng nhập giữ cả `?code=&state=` (`core/auth/return-path.ts`), đăng nhập xong quay
+  lại callback để hoàn tất kết nối.
+- Chưa làm: nút lệnh TikTok chỉ ở drawer chi tiết (hàng trong bảng chỉ có lệnh Facebook).
 
 ## Checklist khi sửa
 
@@ -114,6 +134,8 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.7.0 | 2026-10-06 | TikTok: công bố nội dung thương mại, AIGC, xác nhận Music Usage/Branded Content Policy trước khi đăng. |
+| 3.6.0 | 2026-10-06 | "Đồng bộ ngay", % so kỳ trước, "Đồng bộ lần cuối", chỉ số Bài/video trên biểu đồ, ảnh nhỏ top bài. |
 | 3.5.0 | 2026-10-05 | Nối API TikTok (bản đăng, tài khoản/OAuth callback) và Dashboard mạng xã hội. |
 | 3.4.0 | 2026-10-05 | Tab "Mạng xã hội", cột/lọc Kênh, panel TikTok (khoá), màn Dashboard mạng xã hội với hook placeholder. |
 | 3.3.0 | 2026-10-05 | Lỗi thao tác banner/social dùng toast; ẩn "lỗi gần nhất" khi Facebook đang xử lý video. |

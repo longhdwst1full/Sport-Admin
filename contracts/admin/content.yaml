@@ -1504,7 +1504,7 @@ paths:
         - social.post.publish
   /api/v1/admin/content/social/posts/{id}/tiktok:
     post:
-      description: 400 SOCIAL_MEDIA_INVALID (chỉ 0–1 video); 409 SOCIAL_ALREADY_TIKTOK_POST / SOCIAL_POST_ARCHIVED / SOCIAL_VERSION_STALE.
+      description: 400 SOCIAL_MEDIA_INVALID (chỉ 0–1 video) / SOCIAL_TIKTOK_OPTIONS_INVALID (TIKTOK_BRANDED_CONTENT_PRIVATE); 409 SOCIAL_ALREADY_TIKTOK_POST / SOCIAL_POST_ARCHIVED / SOCIAL_VERSION_STALE.
       operationId: createAdminTikTokDraft
       parameters:
         - name: id
@@ -1569,7 +1569,7 @@ paths:
       x-required-permissions:
         - social.post.manage
     patch:
-      description: 400 SOCIAL_CONTENT_EDIT_NOT_ALLOWED khi bài website hoặc bản Facebook đã rời nháp (caption dùng chung).
+      description: 400 SOCIAL_CONTENT_EDIT_NOT_ALLOWED khi bài website hoặc bản Facebook đã rời nháp (caption dùng chung); 400 SOCIAL_TIKTOK_OPTIONS_INVALID (TIKTOK_BRANDED_CONTENT_PRIVATE).
       operationId: updateAdminTikTokDraft
       parameters:
         - name: id
@@ -1700,7 +1700,7 @@ paths:
         - social.post.manage
   /api/v1/admin/content/social/posts/{id}/tiktok/approve:
     post:
-      description: Kiểm tuỳ chọn với creator_info của tài khoản (privacy trong danh sách cho phép, video không dài hơn giới hạn) rồi ghi PUBLISHING; video được đẩy nền (thử ngay vài giây, phần còn lại do job social-sync) → PUBLISHED/FAILED. Không hẹn giờ. 400 SOCIAL_TIKTOK_OPTIONS_INVALID / SOCIAL_MEDIA_INVALID / SOCIAL_TIKTOK_CAPTION_TOO_LONG; 409 SOCIAL_IDEMPOTENCY_CONFLICT / SOCIAL_INVALID_TRANSITION; 503 SOCIAL_TIKTOK_NOT_CONNECTED / SOCIAL_TIKTOK_NOT_CONFIGURED; 502 SOCIAL_TIKTOK_ERROR.
+      description: Kiểm tuỳ chọn với creator_info của tài khoản (privacy trong danh sách cho phép, video không dài hơn giới hạn) rồi ghi PUBLISHING; video được đẩy nền (thử ngay vài giây, phần còn lại do job social-sync) → PUBLISHED/FAILED. Không hẹn giờ. Người duyệt phải gửi consent.musicUsageConfirmed=true (và consent.brandedContentPolicyConfirmed=true khi có Branded content). 400 SOCIAL_TIKTOK_CONSENT_REQUIRED / SOCIAL_TIKTOK_OPTIONS_INVALID (details.code TIKTOK_COMMERCIAL_CONTENT_UNSPECIFIED, TIKTOK_BRANDED_CONTENT_PRIVATE) / SOCIAL_MEDIA_INVALID / SOCIAL_TIKTOK_CAPTION_TOO_LONG; 409 SOCIAL_IDEMPOTENCY_CONFLICT / SOCIAL_INVALID_TRANSITION; 503 SOCIAL_TIKTOK_NOT_CONNECTED / SOCIAL_TIKTOK_NOT_CONFIGURED; 502 SOCIAL_TIKTOK_ERROR.
       operationId: approveAdminTikTokPost
       parameters:
         - name: id
@@ -1719,7 +1719,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VersionedSocialCommandDto"
+              $ref: "#/components/schemas/PublishTikTokDto"
       responses:
         "200":
           description: ""
@@ -1843,6 +1843,7 @@ paths:
         - social.post.publish
   /api/v1/admin/content/social/posts/{id}/tiktok/retry:
     post:
+      description: Cùng kiểm tra và xác nhận (consent) như approveAdminTikTokPost; 400 SOCIAL_TIKTOK_CONSENT_REQUIRED khi thiếu.
       operationId: retryAdminTikTokPost
       parameters:
         - name: id
@@ -1861,7 +1862,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VersionedSocialCommandDto"
+              $ref: "#/components/schemas/PublishTikTokDto"
       responses:
         "200":
           description: ""
@@ -2482,6 +2483,55 @@ paths:
         - Admin Content
       x-required-permissions:
         - cms.content.view
+  /api/v1/admin/content/social/sync:
+    post:
+      description: Cùng công tắc FACEBOOK_SYNC_JOB_ENABLED/TIKTOK_SYNC_JOB_ENABLED với cron (kênh tắt → skipped). Lượt chạy dừng mở việc mới sau ~20 giây (hasMore=true). 409 SOCIAL_SYNC_RUNNING khi lượt khác (cron/người khác) đang chạy.
+      operationId: runAdminSocialSync
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialSyncRunDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: SOCIAL_SYNC_RUNNING
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "429":
+          description: Tối đa 2 lần/phút
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: Chưa bật DB
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Đồng bộ ngay: chạy một lượt job social-sync (đối soát, nhập bài, đẩy video TikTok, làm mới chỉ số)"
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.publish
 components:
   schemas:
     AnyContentPostType:
@@ -3157,6 +3207,19 @@ components:
       enum:
         - NOT_PUBLISHED
       description: NOT_PUBLISHED = Admin đã kiểm Page và xác nhận bài chưa lên → FAILED (cho phép retry)
+    PublishTikTokDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: number
+          minimum: 0
+          description: posts.version mà Admin đang xem
+        consent:
+          description: Bắt buộc về nghiệp vụ (kiểm ở service)
+          allOf:
+            - $ref: "#/components/schemas/TikTokPublishConsentDto"
+      required:
+        - expectedVersion
     ReconcileFacebookDto:
       type: object
       properties:
@@ -3273,6 +3336,11 @@ components:
         reach:
           type: number
           description: "Tổng delta reach (xấp xỉ: reach là người xem duy nhất tích luỹ). TikTok luôn 0."
+        lastSyncedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Lần job ghi chỉ số gần nhất của kênh (max metrics_synced_at, không lọc theo khoảng). Chỉ có ở `totals`; NULL = chưa từng đồng bộ.
       required:
         - channel
         - posts
@@ -3312,6 +3380,14 @@ components:
           type: number
         reach:
           type: number
+        posts:
+          type: number
+          minimum: 0
+          description: Bản đăng PUBLISHED có giờ đăng (giờ VN) rơi vào ngày này
+        videos:
+          type: number
+          minimum: 0
+          description: "Trong số đó là video (TikTok: mọi bài)"
       required:
         - date
         - views
@@ -3319,6 +3395,8 @@ components:
         - comments
         - shares
         - reach
+        - posts
+        - videos
     SocialDashboardDto:
       type: object
       properties:
@@ -3334,11 +3412,33 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SocialChannelSeriesDto"
+        previousFrom:
+          type: string
+          example: 2026-08-07
+          description: "Đầu kỳ trước: cùng số ngày, ngay trước `from`"
+        previousTo:
+          type: string
+          example: 2026-09-05
+          description: Cuối kỳ trước (= from − 1 ngày)
+        previousTotals:
+          description: "KPI kỳ trước để tính % thay đổi. Chỉ số tương tác chỉ có trong 90 ngày giữ metrics_daily: phần kỳ trước cũ hơn mốc đó tính 0."
+          type: array
+          items:
+            $ref: "#/components/schemas/SocialChannelKpiDto"
+        lastSyncedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Max lastSyncedAt của các kênh đã chọn
       required:
         - from
         - to
         - totals
         - daily
+        - previousFrom
+        - previousTo
+        - previousTotals
+        - lastSyncedAt
     SocialMediaDto:
       type: object
       properties:
@@ -3494,6 +3594,99 @@ components:
         - publishedAt
         - updatedAt
         - version
+    SocialSyncFacebookSkip:
+      type: string
+      enum:
+        - DISABLED
+        - NOT_CONFIGURED
+      description: Phần Facebook bị bỏ qua
+    SocialSyncRunDto:
+      type: object
+      properties:
+        skipped:
+          description: Phần Facebook bị bỏ qua
+          allOf:
+            - $ref: "#/components/schemas/SocialSyncFacebookSkip"
+        tiktokSkipped:
+          description: Phần TikTok bị bỏ qua
+          allOf:
+            - $ref: "#/components/schemas/SocialSyncTikTokSkip"
+        staleMarkedUncertain:
+          type: number
+          minimum: 0
+        reconciled:
+          type: number
+          minimum: 0
+        scheduledPublished:
+          type: number
+          minimum: 0
+        deletedOnFacebook:
+          type: number
+          minimum: 0
+        imported:
+          type: number
+          minimum: 0
+          description: Bài đăng thẳng trên Page vừa nhập
+        metricsRefreshed:
+          type: number
+          minimum: 0
+          description: Bản đăng Facebook đã làm mới chỉ số
+        videosResolved:
+          type: number
+          minimum: 0
+        videoAssetsReleased:
+          type: number
+          minimum: 0
+        tiktokInitialized:
+          type: number
+          minimum: 0
+        tiktokChunksUploaded:
+          type: number
+          minimum: 0
+        tiktokPublished:
+          type: number
+          minimum: 0
+        tiktokFailed:
+          type: number
+          minimum: 0
+        tiktokMetricsRefreshed:
+          type: number
+          minimum: 0
+          description: Bản đăng TikTok đã làm mới chỉ số
+        errors:
+          description: 'Lỗi theo bước dạng "<bước>: <thông điệp đã che>"; lỗi một bước không làm hỏng cả lượt'
+          type: array
+          items:
+            type: string
+        hasMore:
+          type: boolean
+          description: Hết time budget trước khi xong mọi việc; phần còn lại để lượt sau
+        durationMs:
+          type: number
+          minimum: 0
+      required:
+        - staleMarkedUncertain
+        - reconciled
+        - scheduledPublished
+        - deletedOnFacebook
+        - imported
+        - metricsRefreshed
+        - videosResolved
+        - videoAssetsReleased
+        - tiktokInitialized
+        - tiktokChunksUploaded
+        - tiktokPublished
+        - tiktokFailed
+        - tiktokMetricsRefreshed
+        - errors
+        - hasMore
+        - durationMs
+    SocialSyncTikTokSkip:
+      type: string
+      enum:
+        - DISABLED
+        - NOT_CONNECTED
+      description: Phần TikTok bị bỏ qua
     SocialTopPostDto:
       type: object
       properties:
@@ -3509,6 +3702,10 @@ components:
         permalinkUrl:
           type: string
           format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+          description: "Ảnh nhỏ: media đầu tiên của bản đăng (thumbnail, hoặc chính ảnh) rồi tới ảnh bìa bài; vắng = không có ảnh"
         publishAt:
           type: string
           format: date-time
@@ -3585,6 +3782,31 @@ components:
         - connected
         - reconnectRequired
         - scopes
+    TikTokCommercialContentDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Công tắc "Nội dung thương mại" (mặc định tắt). Tắt thì hai lựa chọn dưới luôn false.
+        yourBrand:
+          type: boolean
+          description: '"Your brand": quảng bá chính mình/doanh nghiệp của mình (Brand Organic)'
+        brandedContent:
+          type: boolean
+          description: '"Branded content": quảng bá cho bên thứ ba (Paid partnership); không được SELF_ONLY'
+      required:
+        - enabled
+        - yourBrand
+        - brandedContent
+    TikTokCommercialContentInputDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        yourBrand:
+          type: boolean
+        brandedContent:
+          type: boolean
     TikTokConnectStartDto:
       type: object
       properties:
@@ -3666,6 +3888,13 @@ components:
           type: boolean
         disableStitch:
           type: boolean
+        commercialContent:
+          description: Công bố nội dung thương mại; trường con bỏ trống giữ giá trị đã lưu
+          allOf:
+            - $ref: "#/components/schemas/TikTokCommercialContentInputDto"
+        isAigc:
+          type: boolean
+          description: Video do AI tạo → TikTok gắn nhãn AI-generated (is_aigc)
     TikTokPrivacyLevel:
       type: string
       enum:
@@ -3695,6 +3924,11 @@ components:
           type: boolean
         disableStitch:
           type: boolean
+        commercialContent:
+          $ref: "#/components/schemas/TikTokCommercialContentDto"
+        isAigc:
+          type: boolean
+          description: Video do AI tạo (is_aigc)
         postId:
           type: string
           description: Id video công khai trên TikTok (chỉ có khi bài công khai và đã qua kiểm duyệt)
@@ -3734,6 +3968,8 @@ components:
         - disableComment
         - disableDuet
         - disableStitch
+        - commercialContent
+        - isAigc
         - mediaCount
         - metrics
         - media
@@ -3758,6 +3994,11 @@ components:
           type: boolean
         disableStitch:
           type: boolean
+        commercialContent:
+          $ref: "#/components/schemas/TikTokCommercialContentDto"
+        isAigc:
+          type: boolean
+          description: Video do AI tạo (is_aigc)
         postId:
           type: string
           description: Id video công khai trên TikTok (chỉ có khi bài công khai và đã qua kiểm duyệt)
@@ -3791,8 +4032,19 @@ components:
         - disableComment
         - disableDuet
         - disableStitch
+        - commercialContent
+        - isAigc
         - mediaCount
         - metrics
+    TikTokPublishConsentDto:
+      type: object
+      properties:
+        musicUsageConfirmed:
+          type: boolean
+          description: "Phải true: người duyệt đã đọc \"By posting, you agree to TikTok's Music Usage Confirmation\"."
+        brandedContentPolicyConfirmed:
+          type: boolean
+          description: "Phải true khi bài có \"Branded content\": \"…agree to TikTok's Branded Content Policy and Music Usage Confirmation.\""
     TikTokPublishPhase:
       type: string
       enum:

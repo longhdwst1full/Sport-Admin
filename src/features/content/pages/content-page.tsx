@@ -59,6 +59,7 @@ import { SocialPostDetailDrawer } from '../components/social-post-detail-drawer'
 import { SocialPostEditorDrawer, type SocialEditorTarget } from '../components/social-post-editor-drawer';
 import { FacebookSettingsHint } from '../components/facebook-settings-hint';
 import { SocialChannelIcons } from '../components/social-channel-icons';
+import { SocialSyncButton } from '../components/social-sync-button';
 import { TikTokAccountCard } from '../components/tiktok-account-card';
 import { SOCIAL_ACTION_BUTTON } from '../constants/social-action-buttons';
 import {
@@ -238,6 +239,7 @@ export function ContentPage() {
                 aria-label="Làm mới"
               />
             </Tooltip>
+            {filters.tab === CONTENT_TAB.SOCIAL && <SocialSyncButton />}
             {createItems.length > 0 && (
               <Dropdown
                 menu={{
