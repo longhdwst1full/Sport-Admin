@@ -15,7 +15,7 @@
 
 ## Ranh giới
 
-`pages/flash-sales-page.tsx` (list/filter/tạo mới) → `components/flash-sale-table.tsx` (bảng) → `components/flash-sale-detail-drawer.tsx` (chi tiết, vòng đời, quản lý suất bán).
+`pages/flash-sales-page.tsx` (list/filter/tạo mới) → `components/flash-sale-table.tsx` (bảng) → `components/flash-sale-detail-drawer.tsx` (chi tiết, vòng đời, quản lý suất bán). Tạo chiến dịch + suất: `hooks/use-create-flash-sale.ts`, mapping form → DTO ở `model/flash-sale.mapper.ts`.
 
 ## Generated operation
 

@@ -34,15 +34,20 @@ export function PosCounterHeader({
     [branches.data?.items],
   );
 
-  const scopes = auth.currentUser?.scopes ?? [];
-  const hasGlobalScope = scopes.some((scope) => scope.type === AuthScopeDtoType.GLOBAL);
-  const scopedBranchIds = scopes.flatMap((scope) =>
-    scope.type === AuthScopeDtoType.BRANCH && scope.branchId ? [scope.branchId] : [],
-  );
+  const scopes = auth.currentUser?.scopes;
+  const hasGlobalScope = (scopes ?? []).some((scope) => scope.type === AuthScopeDtoType.GLOBAL);
   // Phạm vi toàn hệ thống thì thấy mọi chi nhánh; còn lại chỉ thấy chi nhánh mình phụ trách.
-  const selectableBranches = hasGlobalScope
-    ? activeBranches
-    : activeBranches.filter((branch) => scopedBranchIds.includes(branch.id));
+  const selectableBranches = useMemo(() => {
+    if (hasGlobalScope) return activeBranches;
+    const scopedBranchIds = (scopes ?? []).flatMap((scope) =>
+      scope.type === AuthScopeDtoType.BRANCH && scope.branchId ? [scope.branchId] : [],
+    );
+    return activeBranches.filter((branch) => scopedBranchIds.includes(branch.id));
+  }, [activeBranches, hasGlobalScope, scopes]);
+  const branchOptions = useMemo(
+    () => selectableBranches.map((branch) => ({ value: branch.id, label: branch.name })),
+    [selectableBranches],
+  );
   const lockedToSingleBranch = !hasGlobalScope && selectableBranches.length === 1;
 
   useEffect(() => {
@@ -81,7 +86,7 @@ export function PosCounterHeader({
               )
             }
             onChange={onChange}
-            options={selectableBranches.map((branch) => ({ value: branch.id, label: branch.name }))}
+            options={branchOptions}
           />
         </Form.Item>
       </Form>

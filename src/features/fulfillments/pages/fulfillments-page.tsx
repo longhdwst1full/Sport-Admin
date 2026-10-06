@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { CarOutlined, InboxOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons';
-import { Alert, Button, Input, Select, Tooltip } from 'antd';
-import { useDebounce } from 'use-debounce';
+import { useSearchState } from '@/shared/hooks/use-search-state';
+import { CarOutlined, InboxOutlined, WarningOutlined } from '@ant-design/icons';
+import { Alert, Select } from 'antd';
 import { useListAdminFulfillments } from '@/generated/api/fulfillments/fulfillments';
 import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
+import { FilterBar, RefreshButton } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
 // `orders` không còn import gì từ `fulfillments` (OrderDetailDrawer nhận panel qua prop),
 // nên import qua barrel công khai ở đây không còn tạo vòng phụ thuộc giữa hai feature.
@@ -15,25 +17,20 @@ import { FulfillmentWorkflowPanel } from '../components/fulfillment-workflow-pan
 import {
   ACTIONABLE_FULFILLMENT_STATUSES,
   FULFILLMENT_PAGE_SIZE,
-  fulfillmentStatusPresentation,
+  fulfillmentStatusOptions,
 } from '../constants/fulfillment.constants';
 
-const statusOptions = Object.entries(fulfillmentStatusPresentation).map(([value, { label }]) => ({
-  value,
-  label,
-}));
-
 export function FulfillmentsPage() {
-  const [search, setSearch] = useState('');
+  const search = useSearchState();
+  const debouncedSearch = search.debounced;
   const [status, setStatus] = useState<FulfillmentStatus>();
   const [selectedOrderId, setSelectedOrderId] = useState<string>();
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
   const [page, setPage] = useListPageReset([debouncedSearch, status]);
 
   const fulfillments = useListAdminFulfillments({
     page,
     limit: FULFILLMENT_PAGE_SIZE,
-    search: debouncedSearch || undefined,
+    search: debouncedSearch,
     status,
   });
   const rows = useMemo(() => fulfillments.data?.items ?? [], [fulfillments.data]);
@@ -73,12 +70,13 @@ export function FulfillmentsPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-wrap gap-3">
-            <Input.Search
-              allowClear
-              className="min-w-64 flex-1"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+          <FilterBar
+            actions={<RefreshButton onRefresh={fulfillments.refetch} loading={fulfillments.isFetching} />}
+          >
+            <SearchInput
+              className="w-full sm:!w-[360px]"
+              value={search.value}
+              onChange={search.setValue}
               placeholder="Mã giao vận, mã đơn, tracking, tên, SĐT hoặc email người nhận"
             />
             <Select
@@ -87,17 +85,9 @@ export function FulfillmentsPage() {
               value={status}
               onChange={setStatus}
               placeholder="Trạng thái"
-              options={statusOptions}
+              options={fulfillmentStatusOptions}
             />
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => void fulfillments.refetch()}
-                loading={fulfillments.isFetching}
-                aria-label="Làm mới"
-              />
-            </Tooltip>
-          </div>
+          </FilterBar>
         }
       >
         {fulfillments.isError && (

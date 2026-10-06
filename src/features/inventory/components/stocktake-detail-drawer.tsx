@@ -3,7 +3,8 @@ import { Alert, App, Button, Descriptions, Drawer, Input, Modal, Skeleton, Space
 import { useState } from 'react';
 import { usePermissions } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import {
   getGetStocktakeQueryKey,
   getListInventoryBalancesQueryKey,
@@ -14,20 +15,47 @@ import {
   useGetStocktake,
   useSubmitStocktake,
 } from '@/generated/api/inventory/inventory';
+import type { StocktakeItemDto } from '@/generated/api/inventory/inventory.schemas';
 import {
   availableStocktakeActions,
   getStocktakeErrorMessage,
   isSelfApprovalError,
   stocktakeApproveGate,
 } from '../model/stocktake-actions.policy';
-import { formatStocktakeTime, stocktakeScopeLabel, stocktakeStatusMeta } from '../model/stocktake-display';
+import { formatStocktakeTime, stocktakeScopeLabel, stocktakeStatusMeta } from '../constants/stocktake.constants';
 import { StocktakeCountDrawer } from './stocktake-count-drawer';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const varianceTag = (value?: number | null) => {
   if (value === null || value === undefined) return <Tag>Chưa đếm</Tag>;
   if (value === 0) return <Tag color="green">Khớp</Tag>;
   return <Tag color={value > 0 ? 'blue' : 'red'}>{value > 0 ? `Thừa ${value}` : `Thiếu ${Math.abs(value)}`}</Tag>;
 };
+
+const STOCKTAKE_ITEM_COLUMNS: ColumnsType<StocktakeItemDto> = [
+  { title: 'SKU', dataIndex: 'sku', width: 150, render: (value) => <Typography.Text code>{value}</Typography.Text> },
+  { title: 'Sản phẩm', dataIndex: 'productName', ellipsis: true },
+  col.number<StocktakeItemDto>('systemQuantity', 'Tồn hệ thống', { width: 120 }),
+  { title: 'Đếm thực tế', dataIndex: 'countedQuantity', width: 115, align: 'right', render: (value) => value ?? <Tag>Chưa đếm</Tag> },
+  { title: 'Chênh lệch', dataIndex: 'varianceQuantity', width: 125, render: varianceTag },
+  col.number<StocktakeItemDto>('currentOnHand', 'Tồn hiện tại', { width: 115 }),
+  {
+    title: 'Ghi sổ',
+    dataIndex: 'postingDelta',
+    width: 130,
+    align: 'right',
+    render: (value: number | null, row) => {
+      if (value === null || value === undefined) return '—';
+      return (
+        <Space size={4}>
+          {row.drifted && <Tooltip title="Có phát sinh sau khi đếm; số này đã cộng bù"><Tag color="orange">bù</Tag></Tooltip>}
+          <span>{value === 0 ? '—' : value > 0 ? `+${value}` : value}</span>
+        </Space>
+      );
+    },
+  },
+  col.text<StocktakeItemDto>('note', 'Ghi chú', { width: 160, ellipsis: true }),
+];
 
 export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: () => void }) {
   const { message, modal } = App.useApp();
@@ -120,7 +148,7 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
     <>
       <Drawer
         title={stocktake ? `Phiếu kiểm kê ${stocktake.stocktakeNo}` : 'Phiếu kiểm kê'}
-        width={980}
+        width={DRAWER_WIDTH.lg}
         open={Boolean(id)}
         onClose={onClose}
         destroyOnHidden
@@ -193,30 +221,7 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
               dataSource={stocktake.items}
               pagination={false}
               scroll={{ x: 880, y: 420 }}
-              columns={[
-                { title: 'SKU', dataIndex: 'sku', width: 150, render: (value) => <Typography.Text code>{value}</Typography.Text> },
-                { title: 'Sản phẩm', dataIndex: 'productName', ellipsis: true },
-                { title: 'Tồn hệ thống', dataIndex: 'systemQuantity', width: 120, align: 'right', render: (value) => value ?? '—' },
-                { title: 'Đếm thực tế', dataIndex: 'countedQuantity', width: 115, align: 'right', render: (value) => value ?? <Tag>Chưa đếm</Tag> },
-                { title: 'Chênh lệch', dataIndex: 'varianceQuantity', width: 125, render: varianceTag },
-                { title: 'Tồn hiện tại', dataIndex: 'currentOnHand', width: 115, align: 'right', render: (value) => value ?? '—' },
-                {
-                  title: 'Ghi sổ',
-                  dataIndex: 'postingDelta',
-                  width: 130,
-                  align: 'right',
-                  render: (value: number | null, row) => {
-                    if (value === null || value === undefined) return '—';
-                    return (
-                      <Space size={4}>
-                        {row.drifted && <Tooltip title="Có phát sinh sau khi đếm; số này đã cộng bù"><Tag color="orange">bù</Tag></Tooltip>}
-                        <span>{value === 0 ? '—' : value > 0 ? `+${value}` : value}</span>
-                      </Space>
-                    );
-                  },
-                },
-                { title: 'Ghi chú', dataIndex: 'note', width: 160, ellipsis: true, render: (value) => value ?? '—' },
-              ]}
+              columns={STOCKTAKE_ITEM_COLUMNS}
             />
           </>
         )}

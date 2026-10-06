@@ -1,7 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, InputNumber, Modal, Skeleton, Tag, Typography } from 'antd';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -18,12 +19,13 @@ import {
   useShipStockTransfer,
   useSubmitStockTransfer,
 } from '@/generated/api/inventory/inventory';
-import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory.schemas';
+import type { StockTransferDetailDto, StockTransferItemDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage, isStaleWriteError, STALE_WRITE_RELOADED_MESSAGE } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { StockTransferCreateDrawer } from './stock-transfer-create-drawer';
 import { availableStockTransferActions } from '../model/stock-transfer-actions.policy';
-import { stockTransferStatusMeta } from '../model/stock-transfer-display';
+import { stockTransferStatusMeta } from '../constants/stock-transfer.constants';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 interface ReceiveLineValues {
   sku: string;
@@ -46,6 +48,15 @@ const receiveSchema: yup.ObjectSchema<ReceiveValues> = yup.object({
 });
 
 
+
+const TRANSFER_ITEM_COLUMNS: ColumnsType<StockTransferItemDto> = [
+  { title: 'SKU / Sản phẩm', dataIndex: 'sku', render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },
+  col.number<StockTransferItemDto>('requestedQuantity', 'Yêu cầu', { width: undefined }),
+  col.number<StockTransferItemDto>('shippedQuantity', 'Đã xuất', { width: undefined }),
+  col.number<StockTransferItemDto>('receivedQuantity', 'Nhận tốt', { width: undefined }),
+  col.number<StockTransferItemDto>('damagedQuantity', 'Hỏng', { width: undefined }),
+  col.text<StockTransferItemDto>('damageReason', 'Lý do hỏng'),
+];
 
 function receiveDefaults(transfer?: StockTransferDetailDto): ReceiveValues {
   return {
@@ -178,7 +189,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
   });
 
   return (
-    <Drawer title={transfer ? `Phiếu ${transfer.transferNo}` : 'Chi tiết chuyển kho'} width={840} open={Boolean(id)} onClose={onClose} destroyOnHidden>
+    <Drawer title={transfer ? `Phiếu ${transfer.transferNo}` : 'Chi tiết chuyển kho'} width={DRAWER_WIDTH.lg} open={Boolean(id)} onClose={onClose} destroyOnHidden>
       {detail.isPending ? <Skeleton active /> : detail.isError ? (
         <QueryErrorAlert error={detail.error} retry={() => void detail.refetch()} />
       ) : !transfer ? <Empty description="Không tìm thấy phiếu chuyển kho" /> : (
@@ -204,14 +215,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
               </>
             )}
           </Descriptions>
-          <AdminTable rowKey="id" size="small" pagination={false} dataSource={transfer.items} scroll={{ x: 700 }} columns={[
-            { title: 'SKU / Sản phẩm', dataIndex: 'sku', render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },
-            { title: 'Yêu cầu', dataIndex: 'requestedQuantity', align: 'right' },
-            { title: 'Đã xuất', dataIndex: 'shippedQuantity', align: 'right' },
-            { title: 'Nhận tốt', dataIndex: 'receivedQuantity', align: 'right' },
-            { title: 'Hỏng', dataIndex: 'damagedQuantity', align: 'right' },
-            { title: 'Lý do hỏng', dataIndex: 'damageReason', render: (value) => value || '—' },
-          ]} />
+          <AdminTable rowKey="id" size="small" pagination={false} dataSource={transfer.items} scroll={{ x: 700 }} columns={TRANSFER_ITEM_COLUMNS} />
 
           {transfer.status === 'SHIPPED' && (
             <Form layout="vertical" onFinish={() => void prepareReceive()} className="rounded-xl border border-orange-200 bg-orange-50 p-4">

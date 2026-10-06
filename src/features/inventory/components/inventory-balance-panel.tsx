@@ -1,34 +1,80 @@
-import { EditOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Progress, Select } from 'antd';
+import { EditOutlined, SettingOutlined } from '@ant-design/icons';
+import { Button, Card, Progress, Select } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { useDebounce } from 'use-debounce';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { StatusTag } from '@/foundation/management';
-import { AdminTable, TableActionButton } from '@/foundation/table';
-import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
+import { SearchInput } from '@/foundation/inputs/search-input';
+import type { ColumnsType } from 'antd/es/table';
+import {
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+  AdminTable,
+  ColumnSettingsModal,
+  TableActionButton,
+  col,
+  useColumnVisibility,
+} from '@/foundation/table';
 import {
   useListInventoryBalances,
   useSummarizeInventoryBalances,
 } from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
-import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useSearchState } from '@/shared/hooks/use-search-state';
+import { BALANCE_COLUMN_ITEMS, inventoryBalanceStatusPresentation } from '../constants/inventory.constants';
+import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
-const INVENTORY_STATUSES = {
-  IN_STOCK: { color: 'green', label: 'Còn hàng' },
-  LOW_STOCK: { color: 'orange', label: 'Sắp hết hàng' },
-  OUT_OF_STOCK: { color: 'red', label: 'Hết hàng' },
-};
-
-const BALANCE_COLUMNS: ColumnItem[] = [
-  { id: 'sku', label: 'Sản phẩm / SKU', fixed: true },
-  { id: 'warehouse', label: 'Kho hàng' },
-  { id: 'onHand', label: 'Tồn vật lý' },
-  { id: 'reserved', label: 'Đang giữ chỗ' },
-  { id: 'available', label: 'Có thể bán' },
-  { id: 'reorderPoint', label: 'Điểm đặt lại' },
-  { id: 'status', label: 'Trạng thái' },
-  { id: 'actions', label: 'Thao tác', fixed: true },
+const DATA_COLUMNS: ColumnsType<InventoryBalanceDto> = [
+  {
+    title: 'Sản phẩm / SKU',
+    key: 'sku',
+    // Cột fixed BẮT BUỘC có width: thiếu thì antd không đo được cột dính và
+    // header lệch khỏi body, đúng hiện tượng bảng bị vỡ.
+    fixed: 'left',
+    width: 260,
+    render: (_, row) => (
+      <div className="min-w-0">
+        <div className="font-mono text-xs font-bold text-slate-800">{row.sku}</div>
+        <div className="truncate text-xs font-medium text-slate-500" title={row.productName}>
+          {row.productName}
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Kho lưu trữ',
+    key: 'warehouse',
+    dataIndex: 'warehouseCode',
+    width: 160,
+    render: (code: string) => (
+      <span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-700">{code}</span>
+    ),
+  },
+  col.number<InventoryBalanceDto>('onHand', 'Tồn vật lý', { width: 110, className: 'font-semibold text-slate-800' }),
+  col.number<InventoryBalanceDto>('reserved', 'Đang giữ', { width: 100, className: 'text-slate-500 text-xs' }),
+  {
+    title: 'Có thể bán',
+    key: 'available',
+    dataIndex: 'available',
+    align: 'right',
+    width: 170,
+    render: (value: number, row) => {
+      const ratio = row.onHand ? Math.round((value / row.onHand) * 100) : 0;
+      const strokeColor = ratio > 50 ? '#10b981' : ratio > 20 ? '#f59e0b' : '#ef4444';
+      return (
+        <div className="min-w-28 text-right">
+          <div className="font-bold text-slate-800 text-xs">{value}</div>
+          <Progress percent={ratio} strokeColor={strokeColor} showInfo={false} size="small" />
+        </div>
+      );
+    },
+  },
+  col.number<InventoryBalanceDto>('reorderPoint', 'Mức đặt lại', { width: 110, className: 'text-slate-400 text-xs' }),
+  col.status<InventoryBalanceDto, keyof typeof inventoryBalanceStatusPresentation>(
+    'status',
+    'Trạng thái',
+    inventoryBalanceStatusPresentation,
+    { width: 140 },
+  ),
 ];
 
 export function InventoryBalancePanel({
@@ -38,26 +84,16 @@ export function InventoryBalancePanel({
   onAdjust: (balance: InventoryBalanceDto) => void;
   onMetricsChange: (metrics: { total: number; low: number; out: number; available: number }) => void;
 }) {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const search = useSearchState();
+  const debouncedSearch = search.debounced;
   const [warehouseCode, setWarehouseCode] = useState<string>();
-  const [columnModalOpen, setColumnModalOpen] = useState(false);
-  const [colVisibility, setColVisibility] = useState<Record<string, boolean>>({
-    sku: true,
-    warehouse: true,
-    onHand: true,
-    reserved: true,
-    available: true,
-    reorderPoint: true,
-    status: true,
-    actions: true,
-  });
+  const [page, setPage] = useListPageReset([debouncedSearch, warehouseCode]);
+  const columnsState = useColumnVisibility(BALANCE_COLUMN_ITEMS);
 
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  const warehouses = useSearchActiveAdminWarehouses({ page: 1, limit: 50 });
+  const warehouses = useWarehouseOptions();
   const query = useListInventoryBalances({
     page,
-    limit: 25,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(warehouseCode ? { warehouseCode } : {}),
   });
@@ -66,8 +102,8 @@ export function InventoryBalancePanel({
   /**
    * Thẻ số liệu hỏi riêng một endpoint tổng hợp.
    *
-   * Trước đây ba thẻ đếm trên `items` của trang đang xem (25 dòng), nên "sắp hết hàng: 12" thực
-   * chất là "12 trong 25 dòng đang hiện" và đổi trang là số đổi theo. `page`/`limit` KHÔNG truyền
+   * Trước đây ba thẻ đếm trên `items` của trang đang xem, nên "sắp hết hàng: 12" thực
+   * chất là "12 trong số dòng đang hiện" và đổi trang là số đổi theo. `page`/`limit` KHÔNG truyền
    * vào đây — chỉ bộ lọc, để đổi trang không phải tính lại tổng.
    */
   const summary = useSummarizeInventoryBalances({
@@ -85,154 +121,37 @@ export function InventoryBalancePanel({
     });
   }, [onMetricsChange, summary.data]);
 
-  const columns = [
-    ...(colVisibility.sku !== false
-      ? [
-          {
-            title: 'Sản phẩm / SKU',
-            key: 'sku',
-            // Cột fixed BẮT BUỘC có width: thiếu thì antd không đo được cột dính và
-            // header lệch khỏi body, đúng hiện tượng bảng bị vỡ.
-            fixed: 'left' as const,
-            width: 260,
-            render: (_: unknown, row: InventoryBalanceDto) => (
-              <div className="min-w-0">
-                <div className="font-mono text-xs font-bold text-slate-800">{row.sku}</div>
-                <div className="truncate text-xs font-medium text-slate-500" title={row.productName}>
-                  {row.productName}
-                </div>
-              </div>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.warehouse !== false
-      ? [
-          {
-            title: 'Kho lưu trữ',
-            dataIndex: 'warehouseCode',
-            width: 160,
-            render: (code: string) => (
-              <span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-700">
-                {code}
-              </span>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.onHand !== false
-      ? [
-          {
-            title: 'Tồn vật lý',
-            dataIndex: 'onHand',
-            align: 'right' as const,
-            width: 110,
-            render: (val: number) => (
-              <span className="font-semibold text-slate-800">{val}</span>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.reserved !== false
-      ? [
-          {
-            title: 'Đang giữ',
-            dataIndex: 'reserved',
-            align: 'right' as const,
-            width: 100,
-            render: (val: number) => (
-              <span className="text-slate-500 text-xs">{val}</span>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.available !== false
-      ? [
-          {
-            title: 'Có thể bán',
-            dataIndex: 'available',
-            align: 'right' as const,
-            width: 170,
-            render: (value: number, row: InventoryBalanceDto) => {
-              const ratio = row.onHand ? Math.round((value / row.onHand) * 100) : 0;
-              const strokeColor =
-                ratio > 50 ? '#10b981' : ratio > 20 ? '#f59e0b' : '#ef4444';
-              return (
-                <div className="min-w-28 text-right">
-                  <div className="font-bold text-slate-800 text-xs">{value}</div>
-                  <Progress
-                    percent={ratio}
-                    strokeColor={strokeColor}
-                    showInfo={false}
-                    size="small"
-                  />
-                </div>
-              );
-            },
-          },
-        ]
-      : []),
-    ...(colVisibility.reorderPoint !== false
-      ? [
-          {
-            title: 'Mức đặt lại',
-            dataIndex: 'reorderPoint',
-            align: 'right' as const,
-            width: 110,
-            render: (val: number) => (
-              <span className="text-slate-400 text-xs">{val}</span>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.status !== false
-      ? [
-          {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            width: 140,
-            render: (value: keyof typeof INVENTORY_STATUSES) => (
-              <StatusTag status={value} presentations={INVENTORY_STATUSES} />
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.actions !== false
-      ? [
-          {
-            title: '',
-            key: 'actions',
-            fixed: 'right' as const,
-            width: 120,
-            render: (_: unknown, row: InventoryBalanceDto) => (
-              <PermissionGate permission="inventory.stock.adjust">
-                <TableActionButton
-                  label={`Điều chỉnh tồn SKU ${row.sku}`}
-                  icon={<EditOutlined />}
-                  onClick={() => onAdjust(row)}
-                  className="text-emerald-600 font-medium"
-                />
-              </PermissionGate>
-            ),
-          },
-        ]
-      : []),
-  ];
+  const { visibility } = columnsState;
+  const columns = useMemo(
+    () =>
+      [
+        ...DATA_COLUMNS,
+        col.actions<InventoryBalanceDto>(
+          (row) => (
+            <PermissionGate permission="inventory.stock.adjust">
+              <TableActionButton
+                label={`Điều chỉnh tồn SKU ${row.sku}`}
+                icon={<EditOutlined />}
+                onClick={() => onAdjust(row)}
+                className="text-emerald-600 font-medium"
+              />
+            </PermissionGate>
+          ),
+          { title: '', align: undefined },
+        ),
+      ].filter((column) => visibility[String(column.key)] !== false),
+    [visibility, onAdjust],
+  );
 
   return (
     <Card variant="borderless" className="rounded-2xl shadow-xs">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <Input
-            allowClear
-            prefix={<SearchOutlined className="text-slate-400" />}
+          <SearchInput
             placeholder="Tìm SKU hoặc tên sản phẩm..."
-            value={search}
+            value={search.value}
             className="w-72"
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
+            onChange={search.setValue}
           />
           <Select
             allowClear
@@ -240,21 +159,15 @@ export function InventoryBalancePanel({
             optionFilterProp="label"
             placeholder="Tất cả kho hàng"
             className="w-56"
-            loading={warehouses.isPending}
-            options={(warehouses.data?.items ?? []).map((item) => ({
-              value: item.code,
-              label: `${item.code} — ${item.label}`,
-            }))}
-            onChange={(value) => {
-              setWarehouseCode(value);
-              setPage(1);
-            }}
+            loading={warehouses.query.isPending}
+            options={warehouses.options}
+            onChange={setWarehouseCode}
           />
         </div>
 
         <Button
           icon={<SettingOutlined />}
-          onClick={() => setColumnModalOpen(true)}
+          onClick={columnsState.open}
           className="text-slate-600"
         >
           Tùy chỉnh cột
@@ -272,7 +185,7 @@ export function InventoryBalancePanel({
         scroll={{ x: 1160 }}
         pagination={{
           current: page,
-          pageSize: query.data?.limit ?? 25,
+          pageSize: query.data?.limit ?? ADMIN_TABLE_DEFAULT_PAGE_SIZE,
           total: query.data?.total ?? 0,
           showSizeChanger: false,
           showTotal: (total) => `Tổng ${total} dòng tồn`,
@@ -281,25 +194,7 @@ export function InventoryBalancePanel({
         columns={columns}
       />
 
-      <ColumnSettingsModal
-        isOpen={columnModalOpen}
-        onClose={() => setColumnModalOpen(false)}
-        columns={BALANCE_COLUMNS}
-        visibility={colVisibility}
-        onChange={setColVisibility}
-        onReset={() =>
-          setColVisibility({
-            sku: true,
-            warehouse: true,
-            onHand: true,
-            reserved: true,
-            available: true,
-            reorderPoint: true,
-            status: true,
-            actions: true,
-          })
-        }
-      />
+      <ColumnSettingsModal {...columnsState.modalProps} columns={BALANCE_COLUMN_ITEMS} />
     </Card>
   );
 }

@@ -15,6 +15,7 @@ import { formatDateTime } from '@/lib/format/datetime';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { moneyFormatter, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 type Action = 'confirm' | 'reject';
 
@@ -88,7 +89,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
 
   return (
     <>
-      <Drawer open={Boolean(paymentId)} onClose={closeDrawer} width={720} title={payment ? `Thanh toán ${payment.paymentRef}` : 'Chi tiết thanh toán'} destroyOnHidden>
+      <Drawer open={Boolean(paymentId)} onClose={closeDrawer} width={DRAWER_WIDTH.md} title={payment ? `Thanh toán ${payment.paymentRef}` : 'Chi tiết thanh toán'} destroyOnHidden>
         {detail.isLoading ? <div className="grid min-h-64 place-items-center"><Spin size="large" /></div> : detail.isError ? <Alert type="error" showIcon message="Không tải được thanh toán" description={getApiErrorMessage(detail.error)} /> : !payment ? <Empty /> : (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3"><div><Typography.Title level={4} className="!mb-1">{payment.orderNo}</Typography.Title><Typography.Text type="secondary">{paymentMethodLabels[payment.method] ?? payment.method}</Typography.Text></div>{status && <Tag color={status.color}>{status.label}</Tag>}</div>

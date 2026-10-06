@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import {
   CloseCircleOutlined,
   CopyOutlined,
@@ -34,6 +35,7 @@ import {
   getListAdminOrdersQueryKey,
   useGetAdminOrder,
 } from '@/generated/api/orders/orders';
+import type { OrderItemDto } from '@/generated/api/orders/orders.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
@@ -51,6 +53,7 @@ import { fulfillmentStatusPresentation } from '@/shared/constants/fulfillment-st
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
 import type { ReactNode } from 'react';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 interface OrderDetailDrawerProps {
   orderId?: string;
@@ -88,6 +91,44 @@ function getOrderCurrentStep(status: string): number {
       return 0;
   }
 }
+
+const ORDER_ITEM_COLUMNS: ColumnsType<OrderItemDto> = [
+  {
+    title: 'Sản phẩm',
+    key: 'product',
+    render: (_, item) => (
+      <div className="flex items-center gap-3">
+        <Avatar
+          shape="square"
+          size={46}
+          src={item.imageUrl ?? undefined}
+          className="rounded-lg bg-slate-100 flex-shrink-0 text-slate-600 font-bold border border-slate-200"
+        >
+          {item.productName[0]}
+        </Avatar>
+        <div className="min-w-0">
+          <span className="font-medium text-slate-800 text-xs block truncate">
+            {item.productName}
+          </span>
+          <div className="text-[11px] text-slate-400 font-mono">
+            {item.variantName} · {item.sku}
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'SL',
+    dataIndex: 'quantity',
+    width: 60,
+    align: 'center',
+    render: (q: number) => (
+      <span className="font-semibold text-slate-700">{q}</span>
+    ),
+  },
+  col.money<OrderItemDto>('unitPrice', 'Đơn giá', { width: 120 }),
+  col.money<OrderItemDto>('lineTotal', 'Thành tiền', { width: 130, className: 'font-semibold text-slate-800' }),
+];
 
 export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: OrderDetailDrawerProps) {
   const { message } = App.useApp();
@@ -178,7 +219,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
 
   return (
     <Drawer
-      width={780}
+      width={DRAWER_WIDTH.lg}
       open={Boolean(orderId)}
       title={null}
       onClose={closeDrawer}
@@ -396,59 +437,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                 size="small"
                 pagination={false}
                 dataSource={order.items}
-                columns={[
-                  {
-                    title: 'Sản phẩm',
-                    key: 'product',
-                    render: (_, item) => (
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          shape="square"
-                          size={46}
-                          src={item.imageUrl ?? undefined}
-                          className="rounded-lg bg-slate-100 flex-shrink-0 text-slate-600 font-bold border border-slate-200"
-                        >
-                          {item.productName[0]}
-                        </Avatar>
-                        <div className="min-w-0">
-                          <span className="font-medium text-slate-800 text-xs block truncate">
-                            {item.productName}
-                          </span>
-                          <div className="text-[11px] text-slate-400 font-mono">
-                            {item.variantName} · {item.sku}
-                          </div>
-                        </div>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: 'SL',
-                    dataIndex: 'quantity',
-                    width: 60,
-                    align: 'center' as const,
-                    render: (q: number) => (
-                      <span className="font-semibold text-slate-700">{q}</span>
-                    ),
-                  },
-                  {
-                    title: 'Đơn giá',
-                    dataIndex: 'unitPrice',
-                    width: 120,
-                    align: 'right' as const,
-                    render: (val: number | string) => <CurrencyAmount amount={val} />,
-                  },
-                  {
-                    title: 'Thành tiền',
-                    dataIndex: 'lineTotal',
-                    width: 130,
-                    align: 'right' as const,
-                    render: (val: number | string) => (
-                      <span className="font-semibold text-slate-800">
-                        <CurrencyAmount amount={val} />
-                      </span>
-                    ),
-                  },
-                ]}
+                columns={ORDER_ITEM_COLUMNS}
               />
             </Card>
 

@@ -1,14 +1,11 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Tag, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { useMemo } from 'react';
 import type { OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
-import { StatusTag } from '@/foundation/management';
-import { AdminTable, TableActionButton } from '@/foundation/table';
-import { CurrencyAmount } from '@/foundation/typography/currency-amount';
-import {
-  orderStatusPresentation,
-  paymentStatusPresentation,
-} from '../constants/order.constants';
+import { AdminTable, TableActionButton, col } from '@/foundation/table';
+import { orderStatusPresentation, paymentStatusPresentation } from '../constants/order.constants';
 
 interface OrderTableProps {
   rows: OrderSummaryDto[];
@@ -37,6 +34,102 @@ function getRecipientGradient(name: string): string {
   return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
 }
 
+// Mọi cột có `key` trùng `id` trong `ORDER_COLUMN_ITEMS` để ẩn/hiện theo cài đặt cột.
+const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
+  {
+    title: 'Mã đơn hàng',
+    key: 'order',
+    fixed: 'left',
+    width: 200,
+    render: (_, row) => (
+      <div>
+        <span className="font-mono font-bold text-slate-800 text-sm">{row.orderNo}</span>
+        <div className="mt-0.5 text-xs text-slate-400">{formatDateTime(row.placedAt)}</div>
+      </div>
+    ),
+  },
+  {
+    title: 'Khách nhận hàng',
+    key: 'recipient',
+    width: 240,
+    render: (_, row) => {
+      const gradient = getRecipientGradient(row.recipient.name);
+      const initial = row.recipient.name.slice(0, 1).toUpperCase();
+      return (
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${gradient} text-white font-semibold text-xs shadow-xs`}
+          >
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <Typography.Text strong className="block truncate text-slate-800 text-xs">
+              {row.recipient.name}
+            </Typography.Text>
+            <div className="text-[11px] font-mono text-slate-400">{row.recipient.phone}</div>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    title: 'Chi nhánh xuất',
+    key: 'branch',
+    width: 190,
+    render: (_, row) => (
+      <div>
+        <div className="text-xs font-medium text-slate-700">{row.branchName}</div>
+        <div className="text-[11px] text-slate-400 truncate">{row.warehouseName}</div>
+      </div>
+    ),
+  },
+  {
+    title: 'SL',
+    key: 'itemCount',
+    dataIndex: 'itemCount',
+    align: 'center',
+    width: 80,
+    render: (value: number) => (
+      <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+        {value}
+      </span>
+    ),
+  },
+  col.money<OrderSummaryDto>('grandTotal', 'Tổng tiền', {
+    width: 150,
+    className: 'font-semibold text-slate-800',
+  }),
+  {
+    title: 'Thanh toán',
+    key: 'payment',
+    width: 170,
+    render: (_, row) => {
+      const state = paymentStatusPresentation[row.paymentStatus] ?? {
+        label: row.paymentStatus,
+        color: 'default',
+      };
+      return (
+        <div className="space-y-1">
+          <Tag color={state.color} className="m-0 text-[11px] font-medium">
+            {state.label}
+          </Tag>
+          <div className="text-[10px] text-slate-400">
+            {row.paymentMethod === 'COD' ? 'Tiền mặt khi nhận (COD)' : 'Chuyển khoản'}
+          </div>
+        </div>
+      );
+    },
+  },
+  col.status<OrderSummaryDto, OrderSummaryDto['status']>(
+    'status',
+    'Trạng thái',
+    orderStatusPresentation,
+    {
+      width: 160,
+    },
+  ),
+];
+
 export function OrderTable({
   rows,
   loading,
@@ -47,158 +140,23 @@ export function OrderTable({
   onPageChange,
   onOpen,
 }: OrderTableProps) {
-  const allColumns = [
-    ...(colVisibility.order !== false
-      ? [
-          {
-            title: 'Mã đơn hàng',
-            key: 'order',
-            fixed: 'left' as const,
-            width: 200,
-            render: (_: unknown, row: OrderSummaryDto) => (
-              <div>
-                <span className="font-mono font-bold text-slate-800 text-sm">{row.orderNo}</span>
-                <div className="mt-0.5 text-xs text-slate-400">
-                  {formatDateTime(row.placedAt)}
-                </div>
-              </div>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.recipient !== false
-      ? [
-          {
-            title: 'Khách nhận hàng',
-            key: 'recipient',
-            width: 240,
-            render: (_: unknown, row: OrderSummaryDto) => {
-              const gradient = getRecipientGradient(row.recipient.name);
-              const initial = row.recipient.name.slice(0, 1).toUpperCase();
-              return (
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${gradient} text-white font-semibold text-xs shadow-xs`}
-                  >
-                    {initial}
-                  </div>
-                  <div className="min-w-0">
-                    <Typography.Text strong className="block truncate text-slate-800 text-xs">
-                      {row.recipient.name}
-                    </Typography.Text>
-                    <div className="text-[11px] font-mono text-slate-400">
-                      {row.recipient.phone}
-                    </div>
-                  </div>
-                </div>
-              );
-            },
-          },
-        ]
-      : []),
-    ...(colVisibility.branch !== false
-      ? [
-          {
-            title: 'Chi nhánh xuất',
-            key: 'branch',
-            width: 190,
-            render: (_: unknown, row: OrderSummaryDto) => (
-              <div>
-                <div className="text-xs font-medium text-slate-700">{row.branchName}</div>
-                <div className="text-[11px] text-slate-400 truncate">{row.warehouseName}</div>
-              </div>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.itemCount !== false
-      ? [
-          {
-            title: 'SL',
-            dataIndex: 'itemCount',
-            align: 'center' as const,
-            width: 80,
-            render: (value: number) => (
-              <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
-                {value}
-              </span>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.grandTotal !== false
-      ? [
-          {
-            title: 'Tổng tiền',
-            dataIndex: 'grandTotal',
-            align: 'right' as const,
-            width: 150,
-            render: (value: string | number) => (
-              <div className="font-semibold text-slate-800">
-                <CurrencyAmount amount={value} />
-              </div>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.payment !== false
-      ? [
-          {
-            title: 'Thanh toán',
-            key: 'payment',
-            width: 170,
-            render: (_: unknown, row: OrderSummaryDto) => {
-              const state = paymentStatusPresentation[row.paymentStatus] ?? {
-                label: row.paymentStatus,
-                color: 'default',
-              };
-              return (
-                <div className="space-y-1">
-                  <Tag color={state.color} className="m-0 text-[11px] font-medium">
-                    {state.label}
-                  </Tag>
-                  <div className="text-[10px] text-slate-400">
-                    {row.paymentMethod === 'COD' ? 'Tiền mặt khi nhận (COD)' : 'Chuyển khoản'}
-                  </div>
-                </div>
-              );
-            },
-          },
-        ]
-      : []),
-    ...(colVisibility.status !== false
-      ? [
-          {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            width: 160,
-            render: (value: string) => (
-              <StatusTag
-                status={value}
-                presentations={orderStatusPresentation as Record<string, { label: string; color: string }>}
-              />
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.actions !== false
-      ? [
-          {
-            title: '',
-            key: 'actions',
-            fixed: 'right' as const,
-            width: 60,
-            render: (_: unknown, row: OrderSummaryDto) => (
-              <TableActionButton
-                label={`Xem đơn ${row.orderNo}`}
-                icon={<EyeOutlined className="text-slate-500 hover:text-emerald-600" />}
-                onClick={() => onOpen(row.id)}
-              />
-            ),
-          },
-        ]
-      : []),
-  ];
+  const columns = useMemo(
+    () =>
+      [
+        ...DATA_COLUMNS,
+        col.actions<OrderSummaryDto>(
+          (row) => (
+            <TableActionButton
+              label={`Xem đơn ${row.orderNo}`}
+              icon={<EyeOutlined className="text-slate-500 hover:text-emerald-600" />}
+              onClick={() => onOpen(row.id)}
+            />
+          ),
+          { title: '', width: 60, align: undefined },
+        ),
+      ].filter((column) => colVisibility[String(column.key)] !== false),
+    [colVisibility, onOpen],
+  );
 
   return (
     <AdminTable
@@ -218,7 +176,7 @@ export function OrderTable({
         showTotal: (value) => `Tổng ${value} đơn hàng`,
         onChange: onPageChange,
       }}
-      columns={allColumns}
+      columns={columns}
     />
   );
 }

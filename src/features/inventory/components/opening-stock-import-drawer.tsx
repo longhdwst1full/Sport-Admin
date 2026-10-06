@@ -1,6 +1,6 @@
 import { InboxOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Drawer, Progress, Select, Space, Typography, Upload } from 'antd';
+import { Alert, App, Button, Progress, Select, Space, Typography, Upload } from 'antd';
 import { useRef, useState } from 'react';
 import { AdminTable } from '@/foundation/table';
 import { exportTableToCsv } from '@/foundation/export/export-table';
@@ -12,7 +12,7 @@ import {
   getListStockAdjustmentsQueryKey,
 } from '@/generated/api/inventory/inventory';
 import { StockAdjustmentReason, StockAdjustmentType } from '@/generated/api/inventory/inventory.schemas';
-import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
+import type { ActiveLookupOptionDto } from '@/generated/api/organization/organization.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {
   chunkOpeningStock,
@@ -20,6 +20,10 @@ import {
   type OpeningStockLine,
   type OpeningStockParseResult,
 } from '../model/opening-stock-import';
+import { FormDrawer } from '@/foundation/overlay';
+import { useWarehouseOptions } from '../hooks/use-warehouse-options';
+
+const nameFirstLabel = (item: ActiveLookupOptionDto) => `${item.label} (${item.code})`;
 
 /**
  * Nhập tồn đầu hàng loạt từ CSV cho MỘT kho, ghi bằng phiếu OPENING_BALANCE theo lô 100 dòng.
@@ -39,7 +43,7 @@ export function OpeningStockImportDrawer({ open, onClose }: { open: boolean; onC
   const [downloading, setDownloading] = useState(false);
   const [failure, setFailure] = useState<string>();
   const batchId = useRef(crypto.randomUUID());
-  const warehouses = useSearchActiveAdminWarehouses({ page: 1, limit: 50 }, { query: { enabled: open } });
+  const warehouses = useWarehouseOptions({ enabled: open, formatLabel: nameFirstLabel });
 
   const chunks = parsed ? chunkOpeningStock(parsed.lines) : [];
   const finished = chunks.length > 0 && completedChunks === chunks.length;
@@ -122,21 +126,15 @@ export function OpeningStockImportDrawer({ open, onClose }: { open: boolean; onC
   const canSubmit = Boolean(warehouseCode) && Boolean(parsed?.lines.length) && parsed?.errors.length === 0 && !finished;
 
   return (
-    <Drawer
-      width={720}
+    <FormDrawer
       open={open}
       title="Nhập tồn đầu từ file"
-      onClose={() => { if (!running) { reset(); onClose(); } }}
-      maskClosable={!running}
-      destroyOnClose
-      footer={(
-        <div className="flex justify-end gap-2">
-          <Button disabled={running} onClick={() => { reset(); onClose(); }}>Đóng</Button>
-          <Button type="primary" loading={running} disabled={!canSubmit} onClick={() => void submit()}>
-            {completedChunks > 0 && !finished ? 'Tiếp tục ghi' : 'Ghi tồn đầu'}
-          </Button>
-        </div>
-      )}
+      onClose={() => { reset(); onClose(); }}
+      onSubmit={() => void submit()}
+      submitting={running}
+      submitDisabled={!canSubmit}
+      submitText={completedChunks > 0 && !finished ? 'Tiếp tục ghi' : 'Ghi tồn đầu'}
+      cancelText="Đóng"
     >
       <Space direction="vertical" size="large" className="w-full">
         <Alert
@@ -151,8 +149,8 @@ export function OpeningStockImportDrawer({ open, onClose }: { open: boolean; onC
             placeholder="Chọn kho"
             value={warehouseCode}
             disabled={running || completedChunks > 0}
-            loading={warehouses.isPending}
-            options={warehouses.data?.items.map((item) => ({ value: item.code, label: `${item.label} (${item.code})` }))}
+            loading={warehouses.query.isPending}
+            options={warehouses.options}
             onChange={setWarehouseCode}
           />
           <Button loading={downloading} onClick={() => void downloadTemplate()}>Tải file mẫu (toàn bộ SKU)</Button>
@@ -197,6 +195,6 @@ export function OpeningStockImportDrawer({ open, onClose }: { open: boolean; onC
           </>
         )}
       </Space>
-    </Drawer>
+    </FormDrawer>
   );
 }

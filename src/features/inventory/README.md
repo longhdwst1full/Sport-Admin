@@ -18,7 +18,9 @@
 | Tầng | File |
 | --- | --- |
 | `pages/` | `inventory-page.tsx` (+ `.stories.tsx`) — tab và điều phối |
-| `components/` | `inventory-balance-panel`, `inventory-movement-panel`, `stock-adjustment-panel`, `stock-adjustment-drawer`, `stock-transfer-panel`, `stock-transfer-create-drawer`, `stock-transfer-detail-drawer` |
+| `components/` | `inventory-balance-panel`, `inventory-movement-panel`, `stock-adjustment-panel`, `stock-adjustment-drawer`, `stock-transfer-panel`, `stock-transfer-create-drawer`, `stock-transfer-detail-drawer`, `inventory-document-filters` (hàng lọc chung phiếu chuyển kho/kiểm kê), stocktake drawers |
+| `hooks/` | `use-warehouse-options` (options kho đang hoạt động, tìm phía server), `use-inventory-document-filters` (lọc + trang của danh sách phiếu), `use-cursor-pages` (phân trang cursor có nút lùi) |
+| `constants/` | `inventory.constants` (nhãn trạng thái tồn, loại biến động, loại/lý do điều chỉnh, cột tuỳ chỉnh), `stock-transfer.constants`, `stocktake.constants` |
 
 ## Generated operation
 

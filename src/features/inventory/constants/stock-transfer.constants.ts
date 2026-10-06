@@ -1,3 +1,5 @@
+import { toOptions } from '@/shared/utils/options';
+
 /** Nhãn trạng thái phiếu chuyển kho, dùng chung giữa bảng danh sách và drawer chi tiết. */
 export const stockTransferStatusMeta = {
   DRAFT: { label: 'Nháp', color: 'default' },
@@ -6,3 +8,5 @@ export const stockTransferStatusMeta = {
   RECEIVED: { label: 'Đã nhận', color: 'green' },
   CANCELLED: { label: 'Đã huỷ', color: 'red' },
 } as const;
+
+export const stockTransferStatusOptions = toOptions(stockTransferStatusMeta);

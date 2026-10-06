@@ -1,3 +1,6 @@
+import { moneyFormatter } from '@/lib/format/money';
+import { toOptions } from '@/shared/utils/options';
+
 export const FLASH_SALE_PAGE_SIZE = 20;
 
 /** Nhãn tách khỏi mã trạng thái (`08-enums-constants.md`). */
@@ -8,6 +11,8 @@ export const flashSaleStatusPresentation: Record<string, { label: string; color:
   ENDED: { label: 'Đã kết thúc', color: 'default' },
   CANCELLED: { label: 'Đã hủy', color: 'error' },
 };
+
+export const flashSaleStatusOptions = toOptions(flashSaleStatusPresentation);
 
 /**
  * State machine bản sao phía FE để chỉ hiện đúng nút hợp lệ.
@@ -21,9 +26,21 @@ export const FLASH_SALE_TRANSITIONS: Record<string, readonly string[]> = {
   CANCELLED: [],
 };
 
-export { moneyFormatter } from '@/lib/format/money';
+export { moneyFormatter };
 
 export type PricingMode = 'PERCENT_LIST' | 'PER_ITEM';
+
+export const pricingModeOptions = toOptions<PricingMode>({
+  PER_ITEM: 'Giá từng sản phẩm',
+  PERCENT_LIST: 'Giảm % cho cả danh sách',
+});
+
+/** Nhãn SKU trong ô chọn suất bán: kèm giá hiện tại nếu có để người đặt giá flash so sánh. */
+export function variantOptionLabel(item: { code: string; label: string; priceAmount?: string | null }) {
+  return item.priceAmount
+    ? `${item.code} — ${item.label} · ${moneyFormatter.format(Number(item.priceAmount))}`
+    : `${item.code} — ${item.label}`;
+}
 
 /**
  * Giá flash tính theo phần trăm, làm tròn xuống để khách không bao giờ phải trả

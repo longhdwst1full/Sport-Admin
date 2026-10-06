@@ -32,6 +32,7 @@ import {
   setQuantity,
   toOrderItems,
 } from '../model/pos-cart';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const EMPTY_DELIVERY = {
   recipient: '',
@@ -228,7 +229,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
       <Drawer
         open={open}
         onClose={closeDrawer}
-        width="min(1080px, 96vw)"
+        width={DRAWER_WIDTH.xl}
         destroyOnHidden
         title="Tạo đơn hàng tại cửa hàng"
         extra={

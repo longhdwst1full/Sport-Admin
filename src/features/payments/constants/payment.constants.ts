@@ -1,4 +1,5 @@
-import type { PaymentStatus } from '@/generated/api/payments/payments.schemas';
+import type { PaymentMethod, PaymentStatus } from '@/generated/api/payments/payments.schemas';
+import { toOptions } from '@/shared/utils/options';
 
 export const PAYMENT_PAGE_SIZE = 20;
 
@@ -12,10 +13,17 @@ export const paymentStatusPresentation: Record<PaymentStatus, { label: string; c
   REFUNDED: { label: 'Đã hoàn tiền', color: 'purple' },
 };
 
-export const paymentMethodLabels: Record<string, string> = {
+export const paymentStatusOptions = toOptions(paymentStatusPresentation);
+
+/** Phương thức có nhãn; cũng là tập phương thức lọc được trên danh sách. */
+const labelledPaymentMethods = {
   BANK_TRANSFER: 'Chuyển khoản',
   COD: 'COD',
-};
+} satisfies Partial<Record<PaymentMethod, string>>;
+
+export const paymentMethodLabels: Record<string, string> = labelledPaymentMethods;
+
+export const paymentMethodOptions = toOptions(labelledPaymentMethods);
 
 export { moneyFormatter } from '@/lib/format/money';
 

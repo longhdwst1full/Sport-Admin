@@ -26,7 +26,11 @@ import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generate
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { CarrierShipmentStatusTag } from './carrier-shipment-status-tag';
-import { fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
+import {
+  deliveryFailureReasonOptions,
+  fulfillmentStatusPresentation,
+  returnConditionOptions,
+} from '../constants/fulfillment.constants';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 
 type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive';
@@ -269,12 +273,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
                 className="w-full"
                 value={reasonCode}
                 onChange={setReasonCode}
-                options={[
-                  { value: 'CUSTOMER_UNAVAILABLE', label: 'Không liên hệ được khách' },
-                  { value: 'CUSTOMER_REJECTED', label: 'Khách từ chối nhận' },
-                  { value: 'ADDRESS_INVALID', label: 'Địa chỉ không hợp lệ' },
-                  { value: 'OTHER', label: 'Lý do khác' },
-                ]}
+                options={deliveryFailureReasonOptions}
               />
             </div>
           )}
@@ -286,11 +285,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
                 className="w-full"
                 value={condition}
                 onChange={setCondition}
-                options={[
-                  { value: 'SELLABLE', label: 'Còn bán được — hoàn tồn bán' },
-                  { value: 'DAMAGED', label: 'Hư hỏng — không hoàn tồn bán' },
-                  { value: 'MISSING', label: 'Thiếu/mất — không hoàn tồn bán' },
-                ]}
+                options={returnConditionOptions}
               />
             </div>
           )}

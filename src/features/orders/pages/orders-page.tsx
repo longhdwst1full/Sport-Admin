@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { PosOrderDrawer } from '@/features/pos';
@@ -7,23 +7,33 @@ import {
   InboxOutlined,
   PhoneOutlined,
   PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Alert, Button, Input, Tabs, Tooltip } from 'antd';
-import { useDebounce } from 'use-debounce';
+import { Alert, Button, Tabs } from 'antd';
 import { useListAdminOrders } from '@/generated/api/orders/orders';
 import type { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
-import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
+import {
+  ColumnSettingsModal,
+  FilterBar,
+  RefreshButton,
+  useColumnVisibility,
+} from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
-import { moneyFormatter, ORDER_PAGE_SIZE, orderTabs } from '../constants/order.constants';
+import {
+  moneyFormatter,
+  ORDER_COLUMN_ITEMS,
+  ORDER_PAGE_SIZE,
+  orderTabs,
+} from '../constants/order.constants';
 
 // Nạp lười để phá vòng chunk tĩnh orders ↔ fulfillments (FulfillmentsPage lại import OrderDetailDrawer
 // từ barrel orders); vẫn đi qua barrel theo RULE-FA-03.
@@ -33,57 +43,33 @@ const FulfillmentWorkflowPanel = lazy(() =>
 
 type OrderTab = 'ALL' | OrderStatusGroup;
 
-const ORDER_COLUMNS: ColumnItem[] = [
-  { id: 'order', label: 'Mã đơn hàng', fixed: true },
-  { id: 'recipient', label: 'Người nhận hàng' },
-  { id: 'branch', label: 'Chi nhánh xuất' },
-  { id: 'itemCount', label: 'Số lượng SP' },
-  { id: 'grandTotal', label: 'Tổng tiền' },
-  { id: 'payment', label: 'Thanh toán' },
-  { id: 'status', label: 'Trạng thái đơn' },
-  { id: 'actions', label: 'Thao tác', fixed: true },
-];
-
 export function OrdersPage() {
   const [tab, setTab] = useState<OrderTab>('ALL');
   const [createOpen, setCreateOpen] = useState(false);
-  const [orderNo, setOrderNo] = useState('');
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientPhone, setRecipientPhone] = useState('');
-  const [page, setPage] = useState(1);
+  // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend: nhập cả mã đơn lẫn
+  // số điện thoại sẽ thu hẹp kết quả chứ không mở rộng như ô gộp trước đây.
+  const orderNo = useSearchState();
+  const recipientName = useSearchState();
+  const recipientPhone = useSearchState();
+  const [page, setPage] = useListPageReset([
+    tab,
+    orderNo.debounced,
+    recipientName.debounced,
+    recipientPhone.debounced,
+  ]);
   const [pageSize, setPageSize] = useState(ORDER_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
   // Đơn đang mở ở drawer chi tiết là ngữ cảnh gợi ý cho Copilot.
   useCopilotPageHints(selectedId ? { orderId: selectedId } : undefined);
-  const [columnModalOpen, setColumnModalOpen] = useState(false);
-  const [colVisibility, setColVisibility] = useState<Record<string, boolean>>({
-    order: true,
-    recipient: true,
-    branch: true,
-    itemCount: true,
-    grandTotal: true,
-    payment: true,
-    status: true,
-    actions: true,
-  });
-
-  // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend: nhập cả mã đơn lẫn
-  // số điện thoại sẽ thu hẹp kết quả chứ không mở rộng như ô gộp trước đây.
-  const [debouncedOrderNo] = useDebounce(orderNo.trim(), 350);
-  const [debouncedName] = useDebounce(recipientName.trim(), 350);
-  const [debouncedPhone] = useDebounce(recipientPhone.trim(), 350);
-  useEffect(
-    () => setPage(1),
-    [tab, debouncedOrderNo, debouncedName, debouncedPhone],
-  );
+  const columnsState = useColumnVisibility(ORDER_COLUMN_ITEMS);
 
   const orders = useListAdminOrders({
     page,
     limit: pageSize,
     statusGroup: tab === 'ALL' ? undefined : tab,
-    orderNo: debouncedOrderNo || undefined,
-    recipientName: debouncedName || undefined,
-    recipientPhone: debouncedPhone || undefined,
+    orderNo: orderNo.debounced,
+    recipientName: recipientName.debounced,
+    recipientPhone: recipientPhone.debounced,
   });
   const rows = orders.data?.items ?? [];
 
@@ -127,65 +113,52 @@ export function OrdersPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-1 flex-wrap items-center gap-3">
-              <Input
-                allowClear
-                prefix={<SearchOutlined className="text-slate-400" />}
-                className="w-full sm:!w-[220px] md:!w-[240px]"
-                value={orderNo}
-                placeholder="Nhập mã đơn hàng..."
-                onChange={(event) => setOrderNo(event.target.value)}
-              />
-              <Input
-                allowClear
-                prefix={<UserOutlined className="text-slate-400" />}
-                className="w-full sm:!w-[220px] md:!w-[240px]"
-                value={recipientName}
-                placeholder="Nhập tên người nhận..."
-                onChange={(event) => setRecipientName(event.target.value)}
-              />
-              <Input
-                allowClear
-                prefix={<PhoneOutlined className="text-slate-400" />}
-                className="w-full sm:!w-[220px] md:!w-[240px]"
-                value={recipientPhone}
-                placeholder="Nhập số điện thoại..."
-                onChange={(event) => setRecipientPhone(event.target.value)}
-              />
-            </div>
-            <div className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end items-center">
-              <Tooltip title="Làm mới dữ liệu">
+          <FilterBar
+            actions={
+              <>
+                <RefreshButton onRefresh={orders.refetch} loading={orders.isFetching} />
                 <Button
-                  icon={<ReloadOutlined />}
-                  onClick={() => void orders.refetch()}
-                  loading={orders.isFetching}
-                  aria-label="Làm mới"
-                />
-              </Tooltip>
-              <Button
-                icon={<SettingOutlined />}
-                onClick={() => setColumnModalOpen(true)}
-                className="text-slate-600"
-              >
-                Tùy chỉnh cột
-              </Button>
-              <PermissionGate permission="order.manage">
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => setCreateOpen(true)}
+                  icon={<SettingOutlined />}
+                  onClick={columnsState.open}
+                  className="text-slate-600"
                 >
-                  Tạo đơn
+                  Tùy chỉnh cột
                 </Button>
-              </PermissionGate>
-            </div>
-          </div>
+                <PermissionGate permission="order.manage">
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setCreateOpen(true)}
+                  >
+                    Tạo đơn
+                  </Button>
+                </PermissionGate>
+              </>
+            }
+          >
+            <SearchInput
+              value={orderNo.value}
+              placeholder="Nhập mã đơn hàng..."
+              onChange={orderNo.setValue}
+            />
+            <SearchInput
+              icon={<UserOutlined className="text-slate-400" />}
+              value={recipientName.value}
+              placeholder="Nhập tên người nhận..."
+              onChange={recipientName.setValue}
+            />
+            <SearchInput
+              icon={<PhoneOutlined className="text-slate-400" />}
+              value={recipientPhone.value}
+              placeholder="Nhập số điện thoại..."
+              onChange={recipientPhone.setValue}
+            />
+          </FilterBar>
         }
       >
         <Tabs
           activeKey={tab}
-          items={orderTabs.map((item) => ({ key: item.key, label: item.label }))}
+          items={orderTabs}
           onChange={(key) => setTab(key as OrderTab)}
           className="mb-3"
         />
@@ -210,7 +183,7 @@ export function OrdersPage() {
           page={page}
           pageSize={pageSize}
           total={orders.data?.total ?? 0}
-          colVisibility={colVisibility}
+          colVisibility={columnsState.visibility}
           onPageChange={(nextPage, nextPageSize) => {
             setPage(nextPageSize === pageSize ? nextPage : 1);
             setPageSize(nextPageSize);
@@ -219,25 +192,7 @@ export function OrdersPage() {
         />
       </ManagementPage>
 
-      <ColumnSettingsModal
-        isOpen={columnModalOpen}
-        onClose={() => setColumnModalOpen(false)}
-        columns={ORDER_COLUMNS}
-        visibility={colVisibility}
-        onChange={setColVisibility}
-        onReset={() =>
-          setColVisibility({
-            order: true,
-            recipient: true,
-            branch: true,
-            itemCount: true,
-            grandTotal: true,
-            payment: true,
-            status: true,
-            actions: true,
-          })
-        }
-      />
+      <ColumnSettingsModal {...columnsState.modalProps} columns={ORDER_COLUMN_ITEMS} />
 
       <OrderDetailDrawer
         orderId={selectedId}

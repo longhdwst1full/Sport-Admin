@@ -1,36 +1,21 @@
 import { useMemo, useState } from 'react';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import {
-  Alert, Button, DatePicker, Drawer, Form, Input, InputNumber, Radio, Select, Space,
-  Typography,
+  Alert, Button, DatePicker, Form, Input, InputNumber, Radio, Select, Typography,
 } from 'antd';
 import { AdminTable } from '@/foundation/table';
-import type { Dayjs } from 'dayjs';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import { useDebounce } from 'use-debounce';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import {
   applyPercent,
   moneyFormatter,
+  pricingModeOptions,
+  variantOptionLabel,
   type PricingMode,
 } from '../constants/flash-sale.constants';
-
-export interface StagedItem {
-  productVariantId: string;
-  sku: string;
-  name: string;
-  basePrice?: number;
-  salePrice: number;
-  quota: number;
-  perCustomerLimit?: number;
-}
-
-export interface CreateCampaignValues {
-  code: string;
-  name: string;
-  description?: string;
-  window: [Dayjs, Dayjs];
-}
+import { FormDrawer } from '@/foundation/overlay';
+import type { CreateCampaignValues, StagedItem } from '../model/flash-sale.mapper';
 
 export function FlashSaleCreateDrawer({
   open,
@@ -59,6 +44,10 @@ export function FlashSaleCreateDrawer({
     { query: { enabled: open } },
   );
   const options = useMemo(() => variantsQuery.data?.items ?? [], [variantsQuery.data]);
+  const variantOptions = useMemo(
+    () => options.map((option) => ({ value: option.id, label: variantOptionLabel(option) })),
+    [options],
+  );
   const picked = useMemo(() => options.find((o) => o.id === variantId), [options, variantId]);
   const basePrice = picked?.priceAmount ? Number(picked.priceAmount) : undefined;
 
@@ -111,25 +100,16 @@ export function FlashSaleCreateDrawer({
   }
 
   return (
-    <Drawer
+    <FormDrawer
       open={open}
-      width={860}
-      destroyOnClose
+      size="lg"
       title="Tạo chiến dịch flash sale"
       onClose={() => { reset(); onCancel(); }}
       afterOpenChange={(opened) => { if (!opened) reset(); }}
-      extra={
-        <Space>
-          <Button onClick={() => { reset(); onCancel(); }}>Huỷ</Button>
-          <Button
-            type="primary"
-            loading={submitting}
-            onClick={() => void form.validateFields().then((values) => onSubmit(values, items)).catch(() => undefined)}
-          >
-            Tạo chiến dịch{items.length > 0 ? ` + ${items.length} suất` : ''}
-          </Button>
-        </Space>
-      }
+      onSubmit={() => void form.validateFields().then((values) => onSubmit(values, items)).catch(() => undefined)}
+      submitting={submitting}
+      submitText={`Tạo chiến dịch${items.length > 0 ? ` + ${items.length} suất` : ''}`}
+      isDirty={() => form.isFieldsTouched() || items.length > 0}
     >
       <Alert
         className="mb-4"
@@ -173,10 +153,7 @@ export function FlashSaleCreateDrawer({
             onChange={(event) => setPricingMode(event.target.value as PricingMode)}
             optionType="button"
             buttonStyle="solid"
-            options={[
-              { value: 'PER_ITEM', label: 'Giá từng sản phẩm' },
-              { value: 'PERCENT_LIST', label: 'Giảm % cho cả danh sách' },
-            ]}
+            options={pricingModeOptions}
           />
           {pricingMode === 'PERCENT_LIST' && (
             <InputNumber
@@ -211,12 +188,7 @@ export function FlashSaleCreateDrawer({
                     : current,
               );
             }}
-            options={options.map((option) => ({
-              value: option.id,
-              label: option.priceAmount
-                ? `${option.code} — ${option.label} · ${moneyFormatter.format(Number(option.priceAmount))}`
-                : `${option.code} — ${option.label}`,
-            }))}
+            options={variantOptions}
           />
           <MoneyInput
             min={1}
@@ -278,6 +250,6 @@ export function FlashSaleCreateDrawer({
           },
         ]}
       />
-    </Drawer>
+    </FormDrawer>
   );
 }

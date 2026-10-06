@@ -47,8 +47,11 @@ import {
   applyPercent,
   flashSaleStatusPresentation,
   moneyFormatter,
+  pricingModeOptions,
+  variantOptionLabel,
   type PricingMode,
 } from '../constants/flash-sale.constants';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 interface CampaignFormValues {
   name: string;
@@ -90,6 +93,11 @@ export function FlashSaleDetailDrawer({
   const variantsQuery = useSearchActiveAdminProductVariants(
     { search: debouncedVariantSearch || undefined, page: 1, limit: 50 },
     { query: { enabled: Boolean(campaignId) && canManage } },
+  );
+
+  const variantOptions = useMemo(
+    () => (variantsQuery.data?.items ?? []).map((item) => ({ value: item.id, label: variantOptionLabel(item) })),
+    [variantsQuery.data?.items],
   );
 
   const allowedTransitions = useMemo(
@@ -171,7 +179,7 @@ export function FlashSaleDetailDrawer({
     <Drawer
       open={Boolean(campaignId)}
       onClose={onClose}
-      width={940}
+      width={DRAWER_WIDTH.lg}
       destroyOnClose
       styles={{
         header: { padding: '16px 24px', borderBottom: '1px solid #f1f5f9' },
@@ -449,10 +457,7 @@ export function FlashSaleDetailDrawer({
                     optionType="button"
                     buttonStyle="solid"
                     className="!text-xs"
-                    options={[
-                      { value: 'PER_ITEM', label: 'Giá từng sản phẩm' },
-                      { value: 'PERCENT_LIST', label: 'Giảm % cho cả danh sách' },
-                    ]}
+                    options={pricingModeOptions}
                   />
                   {pricingMode === 'PERCENT_LIST' && (
                     <InputNumber
@@ -514,12 +519,7 @@ export function FlashSaleDetailDrawer({
                                 : current,
                           });
                         }}
-                        options={(variantsQuery.data?.items ?? []).map((item) => ({
-                          value: item.id,
-                          label: item.priceAmount
-                            ? `${item.code} — ${item.label} · ${moneyFormatter.format(Number(item.priceAmount))}`
-                            : `${item.code} — ${item.label}`,
-                        }))}
+                        options={variantOptions}
                       />
                     </Form.Item>
                   </div>

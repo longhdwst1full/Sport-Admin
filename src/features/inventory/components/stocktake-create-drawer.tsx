@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Drawer, Form, Select } from 'antd';
+import { Alert, App, Form, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
@@ -8,8 +8,9 @@ import * as yup from 'yup';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import { getListStocktakesQueryKey, useCreateStocktake } from '@/generated/api/inventory/inventory';
 import type { StocktakeScopeType } from '@/generated/api/inventory/inventory.schemas';
-import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
+import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
 interface StocktakeValues {
   warehouseCode?: string;
@@ -26,6 +27,11 @@ const schema: yup.ObjectSchema<StocktakeValues> = yup.object({
     otherwise: (field) => field.max(0),
   }).required(),
 });
+
+const scopeTypeOptions: { value: StocktakeScopeType; label: string }[] = [
+  { value: 'FULL', label: 'Toàn kho — đếm mọi SKU đang có dòng tồn' },
+  { value: 'SKU_LIST', label: 'Theo danh sách SKU — kiểm kê từng phần' },
+];
 
 const emptyValues: StocktakeValues = { warehouseCode: undefined, scopeType: 'FULL', skus: [] };
 
@@ -47,9 +53,7 @@ export function StocktakeCreateDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const idempotencyKey = useRef(crypto.randomUUID());
-  const [warehouseSearch, setWarehouseSearch] = useState('');
   const [skuSearch, setSkuSearch] = useState('');
-  const [debouncedWarehouseSearch] = useDebounce(warehouseSearch.trim(), 300);
   const [debouncedSkuSearch] = useDebounce(skuSearch.trim(), 300);
   const form = useForm<StocktakeValues>({ resolver: yupResolver(schema), defaultValues: emptyValues });
   const scopeType = form.watch('scopeType');
@@ -58,9 +62,7 @@ export function StocktakeCreateDrawer({
     if (open) form.reset(emptyValues);
   }, [form, open]);
 
-  const warehouses = useSearchActiveAdminWarehouses({
-    search: debouncedWarehouseSearch || undefined, page: 1, limit: 50,
-  });
+  const warehouses = useWarehouseOptions();
   const variants = useSearchActiveAdminProductVariants({
     search: debouncedSkuSearch || undefined, page: 1, limit: 50,
   });
@@ -89,13 +91,14 @@ export function StocktakeCreateDrawer({
   });
 
   return (
-    <Drawer
+    <FormDrawer
       title="Tạo phiếu kiểm kê"
-      width={640}
       open={open}
       onClose={onClose}
-      destroyOnHidden
-      extra={<Button type="primary" loading={mutation.isPending} onClick={() => void submit()}>Tạo và bắt đầu đếm</Button>}
+      onSubmit={() => void submit()}
+      submitting={mutation.isPending}
+      submitText="Tạo và bắt đầu đếm"
+      isDirty={() => form.formState.isDirty}
     >
       <Alert
         className="mb-5"
@@ -116,10 +119,10 @@ export function StocktakeCreateDrawer({
               allowClear
               showSearch
               filterOption={false}
-              onSearch={setWarehouseSearch}
-              loading={warehouses.isFetching}
+              onSearch={warehouses.onSearch}
+              loading={warehouses.query.isFetching}
               placeholder="Tự suy ra từ chi nhánh của bạn"
-              options={(warehouses.data?.items ?? []).map((item) => ({ value: item.code, label: `${item.code} — ${item.label}` }))}
+              options={warehouses.options}
             />
           )} />
         </Form.Item>
@@ -129,10 +132,7 @@ export function StocktakeCreateDrawer({
             <Select
               {...field}
               onChange={(value) => { field.onChange(value); form.setValue('skus', []); }}
-              options={[
-                { value: 'FULL', label: 'Toàn kho — đếm mọi SKU đang có dòng tồn' },
-                { value: 'SKU_LIST', label: 'Theo danh sách SKU — kiểm kê từng phần' },
-              ]}
+              options={scopeTypeOptions}
             />
           )} />
         </Form.Item>
@@ -159,6 +159,6 @@ export function StocktakeCreateDrawer({
           </Form.Item>
         )}
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

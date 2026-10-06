@@ -1,17 +1,28 @@
-import { EyeOutlined, SearchOutlined } from '@ant-design/icons';
-import { Card, Input, Select, Tag, Typography } from 'antd';
-import { useState } from 'react';
-import { useDebounce } from 'use-debounce';
+import { EyeOutlined } from '@ant-design/icons';
+import { Card, Tag, Typography } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { AdminTable, TableActionButton } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { useMemo } from 'react';
+import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { useListStockTransfers } from '@/generated/api/inventory/inventory';
-import { StockTransferStatus } from '@/generated/api/inventory/inventory.schemas';
-import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
+import type { StockTransferStatus, StockTransferSummaryDto } from '@/generated/api/inventory/inventory.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
+import { useInventoryDocumentFilters } from '../hooks/use-inventory-document-filters';
+import { stockTransferStatusMeta, stockTransferStatusOptions } from '../constants/stock-transfer.constants';
+import { InventoryDocumentFilters } from './inventory-document-filters';
 import { StockTransferDetailDrawer } from './stock-transfer-detail-drawer';
-import { stockTransferStatusMeta } from '../model/stock-transfer-display';
 
-
+const COLUMNS: ColumnsType<StockTransferSummaryDto> = [
+  { title: 'Số phiếu', dataIndex: 'transferNo', width: 250, render: (value) => <Typography.Text code>{value}</Typography.Text> },
+  col.text<StockTransferSummaryDto>('fromWarehouseCode', 'Kho xuất', { width: 130 }),
+  col.text<StockTransferSummaryDto>('toWarehouseCode', 'Kho nhận', { width: 130 }),
+  { title: 'Trạng thái', dataIndex: 'status', width: 150, render: (value: keyof typeof stockTransferStatusMeta) => <Tag color={stockTransferStatusMeta[value].color}>{stockTransferStatusMeta[value].label}</Tag> },
+  col.number<StockTransferSummaryDto>('itemCount', 'Số SKU', { width: 90 }),
+  col.text<StockTransferSummaryDto>('reason', 'Lý do', { width: undefined, ellipsis: true }),
+  col.text<StockTransferSummaryDto>('createdByDisplayName', 'Người tạo', { width: 160 }),
+  // Mốc nghiệp vụ gần nhất của phiếu theo vòng đời nhận → xuất → gửi → tạo.
+  { title: 'Cập nhật nghiệp vụ', key: 'businessUpdatedAt', width: 170, render: (_, row) => formatDateTime(row.receivedAt ?? row.shippedAt ?? row.submittedAt ?? row.createdAt) },
+];
 
 export function StockTransferPanel({
   selectedId,
@@ -20,58 +31,28 @@ export function StockTransferPanel({
   selectedId?: string;
   onSelectedIdChange: (id?: string) => void;
 }) {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [warehouseCode, setWarehouseCode] = useState<string>();
-  const [status, setStatus] = useState<StockTransferStatus>();
-  const [warehouseSearch, setWarehouseSearch] = useState('');
-  const [debouncedSearch] = useDebounce(search.trim(), 300);
-  const [debouncedWarehouseSearch] = useDebounce(warehouseSearch.trim(), 300);
-  const query = useListStockTransfers({
-    page,
-    limit: 25,
-    search: debouncedSearch || undefined,
-    warehouseCode,
-    status,
-  });
-  const warehouses = useSearchActiveAdminWarehouses({
-    page: 1,
-    limit: 50,
-    search: debouncedWarehouseSearch || undefined,
-  });
+  const filters = useInventoryDocumentFilters<StockTransferStatus>();
+  const query = useListStockTransfers(filters.params);
+
+  const columns = useMemo(
+    () => [
+      ...COLUMNS,
+      col.actions<StockTransferSummaryDto>(
+        (row) => <TableActionButton label={`Xem phiếu ${row.transferNo}`} icon={<EyeOutlined />} onClick={() => onSelectedIdChange(row.id)} />,
+        { title: '', width: 72, align: undefined },
+      ),
+    ],
+    [onSelectedIdChange],
+  );
 
   return (
     <Card variant="borderless">
-      <div className="mb-4 flex flex-wrap gap-3">
-        <Input
-          className="max-w-sm"
-          allowClear
-          prefix={<SearchOutlined />}
-          value={search}
-          onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-          placeholder="Tìm số phiếu, kho hoặc lý do"
-        />
-        <Select
-          className="min-w-64"
-          allowClear
-          showSearch
-          filterOption={false}
-          value={warehouseCode}
-          onSearch={setWarehouseSearch}
-          onChange={(value) => { setWarehouseCode(value); setPage(1); }}
-          loading={warehouses.isFetching}
-          placeholder="Tất cả kho liên quan"
-          options={(warehouses.data?.items ?? []).map((item) => ({ value: item.code, label: `${item.code} — ${item.label}` }))}
-        />
-        <Select
-          className="min-w-44"
-          allowClear
-          value={status}
-          onChange={(value) => { setStatus(value); setPage(1); }}
-          placeholder="Tất cả trạng thái"
-          options={Object.entries(stockTransferStatusMeta).map(([value, meta]) => ({ value, label: meta.label }))}
-        />
-      </div>
+      <InventoryDocumentFilters
+        filters={filters}
+        searchPlaceholder="Tìm số phiếu, kho hoặc lý do"
+        warehousePlaceholder="Tất cả kho liên quan"
+        statusOptions={stockTransferStatusOptions}
+      />
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       <AdminTable
         rowKey="id"
@@ -79,24 +60,8 @@ export function StockTransferPanel({
         dataSource={query.data?.items ?? []}
         locale={{ emptyText: 'Chưa có phiếu chuyển kho phù hợp bộ lọc.' }}
         scroll={{ x: 1180 }}
-        pagination={{
-          current: page,
-          pageSize: 25,
-          total: query.data?.total ?? 0,
-          showSizeChanger: false,
-          onChange: setPage,
-        }}
-        columns={[
-          { title: 'Số phiếu', dataIndex: 'transferNo', width: 250, render: (value) => <Typography.Text code>{value}</Typography.Text> },
-          { title: 'Kho xuất', dataIndex: 'fromWarehouseCode', width: 130 },
-          { title: 'Kho nhận', dataIndex: 'toWarehouseCode', width: 130 },
-          { title: 'Trạng thái', dataIndex: 'status', width: 150, render: (value: keyof typeof stockTransferStatusMeta) => <Tag color={stockTransferStatusMeta[value].color}>{stockTransferStatusMeta[value].label}</Tag> },
-          { title: 'Số SKU', dataIndex: 'itemCount', width: 90, align: 'right' },
-          { title: 'Lý do', dataIndex: 'reason', ellipsis: true },
-          { title: 'Người tạo', dataIndex: 'createdByDisplayName', width: 160 },
-          { title: 'Cập nhật nghiệp vụ', width: 170, render: (_, row) => formatDateTime(row.receivedAt ?? row.shippedAt ?? row.submittedAt ?? row.createdAt) },
-          { title: '', width: 72, fixed: 'right', render: (_, row) => <TableActionButton label={`Xem phiếu ${row.transferNo}`} icon={<EyeOutlined />} onClick={() => onSelectedIdChange(row.id)} /> },
-        ]}
+        pagination={filters.pagination(query.data?.total ?? 0)}
+        columns={columns}
       />
       <StockTransferDetailDrawer id={selectedId} onClose={() => onSelectedIdChange(undefined)} />
     </Card>

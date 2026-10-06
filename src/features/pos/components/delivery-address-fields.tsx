@@ -1,11 +1,15 @@
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import { Form, Input, Select } from 'antd';
+import { useMemo } from 'react';
 import {
   useListShippingDistricts,
   useListShippingProvinces,
   useListShippingWards,
 } from '@/generated/api/shipping/shipping';
 import type { PosDeliveryValues } from '../model/pos-checkout';
+
+const toAreaOptions = (items: { code: string; name: string }[] | undefined) =>
+  (items ?? []).map((item) => ({ value: item.code, label: item.name }));
 
 /**
  * Địa chỉ giao lấy mã địa giới từ hãng vận chuyển.
@@ -30,8 +34,9 @@ export function DeliveryAddressFields({
     { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(value.districtCode) } },
   );
 
-  const toOptions = (items: { code: string; name: string }[] | undefined) =>
-    (items ?? []).map((item) => ({ value: item.code, label: item.name }));
+  const provinceOptions = useMemo(() => toAreaOptions(provinces.data?.items), [provinces.data?.items]);
+  const districtOptions = useMemo(() => toAreaOptions(districts.data?.items), [districts.data?.items]);
+  const wardOptions = useMemo(() => toAreaOptions(wards.data?.items), [wards.data?.items]);
 
   return (
     <>
@@ -58,7 +63,7 @@ export function DeliveryAddressFields({
           loading={provinces.isPending}
           value={value.provinceCode || undefined}
           placeholder="Chọn tỉnh/thành"
-          options={toOptions(provinces.data?.items)}
+          options={provinceOptions}
           onChange={(code, option) =>
             // Đổi tỉnh thì quận/phường cũ không còn thuộc về nó nữa, phải xoá theo.
             onChange({
@@ -81,7 +86,7 @@ export function DeliveryAddressFields({
           loading={districts.isFetching}
           value={value.districtCode || undefined}
           placeholder="Chọn quận/huyện"
-          options={toOptions(districts.data?.items)}
+          options={districtOptions}
           onChange={(code, option) =>
             onChange({
               districtCode: code,
@@ -101,7 +106,7 @@ export function DeliveryAddressFields({
           loading={wards.isFetching}
           value={value.wardCode || undefined}
           placeholder="Chọn phường/xã"
-          options={toOptions(wards.data?.items)}
+          options={wardOptions}
           onChange={(code, option) =>
             onChange({ wardCode: code, ward: (option as { label: string }).label })
           }

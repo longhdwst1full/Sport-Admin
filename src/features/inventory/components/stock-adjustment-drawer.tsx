@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Drawer, Form, Input, InputNumber, Select } from 'antd';
+import { Alert, App, Form, Input, InputNumber, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
@@ -17,8 +17,10 @@ import {
   StockAdjustmentReason,
   type InventoryBalanceDto,
 } from '@/generated/api/inventory/inventory.schemas';
-import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
+import { adjustmentReasonOptions, adjustmentTypeOptions } from '../constants/inventory.constants';
+import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
 interface StockAdjustmentValues {
   warehouseCode: string;
@@ -30,19 +32,6 @@ interface StockAdjustmentValues {
   quantityDelta: number;
   reason: string;
 }
-
-const adjustmentTypeOptions = [
-  { value: StockAdjustmentType.CORRECTION, label: 'Điều chỉnh chênh lệch' },
-  { value: StockAdjustmentType.OPENING_BALANCE, label: 'Nhập tồn đầu kỳ' },
-  { value: StockAdjustmentType.MANUAL_RECEIPT, label: 'Nhập hàng thủ công' },
-];
-
-const reasonCodeOptions = [
-  { value: StockAdjustmentReason.MANUAL, label: 'Điều chỉnh thủ công' },
-  { value: StockAdjustmentReason.COUNT_CORRECTION, label: 'Chênh lệch kiểm kê' },
-  { value: StockAdjustmentReason.INITIAL_STOCK, label: 'Khởi tạo tồn đầu kỳ' },
-  { value: StockAdjustmentReason.EXTERNAL_RECEIPT, label: 'Nhập từ chứng từ ngoài' },
-];
 
 const schema: yup.ObjectSchema<StockAdjustmentValues> = yup.object({
   warehouseCode: yup.string().trim().required('Chọn kho'),
@@ -81,9 +70,7 @@ export function StockAdjustmentDrawer({
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const [warehouseSearch, setWarehouseSearch] = useState('');
   const [skuSearch, setSkuSearch] = useState('');
-  const [debouncedWarehouseSearch] = useDebounce(warehouseSearch.trim(), 300);
   const [debouncedSkuSearch] = useDebounce(skuSearch.trim(), 300);
   const idempotencyKey = useRef(crypto.randomUUID());
   const form = useForm<StockAdjustmentValues>({
@@ -101,11 +88,7 @@ export function StockAdjustmentDrawer({
   });
   const warehouseCode = form.watch('warehouseCode');
   const adjustmentType = form.watch('adjustmentType');
-  const warehousesQuery = useSearchActiveAdminWarehouses({
-    search: debouncedWarehouseSearch || undefined,
-    page: 1,
-    limit: 50,
-  });
+  const warehouses = useWarehouseOptions();
   const variantsQuery = useSearchActiveAdminProductVariants({
     search: debouncedSkuSearch || undefined,
     page: 1,
@@ -157,13 +140,15 @@ export function StockAdjustmentDrawer({
   });
 
   return (
-    <Drawer
+    <FormDrawer
       title={balance ? `Điều chỉnh tồn — ${balance.sku}` : 'Điều chỉnh tồn kho'}
-      width={520}
+      size="sm"
       open={open}
       onClose={onClose}
-      destroyOnHidden
-      extra={<Button type="primary" loading={mutation.isPending} onClick={() => void submit()}>Ghi điều chỉnh</Button>}
+      onSubmit={() => void submit()}
+      submitting={mutation.isPending}
+      submitText="Ghi điều chỉnh"
+      isDirty={() => form.formState.isDirty}
     >
       <Form layout="vertical" onFinish={() => void submit()}>
         {balance && (
@@ -184,12 +169,9 @@ export function StockAdjustmentDrawer({
                 {...field}
                 showSearch
                 filterOption={false}
-                onSearch={setWarehouseSearch}
-                loading={warehousesQuery.isFetching}
-                options={(warehousesQuery.data?.items ?? []).map((item) => ({
-                  value: item.code,
-                  label: `${item.code} — ${item.label}`,
-                }))}
+                onSearch={warehouses.onSearch}
+                loading={warehouses.query.isFetching}
+                options={warehouses.options}
                 onChange={(value) => {
                   field.onChange(value);
                   form.setValue('sku', '');
@@ -202,7 +184,7 @@ export function StockAdjustmentDrawer({
           <Controller name="adjustmentType" control={form.control} render={({ field }) => <Select {...field} options={adjustmentTypeOptions} />} />
         </Form.Item>
         <Form.Item label="Nguyên nhân" required validateStatus={form.formState.errors.reasonCode ? 'error' : undefined} help={form.formState.errors.reasonCode?.message}>
-          <Controller name="reasonCode" control={form.control} render={({ field }) => <Select {...field} options={reasonCodeOptions} />} />
+          <Controller name="reasonCode" control={form.control} render={({ field }) => <Select {...field} options={adjustmentReasonOptions} />} />
         </Form.Item>
         {adjustmentType === StockAdjustmentType.MANUAL_RECEIPT && (
           <>
@@ -241,6 +223,6 @@ export function StockAdjustmentDrawer({
           <Controller name="reason" control={form.control} render={({ field }) => <Input.TextArea {...field} rows={4} />} />
         </Form.Item>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

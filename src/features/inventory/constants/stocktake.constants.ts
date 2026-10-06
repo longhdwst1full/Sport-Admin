@@ -1,3 +1,5 @@
+import { toOptions } from '@/shared/utils/options';
+
 /** Nhãn hiển thị dùng chung giữa bảng danh sách và drawer chi tiết phiếu kiểm kê. */
 export const stocktakeStatusMeta = {
   DRAFT: { label: 'Đang đếm', color: 'default' },
@@ -5,6 +7,8 @@ export const stocktakeStatusMeta = {
   APPROVED: { label: 'Đã ghi sổ', color: 'green' },
   CANCELLED: { label: 'Đã huỷ', color: 'red' },
 } as const;
+
+export const stocktakeStatusOptions = toOptions(stocktakeStatusMeta);
 
 export const stocktakeScopeLabel = {
   FULL: 'Toàn kho',

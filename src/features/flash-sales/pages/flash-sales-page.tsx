@@ -1,106 +1,41 @@
 import { useState } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { PlusOutlined, ReloadOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useDebounce } from 'use-debounce';
-import {
-  createAdminFlashSale,
-  getListAdminFlashSalesQueryKey,
-  upsertAdminFlashSaleItem,
-  useListAdminFlashSales,
-} from '@/generated/api/promotions/promotions';
+import { useSearchState } from '@/shared/hooks/use-search-state';
+import { PlusOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Alert, Button, Select } from 'antd';
+import { useListAdminFlashSales } from '@/generated/api/promotions/promotions';
 import type { FlashSaleCampaignStatus } from '@/generated/api/promotions/promotions.schemas';
 import { useCan } from '@/core/auth/permissions';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
+import { FilterBar, RefreshButton } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
-import {
-  FlashSaleCreateDrawer,
-  type CreateCampaignValues,
-  type StagedItem,
-} from '../components/flash-sale-create-drawer';
+import { FlashSaleCreateDrawer } from '../components/flash-sale-create-drawer';
 import { FlashSaleDetailDrawer } from '../components/flash-sale-detail-drawer';
 import { FlashSaleTable } from '../components/flash-sale-table';
-import { FLASH_SALE_PAGE_SIZE, flashSaleStatusPresentation } from '../constants/flash-sale.constants';
-
-const statusOptions = Object.entries(flashSaleStatusPresentation).map(([value, { label }]) => ({
-  value,
-  label,
-}));
+import { FLASH_SALE_PAGE_SIZE, flashSaleStatusOptions } from '../constants/flash-sale.constants';
+import { useCreateFlashSale } from '../hooks/use-create-flash-sale';
 
 export function FlashSalesPage() {
-  const { message } = App.useApp();
-  const queryClient = useQueryClient();
   const canManage = useCan('catalog.flash_sale.manage');
-  const [search, setSearch] = useState('');
+  const search = useSearchState();
+  const debouncedSearch = search.debounced;
   const [status, setStatus] = useState<FlashSaleCampaignStatus>();
   const [selectedId, setSelectedId] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
   const [page, setPage] = useListPageReset([debouncedSearch, status]);
 
   const campaigns = useListAdminFlashSales({
     page,
     limit: FLASH_SALE_PAGE_SIZE,
-    search: debouncedSearch || undefined,
+    search: debouncedSearch,
     status,
   });
   const rows = campaigns.data?.items ?? [];
 
-  /**
-   * API không có lệnh tạo chiến dịch kèm suất bán trong một giao dịch, nên tạo
-   * chiến dịch trước rồi thêm từng suất. Chiến dịch sinh ra ở trạng thái nháp và
-   * chưa hiển thị cho khách, nên nếu một suất lỗi thì chỉ cần thêm lại suất đó —
-   * không có rủi ro bán sai giá.
-   */
-  const createMutation = useMutation({
-    mutationFn: async ({
-      campaign,
-      items,
-    }: {
-      campaign: CreateCampaignValues;
-      items: StagedItem[];
-    }) => {
-      const created = await createAdminFlashSale({
-        code: campaign.code.trim().toUpperCase(),
-        name: campaign.name.trim(),
-        description: campaign.description?.trim() || undefined,
-        startsAt: campaign.window[0].toISOString(),
-        endsAt: campaign.window[1].toISOString(),
-      });
-
-      const failed: string[] = [];
-      for (const item of items) {
-        try {
-          await upsertAdminFlashSaleItem(created.id, {
-            productVariantId: item.productVariantId,
-            salePrice: item.salePrice.toFixed(2),
-            quota: item.quota,
-            ...(item.perCustomerLimit ? { perCustomerLimit: item.perCustomerLimit } : {}),
-          });
-        } catch {
-          failed.push(item.sku);
-        }
-      }
-      return { created, added: items.length - failed.length, failed };
-    },
-    onSuccess: async ({ created, added, failed }) => {
-      await queryClient.invalidateQueries({ queryKey: getListAdminFlashSalesQueryKey() });
-      setCreateOpen(false);
-      setSelectedId(created.id);
-      if (failed.length > 0) {
-        void message.warning(
-          `Đã tạo chiến dịch và thêm ${added} suất. Chưa thêm được: ${failed.join(', ')}.`,
-        );
-        return;
-      }
-      void message.success(
-        added > 0
-          ? `Đã tạo chiến dịch nháp kèm ${added} suất bán`
-          : 'Đã tạo chiến dịch ở trạng thái nháp',
-      );
-    },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+  const createMutation = useCreateFlashSale((id) => {
+    setCreateOpen(false);
+    setSelectedId(id);
   });
 
   return (
@@ -126,12 +61,21 @@ export function FlashSalesPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-wrap gap-3">
-            <Input.Search
-              allowClear
-              className="min-w-64 flex-1"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+          <FilterBar
+            actions={
+              <>
+                <RefreshButton onRefresh={campaigns.refetch} loading={campaigns.isFetching} />
+                {canManage && (
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+                    Tạo chiến dịch
+                  </Button>
+                )}
+              </>
+            }
+          >
+            <SearchInput
+              value={search.value}
+              onChange={search.setValue}
               placeholder="Mã hoặc tên chiến dịch"
             />
             <Select
@@ -140,22 +84,9 @@ export function FlashSalesPage() {
               value={status}
               onChange={setStatus}
               placeholder="Trạng thái"
-              options={statusOptions}
+              options={flashSaleStatusOptions}
             />
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => void campaigns.refetch()}
-                loading={campaigns.isFetching}
-                aria-label="Làm mới"
-              />
-            </Tooltip>
-            {canManage && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-                Tạo chiến dịch
-              </Button>
-            )}
-          </div>
+          </FilterBar>
         }
       >
         {campaigns.isError && (

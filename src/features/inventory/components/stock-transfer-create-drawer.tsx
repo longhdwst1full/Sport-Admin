@@ -1,7 +1,7 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Drawer, Form, Input, InputNumber, Select } from 'antd';
+import { Alert, App, Button, Form, Input, InputNumber, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
@@ -14,8 +14,9 @@ import {
   useUpdateStockTransfer,
 } from '@/generated/api/inventory/inventory';
 import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory.schemas';
-import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
+import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
 interface StockTransferLineValues {
   sku: string;
@@ -71,9 +72,7 @@ export function StockTransferCreateDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const idempotencyKey = useRef(crypto.randomUUID());
-  const [warehouseSearch, setWarehouseSearch] = useState('');
   const [skuSearch, setSkuSearch] = useState('');
-  const [debouncedWarehouseSearch] = useDebounce(warehouseSearch.trim(), 300);
   const [debouncedSkuSearch] = useDebounce(skuSearch.trim(), 300);
   const form = useForm<StockTransferValues>({
     resolver: yupResolver(schema),
@@ -89,20 +88,12 @@ export function StockTransferCreateDrawer({
     } : emptyValues);
   }, [form, open, transfer]);
   const lines = useFieldArray({ control: form.control, name: 'items' });
-  const warehouses = useSearchActiveAdminWarehouses({
-    search: debouncedWarehouseSearch || undefined,
-    page: 1,
-    limit: 50,
-  });
+  const warehouses = useWarehouseOptions();
   const variants = useSearchActiveAdminProductVariants({
     search: debouncedSkuSearch || undefined,
     page: 1,
     limit: 50,
   });
-  const warehouseOptions = (warehouses.data?.items ?? []).map((item) => ({
-    value: item.code,
-    label: `${item.code} — ${item.label}`,
-  }));
   const variantOptions = (variants.data?.items ?? []).map((item) => ({
     value: item.code,
     label: `${item.code} — ${item.label}`,
@@ -147,13 +138,14 @@ export function StockTransferCreateDrawer({
   const pending = mutation.isPending || update.isPending;
 
   return (
-    <Drawer
+    <FormDrawer
       title={transfer ? `Sửa phiếu ${transfer.transferNo}` : 'Tạo phiếu chuyển kho'}
-      width={720}
       open={open}
       onClose={onClose}
-      destroyOnHidden
-      extra={<Button type="primary" loading={pending} onClick={() => void submit()}>Lưu bản nháp</Button>}
+      onSubmit={() => void submit()}
+      submitting={pending}
+      submitText="Lưu bản nháp"
+      isDirty={() => form.formState.isDirty}
     >
       <Alert
         className="mb-5"
@@ -168,12 +160,12 @@ export function StockTransferCreateDrawer({
         <div className="grid gap-4 md:grid-cols-2">
           <Form.Item label="Kho xuất" required validateStatus={form.formState.errors.fromWarehouseCode ? 'error' : undefined} help={form.formState.errors.fromWarehouseCode?.message}>
             <Controller name="fromWarehouseCode" control={form.control} render={({ field }) => (
-              <Select {...field} disabled={editing} showSearch filterOption={false} onSearch={setWarehouseSearch} loading={warehouses.isFetching} options={warehouseOptions} placeholder="Chọn kho xuất" />
+              <Select {...field} disabled={editing} showSearch filterOption={false} onSearch={warehouses.onSearch} loading={warehouses.query.isFetching} options={warehouses.options} placeholder="Chọn kho xuất" />
             )} />
           </Form.Item>
           <Form.Item label="Kho nhận" required validateStatus={form.formState.errors.toWarehouseCode ? 'error' : undefined} help={form.formState.errors.toWarehouseCode?.message}>
             <Controller name="toWarehouseCode" control={form.control} render={({ field }) => (
-              <Select {...field} disabled={editing} showSearch filterOption={false} onSearch={setWarehouseSearch} loading={warehouses.isFetching} options={warehouseOptions} placeholder="Chọn kho nhận" />
+              <Select {...field} disabled={editing} showSearch filterOption={false} onSearch={warehouses.onSearch} loading={warehouses.query.isFetching} options={warehouses.options} placeholder="Chọn kho nhận" />
             )} />
           </Form.Item>
         </div>
@@ -204,6 +196,6 @@ export function StockTransferCreateDrawer({
           ))}
         </div>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

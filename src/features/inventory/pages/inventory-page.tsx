@@ -1,11 +1,12 @@
-import { AuditOutlined, ContainerOutlined, InboxOutlined, PlusOutlined, ReloadOutlined, SwapOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons';
+import { AuditOutlined, ContainerOutlined, InboxOutlined, PlusOutlined, SwapOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, Tabs, Tooltip } from 'antd';
+import { Button, Tabs } from 'antd';
 import { useState } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
+import { RefreshButton } from '@/foundation/table';
 import {
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
@@ -74,14 +75,7 @@ export function InventoryPage() {
         description="Theo dõi tồn khả dụng theo từng kho, đối soát phiếu điều chỉnh và audit sổ kho bất biến từ cơ sở dữ liệu."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => void refresh()}
-                loading={isRefreshing}
-                aria-label="Làm mới"
-              />
-            </Tooltip>
+            <RefreshButton onRefresh={refresh} loading={isRefreshing} />
             <PermissionGate permission="inventory.stock.adjust">
               <Button type="primary" icon={<PlusOutlined />} onClick={() => openAdjustment()}>
                 Tạo phiếu điều chỉnh

@@ -1,6 +1,19 @@
+import type { ColumnItem } from '@/foundation/table';
 import type { OrderStatus, OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
 
 export const ORDER_PAGE_SIZE = 20;
+
+/** Cột tuỳ chỉnh được của bảng đơn; `id` trùng `key` cột trong `OrderTable`. */
+export const ORDER_COLUMN_ITEMS: ColumnItem[] = [
+  { id: 'order', label: 'Mã đơn hàng', fixed: true },
+  { id: 'recipient', label: 'Người nhận hàng' },
+  { id: 'branch', label: 'Chi nhánh xuất' },
+  { id: 'itemCount', label: 'Số lượng SP' },
+  { id: 'grandTotal', label: 'Tổng tiền' },
+  { id: 'payment', label: 'Thanh toán' },
+  { id: 'status', label: 'Trạng thái đơn' },
+  { id: 'actions', label: 'Thao tác', fixed: true },
+];
 
 export { moneyFormatter } from '@/lib/format/money';
 

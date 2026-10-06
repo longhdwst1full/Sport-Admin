@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Drawer, Input, InputNumber, Progress, Space, Tag, Typography } from 'antd';
+import { Alert, App, Input, InputNumber, Progress, Tag, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { AdminTable } from '@/foundation/table';
 import {
@@ -9,6 +9,7 @@ import {
 } from '@/generated/api/inventory/inventory';
 import type { StocktakeDetailDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
 
 type CountEntry = { countedQuantity: number | null; note: string };
 
@@ -90,22 +91,22 @@ export function StocktakeCountDrawer({
   };
 
   return (
-    <Drawer
+    <FormDrawer
       title={stocktake ? `Nhập số đếm — ${stocktake.stocktakeNo}` : 'Nhập số đếm'}
-      width={880}
+      size="lg"
       open={open}
       onClose={onClose}
-      destroyOnHidden
-      extra={
-        <Space>
-          <Progress
-            className="!mb-0 w-40"
-            percent={total === 0 ? 0 : Math.round((filled / total) * 100)}
-            size="small"
-            format={() => `${filled}/${total}`}
-          />
-          <Button type="primary" loading={mutation.isPending} onClick={save}>Lưu số đếm</Button>
-        </Space>
+      onSubmit={save}
+      submitting={mutation.isPending}
+      submitText="Lưu số đếm"
+      isDirty={() => touched.size > 0}
+      footerExtra={
+        <Progress
+          className="!mb-0 w-40"
+          percent={total === 0 ? 0 : Math.round((filled / total) * 100)}
+          size="small"
+          format={() => `${filled}/${total}`}
+        />
       }
     >
       <Alert
@@ -161,6 +162,6 @@ export function StocktakeCountDrawer({
           },
         ]}
       />
-    </Drawer>
+    </FormDrawer>
   );
 }
