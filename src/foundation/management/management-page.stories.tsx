@@ -70,3 +70,39 @@ export const EmptyState: Story = {
     children: <div className="py-16 text-center text-slate-500">Chưa có sản phẩm.</div>,
   },
 };
+
+const manyRows = Array.from({ length: 60 }, (_, index) => ({
+  id: String(index + 1),
+  sku: `DCTD-SKU-${String(index + 1).padStart(3, '0')}`,
+  name: `Sản phẩm mẫu ${index + 1}`,
+  stock: (index * 7) % 50,
+  status: index % 3 === 0 ? 'DRAFT' : 'ACTIVE',
+}));
+
+/** Vỏ cao đúng 100vh như layout thật: trang không cuộn, chỉ thân bảng cuộn, pager luôn hiện. */
+export const FullHeightTable: Story = {
+  decorators: [
+    (Story) => (
+      <div className="flex h-screen flex-col overflow-y-auto bg-slate-50 p-6">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    ...ProductManagement.args,
+    eyebrow: 'Catalog',
+    title: 'Quản lý sản phẩm',
+    children: (
+      <AdminTable
+        rowKey="id"
+        dataSource={manyRows}
+        pagination={{ pageSize: 50, total: manyRows.length }}
+        columns={[
+          { title: 'SKU', dataIndex: 'sku' },
+          { title: 'Sản phẩm', dataIndex: 'name' },
+          { title: 'Tồn có thể bán', dataIndex: 'stock', align: 'right' },
+        ]}
+      />
+    ),
+  },
+};

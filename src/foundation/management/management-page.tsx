@@ -63,9 +63,11 @@ export function ManagementPage({
   children,
 }: ManagementPageProps) {
   return (
-    <div className="space-y-6">
+    // Màn danh sách vừa khít chiều cao vùng nội dung: tiêu đề/số liệu/bộ lọc đứng yên, bảng lấp phần
+    // còn lại và chỉ thân bảng cuộn. Màn quá thấp (< min-h) thì vùng nội dung của layout cuộn thay.
+    <div className="flex min-h-[560px] flex-1 flex-col gap-6">
       {/* ── Page header ──────────────────────────────────── */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex shrink-0 flex-wrap items-end justify-between gap-4">
         <div className="max-w-3xl">
           <Typography.Text className="!text-[10px] !font-bold !tracking-[0.16em] !text-slate-400">
             {eyebrow.toUpperCase()}
@@ -85,7 +87,7 @@ export function ManagementPage({
 
       {/* ── Metric cards ─────────────────────────────────── */}
       {metrics.length > 0 && (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[16, 16]} className="shrink-0">
           {metrics.map((metric) => {
             const config = toneConfig[metric.tone ?? 'blue'] ?? defaultToneConfig;
             return (
@@ -132,9 +134,12 @@ export function ManagementPage({
       )}
 
       {/* ── Main content card ────────────────────────────── */}
-      <Card className="!rounded-2xl !border-slate-100" styles={{ body: { padding: 0 } }}>
+      <Card
+        className="flex min-h-0 flex-1 flex-col !rounded-2xl !border-slate-100"
+        styles={{ body: { padding: 0, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
+      >
         {filters && (
-          <div className="border-b border-slate-100 px-5 py-4 lg:px-6">
+          <div className="shrink-0 border-b border-slate-100 px-5 py-4 lg:px-6">
             {filters}
           </div>
         )}
@@ -142,7 +147,7 @@ export function ManagementPage({
           Bảng trong vùng nội dung của một màn danh sách là bảng chính của màn đó: nó cao hết phần
           còn lại của màn hình. Khai ở đây một lần để mỗi màn không phải tự nhớ.
         */}
-        <div className="min-w-0 w-full overflow-x-auto p-4 sm:p-5 lg:p-6">
+        <div className="dctd-fill flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-auto p-4 sm:p-5 lg:p-6">
           <TableSurfaceProvider value="page">{children}</TableSurfaceProvider>
         </div>
       </Card>

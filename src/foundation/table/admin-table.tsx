@@ -1,6 +1,6 @@
 import { Table } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import { isValidElement, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { isValidElement, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import type { TableProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTableSurface, type TableSurface } from './table-surface';
@@ -128,6 +128,11 @@ export function AdminTable<RecordType extends object>({
   const effectiveSurface: TableSurface =
     surface ?? (insideOverlay ? 'embedded' : contextSurface);
 
+  const normalizedColumns = useMemo(
+    () => withCellLineClamp(withFixedColumnWidths(columns, defaultColumnWidth)),
+    [columns, defaultColumnWidth],
+  );
+
   const copyCellOnDoubleClick = (event: MouseEvent<HTMLDivElement>) => {
     const cell = (event.target as HTMLElement).closest('td');
     const value = cell?.innerText.trim();
@@ -137,11 +142,15 @@ export function AdminTable<RecordType extends object>({
   };
 
   return (
-    <div ref={containerRef} onDoubleClick={copyCellOnDoubleClick}>
+    <div
+      ref={containerRef}
+      className={effectiveSurface === 'page' ? 'admin-table-fill' : undefined}
+      onDoubleClick={copyCellOnDoubleClick}
+    >
       <Table<RecordType>
         size={size ?? TABLE_DENSITY_SIZE[density]}
         {...props}
-        columns={withCellLineClamp(withFixedColumnWidths(columns, defaultColumnWidth))}
+        columns={normalizedColumns}
         tableLayout={tableLayout}
         scroll={{
           ...scroll,

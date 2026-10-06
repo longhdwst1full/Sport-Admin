@@ -582,7 +582,8 @@ a,
   padding: 10px 12px !important;
 }
 
-.ant-table-wrapper .ant-table-tbody > tr > td {
+/* Bỏ hàng đo ẩn của antd (bảng có scroll.y): ép padding vào nó sẽ tạo khe trống dưới tiêu đề cột. */
+.ant-table-wrapper .ant-table-tbody > tr:not(.ant-table-measure-row) > td {
   padding: 10px 12px !important;
   font-size: 13px !important;
   border-bottom: 1px solid #f1f5f9 !important;
@@ -1006,4 +1007,38 @@ a,
   .print-receipt__grand { font-size: 14px; font-weight: 700; border-top: 1px solid #000; padding-top: 4px; margin-top: 4px; }
   .print-receipt__note { margin-top: 6px; }
   .print-receipt__footer { margin-top: 10px; text-align: center; font-size: 11px; }
+}
+
+/*
+ * Bảng chính của màn danh sách lấp phần còn lại của vùng `.dctd-fill` (ManagementPage), chỉ thân bảng
+ * cuộn, pager luôn hiện. Chỉ áp khi bảng là con trực tiếp của vùng fill; bảng bị bọc thêm lớp khác
+ * giữ chiều cao `ADMIN_TABLE_BODY_HEIGHT` như cũ (thêm class `dctd-fill` + flex vào lớp bọc để nối chuỗi).
+ */
+.dctd-fill > * {
+  flex-shrink: 0;
+}
+.dctd-fill > .admin-table-fill,
+.dctd-fill > .admin-table-fill > .ant-table-wrapper,
+.dctd-fill > .admin-table-fill .ant-spin-nested-loading,
+.dctd-fill > .admin-table-fill .ant-spin-container,
+.dctd-fill > .admin-table-fill .ant-table,
+.dctd-fill > .admin-table-fill .ant-table-container {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+.dctd-fill > .admin-table-fill {
+  min-height: 240px;
+}
+.dctd-fill > .admin-table-fill .ant-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none !important;
+}
+.dctd-fill > .admin-table-fill .ant-table-header,
+.dctd-fill > .admin-table-fill .ant-table-title,
+.dctd-fill > .admin-table-fill .ant-table-footer,
+.dctd-fill > .admin-table-fill .ant-pagination {
+  flex-shrink: 0;
 }

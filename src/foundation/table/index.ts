@@ -35,3 +35,8 @@ export {
   useTableSurface,
   type TableSurface,
 } from './table-surface';
+
+export { RefreshButton } from './refresh-button';
+export { FilterBar } from './filter-bar';
+export { col, EMPTY_CELL } from './column-presets';
+export { useColumnVisibility } from './use-column-visibility';

@@ -174,7 +174,7 @@ export function AdminLayout() {
                     icon={<MenuOutlined className="!text-slate-400" />}
                     onClick={() => dispatch(toggleSidebar())}
                     className="!text-slate-400 hover:!text-white shrink-0"
-                    aria-label="Toggle menu"
+                    aria-label="Thu gọn/mở rộng menu"
                   />
                 )}
                 <button
@@ -380,7 +380,7 @@ export function AdminLayout() {
           {/* ── Content Area (Internal scroll strictly within 100vh) ── */}
           <Content className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#f8fafc] p-3.5 sm:p-5 lg:p-6">
             <PageContainer>
-              <div className="dctd-page-enter" key={location.pathname}>
+              <div className="dctd-page-enter flex min-h-0 flex-1 flex-col" key={location.pathname}>
                 <Outlet />
               </div>
             </PageContainer>

@@ -1,10 +1,10 @@
 # Admin table foundation
 
-> **Document version:** 1.2.0
+> **Document version:** 1.3.0
 >
-> **Last updated:** 2026-10-02
+> **Last updated:** 2026-10-06
 >
-> **Change summary:** Mọi ô của `AdminTable` giới hạn 3 dòng, dài hơn cắt bằng "…" (rê chuột xem đủ với ô chữ thuần; double-click vẫn copy toàn văn). Cột tự khai `ellipsis` giữ hành vi antd. Trước đó: Đổi pagination mặc định thành 30 dòng và mở lựa chọn 10/20/30/50/100.
+> **Change summary:** Bảng chính của `ManagementPage` lấp phần còn lại của màn hình (chỉ thân bảng cuộn, pager luôn hiện); thêm preset cột `col.*`, `useColumnVisibility`, `RefreshButton`, `FilterBar`. Trước đó: Mọi ô của `AdminTable` giới hạn 3 dòng, dài hơn cắt bằng "…" (rê chuột xem đủ với ô chữ thuần; double-click vẫn copy toàn văn). Cột tự khai `ellipsis` giữ hành vi antd. Trước đó: Đổi pagination mặc định thành 30 dòng và mở lựa chọn 10/20/30/50/100.
 
 ## Trách nhiệm
 
@@ -14,6 +14,13 @@
 - Pagination mặc định 30 dòng và có lựa chọn 10/20/30/50/100; server pagination của feature vẫn là nguồn dữ liệu chính.
 - Double-click một ô dữ liệu sẽ copy nội dung text của ô. Không render icon copy trong table.
 - `TableActionButton` và `TableActions` chuẩn hóa action icon-only, tooltip và `aria-label`.
+
+## Preset và hook
+
+- `col.text | number | money | date | dateTime | status | actions` — cột chuẩn (căn lề, width, ô trống `—`, định dạng); tham số cuối ghi đè mọi thuộc tính antd.
+- `useColumnVisibility(items)` — state ẩn/hiện cột cho `ColumnSettingsModal`; `apply(columns)` lọc theo `key`.
+- `FilterBar` — bố cục prop `filters` của `ManagementPage` (lọc trái, hành động phải); `RefreshButton` — nút làm mới có tooltip/aria-label.
+- Bảng là con trực tiếp của vùng nội dung `ManagementPage` (`.dctd-fill`) thì tự lấp chiều cao; bọc thêm lớp thì thêm `dctd-fill flex min-h-0 flex-1 flex-col` vào lớp bọc để nối chuỗi.
 
 ## Biên sở hữu
 
@@ -33,6 +40,7 @@
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.3.0 | 2026-10-06 | Bảng chính lấp chiều cao màn (chỉ thân bảng cuộn); preset cột `col.*`, `useColumnVisibility`, `RefreshButton`, `FilterBar`; sửa khe trống do padding ép vào hàng đo ẩn. |
 | 1.2.0 | 2026-10-02 | Mọi ô của `AdminTable` giới hạn 3 dòng, dài hơn cắt bằng "…" (rê chuột xem đủ với ô chữ thuần; double-click vẫn copy toàn văn). Cột tự khai `ellipsis` giữ hành vi antd. |
 | 1.1.0 | 2026-09-19 | Mặc định 30 dòng, bổ sung lựa chọn số dòng/trang 10/20/30/50/100. |
 | 1.0.0 | 2026-09-19 | Tạo foundation table theo pattern table/action-cell của admin-client, giữ Ant Design và TanStack Query hiện tại. |

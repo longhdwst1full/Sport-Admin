@@ -11,7 +11,7 @@ interface PageTransitionProps {
  */
 export function PageTransition({ children, className = '' }: PageTransitionProps) {
   return (
-    <div className={`animate-fade-in ${className}`}>
+    <div className={`animate-fade-in flex min-h-0 flex-1 flex-col ${className}`}>
       {children}
     </div>
   );

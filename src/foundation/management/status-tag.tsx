@@ -42,10 +42,24 @@ const dotColorMap: Record<string, { badge: string; dot: string }> = {
     badge: 'text-orange-700 bg-orange-50 border border-orange-500/25',
     dot: 'bg-orange-500',
   },
+  magenta: {
+    badge: 'text-pink-700 bg-pink-50 border border-pink-500/25',
+    dot: 'bg-pink-500',
+  },
   default: {
     badge: 'text-slate-700 bg-slate-100 border border-slate-200',
     dot: 'bg-slate-400',
   },
+};
+
+/** Preset ngữ nghĩa của antd `<Tag>` dùng chung bảng màu với preset tên màu; thiếu alias là rơi về xám. */
+const COLOR_ALIASES: Record<string, string> = {
+  success: 'green',
+  emerald: 'green',
+  error: 'red',
+  processing: 'blue',
+  geekblue: 'blue',
+  warning: 'gold',
 };
 
 /**
@@ -60,7 +74,8 @@ export function StatusTag<TStatus extends string>({
   const presentation = presentations[status];
   if (!presentation) return null;
 
-  const styleConfig = dotColorMap[presentation.color] ?? dotColorMap.default;
+  const styleConfig =
+    dotColorMap[COLOR_ALIASES[presentation.color] ?? presentation.color] ?? dotColorMap.default;
 
   if (iconOnly) {
     return (
