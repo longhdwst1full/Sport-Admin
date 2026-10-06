@@ -1,7 +1,8 @@
 import { App, Button, Descriptions, Drawer, Space, Tag } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/core/auth/permissions';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import {
   approveSupplierReturn, cancelSupplierReturn, closeSupplierReturn,
   getGetSupplierReturnQueryKey, getListSupplierReturnsQueryKey,
@@ -9,8 +10,21 @@ import {
 } from '@/generated/api/procurement/procurement';
 import type { SupplierReturnDetailDto } from '@/generated/api/procurement/procurement.schemas';
 import { getApiErrorMessage, isStaleWriteError, STALE_WRITE_RELOADED_MESSAGE } from '@/lib/api/error';
-import { actorAt, formatDateTime, moneyFormatter, partyLabel, statusLabel } from '../constants/procurement.constants';
+import { formatDateTime } from '@/lib/format/datetime';
+import { formatMoney } from '@/lib/format/money';
+import { actorAt, partyLabel, statusLabel } from '../constants/procurement.constants';
 import { supplierReturnActions, type ProcurementAction } from '../model/procurement-actions.policy';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
+
+type ReturnItem = SupplierReturnDetailDto['items'][number];
+
+const RETURN_ITEM_COLUMNS: ColumnsType<ReturnItem> = [
+  { title: 'SKU', dataIndex: 'sku', width: 150 },
+  { title: 'Sản phẩm', dataIndex: 'productName', width: 240 },
+  col.number<ReturnItem>('quantity', 'Số trả', { width: 100 }),
+  col.money<ReturnItem>('invoiceUnitCost', 'Giá hoá đơn', { width: 150 }),
+  { title: 'Giá vốn xuất', dataIndex: 'issuedUnitCost', width: 150, align: 'right', render: (value) => value ? formatMoney(value) : 'Chưa xuất' },
+];
 
 export function SupplierReturnDetailDrawer({ id, onClose, onEdit }: { id?: string; onClose: () => void; onEdit: (detail: SupplierReturnDetailDto) => void }) {
   const query = useGetSupplierReturn(id ?? '', { query: { enabled: Boolean(id) } }); const detail = query.data;
@@ -36,7 +50,7 @@ export function SupplierReturnDetailDrawer({ id, onClose, onEdit }: { id?: strin
     } });
   };
   const actions = detail ? supplierReturnActions(detail.status) : [];
-  return <Drawer title={detail?.returnNo ?? 'Chi tiết phiếu trả'} width="min(1000px, 96vw)" open={Boolean(id)} loading={query.isLoading} onClose={onClose} extra={detail && <Space>
+  return <Drawer title={detail?.returnNo ?? 'Chi tiết phiếu trả'} width={DRAWER_WIDTH.xl} open={Boolean(id)} loading={query.isLoading} onClose={onClose} extra={detail && <Space>
     {actions.includes('edit') && <PermissionGate permission="purchase.return.manage"><Button onClick={() => onEdit(detail)}>Sửa</Button></PermissionGate>}
     {actions.filter((action) => action !== 'edit').map((action) => <PermissionGate key={action} permission="purchase.return.manage"><Button type={action === 'approve' || action === 'ship' ? 'primary' : 'default'} danger={action === 'cancel'} onClick={() => run(action)}>{action === 'approve' ? 'Duyệt' : action === 'ship' ? 'Xuất trả' : action === 'close' ? 'Đóng' : 'Huỷ'}</Button></PermissionGate>)}
   </Space>}>
@@ -50,10 +64,7 @@ export function SupplierReturnDetailDrawer({ id, onClose, onEdit }: { id?: strin
       <Descriptions.Item label="Ngày đóng">{formatDateTime(detail.closedAt)}</Descriptions.Item>
       <Descriptions.Item label="Lý do" span={2}>{detail.reason}</Descriptions.Item>
       {detail.cancelReason ? <Descriptions.Item label="Lý do huỷ" span={2}>{detail.cancelReason}</Descriptions.Item> : null}
-    </Descriptions><AdminTable surface="embedded" rowKey="id" pagination={false} dataSource={detail.items} columns={[
-      { title: 'SKU', dataIndex: 'sku', width: 150 }, { title: 'Sản phẩm', dataIndex: 'productName', width: 240 }, { title: 'Số trả', dataIndex: 'quantity', width: 100, align: 'right' },
-      { title: 'Giá hoá đơn', dataIndex: 'invoiceUnitCost', width: 150, align: 'right', render: (value) => value ? moneyFormatter.format(Number(value)) : '—' }, { title: 'Giá vốn xuất', dataIndex: 'issuedUnitCost', width: 150, align: 'right', render: (value) => value ? moneyFormatter.format(Number(value)) : 'Chưa xuất' },
-    ]} /></div>}
+    </Descriptions><AdminTable surface="embedded" rowKey="id" pagination={false} dataSource={detail.items} columns={RETURN_ITEM_COLUMNS} /></div>}
   </Drawer>;
 }
 

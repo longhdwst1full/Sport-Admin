@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { canEditRolePermissions } from '../model/role-lifecycle.policy';
-import { Alert, Drawer, Form, Input, Select, Space, Button } from 'antd';
+import { Alert, Form, Input, Select } from 'antd';
 import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
-import { ROOT_ROLE_CODE } from '../constants/role.constants';
+import { ROLE_STATUS_OPTIONS, ROOT_ROLE_CODE } from '../constants/role.constants';
 import { RolePermissionEditor } from './role-permission-editor';
+import { FormDrawer } from '@/foundation/overlay';
 
 export interface RoleFormValues {
   code?: string;
@@ -52,20 +53,14 @@ export function RoleFormDrawer({
   }, [open, editing, form]);
 
   return (
-    <Drawer
+    <FormDrawer
       open={open}
-      width={760}
-      destroyOnClose
       title={isEdit ? `Sửa vai trò — ${editing?.code}` : 'Tạo vai trò mới'}
       onClose={onCancel}
-      extra={
-        <Space>
-          <Button onClick={onCancel}>Hủy</Button>
-          <Button type="primary" loading={submitting} onClick={() => void form.submit()}>
-            {isEdit ? 'Lưu' : 'Tạo vai trò'}
-          </Button>
-        </Space>
-      }
+      onSubmit={() => form.submit()}
+      submitting={submitting}
+      submitText={isEdit ? 'Lưu' : 'Tạo vai trò'}
+      isDirty={() => form.isFieldsTouched()}
     >
       {isSystem && (
         <Alert
@@ -118,13 +113,7 @@ export function RoleFormDrawer({
 
         {isEdit && (
           <Form.Item name="status" label="Trạng thái">
-            <Select
-              disabled={isRootRole}
-              options={[
-                { value: 'ACTIVE', label: 'Đang dùng' },
-                { value: 'INACTIVE', label: 'Ngừng dùng' },
-              ]}
-            />
+            <Select disabled={isRootRole} options={ROLE_STATUS_OPTIONS} />
           </Form.Item>
         )}
 
@@ -152,6 +141,6 @@ export function RoleFormDrawer({
           />
         </Form.Item>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

@@ -13,7 +13,11 @@ Chi nhánh và kho: tạo, sửa, activate/deactivate; khai danh sách quận/hu
 
 ## Ranh giới
 
-`pages/organization-page.tsx` → `components/organization-form-drawer.tsx`.
+`pages/organization-page.tsx` → `components/organization-form-drawer.tsx`. Dòng bảng dựng ở `model/branch-warehouse.mapper.ts`; nhãn trạng thái và bộ quyền quản lý ở `constants/organization.constants.ts`.
+
+Dùng chung cho feature khác (qua barrel): `components/branch-select.tsx` (`BranchSelect`, lookup chi nhánh
+ACTIVE, queryKey `['organization','branch-lookup']`) và `hooks/use-branch-labels.ts` (`useBranchLabels`, tra
+tên từ `branchId`, chi nhánh ngoài lookup hiện `#<id>`).
 
 ## Generated operation
 

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { KeyOutlined, PlusOutlined, ReloadOutlined, SafetyOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Tooltip } from 'antd';
+import { KeyOutlined, PlusOutlined, SafetyOutlined } from '@ant-design/icons';
+import { Alert, App, Button, Input } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useListAdminAllRoles, useListAdminPermissions } from '@/generated/api/iam/iam';
 import type { RoleDto } from '@/generated/api/iam/iam.schemas';
 import { useCan, usePermissions } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
+import { FilterBar, RefreshButton } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 import { RoleFormDrawer } from '../components/role-form-drawer';
@@ -16,7 +17,7 @@ import {
   roleDeleteErrorMessage,
   shouldReloadAfterRoleDeleteError,
 } from '../model/role-lifecycle.policy';
-import { useRoleMutations } from '../model/use-role-mutations';
+import { useRoleMutations } from '../hooks/use-role-mutations';
 
 export function RolesPage() {
   const { message, modal } = App.useApp();
@@ -120,28 +121,25 @@ export function RolesPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-wrap justify-end gap-3">
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => void roles.refetch()}
-                loading={roles.isFetching}
-                aria-label="Làm mới"
-              />
-            </Tooltip>
-            {canManage && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setEditing(undefined);
-                  setFormOpen(true);
-                }}
-              >
-                Tạo vai trò
-              </Button>
-            )}
-          </div>
+          <FilterBar
+            actions={
+              <>
+                <RefreshButton onRefresh={roles.refetch} loading={roles.isFetching} />
+                {canManage && (
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                      setEditing(undefined);
+                      setFormOpen(true);
+                    }}
+                  >
+                    Tạo vai trò
+                  </Button>
+                )}
+              </>
+            }
+          />
         }
       >
         {roles.isError && (

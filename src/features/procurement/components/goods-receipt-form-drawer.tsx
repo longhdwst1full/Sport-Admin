@@ -1,4 +1,4 @@
-import { Alert, App, Button, Drawer, Form, Input, Select, Skeleton } from 'antd';
+import { Alert, App, Button, Form, Input, Select, Skeleton } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -21,6 +21,7 @@ import { useProcurementLookups } from '../hooks/use-procurement-lookups';
 import { toRemainingPoReceiptItems } from '../model/po-receipt.mapper';
 import { LineItemsFields } from './line-items-fields';
 import { PoReceiptItemsFields } from './po-receipt-items-fields';
+import { FormDrawer } from '@/foundation/overlay';
 
 export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boolean; editing?: GoodsReceiptDetailDto; onClose: () => void }) {
   const [form] = Form.useForm<CreateGoodsReceiptDto>();
@@ -89,7 +90,7 @@ export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boole
     finally { setSubmitting(false); }
   };
 
-  return <Drawer title={editing ? `Sửa ${editing.receiptNo}` : 'Tạo phiếu nhập'} width="min(1120px, 96vw)" open={open} destroyOnClose onClose={onClose} extra={<Button type="primary" loading={submitting} onClick={() => form.submit()}>Lưu nháp</Button>}>
+  return <FormDrawer title={editing ? `Sửa ${editing.receiptNo}` : 'Tạo phiếu nhập'} size="xl" open={open} onClose={onClose} onSubmit={() => form.submit()} submitting={submitting} submitText="Lưu nháp" isDirty={() => form.isFieldsTouched()}>
     <Form form={form} layout="vertical" disabled={submitting} onFinish={(values) => void submit(values)}>
       <div className="grid gap-x-4 md:grid-cols-2 lg:grid-cols-3">
         <Form.Item name="receiptType" label="Loại phiếu" rules={[{ required: true }]}><Select disabled={Boolean(editing)} options={goodsReceiptTypeOptions} onChange={() => { hydratedPoRef.current = undefined; form.setFieldsValue({ purchaseOrderId: undefined, items: [] }); }} /></Form.Item>
@@ -97,14 +98,8 @@ export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boole
           ...(editing?.purchaseOrder && !lookups.purchaseOrderOptions.some((option) => option.value === editing.purchaseOrder?.id) ? [{ value: editing.purchaseOrder.id, label: editing.purchaseOrder.poNo }] : []),
           ...lookups.purchaseOrderOptions,
         ]} filterOption={false} onSearch={lookups.setPurchaseOrderSearch} onChange={() => { hydratedPoRef.current = undefined; form.setFieldValue('items', []); }} /></Form.Item> : <>
-          <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true }]}><Select showSearch filterOption={false} onSearch={lookups.setSupplierSearch} options={[
-            ...withSelectedParty(lookups.supplierOptions, editing?.supplier),
-            ...lookups.supplierOptions,
-          ]} /></Form.Item>
-          <Form.Item name="warehouseId" label="Kho nhận" rules={[{ required: true }]}><Select showSearch filterOption={false} onSearch={lookups.setWarehouseSearch} options={[
-            ...withSelectedParty(lookups.warehouseOptions, editing?.warehouse),
-            ...lookups.warehouseOptions,
-          ]} /></Form.Item>
+          <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true }]}><Select showSearch filterOption={false} onSearch={lookups.setSupplierSearch} options={withSelectedParty(lookups.supplierOptions, editing?.supplier)} /></Form.Item>
+          <Form.Item name="warehouseId" label="Kho nhận" rules={[{ required: true }]}><Select showSearch filterOption={false} onSearch={lookups.setWarehouseSearch} options={withSelectedParty(lookups.warehouseOptions, editing?.warehouse)} /></Form.Item>
           <Form.Item name="reasonCode" label="Lý do nhập trực tiếp" rules={[{ required: true }]}><Select options={directReceiptReasonOptions} /></Form.Item>
         </>}
         <Form.Item name="supplierInvoiceNo" label="Số hoá đơn NCC"><Input maxLength={64} /></Form.Item>
@@ -121,5 +116,5 @@ export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boole
         <Button danger type="text" onClick={() => remove(field.name)}>Xoá</Button>
       </div>)}<Button type="dashed" onClick={() => add()}>Thêm chi phí</Button></div>}</Form.List>
     </Form>
-  </Drawer>;
+  </FormDrawer>;
 }

@@ -1,5 +1,13 @@
+import { RoleStatus } from '@/generated/api/iam/iam.schemas';
+import { toOptions } from '@/shared/utils/options';
+
 /** OWNER là tài khoản gốc duy nhất và không được ngừng hoạt động qua UI/API. */
 export const ROOT_ROLE_CODE = 'OWNER';
+
+export const ROLE_STATUS_OPTIONS = toOptions<RoleStatus>({
+  [RoleStatus.ACTIVE]: 'Đang dùng',
+  [RoleStatus.INACTIVE]: 'Ngừng dùng',
+});
 
 /** Mã lỗi ổn định của `deleteAdminRole` (API D98). */
 export const ROLE_DELETE_ERROR_CODE = {

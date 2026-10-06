@@ -1,7 +1,7 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Input, InputNumber, Select, Space, Switch } from 'antd';
+import { App, Button, Form, Input, InputNumber, Select, Space, Switch } from 'antd';
 import { useEffect } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -12,7 +12,9 @@ import {
 } from '@/generated/api/catalog/catalog';
 import { AttributeDataType, type AttributeDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { ATTRIBUTE_TYPE_LABEL, toAttributePayload, type AttributeFormValues } from '../model/attribute-form';
+import { ATTRIBUTE_TYPE_OPTIONS } from '../constants/catalog-masters.constants';
+import { toAttributePayload, type AttributeFormValues } from '../model/attribute-form';
+import { FormDrawer } from '@/foundation/overlay';
 
 const schema: yup.ObjectSchema<AttributeFormValues> = yup.object({
   code: yup.string().trim().uppercase().matches(/^[A-Z][A-Z0-9_]{1,63}$/, 'Chỉ A-Z, 0-9, _ và bắt đầu bằng chữ').required('Nhập mã'),
@@ -89,24 +91,20 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
     }
   });
 
+  const { isDirty } = form.formState;
   const field = (name: keyof AttributeFormValues) => ({
     validateStatus: form.formState.errors[name] ? ('error' as const) : undefined,
     help: form.formState.errors[name]?.message as string | undefined,
   });
 
   return (
-    <Drawer
-      width={640}
+    <FormDrawer
       open={open}
       title={isEdit ? `Sửa thuộc tính ${attribute?.code}` : 'Thêm thuộc tính'}
       onClose={onClose}
-      destroyOnClose
-      footer={(
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose}>Hủy</Button>
-          <Button type="primary" loading={create.isPending || update.isPending} onClick={() => void submit()}>Lưu</Button>
-        </div>
-      )}
+      onSubmit={() => void submit()}
+      submitting={create.isPending || update.isPending}
+      isDirty={() => isDirty}
     >
       <Form layout="vertical">
         <Form.Item label="Mã thuộc tính" required extra="Không đổi được sau khi tạo, ví dụ ADJUSTABLE_HEIGHT" {...field('code')}>
@@ -120,7 +118,7 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
         <Space className="w-full" size="middle" wrap>
           <Form.Item label="Kiểu giá trị" required extra={isEdit ? 'Không đổi được sau khi tạo' : undefined}>
             <Controller name="dataType" control={form.control} render={({ field: input }) => (
-              <Select {...input} disabled={isEdit} className="min-w-44" options={Object.values(AttributeDataType).map((value) => ({ value, label: ATTRIBUTE_TYPE_LABEL[value] }))} />
+              <Select {...input} disabled={isEdit} className="min-w-44" options={ATTRIBUTE_TYPE_OPTIONS} />
             )} />
           </Form.Item>
           {dataType === AttributeDataType.NUMBER && (
@@ -159,6 +157,6 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
           </Form.Item>
         )}
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

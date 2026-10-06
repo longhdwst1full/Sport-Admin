@@ -1,4 +1,9 @@
-import type { SystemParameterGroup } from '@/generated/api/system/system.schemas';
+import type {
+  SystemParameterGroup,
+  SystemParameterStatus,
+  SystemParameterValueType,
+} from '@/generated/api/system/system.schemas';
+import { toOptions } from '@/shared/utils/options';
 
 export const SYSTEM_PARAMETER_PAGE_SIZE = 20;
 
@@ -27,15 +32,23 @@ const groupLabels: Record<SystemParameterGroup, string> = {
 export const EMPTY_ALLOWED_PARAMETER_GROUPS: readonly string[] = ['NOTIFICATION'];
 
 export const parameterGroupLabels: Record<string, string> = groupLabels;
+export const PARAMETER_GROUP_OPTIONS = toOptions(groupLabels);
 
-export const parameterValueTypeLabels: Record<string, string> = {
+const valueTypeLabels: Record<SystemParameterValueType, string> = {
   INTEGER: 'Số nguyên',
   DECIMAL: 'Số thập phân',
   BOOLEAN: 'Đúng/Sai',
   STRING: 'Chuỗi',
 };
 
-export const parameterStatusPresentation: Record<string, { label: string; color: string }> = {
+export const parameterValueTypeLabels: Record<string, string> = valueTypeLabels;
+export const PARAMETER_VALUE_TYPE_OPTIONS = toOptions(valueTypeLabels);
+
+const statusPresentation: Record<SystemParameterStatus, { label: string; color: string }> = {
   ACTIVE: { label: 'Đang dùng', color: 'success' },
   INACTIVE: { label: 'Ngừng dùng', color: 'default' },
 };
+
+export const parameterStatusPresentation: Record<string, { label: string; color: string }> =
+  statusPresentation;
+export const PARAMETER_STATUS_OPTIONS = toOptions(statusPresentation);

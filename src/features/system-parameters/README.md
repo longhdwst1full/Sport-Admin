@@ -26,6 +26,7 @@ Lý do: code đọc tham số hệ thống theo mã. Cho sửa mã hoặc xoá t
 ## Generated operation
 
 `useListAdminSystemParameters`, `createAdminSystemParameter`, `updateAdminSystemParameter`, `deleteAdminSystemParameter` — `src/generated/api/system`.
+Lệnh tạo/sửa/ngừng dùng (kèm MFA cho tham số bảo mật) nằm ở `hooks/use-system-parameter-commands.ts`.
 
 Danh sách chạy server-side: phân trang, tìm theo mã/tên, lọc nhóm và trạng thái, sắp xếp qua whitelist trường.
 

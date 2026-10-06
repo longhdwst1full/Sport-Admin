@@ -1,131 +1,52 @@
 import { useState } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { ControlOutlined, GlobalOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useDebounce } from 'use-debounce';
-import {
-  createAdminSystemParameter,
-  deleteAdminSystemParameter,
-  getListAdminSystemParametersQueryKey,
-  updateAdminSystemParameter,
-  useListAdminSystemParameters,
-} from '@/generated/api/system/system';
+import { ControlOutlined, GlobalOutlined, PlusOutlined } from '@ant-design/icons';
+import { Alert, App, Button, Input, Select } from 'antd';
+import { useListAdminSystemParameters } from '@/generated/api/system/system';
 import type {
   SystemParameterStatus,
   SystemParameterDto,
 } from '@/generated/api/system/system.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { ManagementPage } from '@/foundation/management';
+import { SearchInput } from '@/foundation/inputs/search-input';
+import { FilterBar, RefreshButton } from '@/foundation/table';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { getMfaErrorMessage, isMfaCodeCancelled, useMfaCode, type MfaRequestOptions } from '@/features/auth';
-import {
-  SystemParameterFormModal,
-  type ParameterFormValues,
-} from '../components/system-parameter-form-modal';
+import { SystemParameterFormModal } from '../components/system-parameter-form-modal';
 import { SystemParameterTable } from '../components/system-parameter-table';
 import {
+  PARAMETER_GROUP_OPTIONS,
+  PARAMETER_STATUS_OPTIONS,
   SYSTEM_PARAMETER_PAGE_SIZE,
-  parameterGroupLabels,
 } from '../constants/system-parameter.constants';
+import { useSystemParameterCommands } from '../hooks/use-system-parameter-commands';
 import { requiresMfaCode } from '../model/system-parameter-mfa.policy';
 
 export function SystemParametersPage() {
   const { message, modal } = App.useApp();
-  const queryClient = useQueryClient();
   const canManage = useCan('system.parameter.manage');
-  const [search, setSearch] = useState('');
+  const search = useSearchState();
   const [groupCode, setGroupCode] = useState<string>();
   const [status, setStatus] = useState<SystemParameterStatus>();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SystemParameterDto>();
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  const { withMfaCode, mfaModal } = useMfaCode();
-  const [page, setPage] = useListPageReset([debouncedSearch, groupCode, status]);
+  const [page, setPage] = useListPageReset([search.debounced, groupCode, status]);
 
   const parameters = useListAdminSystemParameters({
     page,
     limit: SYSTEM_PARAMETER_PAGE_SIZE,
-    search: debouncedSearch || undefined,
+    search: search.debounced,
     groupCode: groupCode as never,
     status,
   });
   const rows = parameters.data?.items ?? [];
 
-  async function refresh() {
-    await queryClient.invalidateQueries({ queryKey: getListAdminSystemParametersQueryKey() });
-  }
-
-  const saveMutation = useMutation({
-    mutationFn: (values: ParameterFormValues) => {
-      if (editing) {
-        const update = (options?: MfaRequestOptions) =>
-          updateAdminSystemParameter(
-            editing.code,
-            {
-              expectedVersion: editing.version,
-              value: values.value!,
-              ...(values.reason?.trim() ? { reason: values.reason.trim() } : {}),
-            },
-            options,
-          );
-        if (!requiresMfaCode(editing)) return update();
-        return withMfaCode({
-          title: `Xác thực để lưu ${editing.code}`,
-          description: 'Tham số bảo mật: cần mã xác thực 2 lớp hiện tại của bạn để lưu thay đổi.',
-          okText: 'Xác thực & lưu',
-          run: update,
-        });
-      }
-      return createAdminSystemParameter({
-        code: values.code!,
-        groupCode: values.groupCode! as never,
-        label: values.label!,
-        description: values.description,
-        valueType: values.valueType! as never,
-        value: values.value!,
-        minValue: values.minValue,
-        maxValue: values.maxValue,
-        unit: values.unit,
-        isPublic: values.isPublic ?? false,
-      });
-    },
-    onSuccess: async () => {
-      await refresh();
+  const { saveMutation, deactivateMutation, mfaModal } = useSystemParameterCommands({
+    editing,
+    onSaved: () => {
       setFormOpen(false);
       setEditing(undefined);
-      void message.success(editing ? 'Đã lưu giá trị mới' : 'Đã tạo tham số');
-    },
-    onError: (error: unknown) => {
-      if (!isMfaCodeCancelled(error)) void message.error(getMfaErrorMessage(error));
-    },
-  });
-
-  const deactivateMutation = useMutation({
-    mutationFn: ({ row, reason }: { row: SystemParameterDto; reason?: string }) => {
-      const remove = (options?: MfaRequestOptions) =>
-        deleteAdminSystemParameter(
-          row.code,
-          {
-            expectedVersion: row.version,
-            ...(reason?.trim() ? { reason: reason.trim() } : {}),
-          },
-          options,
-        );
-      if (!requiresMfaCode(row)) return remove();
-      return withMfaCode({
-        title: `Xác thực để ngừng dùng ${row.code}`,
-        okText: 'Xác thực & ngừng dùng',
-        danger: true,
-        run: remove,
-      });
-    },
-    onSuccess: async () => {
-      await refresh();
-      void message.success('Đã ngừng dùng tham số');
-    },
-    onError: (error: unknown) => {
-      if (!isMfaCodeCancelled(error)) void message.error(getMfaErrorMessage(error));
     },
   });
 
@@ -188,12 +109,28 @@ export function SystemParametersPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-wrap gap-3">
-            <Input.Search
-              allowClear
-              className="min-w-64 flex-1"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+          <FilterBar
+            actions={
+              <>
+                <RefreshButton onRefresh={parameters.refetch} loading={parameters.isFetching} />
+                {canManage && (
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                      setEditing(undefined);
+                      setFormOpen(true);
+                    }}
+                  >
+                    Tạo tham số
+                  </Button>
+                )}
+              </>
+            }
+          >
+            <SearchInput
+              value={search.value}
+              onChange={search.setValue}
               placeholder="Mã hoặc tên tham số"
             />
             <Select
@@ -202,7 +139,7 @@ export function SystemParametersPage() {
               value={groupCode}
               onChange={setGroupCode}
               placeholder="Nhóm"
-              options={Object.entries(parameterGroupLabels).map(([value, label]) => ({ value, label }))}
+              options={PARAMETER_GROUP_OPTIONS}
             />
             <Select
               allowClear
@@ -210,32 +147,9 @@ export function SystemParametersPage() {
               value={status}
               onChange={setStatus}
               placeholder="Trạng thái"
-              options={[
-                { value: 'ACTIVE', label: 'Đang dùng' },
-                { value: 'INACTIVE', label: 'Ngừng dùng' },
-              ]}
+              options={PARAMETER_STATUS_OPTIONS}
             />
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => void parameters.refetch()}
-                loading={parameters.isFetching}
-                aria-label="Làm mới"
-              />
-            </Tooltip>
-            {canManage && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setEditing(undefined);
-                  setFormOpen(true);
-                }}
-              >
-                Tạo tham số
-              </Button>
-            )}
-          </div>
+          </FilterBar>
         }
       >
         {parameters.isError && (

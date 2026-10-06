@@ -23,7 +23,7 @@ Hai màn độc lập, mỗi màn một mục menu và một `PermissionRoute` r
 
 `/catalog-masters` (màn ghép cũ) redirect về `/brands`.
 
-Dùng chung: `components/master-data-form-drawers.tsx` (form Brand/Category), `components/master-columns.tsx` (cột Mã + Trạng thái, `MASTER_STATUSES`), `model/catalog-masters.mapper.ts` (lọc tìm kiếm, có test).
+Dùng chung: `components/master-data-list-page.tsx` (khung trang Brand/Category: lọc client-side, chỉ số, thao tác sửa/bật-tắt/xoá; trang chỉ giữ mutation và cột riêng), `components/master-data-form-drawers.tsx` (form Brand/Category trên `FormDrawer`, dùng chung trường tên/slug/mô tả), `constants/catalog-masters.constants.ts` (`MASTER_STATUSES`, `ATTRIBUTE_STATUSES`, nhãn/option kiểu thuộc tính), `model/catalog-masters.mapper.ts` (lọc tìm kiếm, có test).
 
 Trước đây một màn gộp hai tab gác bằng `catalog.brand.view`, nên người chỉ có quyền danh mục không vào được. Tách ra để quyền vào màn khớp đúng dữ liệu màn đó quản.
 

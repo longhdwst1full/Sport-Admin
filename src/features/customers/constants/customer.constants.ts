@@ -2,8 +2,22 @@ import {
   CustomerKind,
   CustomerStatus,
 } from '@/generated/api/customers/customers.schemas';
+import type { ColumnItem } from '@/foundation/table';
+import { toOptions } from '@/shared/utils/options';
 
 export const CUSTOMER_PAGE_SIZE = 20;
+
+/** Cột bật/tắt được trong "Tùy chỉnh cột"; `id` khớp `key` của cột trong bảng. */
+export const CUSTOMER_COLUMN_ITEMS: ColumnItem[] = [
+  { id: 'customer', label: 'Khách hàng', fixed: true },
+  { id: 'contact', label: 'Liên hệ' },
+  { id: 'kind', label: 'Loại khách' },
+  { id: 'orderCount', label: 'Số đơn' },
+  { id: 'lifetimeValue', label: 'Đã chi tiêu' },
+  { id: 'lastOrder', label: 'Mua gần nhất' },
+  { id: 'status', label: 'Trạng thái' },
+  { id: 'actions', label: 'Thao tác', fixed: true },
+];
 
 export { moneyFormatter } from '@/lib/format/money';
 
@@ -18,10 +32,6 @@ export const customerStatusPresentation: Record<string, { label: string; color: 
   [CustomerStatus.INACTIVE]: { label: 'Ngừng hoạt động', color: 'default' },
 };
 
-export const customerKindOptions = Object.entries(customerKindPresentation).map(
-  ([value, { label }]) => ({ value, label }),
-);
+export const customerKindOptions = toOptions(customerKindPresentation);
 
-export const customerStatusOptions = Object.entries(customerStatusPresentation).map(
-  ([value, { label }]) => ({ value, label }),
-);
+export const customerStatusOptions = toOptions(customerStatusPresentation);

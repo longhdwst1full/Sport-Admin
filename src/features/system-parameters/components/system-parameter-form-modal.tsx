@@ -3,8 +3,8 @@ import { Alert, Form, Input, InputNumber, Modal, Select, Switch, Typography } fr
 import type { SystemParameterDto } from '@/generated/api/system/system.schemas';
 import {
   EMPTY_ALLOWED_PARAMETER_GROUPS,
-  parameterGroupLabels,
-  parameterValueTypeLabels,
+  PARAMETER_GROUP_OPTIONS,
+  PARAMETER_VALUE_TYPE_OPTIONS,
 } from '../constants/system-parameter.constants';
 
 export interface ParameterFormValues {
@@ -110,9 +110,7 @@ export function SystemParameterFormModal({
               <Input placeholder="SUPPORT_SLA_HOURS" maxLength={64} />
             </Form.Item>
             <Form.Item name="groupCode" label="Nhóm" rules={[{ required: true, message: 'Chọn nhóm' }]}>
-              <Select
-                options={Object.entries(parameterGroupLabels).map(([value, label]) => ({ value, label }))}
-              />
+              <Select options={PARAMETER_GROUP_OPTIONS} />
             </Form.Item>
             <Form.Item name="label" label="Tên hiển thị" rules={[{ required: true, message: 'Nhập tên' }]}>
               <Input maxLength={255} />
@@ -121,9 +119,7 @@ export function SystemParameterFormModal({
               <Input.TextArea rows={2} />
             </Form.Item>
             <Form.Item name="valueType" label="Kiểu giá trị" rules={[{ required: true, message: 'Chọn kiểu' }]}>
-              <Select
-                options={Object.entries(parameterValueTypeLabels).map(([value, label]) => ({ value, label }))}
-              />
+              <Select options={PARAMETER_VALUE_TYPE_OPTIONS} />
             </Form.Item>
             <div className="flex gap-3">
               <Form.Item name="minValue" label="Nhỏ nhất" className="flex-1">

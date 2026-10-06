@@ -8,6 +8,7 @@ import {
   SupplierReturnStatus,
   SupplierStatus,
 } from '@/generated/api/procurement/procurement.schemas';
+import { formatDateTime } from '@/lib/format/datetime';
 
 export const PROCUREMENT_PAGE_SIZE = 30;
 
@@ -89,12 +90,6 @@ export const withSelectedParty = (
     ? [{ value: party.id, label: partyLabel(party) }, ...options]
     : options;
 
-export const formatDate = (value?: string | null, empty = '—'): string =>
-  value ? new Date(value).toLocaleDateString('vi-VN') : empty;
-
-export const formatDateTime = (value?: string | null, empty = '—'): string =>
-  value ? new Date(value).toLocaleString('vi-VN') : empty;
-
 /** `Người thực hiện · thời điểm`; `empty` là câu trạng thái khi bước đó chưa xảy ra. */
 export const actorAt = (displayName?: string | null, at?: string | null, empty = 'Chưa thực hiện'): string =>
   displayName ? `${displayName}${at ? ` · ${formatDateTime(at)}` : ''}` : empty;
@@ -106,10 +101,4 @@ export const statusLabel = (value: string): string =>
     ...goodsReceiptStatusOptions,
     ...supplierReturnStatusOptions,
   ].find((option) => option.value === value)?.label ?? value;
-
-export const moneyFormatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-  maximumFractionDigits: 0,
-});
 

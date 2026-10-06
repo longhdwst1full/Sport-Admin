@@ -1,9 +1,19 @@
 import { Alert, Descriptions, Drawer, Empty, Skeleton, Tag } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { AdminTable } from '@/foundation/table';
 import { useGetAdminCustomer } from '@/generated/api/customers/customers';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
 import { toCustomerDetailView, type CustomerOrderView } from '../model/customer.mapper';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
+
+const RECENT_ORDER_COLUMNS: ColumnsType<CustomerOrderView> = [
+  { title: 'Mã đơn', dataIndex: 'orderNo' },
+  { title: 'Trạng thái', dataIndex: 'status', width: 150 },
+  { title: 'Thanh toán', dataIndex: 'paymentStatus', width: 130 },
+  { title: 'Tổng tiền', dataIndex: 'grandTotalLabel', width: 140, align: 'right' },
+  { title: 'Ngày đặt', dataIndex: 'placedLabel', width: 120 },
+];
 
 export function CustomerDetailDrawer({
   customerId,
@@ -20,7 +30,7 @@ export function CustomerDetailDrawer({
   return (
     <Drawer
       open={Boolean(customerId)}
-      width={760}
+      width={DRAWER_WIDTH.md}
       onClose={onClose}
       title={customer ? customer.name : 'Chi tiết khách hàng'}
     >
@@ -91,18 +101,7 @@ export function CustomerDetailDrawer({
               rowKey="id"
               pagination={false}
               dataSource={customer.recentOrders}
-              columns={[
-                { title: 'Mã đơn', dataIndex: 'orderNo' },
-                { title: 'Trạng thái', dataIndex: 'status', width: 150 },
-                { title: 'Thanh toán', dataIndex: 'paymentStatus', width: 130 },
-                {
-                  title: 'Tổng tiền',
-                  dataIndex: 'grandTotalLabel',
-                  width: 140,
-                  align: 'right',
-                },
-                { title: 'Ngày đặt', dataIndex: 'placedLabel', width: 120 },
-              ]}
+              columns={RECENT_ORDER_COLUMNS}
             />
           )}
         </>

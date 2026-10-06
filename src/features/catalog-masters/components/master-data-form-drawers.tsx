@@ -1,8 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Input, InputNumber, Select, Switch } from 'antd';
-import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { App, Form, Input, InputNumber, Select, Switch } from 'antd';
+import { useEffect, useMemo, type ReactNode } from 'react';
+import { Controller, useForm, type Control, type FieldErrors, type FieldPath } from 'react-hook-form';
 import * as yup from 'yup';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/generated/api/catalog/catalog';
 import type { BrandDto, CategoryDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
 
 interface BrandFormValues {
   name: string;
@@ -54,6 +55,142 @@ const categoryDefaults: CategoryFormValues = { ...brandDefaults, parentId: undef
 function FieldError({ message }: { message?: string }) {
   return message ? <span className="text-red-500 text-xs">{message}</span> : null;
 }
+
+interface MasterFormCopy {
+  nameLabel: string;
+  namePlaceholder: string;
+  slugExtra: string;
+  slugPlaceholder: string;
+  descriptionLabel: string;
+  descriptionPlaceholder: string;
+  descriptionRows: number;
+}
+
+const fieldLabel = (text: string) => <span className="text-xs font-semibold text-slate-700">{text}</span>;
+
+/**
+ * Khung chung của drawer Thương hiệu/Danh mục: FormDrawer + các trường tên, slug (chỉ khi sửa) và mô
+ * tả. Trường riêng của từng thực thể nằm giữa slug và mô tả (`children`).
+ */
+function MasterFormDrawer<T extends BrandFormValues>({
+  open,
+  title,
+  entityLabel,
+  isEdit,
+  pending,
+  isDirty,
+  control,
+  errors,
+  copy,
+  onClose,
+  onSubmit,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  entityLabel: string;
+  isEdit: boolean;
+  pending: boolean;
+  isDirty: boolean;
+  control: Control<T>;
+  errors: FieldErrors<BrandFormValues>;
+  copy: MasterFormCopy;
+  onClose: () => void;
+  onSubmit: () => void;
+  children?: ReactNode;
+}) {
+  // CONTRACT: T mở rộng BrandFormValues nên các khoá chung luôn là path hợp lệ của T.
+  const path = (name: keyof BrandFormValues) => name as FieldPath<T>;
+  return (
+    <FormDrawer
+      title={title}
+      size="sm"
+      open={open}
+      onClose={onClose}
+      onSubmit={onSubmit}
+      submitting={pending}
+      submitText={pending ? 'Đang lưu...' : `Lưu ${entityLabel}`}
+      isDirty={() => isDirty}
+    >
+      <Form layout="vertical" onFinish={onSubmit}>
+        <Form.Item
+          label={fieldLabel(copy.nameLabel)}
+          required
+          validateStatus={errors.name ? 'error' : undefined}
+          help={<FieldError message={errors.name?.message} />}
+        >
+          <Controller
+            name={path('name')}
+            control={control}
+            render={({ field }) => (
+              <Input {...field} value={field.value as string} placeholder={copy.namePlaceholder} className="!rounded-lg" />
+            )}
+          />
+        </Form.Item>
+
+        {isEdit && (
+          <Form.Item
+            label={fieldLabel('Slug đường dẫn')}
+            validateStatus={errors.slug ? 'error' : undefined}
+            help={<FieldError message={errors.slug?.message} />}
+            extra={copy.slugExtra}
+          >
+            <Controller
+              name={path('slug')}
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  value={(field.value as string | undefined) ?? ''}
+                  placeholder={copy.slugPlaceholder}
+                  className="!rounded-lg font-mono text-xs"
+                />
+              )}
+            />
+          </Form.Item>
+        )}
+
+        {children}
+
+        <Form.Item label={fieldLabel(copy.descriptionLabel)}>
+          <Controller
+            name={path('description')}
+            control={control}
+            render={({ field }) => (
+              <Input.TextArea
+                {...field}
+                value={field.value as string | undefined}
+                rows={copy.descriptionRows}
+                placeholder={copy.descriptionPlaceholder}
+                className="!rounded-lg"
+              />
+            )}
+          />
+        </Form.Item>
+      </Form>
+    </FormDrawer>
+  );
+}
+
+const BRAND_COPY: MasterFormCopy = {
+  nameLabel: 'Tên thương hiệu',
+  namePlaceholder: 'Ví dụ: Nike, Adidas, Lining...',
+  slugExtra: 'Đây là URL công khai. Đổi slug làm hỏng link cũ và SEO.',
+  slugPlaceholder: 'nike-viet-nam',
+  descriptionLabel: 'Mô tả giới thiệu',
+  descriptionPlaceholder: 'Giới thiệu xuất xứ, thế mạnh thương hiệu...',
+  descriptionRows: 4,
+};
+
+const CATEGORY_COPY: MasterFormCopy = {
+  nameLabel: 'Tên danh mục',
+  namePlaceholder: 'Ví dụ: Giày đá bóng sân cỏ nhân tạo...',
+  slugExtra: 'Đây là URL công khai /category/<slug>. Đổi slug làm hỏng link cũ và SEO.',
+  slugPlaceholder: 'giay-bong-da',
+  descriptionLabel: 'Mô tả danh mục',
+  descriptionPlaceholder: 'Mô tả danh mục hiển thị trên website...',
+  descriptionRows: 3,
+};
 
 export function BrandFormDrawer({
   open,
@@ -113,93 +250,22 @@ export function BrandFormDrawer({
     });
   });
   const pending = create.isPending || update.isPending;
+  const { isDirty, errors } = form.formState;
 
   return (
-    <Drawer
-      title={brand ? 'Cập nhật thương hiệu' : 'Thêm thương hiệu mới'}
-      width={520}
+    <MasterFormDrawer
       open={open}
+      title={brand ? 'Cập nhật thương hiệu' : 'Thêm thương hiệu mới'}
+      entityLabel="thương hiệu"
+      isEdit={Boolean(brand)}
+      pending={pending}
+      isDirty={isDirty}
+      control={form.control}
+      errors={errors}
+      copy={BRAND_COPY}
       onClose={onClose}
-      destroyOnHidden
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose} className="!rounded-xl">
-            Hủy
-          </Button>
-          <Button
-            type="primary"
-            loading={pending}
-            onClick={() => void submit()}
-            className="!rounded-xl !bg-emerald-600 hover:!bg-emerald-500 !font-semibold !px-5"
-          >
-            {pending ? 'Đang lưu...' : 'Lưu thương hiệu'}
-          </Button>
-        </div>
-      }
-    >
-      <Form layout="vertical" onFinish={() => void submit()}>
-        <Form.Item
-          label={<span className="text-xs font-semibold text-slate-700">Tên thương hiệu</span>}
-          required
-          validateStatus={form.formState.errors.name ? 'error' : undefined}
-          help={<FieldError message={form.formState.errors.name?.message} />}
-        >
-          <Controller
-            name="name"
-            control={form.control}
-            render={({ field }) => (
-              <Input
-                {...field}
-                placeholder="Ví dụ: Nike, Adidas, Lining..."
-                className="!rounded-lg"
-                onChange={(e) => {
-                  field.onChange(e);
-                }}
-              />
-            )}
-          />
-        </Form.Item>
-
-        {brand && (
-          <Form.Item
-            label={<span className="text-xs font-semibold text-slate-700">Slug đường dẫn</span>}
-            validateStatus={form.formState.errors.slug ? 'error' : undefined}
-            help={<FieldError message={form.formState.errors.slug?.message} />}
-            extra="Đây là URL công khai. Đổi slug làm hỏng link cũ và SEO."
-          >
-            <Controller
-              name="slug"
-              control={form.control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  value={field.value ?? ''}
-                  placeholder="nike-viet-nam"
-                  className="!rounded-lg font-mono text-xs"
-                />
-              )}
-            />
-          </Form.Item>
-        )}
-
-        <Form.Item
-          label={<span className="text-xs font-semibold text-slate-700">Mô tả giới thiệu</span>}
-        >
-          <Controller
-            name="description"
-            control={form.control}
-            render={({ field }) => (
-              <Input.TextArea
-                {...field}
-                rows={4}
-                placeholder="Giới thiệu xuất xứ, thế mạnh thương hiệu..."
-                className="!rounded-lg"
-              />
-            )}
-          />
-        </Form.Item>
-      </Form>
-    </Drawer>
+      onSubmit={() => void submit()}
+    />
   );
 }
 
@@ -278,137 +344,62 @@ export function CategoryFormDrawer({
     });
   });
   const pending = create.isPending || update.isPending;
+  const { isDirty, errors } = form.formState;
+  const parentOptions = useMemo(
+    () =>
+      categories
+        .filter((item) => item.status === 'ACTIVE')
+        .map((item) => ({ value: item.id, label: `${item.code} — ${item.name}` })),
+    [categories],
+  );
 
   return (
-    <Drawer
-      title={category ? 'Cập nhật danh mục' : 'Thêm danh mục mới'}
-      width={560}
+    <MasterFormDrawer
       open={open}
+      title={category ? 'Cập nhật danh mục' : 'Thêm danh mục mới'}
+      entityLabel="danh mục"
+      isEdit={Boolean(category)}
+      pending={pending}
+      isDirty={isDirty}
+      control={form.control}
+      errors={errors}
+      copy={CATEGORY_COPY}
       onClose={onClose}
-      destroyOnHidden
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose} className="!rounded-xl">
-            Hủy
-          </Button>
-          <Button
-            type="primary"
-            loading={pending}
-            onClick={() => void submit()}
-            className="!rounded-xl !bg-emerald-600 hover:!bg-emerald-500 !font-semibold !px-5"
-          >
-            {pending ? 'Đang lưu...' : 'Lưu danh mục'}
-          </Button>
-        </div>
-      }
+      onSubmit={() => void submit()}
     >
-      <Form layout="vertical" onFinish={() => void submit()}>
+      {!category && (
         <Form.Item
-          label={<span className="text-xs font-semibold text-slate-700">Tên danh mục</span>}
-          required
-          validateStatus={form.formState.errors.name ? 'error' : undefined}
-          help={<FieldError message={form.formState.errors.name?.message} />}
+          label={fieldLabel('Danh mục cha (Cấp trên)')}
+          help={<span className="text-xs text-slate-400">Để trống nếu đây là danh mục gốc cao nhất.</span>}
         >
           <Controller
-            name="name"
+            name="parentId"
             control={form.control}
             render={({ field }) => (
-              <Input
-                {...field}
-                placeholder="Ví dụ: Giày đá bóng sân cỏ nhân tạo..."
-                className="!rounded-lg"
-                onChange={(e) => {
-                  field.onChange(e);
-                }}
-              />
+              <Select {...field} allowClear placeholder="Chọn danh mục cha nếu có" className="w-full" options={parentOptions} />
             )}
           />
         </Form.Item>
+      )}
 
-        {category && (
-          <Form.Item
-            label={<span className="text-xs font-semibold text-slate-700">Slug đường dẫn</span>}
-            validateStatus={form.formState.errors.slug ? 'error' : undefined}
-            help={<FieldError message={form.formState.errors.slug?.message} />}
-            extra="Đây là URL công khai /category/<slug>. Đổi slug làm hỏng link cũ và SEO."
-          >
-            <Controller
-              name="slug"
-              control={form.control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  value={field.value ?? ''}
-                  placeholder="giay-bong-da"
-                  className="!rounded-lg font-mono text-xs"
-                />
-              )}
-            />
-          </Form.Item>
-        )}
+      <Form.Item label={fieldLabel('Thứ tự hiển thị')} required>
+        <Controller
+          name="sortOrder"
+          control={form.control}
+          render={({ field }) => <InputNumber {...field} min={0} className="w-full !rounded-lg" />}
+        />
+      </Form.Item>
 
-        {!category && (
-          <Form.Item
-            label={<span className="text-xs font-semibold text-slate-700">Danh mục cha (Cấp trên)</span>}
-            help={<span className="text-xs text-slate-400">Để trống nếu đây là danh mục gốc cao nhất.</span>}
-          >
-            <Controller
-              name="parentId"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  allowClear
-                  placeholder="Chọn danh mục cha nếu có"
-                  className="w-full"
-                  options={categories
-                    .filter((item) => item.status === 'ACTIVE')
-                    .map((item) => ({ value: item.id, label: `${item.code} — ${item.name}` }))}
-                />
-              )}
-            />
-          </Form.Item>
-        )}
-
-        <Form.Item
-          label={<span className="text-xs font-semibold text-slate-700">Thứ tự hiển thị</span>}
-          required
-        >
-          <Controller
-            name="sortOrder"
-            control={form.control}
-            render={({ field }) => <InputNumber {...field} min={0} className="w-full !rounded-lg" />}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={<span className="text-xs font-semibold text-slate-700">Cho phép đổi trả</span>}
-          extra="Tắt với hàng không nhận trả (đồ lót, hàng vệ sinh...). Khách và nhân viên sẽ không tạo được phiếu trả cho sản phẩm thuộc danh mục này."
-        >
-          <Controller
-            name="returnable"
-            control={form.control}
-            render={({ field }) => <Switch checked={field.value} onChange={field.onChange} />}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={<span className="text-xs font-semibold text-slate-700">Mô tả danh mục</span>}
-        >
-          <Controller
-            name="description"
-            control={form.control}
-            render={({ field }) => (
-              <Input.TextArea
-                {...field}
-                rows={3}
-                placeholder="Mô tả danh mục hiển thị trên website..."
-                className="!rounded-lg"
-              />
-            )}
-          />
-        </Form.Item>
-      </Form>
-    </Drawer>
+      <Form.Item
+        label={fieldLabel('Cho phép đổi trả')}
+        extra="Tắt với hàng không nhận trả (đồ lót, hàng vệ sinh...). Khách và nhân viên sẽ không tạo được phiếu trả cho sản phẩm thuộc danh mục này."
+      >
+        <Controller
+          name="returnable"
+          control={form.control}
+          render={({ field }) => <Switch checked={field.value} onChange={field.onChange} />}
+        />
+      </Form.Item>
+    </MasterFormDrawer>
   );
 }

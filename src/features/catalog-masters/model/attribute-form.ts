@@ -1,12 +1,5 @@
 import { AttributeDataType, type CreateAttributeDto } from '@/generated/api/catalog/catalog.schemas';
 
-export const ATTRIBUTE_TYPE_LABEL: Record<AttributeDataType, string> = {
-  [AttributeDataType.TEXT]: 'Chữ',
-  [AttributeDataType.NUMBER]: 'Số (có đơn vị)',
-  [AttributeDataType.BOOLEAN]: 'Có / Không',
-  [AttributeDataType.OPTION]: 'Chọn từ danh sách',
-};
-
 export interface AttributeFormValues {
   code: string;
   name: string;

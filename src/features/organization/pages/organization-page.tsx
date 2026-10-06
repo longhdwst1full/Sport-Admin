@@ -10,11 +10,12 @@ import {
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Button, Descriptions, Popconfirm, Typography } from 'antd';
-import { useState } from 'react';
-import { PermissionGate, useCan } from '@/core/auth/permissions';
+import { useMemo, useState } from 'react';
+import type { ColumnsType } from 'antd/es/table';
+import { PermissionGate, useCan, useCanAll } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { ManagementPage, StatusTag } from '@/foundation/management';
-import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
+import { ManagementPage } from '@/foundation/management';
+import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import {
   getListAdminBranchesQueryKey,
   getListAdminWarehousesQueryKey,
@@ -23,31 +24,42 @@ import {
   useListAdminBranches,
   useListAdminWarehouses,
 } from '@/generated/api/organization/organization';
-import type { BranchDto, OrganizationStatus, WarehouseDto } from '@/generated/api/organization/organization.schemas';
+import type { BranchDto, OrganizationStatus } from '@/generated/api/organization/organization.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { OrganizationFormDrawer } from '../components/organization-form-drawer';
+import { BRANCH_WAREHOUSE_MANAGE, ORGANIZATION_STATUSES } from '../constants/organization.constants';
+import { toBranchWarehouseRows, type BranchWarehouseRow } from '../model/branch-warehouse.mapper';
 
-interface BranchWarehouseRow {
-  branchId: string;
-  branchCode: string;
-  branchName: string;
-  warehouseCode: string;
-  warehouseName: string;
-  address: string;
-  region: string;
-  status: OrganizationStatus;
-  branch: BranchDto;
-  warehouse?: WarehouseDto;
-}
-
-const organizationStatuses: Record<OrganizationStatus, { color: string; label: string }> = {
-  ACTIVE: { color: 'green', label: 'Đang hoạt động' },
-  INACTIVE: { color: 'default', label: 'Ngừng hoạt động' },
-};
-
-// SECURITY: mọi endpoint branch/kho khai báo đồng thời org.branch.manage và org.warehouse.manage,
-// nên UI phải yêu cầu đủ cả hai; thiếu một quyền mà vẫn hiện nút thì thao tác chắc chắn 403.
-const BRANCH_WAREHOUSE_MANAGE = ['org.branch.manage', 'org.warehouse.manage'] as const;
+const BRANCH_WAREHOUSE_DATA_COLUMNS: ColumnsType<BranchWarehouseRow> = [
+  {
+    title: 'Chi nhánh',
+    dataIndex: 'branchName',
+    width: 260,
+    render: (value, row) => (
+      <div className="min-w-0">
+        <strong className="block truncate" title={String(value)}>
+          {value}
+        </strong>
+        <Typography.Text code className="text-xs">
+          {row.branchCode}
+        </Typography.Text>
+      </div>
+    ),
+  },
+  {
+    title: 'Kho duy nhất',
+    dataIndex: 'warehouseName',
+    width: 240,
+    ellipsis: true,
+    render: (value) => <strong>{value}</strong>,
+  },
+  col.text<BranchWarehouseRow>('region', 'Khu vực', { width: 160, ellipsis: true }),
+  // Địa chỉ dài hơn mọi cột khác; cắt ở đây và cho xem đầy đủ ở dòng mở rộng.
+  col.text<BranchWarehouseRow>('address', 'Địa chỉ', { width: 320, ellipsis: true }),
+  col.status<BranchWarehouseRow, OrganizationStatus>('status', 'Trạng thái', ORGANIZATION_STATUSES, {
+    width: 140,
+  }),
+];
 
 export function OrganizationPage() {
   const { message } = App.useApp();
@@ -57,25 +69,9 @@ export function OrganizationPage() {
   const canViewWarehouses = useCan('org.warehouse.view');
   const branchesQuery = useListAdminBranches({ query: { ...CACHE_POLICY.REFERENCE } });
   const warehousesQuery = useListAdminWarehouses({ query: { enabled: canViewWarehouses } });
-  const branches = branchesQuery.data?.items ?? [];
-  const warehouses = warehousesQuery.data?.items ?? [];
-  const rows: BranchWarehouseRow[] = branches.map((branch) => {
-    const warehouse = warehouses.find((item) => item.branchId === branch.id);
-    return {
-      branchId: branch.id,
-      branchCode: branch.code,
-      branchName: branch.name,
-      warehouseCode: warehouse?.code ?? 'Chưa liên kết',
-      warehouseName: warehouse?.name ?? 'Chưa có kho',
-      address: [branch.address.addressLine, branch.address.district, branch.address.province].join(
-        ', ',
-      ),
-      region: branch.address.province,
-      status: branch.status,
-      branch,
-      warehouse,
-    };
-  });
+  const branches = useMemo(() => branchesQuery.data?.items ?? [], [branchesQuery.data]);
+  const warehouses = useMemo(() => warehousesQuery.data?.items ?? [], [warehousesQuery.data]);
+  const rows = useMemo(() => toBranchWarehouseRows(branches, warehouses), [branches, warehouses]);
   const regionCount = new Set(branches.map((branch) => branch.address.province)).size;
   const hasError = branchesQuery.isError || (canViewWarehouses && warehousesQuery.isError);
   const refresh = async () => {
@@ -99,6 +95,58 @@ export function OrganizationPage() {
   const selectedWarehouse = selectedBranch
     ? warehouses.find((item) => item.branchId === selectedBranch.id)
     : undefined;
+
+  const canManage = useCanAll(BRANCH_WAREHOUSE_MANAGE);
+  const { mutate: activateBranch } = activate;
+  const { mutate: deactivateBranch } = deactivate;
+  const columns = useMemo<ColumnsType<BranchWarehouseRow>>(
+    () => [
+      ...BRANCH_WAREHOUSE_DATA_COLUMNS,
+      // Ghim phải để không phải cuộn ngang mới bấm được Sửa/Ngừng.
+      col.actions<BranchWarehouseRow>(
+        (row) =>
+          canManage ? (
+            <>
+              <TableActionButton
+                label={`Sửa chi nhánh ${row.branchName}`}
+                icon={<EditOutlined />}
+                disabled={!row.warehouse}
+                onClick={() => {
+                  setSelectedBranch(row.branch);
+                  setDrawerOpen(true);
+                }}
+              />
+              <Popconfirm
+                title={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho?' : 'Kích hoạt lại chi nhánh và kho?'}
+                description="Hai bản ghi sẽ đổi trạng thái trong cùng transaction."
+                disabled={!row.warehouse}
+                onConfirm={() => {
+                  if (!row.warehouse) return;
+                  const variables = {
+                    id: row.branch.id,
+                    data: {
+                      expectedVersion: row.branch.version,
+                      warehouseExpectedVersion: row.warehouse.version,
+                    },
+                  };
+                  if (row.status === 'ACTIVE') deactivateBranch(variables);
+                  else activateBranch(variables);
+                }}
+              >
+                <TableActionButton
+                  label={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho' : 'Kích hoạt chi nhánh và kho'}
+                  danger={row.status === 'ACTIVE'}
+                  disabled={!row.warehouse}
+                  icon={<PoweroffOutlined />}
+                />
+              </Popconfirm>
+            </>
+          ) : null,
+        { title: '', width: 100 },
+      ),
+    ],
+    [activateBranch, canManage, deactivateBranch],
+  );
 
   return (
     <ManagementPage
@@ -169,88 +217,7 @@ export function OrganizationPage() {
             </Descriptions>
           ),
         }}
-        columns={[
-          {
-            title: 'Chi nhánh',
-            dataIndex: 'branchName',
-            width: 260,
-            render: (value, row) => (
-              <div className="min-w-0">
-                <strong className="block truncate" title={String(value)}>
-                  {value}
-                </strong>
-                <Typography.Text code className="text-xs">
-                  {row.branchCode}
-                </Typography.Text>
-              </div>
-            ),
-          },
-          {
-            title: 'Kho duy nhất',
-            dataIndex: 'warehouseName',
-            width: 240,
-            ellipsis: true,
-            render: (value) => <strong>{value}</strong>,
-          },
-          { title: 'Khu vực', dataIndex: 'region', width: 160, ellipsis: true },
-          // Địa chỉ dài hơn mọi cột khác; cắt ở đây và cho xem đầy đủ ở dòng mở rộng.
-          { title: 'Địa chỉ', dataIndex: 'address', width: 320, ellipsis: true },
-          {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            width: 140,
-            render: (value: OrganizationStatus) => (
-              <StatusTag status={value} presentations={organizationStatuses} />
-            ),
-          },
-          {
-            title: '',
-            key: 'actions',
-            width: 100,
-            align: 'right',
-            // Ghim phải để không phải cuộn ngang mới bấm được Sửa/Ngừng.
-            fixed: 'right',
-            render: (_, row: BranchWarehouseRow) => (
-              <PermissionGate permission={BRANCH_WAREHOUSE_MANAGE}>
-                <TableActions>
-                  <TableActionButton
-                    label={`Sửa chi nhánh ${row.branchName}`}
-                    icon={<EditOutlined />}
-                    disabled={!row.warehouse}
-                    onClick={() => {
-                      setSelectedBranch(row.branch);
-                      setDrawerOpen(true);
-                    }}
-                  />
-                  <Popconfirm
-                    title={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho?' : 'Kích hoạt lại chi nhánh và kho?'}
-                    description="Hai bản ghi sẽ đổi trạng thái trong cùng transaction."
-                    disabled={!row.warehouse}
-                    onConfirm={() => {
-                      if (!row.warehouse) return;
-                      const variables = {
-                        id: row.branch.id,
-                        data: {
-                          expectedVersion: row.branch.version,
-                          warehouseExpectedVersion: row.warehouse.version,
-                        },
-                      };
-                      if (row.status === 'ACTIVE') deactivate.mutate(variables);
-                      else activate.mutate(variables);
-                    }}
-                  >
-                    <TableActionButton
-                      label={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho' : 'Kích hoạt chi nhánh và kho'}
-                      danger={row.status === 'ACTIVE'}
-                      disabled={!row.warehouse}
-                      icon={<PoweroffOutlined />}
-                    />
-                  </Popconfirm>
-                </TableActions>
-              </PermissionGate>
-            ),
-          },
-        ]}
+        columns={columns}
       />
       <OrganizationFormDrawer
         open={drawerOpen}

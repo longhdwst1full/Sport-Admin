@@ -1,5 +1,7 @@
 import { Tag, Tree, Typography } from 'antd';
-import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { useMemo } from 'react';
+import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
@@ -64,6 +66,63 @@ export function RoleTable({
   onEdit: (row: RoleDto) => void;
   onDelete: (row: RoleDto) => void;
 }) {
+  const columns = useMemo<ColumnsType<RoleDto>>(
+    () => [
+      {
+        title: 'Vai trò',
+        dataIndex: 'name',
+        width: 280,
+        render: (_value, row) => (
+          <div>
+            <div className="font-medium">
+              {row.name}
+              {row.system && (
+                <Tag color="blue" className="ml-2">
+                  Hệ thống
+                </Tag>
+              )}
+              {row.status === 'INACTIVE' && (
+                <Tag color="default" className="ml-2">
+                  Ngừng dùng
+                </Tag>
+              )}
+            </div>
+            <Typography.Text type="secondary" className="text-xs">
+              {row.code}
+            </Typography.Text>
+          </div>
+        ),
+      },
+      col.text<RoleDto>('description', 'Mô tả', { width: 360, ellipsis: true }),
+      {
+        title: 'Số quyền',
+        dataIndex: 'permissionCodes',
+        width: 110,
+        align: 'center',
+        render: (codes: string[]) => codes.length,
+      },
+      col.actions<RoleDto>(
+        (row) => {
+          const deleteState = getRoleDeleteState(row);
+          return (
+            <>
+              <TableActionButton label={`Sửa vai trò ${row.name}`} icon={<EditOutlined />} disabled={!canManage} onClick={() => onEdit(row)} />
+              <TableActionButton
+                label={deleteState.label}
+                danger
+                icon={<DeleteOutlined />}
+                disabled={!canManage || !deleteState.allowed}
+                onClick={() => onDelete(row)}
+              />
+            </>
+          );
+        },
+        { title: '', width: 100 },
+      ),
+    ],
+    [canManage, onDelete, onEdit],
+  );
+
   return (
     <AdminTable<RoleDto>
       rowKey="id"
@@ -89,69 +148,7 @@ export function RoleTable({
         ),
         rowExpandable: (row) => row.permissionCodes.length > 0,
       }}
-      columns={[
-        {
-          title: 'Vai trò',
-          dataIndex: 'name',
-          width: 280,
-          render: (_value, row) => (
-            <div>
-              <div className="font-medium">
-                {row.name}
-                {row.system && (
-                  <Tag color="blue" className="ml-2">
-                    Hệ thống
-                  </Tag>
-                )}
-                {row.status === 'INACTIVE' && (
-                  <Tag color="default" className="ml-2">
-                    Ngừng dùng
-                  </Tag>
-                )}
-              </div>
-              <Typography.Text type="secondary" className="text-xs">
-                {row.code}
-              </Typography.Text>
-            </div>
-          ),
-        },
-        {
-          title: 'Mô tả',
-          dataIndex: 'description',
-          width: 360,
-          ellipsis: true,
-          render: (value: string | undefined) => value ?? '—',
-        },
-        {
-          title: 'Số quyền',
-          dataIndex: 'permissionCodes',
-          width: 110,
-          align: 'center',
-          render: (codes: string[]) => codes.length,
-        },
-        {
-          title: '',
-          key: 'actions',
-          width: 100,
-          fixed: 'right',
-          align: 'right',
-          render: (_value, row) => {
-            const deleteState = getRoleDeleteState(row);
-            return (
-              <TableActions>
-              <TableActionButton label={`Sửa vai trò ${row.name}`} icon={<EditOutlined />} disabled={!canManage} onClick={() => onEdit(row)} />
-              <TableActionButton
-                  label={deleteState.label}
-                  danger
-                  icon={<DeleteOutlined />}
-                  disabled={!canManage || !deleteState.allowed}
-                  onClick={() => onDelete(row)}
-                />
-              </TableActions>
-            );
-          },
-        },
-      ]}
+      columns={columns}
     />
   );
 }

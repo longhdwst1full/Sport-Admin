@@ -1,26 +1,22 @@
-import { useEffect, useState } from 'react';
-import { MailOutlined, PhoneOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
-import { useDebounce } from 'use-debounce';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  activateAdminCustomer,
-  deactivateAdminCustomer,
-  deleteAdminCustomer,
-  getGetAdminCustomerQueryKey,
-  getListAdminCustomersQueryKey,
-  useListAdminCustomers,
-} from '@/generated/api/customers/customers';
+import { useState } from 'react';
+import { MailOutlined, PhoneOutlined, PlusOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
+import { Alert, Button, Select } from 'antd';
+import { useListAdminCustomers } from '@/generated/api/customers/customers';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useAuth } from '@/core/auth/auth-context';
 import { ManagementPage } from '@/foundation/management';
-import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
+import { SearchInput } from '@/foundation/inputs/search-input';
+import { ColumnSettingsModal, FilterBar, RefreshButton, useColumnVisibility } from '@/foundation/table';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { CustomerDetailDrawer } from '../components/customer-detail-drawer';
 import { CustomerFormDrawer } from '../components/customer-form-drawer';
 import { CustomerTable } from '../components/customer-table';
+import { useCustomerLifecycle } from '../hooks/use-customer-lifecycle';
 import {
+  CUSTOMER_COLUMN_ITEMS,
   CUSTOMER_PAGE_SIZE,
   customerKindOptions,
   customerStatusOptions,
@@ -28,100 +24,43 @@ import {
 } from '../constants/customer.constants';
 import { toCustomerRowView, type CustomerRowView } from '../model/customer.mapper';
 
-const CUSTOMER_COLUMNS: ColumnItem[] = [
-  { id: 'customer', label: 'Khách hàng', fixed: true },
-  { id: 'contact', label: 'Liên hệ' },
-  { id: 'kind', label: 'Loại khách' },
-  { id: 'orderCount', label: 'Số đơn' },
-  { id: 'lifetimeValue', label: 'Đã chi tiêu' },
-  { id: 'lastOrder', label: 'Mua gần nhất' },
-  { id: 'status', label: 'Trạng thái' },
-  { id: 'actions', label: 'Thao tác', fixed: true },
-];
-
 export function CustomersPage() {
   const auth = useAuth();
   // PERMISSION: Customer chưa có đơn chưa mang branch scope; API chỉ cho GLOBAL tạo độc lập.
   const canCreateStandaloneCustomer = auth.currentUser?.scopes.some(
     ({ type }) => type === 'GLOBAL',
   );
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [kind, setKind] = useState<string>();
   const [status, setStatus] = useState<string>();
-  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string>();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CustomerRowView>();
-  const [busyId, setBusyId] = useState<string>();
-  const [columnModalOpen, setColumnModalOpen] = useState(false);
-  const [colVisibility, setColVisibility] = useState<Record<string, boolean>>(
-    Object.fromEntries(CUSTOMER_COLUMNS.map((column) => [column.id, true])),
-  );
+  const columnsState = useColumnVisibility(CUSTOMER_COLUMN_ITEMS);
 
   // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend — giống màn đơn hàng.
-  const [debouncedName] = useDebounce(name.trim(), 350);
-  const [debouncedPhone] = useDebounce(phone.trim(), 350);
-  const [debouncedEmail] = useDebounce(email.trim(), 350);
-  useEffect(
-    () => setPage(1),
-    [debouncedName, debouncedPhone, debouncedEmail, kind, status],
-  );
+  const name = useSearchState();
+  const phone = useSearchState();
+  const email = useSearchState();
+  const [page, setPage] = useListPageReset([
+    name.debounced,
+    phone.debounced,
+    email.debounced,
+    kind,
+    status,
+  ]);
 
   const customers = useListAdminCustomers({
     page,
     limit: CUSTOMER_PAGE_SIZE,
-    name: debouncedName || undefined,
-    phone: debouncedPhone || undefined,
-    email: debouncedEmail || undefined,
+    name: name.debounced,
+    phone: phone.debounced,
+    email: email.debounced,
     kind: kind as never,
     status: status as never,
   });
   const rows = (customers.data?.items ?? []).map(toCustomerRowView);
 
-  const { message } = App.useApp();
-  const queryClient = useQueryClient();
-  const refreshCustomerQueries = async (customerId?: string) => {
-    await queryClient.invalidateQueries({ queryKey: getListAdminCustomersQueryKey() });
-    if (customerId) {
-      await queryClient.invalidateQueries({ queryKey: getGetAdminCustomerQueryKey(customerId) });
-    }
-  };
-
-  const statusMutation = useMutation({
-    mutationFn: (row: CustomerRowView) => {
-      const command = { expectedVersion: row.version };
-      return row.status === 'ACTIVE'
-        ? deactivateAdminCustomer(row.id, command)
-        : activateAdminCustomer(row.id, command);
-    },
-    onSuccess: async (_result, row) => {
-      // CACHE: lifecycle đổi cả list theo status lẫn drawer chi tiết của đúng khách.
-      await refreshCustomerQueries(row.id);
-      void message.success(
-        row.status === 'ACTIVE' ? 'Đã ngừng hoạt động khách hàng.' : 'Đã mở lại khách hàng.',
-      );
-    },
-    onError: (error) =>
-      void message.error(getApiErrorMessage(error, 'Không đổi được trạng thái khách hàng.')),
-    onSettled: () => setBusyId(undefined),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (row: CustomerRowView) =>
-      deleteAdminCustomer(row.id, { expectedVersion: row.version }),
-    onSuccess: async (_result, row) => {
-      await queryClient.invalidateQueries({ queryKey: getListAdminCustomersQueryKey() });
-      queryClient.removeQueries({ queryKey: getGetAdminCustomerQueryKey(row.id) });
-      void message.success('Đã xoá hồ sơ khách hàng.');
-    },
-    onError: (error) =>
-      void message.error(
-        getApiErrorMessage(error, 'Không xoá được khách hàng. Khách đã có đơn thì chỉ ngừng được.'),
-      ),
-    onSettled: () => setBusyId(undefined),
-  });
+  const lifecycle = useCustomerLifecycle();
   const pageSpend = (customers.data?.items ?? []).reduce(
     (sum, item) => sum + Number(item.lifetimeValue),
     0,
@@ -157,79 +96,70 @@ export function CustomersPage() {
           },
         ]}
         filters={
-          <div className="flex w-full flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-1 flex-wrap items-center gap-3">
-              <Input
-                allowClear
-                prefix={<UserOutlined className="text-slate-400" />}
-                className="!w-56"
-                value={name}
-                placeholder="Nhập tên khách hàng..."
-                onChange={(event) => setName(event.target.value)}
-              />
-              <Input
-                allowClear
-                prefix={<PhoneOutlined className="text-slate-400" />}
-                className="!w-48"
-                value={phone}
-                placeholder="Nhập số điện thoại..."
-                onChange={(event) => setPhone(event.target.value)}
-              />
-              <Input
-                allowClear
-                prefix={<MailOutlined className="text-slate-400" />}
-                className="!w-56"
-                value={email}
-                placeholder="Nhập địa chỉ email..."
-                onChange={(event) => setEmail(event.target.value)}
-              />
-              <Select
-                allowClear
-                className="!w-44"
-                placeholder="Chọn loại khách"
-                value={kind}
-                onChange={setKind}
-                options={customerKindOptions}
-              />
-              <Select
-                allowClear
-                className="!w-44"
-                placeholder="Chọn trạng thái"
-                value={status}
-                onChange={setStatus}
-                options={customerStatusOptions}
-              />
-              <Tooltip title="Làm mới dữ liệu">
+          <FilterBar
+            actions={
+              <Button
+                icon={<SettingOutlined />}
+                onClick={columnsState.open}
+                className="text-slate-600"
+              >
+                Tùy chỉnh cột
+              </Button>
+            }
+          >
+            <SearchInput
+              icon={<UserOutlined className="text-slate-400" />}
+              className="!w-56"
+              value={name.value}
+              placeholder="Nhập tên khách hàng..."
+              onChange={name.setValue}
+            />
+            <SearchInput
+              icon={<PhoneOutlined className="text-slate-400" />}
+              className="!w-48"
+              value={phone.value}
+              placeholder="Nhập số điện thoại..."
+              onChange={phone.setValue}
+            />
+            <SearchInput
+              icon={<MailOutlined className="text-slate-400" />}
+              className="!w-56"
+              value={email.value}
+              placeholder="Nhập địa chỉ email..."
+              onChange={email.setValue}
+            />
+            <Select
+              allowClear
+              className="!w-44"
+              placeholder="Chọn loại khách"
+              value={kind}
+              onChange={setKind}
+              options={customerKindOptions}
+            />
+            <Select
+              allowClear
+              className="!w-44"
+              placeholder="Chọn trạng thái"
+              value={status}
+              onChange={setStatus}
+              options={customerStatusOptions}
+            />
+            <RefreshButton onRefresh={customers.refetch} loading={customers.isFetching} />
+            {canCreateStandaloneCustomer && (
+              <PermissionGate permission="customer.manage">
                 <Button
-                  icon={<ReloadOutlined />}
-                  onClick={() => void customers.refetch()}
-                  loading={customers.isFetching}
-                  aria-label="Làm mới"
-                />
-              </Tooltip>
-              {canCreateStandaloneCustomer && (
-                <PermissionGate permission="customer.manage">
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                      setEditing(undefined);
-                      setFormOpen(true);
-                    }}
-                  >
-                    Thêm khách hàng
-                  </Button>
-                </PermissionGate>
-              )}
-            </div>
-            <Button
-              icon={<SettingOutlined />}
-              onClick={() => setColumnModalOpen(true)}
-              className="text-slate-600"
-            >
-              Tùy chỉnh cột
-            </Button>
-          </div>
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setEditing(undefined);
+                    setFormOpen(true);
+                  }}
+                >
+                  Thêm khách hàng
+                </Button>
+              </PermissionGate>
+            )}
+          </FilterBar>
         }
       >
         {customers.isError && (
@@ -251,22 +181,16 @@ export function CustomersPage() {
           loading={customers.isLoading || customers.isFetching}
           page={page}
           total={customers.data?.total ?? 0}
-          colVisibility={colVisibility}
+          applyColumns={columnsState.apply}
           onPageChange={setPage}
           onOpen={setSelectedId}
-          busyId={statusMutation.isPending || deleteMutation.isPending ? busyId : undefined}
+          busyId={lifecycle.busyId}
           onEdit={(row) => {
             setEditing(row);
             setFormOpen(true);
           }}
-          onToggleStatus={(row) => {
-            setBusyId(row.id);
-            statusMutation.mutate(row);
-          }}
-          onDelete={(row) => {
-            setBusyId(row.id);
-            deleteMutation.mutate(row);
-          }}
+          onToggleStatus={lifecycle.toggleStatus}
+          onDelete={lifecycle.remove}
         />
 
         <CustomerFormDrawer
@@ -281,16 +205,7 @@ export function CustomersPage() {
 
       <CustomerDetailDrawer customerId={selectedId} onClose={() => setSelectedId(undefined)} />
 
-      <ColumnSettingsModal
-        isOpen={columnModalOpen}
-        onClose={() => setColumnModalOpen(false)}
-        columns={CUSTOMER_COLUMNS}
-        visibility={colVisibility}
-        onChange={setColVisibility}
-        onReset={() =>
-          setColVisibility(Object.fromEntries(CUSTOMER_COLUMNS.map((column) => [column.id, true])))
-        }
-      />
+      <ColumnSettingsModal {...columnsState.modalProps} columns={CUSTOMER_COLUMN_ITEMS} />
     </PageTransition>
   );
 }

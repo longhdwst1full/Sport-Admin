@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Input, Select } from 'antd';
-import { useEffect, useState } from 'react';
+import { App, Form, Input, Select } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useController, useForm, type Control } from 'react-hook-form';
 import * as yup from 'yup';
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
@@ -17,6 +17,7 @@ import {
 } from '@/generated/api/organization/organization';
 import type { BranchDto, WarehouseDto } from '@/generated/api/organization/organization.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
 
 interface OrganizationFormValues {
   branchCode: string;
@@ -187,6 +188,7 @@ export function OrganizationFormDrawer({
   });
   const branchProvinceCode = form.watch('provinceCode');
   const pending = create.isPending || update.isPending;
+  const { isDirty } = form.formState;
   const field = (
     name: Exclude<keyof OrganizationFormValues, 'freeDeliveryDistrictCodes'>,
     label: string,
@@ -203,13 +205,13 @@ export function OrganizationFormDrawer({
   );
 
   return (
-    <Drawer
+    <FormDrawer
       title={branch ? 'Cập nhật chi nhánh & kho' : 'Thêm chi nhánh & kho'}
-      width={680}
       open={open}
       onClose={onClose}
-      destroyOnHidden
-      extra={<Button type="primary" loading={pending} onClick={() => void submit()}>Lưu</Button>}
+      onSubmit={() => void submit()}
+      submitting={pending}
+      isDirty={() => isDirty}
     >
       <Form layout="vertical" onFinish={() => void submit()}>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -239,7 +241,7 @@ export function OrganizationFormDrawer({
           {field('warehouseName', 'Tên kho', { required: true })}
         </div>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }
 
@@ -266,7 +268,14 @@ function FreeDeliveryDistrictsField({
     { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(provinceCode) } },
   );
   const selected = field.value ?? [];
-  const options = (districts.data?.items ?? []).map((item) => ({ value: item.code, label: item.name }));
+  const provinceOptions = useMemo(
+    () => (provinces.data?.items ?? []).map((item) => ({ value: item.code, label: item.name })),
+    [provinces.data],
+  );
+  const options = useMemo(
+    () => (districts.data?.items ?? []).map((item) => ({ value: item.code, label: item.name })),
+    [districts.data],
+  );
   // Danh sách đã lưu có thể chứa quận thuộc tỉnh khác tỉnh đang lọc; giữ chúng làm option thô để
   // đổi bộ lọc tỉnh không âm thầm xoá lựa chọn cũ.
   const extras = selected
@@ -290,7 +299,7 @@ function FreeDeliveryDistrictsField({
           loading={provinces.isPending}
           placeholder="Lọc theo tỉnh/thành"
           value={provinceCode}
-          options={(provinces.data?.items ?? []).map((item) => ({ value: item.code, label: item.name }))}
+          options={provinceOptions}
           onChange={(code?: string) => setPicked(code)}
         />
         <Select

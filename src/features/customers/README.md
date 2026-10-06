@@ -15,7 +15,8 @@ Ngoài phạm vi: gộp khách trùng và quản lý credential của tài kho�
 
 ## Ranh giới và contract
 
-- `pages/customers-page.tsx` sở hữu bộ lọc, phân trang và gọi `useListAdminCustomers`.
+- `pages/customers-page.tsx` sở hữu bộ lọc, phân trang và gọi `useListAdminCustomers`; ẩn/hiện cột qua `useColumnVisibility(CUSTOMER_COLUMN_ITEMS)`.
+- `hooks/use-customer-lifecycle.ts` giữ lệnh ngừng/mở lại/xoá từ bảng và `busyId` khoá nút.
 - `components/customer-detail-drawer.tsx` tự tải chi tiết qua `useGetAdminCustomer`; không
   đoán dữ liệu chi tiết từ dòng trong danh sách.
 - `model/customer.mapper.ts` là nơi duy nhất đọc tên trường generated; component nhận view model.

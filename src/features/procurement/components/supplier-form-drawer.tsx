@@ -1,4 +1,4 @@
-import { App, Button, Drawer, Form, Input } from 'antd';
+import { App, Form, Input } from 'antd';
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -8,6 +8,7 @@ import {
 } from '@/generated/api/procurement/procurement';
 import type { CreateSupplierDto, SupplierDto } from '@/generated/api/procurement/procurement.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
 
 type SupplierForm = Omit<CreateSupplierDto, 'address'> & {
   provinceName?: string;
@@ -91,13 +92,13 @@ export function SupplierFormDrawer({
 
   const pending = create.isPending || update.isPending;
   return (
-    <Drawer
+    <FormDrawer
       title={editing ? `Sửa nhà cung cấp ${editing.code}` : 'Thêm nhà cung cấp'}
-      width={720}
       open={open}
-      destroyOnClose
       onClose={onClose}
-      extra={<Button type="primary" loading={pending} onClick={() => form.submit()}>Lưu</Button>}
+      onSubmit={() => form.submit()}
+      submitting={pending}
+      isDirty={() => form.isFieldsTouched()}
     >
       <Form form={form} layout="vertical" onFinish={submit} disabled={pending}>
         <div className="grid gap-x-4 md:grid-cols-2">
@@ -118,6 +119,6 @@ export function SupplierFormDrawer({
         </div>
         <Form.Item name="note" label="Ghi chú"><Input.TextArea rows={3} maxLength={2000} showCount /></Form.Item>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

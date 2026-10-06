@@ -1,4 +1,4 @@
-import { App, Button, DatePicker, Drawer, Form, Input, Select } from 'antd';
+import { App, DatePicker, Form, Input, Select } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,6 +14,7 @@ import { withSelectedParty } from '../constants/procurement.constants';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 import { useProcurementLookups } from '../hooks/use-procurement-lookups';
 import { LineItemsFields } from './line-items-fields';
+import { FormDrawer } from '@/foundation/overlay';
 
 type FormValues = Omit<CreatePurchaseOrderDto, 'expectedAt'> & { expectedAt?: dayjs.Dayjs };
 
@@ -72,21 +73,17 @@ export function PurchaseOrderFormDrawer({ open, editing, onClose }: { open: bool
   };
 
   return (
-    <Drawer title={editing ? `Sửa ${editing.poNo}` : 'Tạo đơn mua hàng'} width="min(1100px, 96vw)" open={open} destroyOnClose onClose={onClose} extra={<Button type="primary" loading={submitting} onClick={() => form.submit()}>Lưu nháp</Button>}>
+    <FormDrawer title={editing ? `Sửa ${editing.poNo}` : 'Tạo đơn mua hàng'} size="xl" open={open} onClose={onClose} onSubmit={() => form.submit()} submitting={submitting} submitText="Lưu nháp" isDirty={() => form.isFieldsTouched()}>
       <Form form={form} layout="vertical" disabled={submitting} onFinish={(values) => void submit(values)}>
         <div className="grid gap-x-4 md:grid-cols-2">
-          <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true, message: 'Chọn nhà cung cấp' }]}><Select showSearch filterOption={false} onSearch={setSupplierSearch} options={[
-            ...withSelectedParty(supplierOptions, editing?.supplier),
-          ]} /></Form.Item>
-          <Form.Item name="warehouseId" label="Kho nhận" rules={[{ required: true, message: 'Chọn kho nhận' }]}><Select showSearch filterOption={false} onSearch={setWarehouseSearch} options={[
-            ...withSelectedParty(warehouseOptions, editing?.warehouse),
-          ]} /></Form.Item>
+          <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true, message: 'Chọn nhà cung cấp' }]}><Select showSearch filterOption={false} onSearch={setSupplierSearch} options={withSelectedParty(supplierOptions, editing?.supplier)} /></Form.Item>
+          <Form.Item name="warehouseId" label="Kho nhận" rules={[{ required: true, message: 'Chọn kho nhận' }]}><Select showSearch filterOption={false} onSearch={setWarehouseSearch} options={withSelectedParty(warehouseOptions, editing?.warehouse)} /></Form.Item>
           <Form.Item name="expectedAt" label="Ngày dự kiến nhận"><DatePicker className="!w-full" format="DD/MM/YYYY" /></Form.Item>
           <Form.Item name="note" label="Ghi chú"><Input.TextArea rows={2} maxLength={2000} /></Form.Item>
         </div>
         <div className="mb-2 font-semibold text-slate-800">Dòng hàng <span className="text-red-500">*</span></div>
         <LineItemsFields variantOptions={variantOptions} onVariantSearch={setVariantSearch} quantityName="orderedQty" quantityLabel="Số đặt" unitCostRequired taxRate />
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

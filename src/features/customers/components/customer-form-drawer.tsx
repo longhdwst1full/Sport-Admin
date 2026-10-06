@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { EnvironmentOutlined, PlusOutlined as AddIcon, StopOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Drawer, Form, Input, Skeleton, Space, Switch, Tag } from 'antd';
+import { Alert, App, Button, Form, Input, Skeleton, Space, Switch, Tag } from 'antd';
 import { FormSection } from '@/foundation/layout/form-section';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -23,6 +23,7 @@ import {
 } from '../model/customer-form.mapper';
 import { CustomerAddressFields } from './customer-address-fields';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
+import { FormDrawer } from '@/foundation/overlay';
 
 const FORM_FIELDS = ['name', 'phone', 'email', 'marketingConsent'] as const;
 
@@ -132,44 +133,18 @@ export function CustomerFormDrawer({
 
   const loadingDetail = Boolean(editing) && detail.isPending;
 
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth < 768,
-  );
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
-    <Drawer
+    <FormDrawer
       open={open}
+      size="xl"
       aria-label={editing ? `Sửa khách ${editing.customerNo}` : 'Thêm khách hàng'}
-      onClose={() => (mutation.isPending ? undefined : onClose())}
-      width={isMobile ? '100%' : '70%'}
-      // Chiếm tầm 70% chiều rộng màn hình, không chiếm all
-      styles={{
-        wrapper: isMobile ? { maxWidth: '100%' } : { maxWidth: '70vw' },
-        body: { background: 'var(--color-surface-sunken)' },
-      }}
-      destroyOnHidden
       title={editing ? `Sửa khách ${editing.customerNo}` : 'Thêm khách hàng'}
-      footer={
-        <Space className="flex justify-end">
-          <Button onClick={onClose} disabled={mutation.isPending}>
-            Huỷ
-          </Button>
-          <Button
-            type="primary"
-            loading={mutation.isPending}
-            disabled={loadingDetail}
-            onClick={() => form.submit()}
-          >
-            Lưu
-          </Button>
-        </Space>
-      }
+      styles={{ body: { background: 'var(--color-surface-sunken)' } }}
+      onClose={onClose}
+      onSubmit={() => form.submit()}
+      submitting={mutation.isPending}
+      submitDisabled={loadingDetail}
+      isDirty={() => form.isFieldsTouched()}
     >
       {loadingDetail ? (
         <Skeleton active paragraph={{ rows: 8 }} />
@@ -339,6 +314,6 @@ export function CustomerFormDrawer({
           </FormSection>
         </Form>
       )}
-    </Drawer>
+    </FormDrawer>
   );
 }

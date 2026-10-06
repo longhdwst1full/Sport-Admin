@@ -1,7 +1,8 @@
 import { App, Button, Descriptions, Drawer, Space, Tag } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/core/auth/permissions';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import {
   cancelGoodsReceipt,
   getGetGoodsReceiptQueryKey,
@@ -11,8 +12,27 @@ import {
 } from '@/generated/api/procurement/procurement';
 import type { GoodsReceiptDetailDto } from '@/generated/api/procurement/procurement.schemas';
 import { getApiErrorMessage, isStaleWriteError, STALE_WRITE_RELOADED_MESSAGE } from '@/lib/api/error';
-import { actorAt, costAllocationOptions, directReceiptReasonOptions, goodsReceiptTypeOptions, moneyFormatter, optionLabel, partyLabel, receiptCostTypeOptions, statusLabel } from '../constants/procurement.constants';
+import { formatMoney } from '@/lib/format/money';
+import { actorAt, costAllocationOptions, directReceiptReasonOptions, goodsReceiptTypeOptions, optionLabel, partyLabel, receiptCostTypeOptions, statusLabel } from '../constants/procurement.constants';
 import { goodsReceiptActions } from '../model/procurement-actions.policy';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
+
+type ReceiptItem = GoodsReceiptDetailDto['items'][number];
+type ReceiptCost = GoodsReceiptDetailDto['costs'][number];
+
+const RECEIPT_ITEM_COLUMNS: ColumnsType<ReceiptItem> = [
+  { title: 'SKU', dataIndex: 'sku', width: 150 },
+  { title: 'Biến thể', dataIndex: 'variantName', width: 220 },
+  col.number<ReceiptItem>('quantity', 'Số nhận', { width: 100 }),
+  col.money<ReceiptItem>('unitCost', 'Đơn giá', { width: 150 }),
+  { title: 'Giá vốn sau phân bổ', dataIndex: 'landedUnitCost', width: 180, align: 'right', render: (value) => value ? formatMoney(value) : 'Chưa ghi sổ' },
+];
+
+const RECEIPT_COST_COLUMNS: ColumnsType<ReceiptCost> = [
+  { title: 'Loại chi phí', dataIndex: 'costType', width: 180, render: (value) => optionLabel(receiptCostTypeOptions, value) },
+  col.money<ReceiptCost>('amount', 'Số tiền', { width: 160 }),
+  col.text<ReceiptCost>('note', 'Ghi chú'),
+];
 
 export function GoodsReceiptDetailDrawer({ id, onClose, onEdit }: { id?: string; onClose: () => void; onEdit: (detail: GoodsReceiptDetailDto) => void }) {
   const query = useGetGoodsReceipt(id ?? '', { query: { enabled: Boolean(id) } });
@@ -41,7 +61,7 @@ export function GoodsReceiptDetailDrawer({ id, onClose, onEdit }: { id?: string;
       await cancelGoodsReceipt(detail.id, { expectedVersion: detail.version, reason: reason.trim() }).then(refresh).catch(fail);
     } });
   };
-  return <Drawer title={detail?.receiptNo ?? 'Chi tiết phiếu nhập'} width="min(1050px, 96vw)" open={Boolean(id)} loading={query.isLoading} onClose={onClose} extra={detail && <Space>
+  return <Drawer title={detail?.receiptNo ?? 'Chi tiết phiếu nhập'} width={DRAWER_WIDTH.xl} open={Boolean(id)} loading={query.isLoading} onClose={onClose} extra={detail && <Space>
     {actions.includes('edit') && <PermissionGate permission="purchase.receipt.create"><Button onClick={() => onEdit(detail)}>Sửa</Button></PermissionGate>}
     {actions.includes('post') && <PermissionGate permission="purchase.receipt.post"><Button type="primary" onClick={post}>Ghi sổ</Button></PermissionGate>}
     {actions.includes('cancel') && <PermissionGate permission="purchase.receipt.create"><Button danger onClick={cancel}>Huỷ</Button></PermissionGate>}
@@ -52,24 +72,17 @@ export function GoodsReceiptDetailDrawer({ id, onClose, onEdit }: { id?: string;
         <Descriptions.Item label="Trạng thái"><Tag>{statusLabel(detail.status)}</Tag></Descriptions.Item><Descriptions.Item label="Loại phiếu">{optionLabel(goodsReceiptTypeOptions, detail.receiptType)}</Descriptions.Item>
         <Descriptions.Item label="Nhà cung cấp">{partyLabel(detail.supplier)}</Descriptions.Item><Descriptions.Item label="Kho nhận">{partyLabel(detail.warehouse)}</Descriptions.Item>
         <Descriptions.Item label="PO">{detail.purchaseOrder?.poNo ?? 'Nhập trực tiếp'}</Descriptions.Item><Descriptions.Item label="Hoá đơn NCC">{detail.supplierInvoiceNo ?? '—'}</Descriptions.Item>
-        <Descriptions.Item label="Giá trị hàng">{moneyFormatter.format(Number(detail.totals.goodsValue))}</Descriptions.Item><Descriptions.Item label="Tổng sau chi phí">{moneyFormatter.format(Number(detail.totals.landedTotal))}</Descriptions.Item>
+        <Descriptions.Item label="Giá trị hàng">{formatMoney(detail.totals.goodsValue)}</Descriptions.Item><Descriptions.Item label="Tổng sau chi phí">{formatMoney(detail.totals.landedTotal)}</Descriptions.Item>
         <Descriptions.Item label="Phân bổ chi phí">{optionLabel(costAllocationOptions, detail.costAllocation)}</Descriptions.Item>
         <Descriptions.Item label="Lý do nhập trực tiếp">{optionLabel(directReceiptReasonOptions, detail.reasonCode)}</Descriptions.Item>
         <Descriptions.Item label="Người tạo">{detail.createdByDisplayName}</Descriptions.Item>
         <Descriptions.Item label="Ghi sổ bởi">{actorAt(detail.postedByDisplayName, detail.postedAt, 'Chưa ghi sổ')}</Descriptions.Item>
         {detail.note ? <Descriptions.Item label="Ghi chú" span={2}>{detail.note}</Descriptions.Item> : null}
       </Descriptions>
-      <AdminTable surface="embedded" rowKey="id" pagination={false} dataSource={detail.items} columns={[
-        { title: 'SKU', dataIndex: 'sku', width: 150 }, { title: 'Biến thể', dataIndex: 'variantName', width: 220 }, { title: 'Số nhận', dataIndex: 'quantity', width: 100, align: 'right' },
-        { title: 'Đơn giá', dataIndex: 'unitCost', width: 150, align: 'right', render: (value) => moneyFormatter.format(Number(value)) }, { title: 'Giá vốn sau phân bổ', dataIndex: 'landedUnitCost', width: 180, align: 'right', render: (value) => value ? moneyFormatter.format(Number(value)) : 'Chưa ghi sổ' },
-      ]} />
+      <AdminTable surface="embedded" rowKey="id" pagination={false} dataSource={detail.items} columns={RECEIPT_ITEM_COLUMNS} />
       {detail.costs.length > 0 && <div className="space-y-2">
         <div className="font-semibold text-slate-800">Chi phí nhập</div>
-        <AdminTable surface="embedded" rowKey="id" pagination={false} dataSource={detail.costs} columns={[
-          { title: 'Loại chi phí', dataIndex: 'costType', width: 180, render: (value) => optionLabel(receiptCostTypeOptions, value) },
-          { title: 'Số tiền', dataIndex: 'amount', width: 160, align: 'right', render: (value) => moneyFormatter.format(Number(value)) },
-          { title: 'Ghi chú', dataIndex: 'note', render: (value) => value ?? '—' },
-        ]} />
+        <AdminTable surface="embedded" rowKey="id" pagination={false} dataSource={detail.costs} columns={RECEIPT_COST_COLUMNS} />
       </div>}
     </div>}
   </Drawer>;

@@ -31,7 +31,7 @@ Menu **suy ra từ quyền**, không lưu riêng — giống `admin-client` (men
 - Mục dùng chung mã (Sản phẩm/Thuộc tính → `catalog.product.view`; Tham số hệ thống/Thông báo email → `system.parameter.view`) được gắn tag "Chung quyền": bật/tắt một mục đổi cả mục kia.
 - Bảng vai trò, khi mở dòng, hiện "Menu sẽ hiển thị".
 - Panel cảnh báo nếu menu khai mã không có trong catalog `listAdminPermissions`.
-- Logic thuần nằm ở `model/menu-visibility.ts`.
+- Logic thuần nằm ở `model/menu-visibility.ts`; mutation lưu/xoá vai trò ở `hooks/use-role-mutations.ts`.
 
 Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhóm/màn hình có thể thu gọn; lọc theo chữ mở lại các kết quả khớp. Chỉ mã quyền ở lá được gửi lên API.
 
