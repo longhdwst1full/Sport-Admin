@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { LinkOutlined } from '@ant-design/icons';
 import { App, Button, Select } from 'antd';
-import { useSearchParams } from 'react-router-dom';
 import { usePermissions } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
 import { FilterBar, RefreshButton } from '@/foundation/table';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { AttachKnowledgePostModal } from '../components/attach-knowledge-post-modal';
 import { KnowledgeDocumentTable } from '../components/knowledge-document-table';
 import { KnowledgeAudience, KnowledgeStatus } from '@/generated/api/assistant/assistant.schemas';
@@ -23,10 +23,6 @@ import { useKnowledgeCommand, useKnowledgeDocuments } from '../hooks/use-knowled
 import type { KnowledgeAction } from '../model/knowledge-actions.policy';
 import { attachKnowledgeErrorMessage, knowledgeTransitionErrorMessage } from '../model/knowledge-command-error';
 import type { AttachKnowledgePostInput, KnowledgeDocument } from '../model/knowledge-document.types';
-
-function parseEnum<T extends string>(values: Record<string, T>, value: string | null): T | undefined {
-  return value && value in values ? (value as T) : undefined;
-}
 
 const actionConfirm: Record<KnowledgeAction, { title: string; okText: string; consequence: string; success: string }> = {
   publish: {
@@ -49,21 +45,14 @@ const actionConfirm: Record<KnowledgeAction, { title: string; okText: string; co
 export function KnowledgePage() {
   const { message, modal } = App.useApp();
   const permissions = usePermissions();
-  const [params, setParams] = useSearchParams();
-  const status = parseEnum(KnowledgeStatus, params.get('status'));
-  const audience = parseEnum(KnowledgeAudience, params.get('audience'));
-  const branchId = params.get('branch') ?? undefined;
+  const url = useUrlFilters();
+  const status = url.getEnum('status', KnowledgeStatus);
+  const audience = url.getEnum('audience', KnowledgeAudience);
+  const branchId = url.get('branch');
   const [page, setPage] = useListPageReset([status, audience, branchId]);
   const [attachOpen, setAttachOpen] = useState(false);
   const command = useKnowledgeCommand();
   const canManage = permissions.has(KNOWLEDGE_PERMISSION.MANAGE);
-
-  const updateParam = (key: string, value?: string) => {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    setParams(next, { replace: true });
-  };
 
   const list = useKnowledgeDocuments({ page, limit: KNOWLEDGE_PAGE_SIZE, status, audience, branchId });
   const rows = useMemo(() => list.data?.items ?? [], [list.data]);
@@ -134,7 +123,7 @@ export function KnowledgePage() {
               allowClear
               className="min-w-44"
               value={status}
-              onChange={(value?: string) => updateParam('status', value)}
+              onChange={(value?: string) => url.set('status', value)}
               placeholder="Trạng thái"
               options={knowledgeStatusOptions}
             />
@@ -142,7 +131,7 @@ export function KnowledgePage() {
               allowClear
               className="min-w-44"
               value={audience}
-              onChange={(value?: string) => updateParam('audience', value)}
+              onChange={(value?: string) => url.set('audience', value)}
               placeholder="Đối tượng"
               options={knowledgeAudienceOptions}
             />
@@ -151,7 +140,7 @@ export function KnowledgePage() {
               className="min-w-48"
               placeholder={ALL_BRANCHES_LABEL}
               value={branchId}
-              onChange={(value) => updateParam('branch', value)}
+              onChange={(value) => url.set('branch', value)}
             />
           </FilterBar>
         )}

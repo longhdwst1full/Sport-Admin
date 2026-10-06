@@ -38,6 +38,7 @@ import { ManagementPage, StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import {
   getListAdminPostsQueryKey,
   getListAdminSocialPostsQueryKey,
@@ -135,7 +136,8 @@ const metric = (value: number | null | undefined) => (value == null ? '—' : va
 export function ContentPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
+  const { patch: updateParams } = useUrlFilters();
   const filters = parseSocialFilters(params);
   const legacyTab = params.get('tab') === LEGACY_SOCIAL_TAB;
   const [search, setSearch] = useState('');
@@ -159,22 +161,11 @@ export function ContentPage() {
   const canManageSocial = useCan(SOCIAL_PERMISSION.MANAGE);
   const canPublishSocial = useCan(SOCIAL_PERMISSION.PUBLISH);
 
-  const updateParams = (patch: Record<string, string | undefined>) => {
-    const next = new URLSearchParams(params);
-    for (const [key, value] of Object.entries(patch)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    setParams(next, { replace: true });
-  };
-
   // Link cũ `?tab=facebook` → `?tab=social`, giữ nguyên các bộ lọc khác.
   useEffect(() => {
     if (!legacyTab) return;
-    const next = new URLSearchParams(params);
-    next.set('tab', CONTENT_TAB.SOCIAL);
-    setParams(next, { replace: true });
-  }, [legacyTab, params, setParams]);
+    updateParams({ tab: CONTENT_TAB.SOCIAL });
+  }, [legacyTab, updateParams]);
 
   const list = useListAdminSocialPosts(
     toSocialListParams(filters, { page, limit: SOCIAL_PAGE_SIZE, search: debouncedSearch }),

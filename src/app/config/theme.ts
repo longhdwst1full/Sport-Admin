@@ -12,7 +12,8 @@ export const ADMIN_THEME: ThemeConfig = {
     colorPrimary: '#f59e0b',
     colorInfo: '#2563eb',
     colorSuccess: '#16a34a',
-    colorWarning: '#f59e0b',
+    // Cảnh báo cam đậm, tách khỏi màu primary amber để nút chính không trông như cảnh báo.
+    colorWarning: '#ea580c',
     colorError: '#ef4444',
     colorLink: '#2563eb',
 
@@ -91,6 +92,8 @@ export const ADMIN_THEME: ThemeConfig = {
     // ── Buttons ─────────────────────────────────────────────
     Button: {
       primaryShadow: '0 1px 2px rgba(245, 158, 11, 0.25)',
+      // Chữ tối trên nền amber (tương phản ~8:1); chữ trắng chỉ ~2.1:1.
+      primaryColor: '#0f172a',
       defaultBorderColor: '#cbd5e1',
       borderRadiusSM: 4,
       controlHeight: 34,

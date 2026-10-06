@@ -2,11 +2,11 @@ import { useMemo, type ReactNode } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { ClockCircleOutlined, DollarOutlined, InboxOutlined, WarningOutlined } from '@ant-design/icons';
 import { Alert, Select } from 'antd';
-import { useSearchParams } from 'react-router-dom';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
 import { FilterBar, RefreshButton } from '@/foundation/table';
 import { useSearchState } from '@/shared/hooks/use-search-state';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { useGetAdminReturnQueueSummary, useListAdminReturns } from '@/generated/api/returns/returns';
 import { ReturnStatus } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
@@ -14,27 +14,16 @@ import { ReturnDetailDrawer } from '../components/return-detail-drawer';
 import { ReturnTable } from '../components/return-table';
 import { RETURN_PAGE_SIZE, returnStatusOptions } from '../constants/return.constants';
 
-function parseStatus(value: string | null): ReturnStatus | undefined {
-  return value && value in ReturnStatus ? (value as ReturnStatus) : undefined;
-}
-
 /**
  * Hàng đợi đổi trả. Bộ lọc trạng thái và phiếu đang mở nằm trên URL để nhân viên gửi link cho nhau
  * và F5 không mất vị trí; ô đếm lấy từ API tổng hợp (cùng phạm vi chi nhánh), không đếm trên trang.
  */
 export function ReturnsPage() {
-  const [params, setParams] = useSearchParams();
-  const status = parseStatus(params.get('status'));
-  const openId = params.get('id') ?? undefined;
+  const url = useUrlFilters();
+  const status = url.getEnum('status', ReturnStatus);
+  const openId = url.get('id');
   const search = useSearchState();
   const [page, setPage] = useListPageReset([search.debounced, status]);
-
-  const updateParam = (key: string, value?: string) => {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    setParams(next, { replace: true });
-  };
 
   const summary = useGetAdminReturnQueueSummary({ query: { retry: false } });
   const list = useListAdminReturns({
@@ -85,7 +74,7 @@ export function ReturnsPage() {
               allowClear
               className="min-w-48"
               value={status}
-              onChange={(value?: string) => updateParam('status', value)}
+              onChange={(value?: string) => url.set('status', value)}
               placeholder="Trạng thái"
               options={returnStatusOptions}
             />
@@ -101,10 +90,10 @@ export function ReturnsPage() {
           page={page}
           total={list.data?.total ?? 0}
           onPageChange={setPage}
-          onOpen={(id) => updateParam('id', id)}
+          onOpen={(id) => url.set('id', id)}
         />
       </ManagementPage>
-      <ReturnDetailDrawer returnId={openId} onClose={() => updateParam('id')} />
+      <ReturnDetailDrawer returnId={openId} onClose={() => url.set('id', undefined)} />
     </>
   );
 }

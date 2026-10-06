@@ -7,7 +7,8 @@ import {
 } from '@ant-design/icons';
 import { Button, Input, Select, Space, Tag } from 'antd';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { AdminTable, TableActionButton } from '@/foundation/table';
+import { AdminTable, FilterBar, RefreshButton, TableActionButton } from '@/foundation/table';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from './management-page';
 
 const rows = [
@@ -90,6 +91,12 @@ export const FullHeightTable: Story = {
   ],
   args: {
     ...ProductManagement.args,
+    filters: (
+      <FilterBar actions={<RefreshButton onRefresh={() => undefined} />}>
+        <SearchInput value="" onChange={() => undefined} placeholder="Tìm tên, mã sản phẩm hoặc SKU" />
+        <Select placeholder="Trạng thái" className="w-40" options={[{ value: 'ACTIVE', label: 'Đang bán' }]} />
+      </FilterBar>
+    ),
     eyebrow: 'Catalog',
     title: 'Quản lý sản phẩm',
     children: (

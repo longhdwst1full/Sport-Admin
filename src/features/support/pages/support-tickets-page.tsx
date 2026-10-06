@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { Select } from 'antd';
-import { useSearchParams } from 'react-router-dom';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
 import { FilterBar, RefreshButton } from '@/foundation/table';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { useSearchState } from '@/shared/hooks/use-search-state';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { BranchSelect } from '@/features/organization';
 import { SupportTicketDetailDrawer } from '../components/support-ticket-detail-drawer';
 import { SupportTicketTable } from '../components/support-ticket-table';
@@ -19,31 +19,20 @@ import {
 import { useSupportAssigneeOptions } from '../hooks/use-support-assignee-options';
 import { useSupportTickets } from '../hooks/use-support-tickets';
 
-function parseEnum<T extends string>(values: Record<string, T>, value: string | null): T | undefined {
-  return value && value in values ? (value as T) : undefined;
-}
-
 /**
  * Hàng đợi hỗ trợ. Bộ lọc (trừ ô tìm kiếm) và ticket đang mở nằm trên URL để nhân viên gửi link cho
  * nhau và F5 không mất vị trí; phân trang/lọc chạy ở server.
  */
 export function SupportTicketsPage() {
-  const [params, setParams] = useSearchParams();
-  const status = parseEnum(SupportTicketStatus, params.get('status'));
-  const priority = parseEnum(SupportTicketPriority, params.get('priority'));
-  const assigneeId = params.get('assignee') ?? undefined;
-  const branchId = params.get('branch') ?? undefined;
-  const openId = params.get('id') ?? undefined;
+  const url = useUrlFilters();
+  const status = url.getEnum('status', SupportTicketStatus);
+  const priority = url.getEnum('priority', SupportTicketPriority);
+  const assigneeId = url.get('assignee');
+  const branchId = url.get('branch');
+  const openId = url.get('id');
   const search = useSearchState();
   const [page, setPage] = useListPageReset([search.debounced, status, priority, assigneeId, branchId]);
   const assignees = useSupportAssigneeOptions(true, branchId);
-
-  const updateParam = (key: string, value?: string) => {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    setParams(next, { replace: true });
-  };
 
   const list = useSupportTickets({
     page,
@@ -74,7 +63,7 @@ export function SupportTicketsPage() {
               allowClear
               className="min-w-40"
               value={status}
-              onChange={(value?: string) => updateParam('status', value)}
+              onChange={(value?: string) => url.set('status', value)}
               placeholder="Trạng thái"
               options={supportTicketStatusOptions}
             />
@@ -82,7 +71,7 @@ export function SupportTicketsPage() {
               allowClear
               className="min-w-36"
               value={priority}
-              onChange={(value?: string) => updateParam('priority', value)}
+              onChange={(value?: string) => url.set('priority', value)}
               placeholder="Ưu tiên"
               options={supportTicketPriorityOptions}
             />
@@ -92,7 +81,7 @@ export function SupportTicketsPage() {
               optionFilterProp="label"
               className="min-w-48"
               value={assigneeId}
-              onChange={(value?: string) => updateParam('assignee', value)}
+              onChange={(value?: string) => url.set('assignee', value)}
               placeholder="Người xử lý"
               loading={assignees.loading}
               options={assignees.options}
@@ -101,7 +90,7 @@ export function SupportTicketsPage() {
               allowClear
               className="min-w-48"
               value={branchId}
-              onChange={(value) => updateParam('branch', value)}
+              onChange={(value) => url.set('branch', value)}
             />
           </FilterBar>
         )}
@@ -116,10 +105,10 @@ export function SupportTicketsPage() {
           total={list.data?.total ?? 0}
           emptyText="Không có ticket phù hợp bộ lọc."
           onPageChange={setPage}
-          onOpen={(id) => updateParam('id', id)}
+          onOpen={(id) => url.set('id', id)}
         />
       </ManagementPage>
-      <SupportTicketDetailDrawer ticketId={openId} onClose={() => updateParam('id')} />
+      <SupportTicketDetailDrawer ticketId={openId} onClose={() => url.set('id', undefined)} />
     </>
   );
 }

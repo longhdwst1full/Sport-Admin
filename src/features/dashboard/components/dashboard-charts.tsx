@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { RevenuePoint, StatusSlice } from '../model/dashboard.mapper';
 
 /**
  * Ba biểu đồ của Dashboard, tách khỏi trang để `recharts` không nằm trong chunk của trang.
@@ -35,16 +36,6 @@ const ORDERS_COLOR = CHART_COLORS[1];
 
 const TOOLTIP_STYLE = { borderRadius: 12, borderColor: '#e2e8f0' } as const;
 
-export interface RevenuePoint {
-  date: string;
-  amount: number;
-  orders: number;
-}
-
-export interface StatusSlice {
-  name: string;
-  value: number;
-}
 
 export function RevenueAreaChart({
   data,

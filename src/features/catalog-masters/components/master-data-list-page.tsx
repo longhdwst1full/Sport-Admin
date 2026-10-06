@@ -167,7 +167,6 @@ export function MasterDataListPage<T extends MasterDataRow>({
         description={description}
         actions={
           <div className="flex flex-wrap gap-2">
-            <RefreshButton onRefresh={query.refetch} loading={query.isFetching} />
             <PermissionGate permission={permission}>
               <Button type="primary" icon={<PlusOutlined />} onClick={() => openDrawer()}>
                 Thêm {entity}
@@ -180,7 +179,7 @@ export function MasterDataListPage<T extends MasterDataRow>({
           { ...activeMetric, value: activeCount, icon: <CheckCircleOutlined />, tone: 'green' },
         ]}
         filters={
-          <FilterBar>
+          <FilterBar actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}>
             <SearchInput
               value={search.value}
               onChange={search.setValue}

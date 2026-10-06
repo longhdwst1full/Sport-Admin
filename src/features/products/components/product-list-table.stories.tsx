@@ -37,7 +37,6 @@ const meta = {
   args: {
     rows: demoRows,
     loading: false,
-    fetching: false,
     page: 1,
     pageSize: 30,
     total: demoRows.length,
@@ -47,7 +46,6 @@ const meta = {
     onToggleVisibility: () => undefined,
     onArchive: () => undefined,
     onPublish: () => undefined,
-    onRefresh: () => undefined,
   },
 } satisfies Meta<typeof ProductListTable>;
 

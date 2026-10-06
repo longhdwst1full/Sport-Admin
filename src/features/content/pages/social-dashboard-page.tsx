@@ -9,6 +9,7 @@ import { PageTransition } from '@/foundation/layout/page-transition';
 import { ManagementPage } from '@/foundation/management';
 import { AdminTable } from '@/foundation/table';
 import { formatDateTime } from '@/lib/format/datetime';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { SocialChannelIcons } from '../components/social-channel-icons';
 import { SocialSyncButton } from '../components/social-sync-button';
 import {
@@ -121,7 +122,8 @@ function KpiCard({
  */
 export function SocialDashboardPage() {
   const { message } = App.useApp();
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
+  const { patch: updateParams } = useUrlFilters();
   const filters = parseSocialDashboardFilters(params);
   const [chartMetric, setChartMetric] = useState<SocialMetric>(SOCIAL_METRIC.VIEWS);
   const dashboard = useSocialDashboard(filters);
@@ -134,15 +136,6 @@ export function SocialDashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- filters được tính lại mỗi render; khoá theo giá trị
     [data.daily, chartMetric, filters.from, filters.to, filters.channel],
   );
-
-  const updateParams = (patch: Record<string, string | undefined>) => {
-    const next = new URLSearchParams(params);
-    for (const [key, value] of Object.entries(patch)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    setParams(next, { replace: true });
-  };
 
   return (
     <PageTransition>

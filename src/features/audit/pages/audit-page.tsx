@@ -24,7 +24,7 @@ import {
 } from 'antd';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, RefreshButton } from '@/foundation/table';
+import { AdminTable, FilterBar, RefreshButton } from '@/foundation/table';
 import { formatDateTime } from '@/lib/format/datetime';
 import { useMemo, useState } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
@@ -182,7 +182,6 @@ export function AuditPage() {
         eyebrow="Bảo mật & Truy vết hệ thống"
         title="Nhật ký Audit Log"
         description="Toàn bộ hành vi ghi và thay đổi trạng thái dữ liệu trên hệ thống PostgreSQL đều được ghi nhận bất biến."
-        actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}
         metrics={[
           {
             key: 'page-events',
@@ -214,6 +213,7 @@ export function AuditPage() {
           },
         ]}
         filters={
+          <FilterBar actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}>
           <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <SearchInput
               className="w-full"
@@ -246,6 +246,7 @@ export function AuditPage() {
               }
             />
           </div>
+          </FilterBar>
         }
       >
         {query.isError && (

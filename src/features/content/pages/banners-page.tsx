@@ -9,7 +9,6 @@ import {
   VerticalAlignBottomOutlined,
 } from '@ant-design/icons';
 import { Button, Image, Select, Tag } from 'antd';
-import { useSearchParams } from 'react-router-dom';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { PageTransition } from '@/foundation/layout/page-transition';
@@ -26,6 +25,7 @@ import {
 import { formatDateTime } from '@/lib/format/datetime';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { useSearchState } from '@/shared/hooks/use-search-state';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { BannerEditorDrawer } from '../components/banner-editor-drawer';
 import { BannerStatusModal } from '../components/banner-status-modal';
 import {
@@ -38,7 +38,6 @@ import {
   bannerStatusPresentation,
 } from '../constants/banner.constants';
 import { availableBannerActions, type BannerAction } from '../model/banner-actions.policy';
-import { parseEnum } from '../model/social-post-filters';
 import { IMAGE_FALLBACK_SRC } from '@/features/media';
 
 const ACTION_BUTTON: Record<BannerAction, { label: string; icon: ReactNode; danger?: boolean }> = {
@@ -119,21 +118,14 @@ const BANNER_COLUMNS: ColumnsType<BannerDto> = [
  * ô tìm kiếm debounce và chỉ sống trong màn. Phân trang/lọc chạy ở server.
  */
 export function BannersPage() {
-  const [params, setParams] = useSearchParams();
-  const placement = parseEnum(BannerPlacement, params.get('placement'));
-  const status = parseEnum(BannerStatus, params.get('status'));
+  const url = useUrlFilters();
+  const placement = url.getEnum('placement', BannerPlacement);
+  const status = url.getEnum('status', BannerStatus);
   const search = useSearchState();
   const [page, setPage] = useListPageReset([search.debounced, placement, status]);
   const [editor, setEditor] = useState<{ open: boolean; bannerId?: string }>({ open: false });
   const [pendingAction, setPendingAction] = useState<{ id: string; action: BannerAction }>();
   const canManage = useCan(BANNER_PERMISSION.MANAGE);
-
-  const updateParam = (key: string, value?: string) => {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    setParams(next, { replace: true });
-  };
 
   const list = useListAdminBanners(
     { page, limit: BANNER_PAGE_SIZE, placement, status, search: search.debounced },
@@ -182,14 +174,11 @@ export function BannersPage() {
         title="Banner"
         description="Banner trang chủ, thẻ khuyến mãi, chân trang và đầu trang danh mục trên storefront."
         actions={(
-          <div className="flex flex-wrap gap-2">
-            <RefreshButton onRefresh={list.refetch} loading={list.isFetching} />
-            <PermissionGate permission={BANNER_PERMISSION.MANAGE}>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditor({ open: true })}>
-                Tạo banner
-              </Button>
-            </PermissionGate>
-          </div>
+          <PermissionGate permission={BANNER_PERMISSION.MANAGE}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditor({ open: true })}>
+              Tạo banner
+            </Button>
+          </PermissionGate>
         )}
         metrics={[
           { key: 'total', label: 'Banner khớp bộ lọc', value: total, icon: <PictureOutlined />, tone: 'blue' },
@@ -202,7 +191,7 @@ export function BannersPage() {
           },
         ]}
         filters={(
-          <FilterBar>
+          <FilterBar actions={<RefreshButton onRefresh={list.refetch} loading={list.isFetching} />}>
             <SearchInput
               className="min-w-64 flex-1"
               value={search.value}
@@ -214,7 +203,7 @@ export function BannersPage() {
               allowClear
               className="min-w-56"
               value={placement}
-              onChange={(value?: string) => updateParam('placement', value)}
+              onChange={(value?: string) => url.set('placement', value)}
               placeholder="Vị trí"
               options={bannerPlacementOptions}
             />
@@ -222,7 +211,7 @@ export function BannersPage() {
               allowClear
               className="min-w-40"
               value={status}
-              onChange={(value?: string) => updateParam('status', value)}
+              onChange={(value?: string) => url.set('status', value)}
               placeholder="Trạng thái"
               options={bannerStatusOptions}
             />

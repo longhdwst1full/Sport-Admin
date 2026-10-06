@@ -20,6 +20,7 @@ import {
   AdminTable,
   col,
   ColumnSettingsModal,
+  FilterBar,
   RefreshButton,
   TableActionButton,
   useColumnVisibility,
@@ -189,7 +190,6 @@ export function ReviewsPage() {
         eyebrow="Ý kiến khách hàng"
         title="Đánh giá & Nhận xét"
         description="Đánh giá của khách đã mua hiển thị ngay trên storefront; hậu kiểm ở đây là ẩn đánh giá vi phạm hoặc khôi phục lại."
-        actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}
         metrics={[
           {
             key: 'total',
@@ -221,15 +221,20 @@ export function ReviewsPage() {
           },
         ]}
         filters={
-          <div className="flex w-full justify-end">
-            <Button
-              icon={<SettingOutlined />}
-              onClick={columnVisibility.open}
-              className="text-slate-600"
-            >
-              Tùy chỉnh cột
-            </Button>
-          </div>
+          <FilterBar
+            actions={
+              <>
+                <RefreshButton onRefresh={query.refetch} loading={query.isFetching} />
+                <Button
+                  icon={<SettingOutlined />}
+                  onClick={columnVisibility.open}
+                  className="text-slate-600"
+                >
+                  Tùy chỉnh cột
+                </Button>
+              </>
+            }
+          />
         }
       >
         {query.isError && (

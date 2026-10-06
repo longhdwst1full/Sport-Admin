@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { PosOrderDrawer } from '@/features/pos';
@@ -13,7 +14,7 @@ import {
 } from '@ant-design/icons';
 import { Alert, Button, Tabs } from 'antd';
 import { useListAdminOrders } from '@/generated/api/orders/orders';
-import type { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
+import { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
 import {
@@ -24,8 +25,8 @@ import {
 } from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
+import { SEARCH_DEBOUNCE_MS, useSearchState } from '@/shared/hooks/use-search-state';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
 import {
@@ -43,20 +44,36 @@ const FulfillmentWorkflowPanel = lazy(() =>
 
 type OrderTab = 'ALL' | OrderStatusGroup;
 
+/**
+ * Tab nhóm trạng thái, ô tìm kiếm và trang nằm trên URL (`status`, `orderNo`, `name`, `phone`, `page`)
+ * để F5/Back/gửi link giữ nguyên. Ô tìm kiếm giữ chữ đang gõ ở state cục bộ và ghi giá trị đã debounce
+ * lên URL; query đọc URL. Đổi bộ lọc thì xoá `page`. Kích thước trang chỉ sống trong màn.
+ */
 export function OrdersPage() {
-  const [tab, setTab] = useState<OrderTab>('ALL');
+  const url = useUrlFilters();
+  const tab: OrderTab = url.getEnum('status', OrderStatusGroup) ?? 'ALL';
+  const page = url.getNumber('page', 1);
   const [createOpen, setCreateOpen] = useState(false);
   // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend: nhập cả mã đơn lẫn
   // số điện thoại sẽ thu hẹp kết quả chứ không mở rộng như ô gộp trước đây.
-  const orderNo = useSearchState();
-  const recipientName = useSearchState();
-  const recipientPhone = useSearchState();
-  const [page, setPage] = useListPageReset([
-    tab,
-    orderNo.debounced,
-    recipientName.debounced,
-    recipientPhone.debounced,
-  ]);
+  const orderNo = useSearchState(url.get('orderNo') ?? '');
+  const recipientName = useSearchState(url.get('name') ?? '');
+  const recipientPhone = useSearchState(url.get('phone') ?? '');
+  // Gọi lúc hết debounce với closure mới nhất nên đọc đúng giá trị cả ba ô.
+  const commitSearch = useDebouncedCallback(
+    () =>
+      url.patch({
+        orderNo: orderNo.value.trim(),
+        name: recipientName.value.trim(),
+        phone: recipientPhone.value.trim(),
+        page: undefined,
+      }),
+    SEARCH_DEBOUNCE_MS,
+  );
+  const typed = (setValue: (value: string) => void) => (value: string) => {
+    setValue(value);
+    commitSearch();
+  };
   const [pageSize, setPageSize] = useState(ORDER_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
   // Đơn đang mở ở drawer chi tiết là ngữ cảnh gợi ý cho Copilot.
@@ -67,9 +84,9 @@ export function OrdersPage() {
     page,
     limit: pageSize,
     statusGroup: tab === 'ALL' ? undefined : tab,
-    orderNo: orderNo.debounced,
-    recipientName: recipientName.debounced,
-    recipientPhone: recipientPhone.debounced,
+    orderNo: url.get('orderNo'),
+    recipientName: url.get('name'),
+    recipientPhone: url.get('phone'),
   });
   const rows = orders.data?.items ?? [];
 
@@ -139,19 +156,19 @@ export function OrdersPage() {
             <SearchInput
               value={orderNo.value}
               placeholder="Nhập mã đơn hàng..."
-              onChange={orderNo.setValue}
+              onChange={typed(orderNo.setValue)}
             />
             <SearchInput
               icon={<UserOutlined className="text-slate-400" />}
               value={recipientName.value}
               placeholder="Nhập tên người nhận..."
-              onChange={recipientName.setValue}
+              onChange={typed(recipientName.setValue)}
             />
             <SearchInput
               icon={<PhoneOutlined className="text-slate-400" />}
               value={recipientPhone.value}
               placeholder="Nhập số điện thoại..."
-              onChange={recipientPhone.setValue}
+              onChange={typed(recipientPhone.setValue)}
             />
           </FilterBar>
         }
@@ -159,7 +176,7 @@ export function OrdersPage() {
         <Tabs
           activeKey={tab}
           items={orderTabs}
-          onChange={(key) => setTab(key as OrderTab)}
+          onChange={(key) => url.patch({ status: key === 'ALL' ? undefined : key, page: undefined })}
           className="mb-3"
         />
 
@@ -185,7 +202,7 @@ export function OrdersPage() {
           total={orders.data?.total ?? 0}
           colVisibility={columnsState.visibility}
           onPageChange={(nextPage, nextPageSize) => {
-            setPage(nextPageSize === pageSize ? nextPage : 1);
+            url.set('page', nextPageSize === pageSize && nextPage > 1 ? nextPage : undefined);
             setPageSize(nextPageSize);
           }}
           onOpen={setSelectedId}

@@ -161,9 +161,6 @@
 /* Tên biến cũ giữ lại làm bí danh: 825 dòng CSS bên dưới và các component đang
    dùng chúng. Xoá bí danh phải là một lượt dọn riêng, không gộp vào lượt đổi token. */
 :root {
-  --color-primary: #059669;
-  --color-primary-light: #10b981;
-  --color-primary-dark: #047857;
   --color-surface: var(--ba-surface);
   --color-surface-sunken: var(--ba-canvas);
   --color-surface-raised: var(--ba-surface);
@@ -593,21 +590,20 @@ a,
   background: #f8fafc !important;
 }
 
-/* Primary buttons with warm JARVIS gold/amber accent */
-.btn-jarvis-primary,
-.ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost) {
+/* Nút primary nền amber: chữ tối (#0f172a, tương phản ~8:1) thay vì chữ trắng (~2.1:1, không đạt WCAG AA).
+   Trừ nút disabled để antd giữ trạng thái xám, không trông như bấm được. */
+.ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):not(:disabled) {
   background: var(--ba-action) !important;
   border-color: var(--ba-action) !important;
-  color: #ffffff !important;
-  font-weight: 500 !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
   box-shadow: 0 1px 2px rgba(245, 158, 11, 0.2) !important;
 }
 
-.btn-jarvis-primary:hover,
-.ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):hover {
-  background: #d97706 !important;
-  border-color: #d97706 !important;
-  color: #ffffff !important;
+.ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):not(:disabled):hover {
+  background: var(--ba-yellow-300) !important;
+  border-color: var(--ba-yellow-300) !important;
+  color: #0f172a !important;
 }
 
 /* ─── CKEditor read-only state ────────────────────────────────── */

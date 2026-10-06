@@ -84,6 +84,8 @@ export function ProductsPage() {
             onSkuChange={list.setSku}
             onProductNoChange={list.setProductNo}
             onCategoryChange={list.setCategory}
+            refreshing={list.query.isFetching}
+            onRefresh={() => void list.query.refetch()}
           />
         }
       >
@@ -97,7 +99,6 @@ export function ProductsPage() {
         <ProductListTable
           rows={list.rows}
           loading={list.query.isPending}
-          fetching={list.query.isFetching}
           page={list.query.data?.meta.page ?? list.page}
           pageSize={list.query.data?.meta.limit ?? list.pageSize}
           total={total}
@@ -110,7 +111,6 @@ export function ProductsPage() {
           onArchive={actions.confirmArchive}
           onPublish={actions.confirmPublish}
           publishBusyId={actions.publishBusyId}
-          onRefresh={() => void list.query.refetch()}
         />
       </ManagementPage>
 

@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import { MailOutlined, PhoneOutlined, PlusOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
 import { Alert, Button, Select } from 'antd';
 import { useListAdminCustomers } from '@/generated/api/customers/customers';
+import { CustomerKind, CustomerStatus } from '@/generated/api/customers/customers.schemas';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useAuth } from '@/core/auth/auth-context';
 import { ManagementPage } from '@/foundation/management';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ColumnSettingsModal, FilterBar, RefreshButton, useColumnVisibility } from '@/foundation/table';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
+import { SEARCH_DEBOUNCE_MS, useSearchState } from '@/shared/hooks/use-search-state';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { CustomerDetailDrawer } from '../components/customer-detail-drawer';
@@ -24,39 +26,54 @@ import {
 } from '../constants/customer.constants';
 import { toCustomerRowView, type CustomerRowView } from '../model/customer.mapper';
 
+/**
+ * Bộ lọc và trang nằm trên URL (`name`, `phone`, `email`, `kind`, `status`, `page`) để F5/Back/gửi link
+ * giữ nguyên. Ô tìm kiếm giữ chữ đang gõ ở state cục bộ và ghi giá trị đã debounce lên URL; query đọc
+ * URL. Đổi bộ lọc thì xoá `page`.
+ */
 export function CustomersPage() {
   const auth = useAuth();
   // PERMISSION: Customer chưa có đơn chưa mang branch scope; API chỉ cho GLOBAL tạo độc lập.
   const canCreateStandaloneCustomer = auth.currentUser?.scopes.some(
     ({ type }) => type === 'GLOBAL',
   );
-  const [kind, setKind] = useState<string>();
-  const [status, setStatus] = useState<string>();
+  const url = useUrlFilters();
+  const kind = url.getEnum('kind', CustomerKind);
+  const status = url.getEnum('status', CustomerStatus);
+  const page = url.getNumber('page', 1);
   const [selectedId, setSelectedId] = useState<string>();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CustomerRowView>();
   const columnsState = useColumnVisibility(CUSTOMER_COLUMN_ITEMS);
 
   // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend — giống màn đơn hàng.
-  const name = useSearchState();
-  const phone = useSearchState();
-  const email = useSearchState();
-  const [page, setPage] = useListPageReset([
-    name.debounced,
-    phone.debounced,
-    email.debounced,
-    kind,
-    status,
-  ]);
+  const name = useSearchState(url.get('name') ?? '');
+  const phone = useSearchState(url.get('phone') ?? '');
+  const email = useSearchState(url.get('email') ?? '');
+  // Gọi lúc hết debounce với closure mới nhất nên đọc đúng giá trị cả ba ô.
+  const commitSearch = useDebouncedCallback(
+    () =>
+      url.patch({
+        name: name.value.trim(),
+        phone: phone.value.trim(),
+        email: email.value.trim(),
+        page: undefined,
+      }),
+    SEARCH_DEBOUNCE_MS,
+  );
+  const typed = (setValue: (value: string) => void) => (value: string) => {
+    setValue(value);
+    commitSearch();
+  };
 
   const customers = useListAdminCustomers({
     page,
     limit: CUSTOMER_PAGE_SIZE,
-    name: name.debounced,
-    phone: phone.debounced,
-    email: email.debounced,
-    kind: kind as never,
-    status: status as never,
+    name: url.get('name'),
+    phone: url.get('phone'),
+    email: url.get('email'),
+    kind,
+    status,
   });
   const rows = (customers.data?.items ?? []).map(toCustomerRowView);
 
@@ -98,13 +115,16 @@ export function CustomersPage() {
         filters={
           <FilterBar
             actions={
-              <Button
-                icon={<SettingOutlined />}
-                onClick={columnsState.open}
-                className="text-slate-600"
-              >
-                Tùy chỉnh cột
-              </Button>
+              <>
+                <RefreshButton onRefresh={customers.refetch} loading={customers.isFetching} />
+                <Button
+                  icon={<SettingOutlined />}
+                  onClick={columnsState.open}
+                  className="text-slate-600"
+                >
+                  Tùy chỉnh cột
+                </Button>
+              </>
             }
           >
             <SearchInput
@@ -112,28 +132,28 @@ export function CustomersPage() {
               className="!w-56"
               value={name.value}
               placeholder="Nhập tên khách hàng..."
-              onChange={name.setValue}
+              onChange={typed(name.setValue)}
             />
             <SearchInput
               icon={<PhoneOutlined className="text-slate-400" />}
               className="!w-48"
               value={phone.value}
               placeholder="Nhập số điện thoại..."
-              onChange={phone.setValue}
+              onChange={typed(phone.setValue)}
             />
             <SearchInput
               icon={<MailOutlined className="text-slate-400" />}
               className="!w-56"
               value={email.value}
               placeholder="Nhập địa chỉ email..."
-              onChange={email.setValue}
+              onChange={typed(email.setValue)}
             />
             <Select
               allowClear
               className="!w-44"
               placeholder="Chọn loại khách"
               value={kind}
-              onChange={setKind}
+              onChange={(value?: string) => url.patch({ kind: value, page: undefined })}
               options={customerKindOptions}
             />
             <Select
@@ -141,10 +161,9 @@ export function CustomersPage() {
               className="!w-44"
               placeholder="Chọn trạng thái"
               value={status}
-              onChange={setStatus}
+              onChange={(value?: string) => url.patch({ status: value, page: undefined })}
               options={customerStatusOptions}
             />
-            <RefreshButton onRefresh={customers.refetch} loading={customers.isFetching} />
             {canCreateStandaloneCustomer && (
               <PermissionGate permission="customer.manage">
                 <Button
@@ -182,7 +201,7 @@ export function CustomersPage() {
           page={page}
           total={customers.data?.total ?? 0}
           applyColumns={columnsState.apply}
-          onPageChange={setPage}
+          onPageChange={(nextPage: number) => url.set('page', nextPage > 1 ? nextPage : undefined)}
           onOpen={setSelectedId}
           busyId={lifecycle.busyId}
           onEdit={(row) => {

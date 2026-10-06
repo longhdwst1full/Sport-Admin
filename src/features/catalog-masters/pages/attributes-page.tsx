@@ -98,7 +98,6 @@ export function AttributesPage() {
         description="Danh mục thông số kỹ thuật dùng chung (chất liệu, kích thước, màu…) để nhập thống nhất cho mọi sản phẩm."
         actions={(
           <div className="flex flex-wrap gap-2">
-            <RefreshButton onRefresh={attributesQuery.refetch} loading={attributesQuery.isFetching} />
             <PermissionGate permission="catalog.product.manage">
               <Button type="primary" icon={<PlusOutlined />} onClick={() => { setSelected(undefined); setDrawerOpen(true); }}>
                 Thêm thuộc tính
@@ -110,7 +109,7 @@ export function AttributesPage() {
           { key: 'total', label: 'Tổng thuộc tính', value: attributesQuery.data?.items.length ?? 0, icon: <ProfileOutlined />, tone: 'blue' },
         ]}
         filters={(
-          <FilterBar>
+          <FilterBar actions={<RefreshButton onRefresh={attributesQuery.refetch} loading={attributesQuery.isFetching} />}>
             <SearchInput value={search} placeholder="Tìm theo mã hoặc tên..." onChange={setSearch} />
           </FilterBar>
         )}

@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { parseEnum } from '@/shared/utils/parse-enum';
 import {
   AnyContentPostType,
   FacebookPublicationOrigin,
@@ -34,9 +35,7 @@ export interface SocialListFilters {
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Giá trị query param thuộc enum `values` thì trả về, ngược lại `undefined` (link cũ/sai không làm hỏng màn). */
-export function parseEnum<T extends string>(values: Record<string, T>, value: string | null): T | undefined {
-  return value && Object.values(values).includes(value as T) ? (value as T) : undefined;
-}
+export { parseEnum };
 
 function parseDate(value: string | null): string | undefined {
   return value && DATE_PATTERN.test(value) && dayjs(value).isValid() ? value : undefined;

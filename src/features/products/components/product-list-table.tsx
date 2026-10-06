@@ -8,7 +8,7 @@ import {
 import { Avatar, Button, Dropdown, Switch, Tag, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, col, RefreshButton } from '@/foundation/table';
+import { AdminTable, col } from '@/foundation/table';
 import { useMemo, type ReactNode } from 'react';
 import { PRODUCT_LIST_PAGE_SIZE_OPTIONS } from '../constants/product-list.constants';
 import type { ProductListRow } from '../model/product-list.mapper';
@@ -89,7 +89,6 @@ const PRODUCT_VERSION_COLUMN: ColumnsType<ProductListRow>[number] = {
 export function ProductListTable({
   rows,
   loading,
-  fetching,
   page,
   pageSize,
   total,
@@ -102,11 +101,9 @@ export function ProductListTable({
   onToggleVisibility,
   onArchive,
   onPublish,
-  onRefresh,
 }: {
   rows: ProductListRow[];
   loading: boolean;
-  fetching: boolean;
   page: number;
   pageSize: number;
   total: number;
@@ -119,7 +116,6 @@ export function ProductListTable({
   onToggleVisibility: (row: ProductListRow, next: boolean) => void;
   onArchive: (row: ProductListRow) => void;
   onPublish: (row: ProductListRow) => void;
-  onRefresh: () => void;
 }) {
   const columns = useMemo<ColumnsType<ProductListRow>>(
     () => [
@@ -223,9 +219,6 @@ export function ProductListTable({
         }}
         columns={columns}
       />
-      <div className="mt-3 flex justify-end border-t border-slate-100 pt-3">
-        <RefreshButton onRefresh={onRefresh} loading={fetching} />
-      </div>
     </>
   );
 }
