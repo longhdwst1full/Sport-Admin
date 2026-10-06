@@ -3,7 +3,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Card, Form, Input, Select, Space, Spin, Tag, Typography } from 'antd';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -18,6 +19,7 @@ import type { ProductDetailDto, ProductPriceWindowDto } from '@/generated/api/ca
 import { getApiErrorMessage } from '@/lib/api/error';
 import { useCan } from '@/core/auth/permissions';
 import { formatDateTime } from '@/lib/format/datetime';
+import { formatMoney } from '@/lib/format/money';
 
 interface PriceFormValues {
   variantId: string;
@@ -38,7 +40,12 @@ const inputNow = () => {
   return now.toISOString().slice(0, 16);
 };
 
-const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+const PRICE_COLUMNS: ColumnsType<ProductPriceWindowDto> = [
+  { title: 'Giá đã VAT', dataIndex: 'amount', render: (value: string) => <strong>{formatMoney(value)}</strong> },
+  col.dateTime<ProductPriceWindowDto>('startsAt', 'Bắt đầu', { width: undefined }),
+  { title: 'Kết thúc', dataIndex: 'endsAt', render: (value?: string | null) => value ? formatDateTime(value) : 'Không giới hạn' },
+  { title: 'Trạng thái', dataIndex: 'status', render: (value: string) => <Tag>{value}</Tag> },
+];
 
 export function ProductPricePanel({
   product,
@@ -123,13 +130,6 @@ export function ProductPricePanel({
     });
   });
 
-  const priceColumns = [
-    { title: 'Giá đã VAT', dataIndex: 'amount', render: (value: string) => <strong>{money.format(Number(value))}</strong> },
-    { title: 'Bắt đầu', dataIndex: 'startsAt', render: (value: string) => formatDateTime(value) },
-    { title: 'Kết thúc', dataIndex: 'endsAt', render: (value?: string | null) => value ? formatDateTime(value) : 'Không giới hạn' },
-    { title: 'Trạng thái', dataIndex: 'status', render: (value: string) => <Tag>{value}</Tag> },
-  ];
-
   return (
     <Card className="border-emerald-100 bg-emerald-50/30" title={<Space><DollarOutlined /> Quản lý lịch giá</Space>}>
       <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
@@ -191,7 +191,7 @@ export function ProductPricePanel({
                 <Spin size="small" />
               </div>
             ) : timeline.data?.current ? (
-              <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={false} dataSource={[timeline.data.current]} columns={priceColumns} />
+              <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={false} dataSource={[timeline.data.current]} columns={PRICE_COLUMNS} />
             ) : (
               <Typography.Text type="secondary">Chưa có giá đang hiệu lực.</Typography.Text>
             )}
@@ -204,7 +204,7 @@ export function ProductPricePanel({
               loading={Boolean(variantId) && timeline.isLoading}
               pagination={false}
               dataSource={timeline.data?.upcoming ?? []}
-              columns={priceColumns}
+              columns={PRICE_COLUMNS}
               locale={{ emptyText: 'Chưa có giá tương lai' }}
             />
           </div>
@@ -216,7 +216,7 @@ export function ProductPricePanel({
               loading={Boolean(variantId) && timeline.isLoading}
               pagination={{ pageSize: 5, hideOnSinglePage: true }}
               dataSource={timeline.data?.history ?? []}
-              columns={priceColumns}
+              columns={PRICE_COLUMNS}
               locale={{ emptyText: 'Chưa có lịch sử giá' }}
             />
           </div>

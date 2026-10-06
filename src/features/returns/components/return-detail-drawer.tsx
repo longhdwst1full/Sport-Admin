@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, App, Button, Card, Descriptions, Drawer, Empty, Image, Space, Table, Tag, Timeline, Typography } from 'antd';
 import { usePermissions } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
+import { AdminTable } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { useGetAdminReturn } from '@/generated/api/returns/returns';
 import type { RefundDto, ReturnDetailDto, ReturnItemDto } from '@/generated/api/returns/returns.schemas';
@@ -27,6 +28,7 @@ import { useReturnCommand, type ReturnCommand } from '../hooks/use-return-comman
 import { buildTableColumns } from '../model/build-table-columns';
 import { availableReturnActions, type ReturnAction } from '../model/return-actions.policy';
 import { ReturnActionModal } from './return-action-modal';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const actionButtons: Record<ReturnAction, { label: string; type?: 'primary'; danger?: boolean }> = {
   approve: { label: 'Duyệt', type: 'primary' },
@@ -74,7 +76,7 @@ export function ReturnDetailDrawer({ returnId, onClose }: { returnId?: string; o
     <Drawer
       open={Boolean(returnId)}
       onClose={closeDrawer}
-      width={880}
+      width={DRAWER_WIDTH.lg}
       title={detail ? (
         <div className="flex flex-wrap items-center gap-3">
           <span>{detail.returnNo}</span>
@@ -227,7 +229,7 @@ const refundColumns = buildTableColumns<RefundDto, RefundColumnId>(REFUND_TABLE_
 function ReturnItems({ detail }: { detail: ReturnDetailDto }) {
   return (
     <Card size="small" title="Sản phẩm trả" className="rounded-2xl">
-      <Table
+      <AdminTable
         rowKey="id"
         size="small"
         pagination={false}
@@ -244,6 +246,7 @@ function ReturnRefunds({ detail }: { detail: ReturnDetailDto }) {
       {detail.refunds.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có lượt hoàn tiền" />
       ) : (
+        // AdminTable cắt mỗi ô còn 3 dòng; cột đối chiếu có mã GD, thời điểm, lý do lỗi và ảnh chứng từ nên giữ Table thường.
         <Table
           rowKey="id"
           size="small"

@@ -5,7 +5,6 @@ import {
   App,
   Button,
   Checkbox,
-  Drawer,
   Form,
   Input,
   Select,
@@ -21,7 +20,6 @@ import {
 } from '@ant-design/icons';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
@@ -53,7 +51,9 @@ import {
   toCreateStaffUserDto,
   toExtraAssignUserRoleDtos,
 } from '../model/staff-creation.mapper';
-import { AccessBranchSelect } from './access-branch-select';
+import { BranchSelect } from '@/features/organization';
+import { FormDrawer } from '@/foundation/overlay';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 
 const extraAssignmentSchema: yup.ObjectSchema<AssignmentFormValues> = yup.object({
   roleCode: yup
@@ -111,8 +111,8 @@ export function StaffCreationDrawer({
 }) {
   const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
-  const [branchSearch, setBranchSearch] = useState('');
-  const [debouncedBranchSearch] = useDebounce(branchSearch.trim(), 300);
+  const branchSearch = useSearchState('', 300);
+  const setBranchSearch = branchSearch.setValue;
   const [showMatrix, setShowMatrix] = useState(true);
 
   const {
@@ -121,7 +121,7 @@ export function StaffCreationDrawer({
     reset,
     setError,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<StaffCreationFormValues>({
     resolver: yupResolver(schema),
     defaultValues: EMPTY_FORM,
@@ -137,7 +137,7 @@ export function StaffCreationDrawer({
   const permissionsQuery = useListAdminPermissions({ query: { enabled: open } });
 
   const branchesQuery = useSearchActiveAdminBranches(
-    { search: debouncedBranchSearch || undefined, page: 1, limit: 20 },
+    { search: branchSearch.debounced, page: 1, limit: 20 },
     { query: { ...CACHE_POLICY.REFERENCE, enabled: open } },
   );
 
@@ -167,6 +167,18 @@ export function StaffCreationDrawer({
     () => roles.filter((r) => (ASSIGNABLE_ROLE_CODES as string[]).includes(r.code)),
     [roles],
   );
+  const assignableRoleOptions = useMemo(
+    () => assignableRoles.map((r) => ({ value: r.code, label: r.name })),
+    [assignableRoles],
+  );
+  const branchOptions = useMemo(
+    () =>
+      (branchesQuery.data?.items ?? []).map((branch) => ({
+        value: branch.id,
+        label: `${branch.code} — ${branch.label}`,
+      })),
+    [branchesQuery.data],
+  );
 
   // Quyền hiệu lực = hợp các vai trò đã chọn (dòng chính + các dòng thêm), đọc từ API.
   const grantedCodesSet = useMemo(() => {
@@ -187,7 +199,7 @@ export function StaffCreationDrawer({
       reset(EMPTY_FORM);
       setBranchSearch('');
     }
-  }, [open, reset]);
+  }, [open, reset, setBranchSearch]);
 
   const submit = handleSubmit(async (values) => {
     // Trùng vai trò + chi nhánh bị server từ chối (409); chặn sớm để không tạo user rồi gán hỏng.
@@ -259,9 +271,8 @@ export function StaffCreationDrawer({
   const totalPossible = permissions.length;
 
   return (
-    <Drawer
+    <FormDrawer
       open={open}
-      width={620}
       title={
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
@@ -276,27 +287,15 @@ export function StaffCreationDrawer({
         </div>
       }
       onClose={onClose}
-      destroyOnHidden
+      onSubmit={() => void submit()}
+      submitting={submitting}
+      submitText={submitting ? 'Đang khởi tạo...' : 'Tạo nhân viên'}
+      isDirty={() => isDirty}
       className="dctd-staff-drawer"
-      footer={
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500">
-            Quyền kích hoạt: <strong className="text-emerald-700 font-semibold">{totalGranted}</strong>/{totalPossible} quyền
-          </span>
-          <div className="flex gap-2">
-            <Button onClick={onClose} className="!rounded-xl">
-              Hủy
-            </Button>
-            <Button
-              type="primary"
-              loading={submitting}
-              onClick={() => void submit()}
-              className="!rounded-xl !bg-emerald-600 hover:!bg-emerald-500 !font-semibold !px-5 shadow-xs"
-            >
-              {submitting ? 'Đang khởi tạo...' : 'Tạo nhân viên'}
-            </Button>
-          </div>
-        </div>
+      footerExtra={
+        <span className="text-xs text-slate-500">
+          Quyền kích hoạt: <strong className="text-emerald-700 font-semibold">{totalGranted}</strong>/{totalPossible} quyền
+        </span>
       }
     >
       <Alert
@@ -379,10 +378,7 @@ export function StaffCreationDrawer({
                 filterOption={false}
                 onSearch={setBranchSearch}
                 loading={branchesQuery.isFetching}
-                options={(branchesQuery.data?.items ?? []).map((branch) => ({
-                  value: branch.id,
-                  label: `${branch.code} — ${branch.label}`,
-                }))}
+                options={branchOptions}
                 placeholder="Chọn chi nhánh đang hoạt động"
                 notFoundContent={branchesQuery.isError ? 'Không tải được chi nhánh' : undefined}
                 className="w-full"
@@ -491,7 +487,7 @@ export function StaffCreationDrawer({
                         render={({ field }) => (
                           <Select
                             {...field}
-                            options={assignableRoles.map((r) => ({ value: r.code, label: r.name }))}
+                            options={assignableRoleOptions}
                             placeholder="Vai trò"
                           />
                         )}
@@ -506,9 +502,13 @@ export function StaffCreationDrawer({
                         name={`extraAssignments.${index}.branchId`}
                         control={control}
                         render={({ field }) => (
-                          <AccessBranchSelect
-                            value={field.value}
-                            onChange={field.onChange}
+                          <BranchSelect
+                            className="w-full"
+                            placeholder="Chọn chi nhánh đang hoạt động"
+                            labelFormat="code-name"
+                            suffixIcon={<ShopOutlined className="text-slate-400" />}
+                            value={field.value || undefined}
+                            onChange={(next) => field.onChange(next ?? '')}
                             status={rowErrors?.branchId ? 'error' : undefined}
                           />
                         )}
@@ -608,6 +608,6 @@ export function StaffCreationDrawer({
           )}
         </div>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

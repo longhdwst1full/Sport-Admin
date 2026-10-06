@@ -29,6 +29,7 @@ import { SocialActionModal, type SocialModalAction } from './social-action-modal
 import { SocialPostEditorDrawer, type SocialEditorTarget } from './social-post-editor-drawer';
 import { TikTokPublicationSection } from './tiktok-publication-section';
 import { IMAGE_FALLBACK_SRC } from '@/features/media';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const metricValue = (value: number | null | undefined) => (value == null ? '—' : value);
 
@@ -87,7 +88,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
   return (
     <Drawer
       title={post ? post.title : 'Chi tiết bài viết'}
-      width={760}
+      width={DRAWER_WIDTH.md}
       open
       onClose={onClose}
       destroyOnHidden

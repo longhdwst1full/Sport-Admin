@@ -1,11 +1,11 @@
 import { useRef } from 'react';
 import { App, Card, Empty, Popconfirm, Skeleton, Tag, Typography } from 'antd';
-import { AdminTable, TableActionButton } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col, TableActionButton } from '@/foundation/table';
 import { CheckOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { formatDateTime } from '@/lib/format/datetime';
 import {
   confirmAdminOrder,
   getListAdminOrdersQueryKey,
@@ -17,11 +17,28 @@ import {
 } from '@/generated/api/orders/orders.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 
-const money = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-  maximumFractionDigits: 0,
-});
+const PENDING_ORDER_COLUMNS: ColumnsType<OrderSummaryDto> = [
+  {
+    title: 'Mã đơn',
+    dataIndex: 'orderNo',
+    width: 160,
+    render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
+  },
+  {
+    title: 'Khách hàng',
+    key: 'recipient',
+    width: 200,
+    ellipsis: true,
+    render: (_: unknown, row) => (
+      <div className="min-w-0">
+        <div className="truncate">{row.recipient.name}</div>
+        <div className="text-xs text-slate-500">{row.recipient.phone}</div>
+      </div>
+    ),
+  },
+  col.money<OrderSummaryDto>('grandTotal', 'Tổng tiền', { width: 150 }),
+  col.dateTime<OrderSummaryDto>('placedAt', 'Đặt lúc', { width: 150 }),
+];
 
 /**
  * Đơn đang chờ Admin xác nhận, duyệt ngay tại Bảng điều khiển.
@@ -65,6 +82,32 @@ export function PendingOrdersCard() {
 
   const rows = query.data?.items ?? [];
 
+  const columns: ColumnsType<OrderSummaryDto> = [
+    ...PENDING_ORDER_COLUMNS,
+    col.actions<OrderSummaryDto>(
+      (row) => (
+        <PermissionGate permission="order.manage">
+          <Popconfirm
+            title="Xác nhận đơn này?"
+            description="Kho sẽ bắt đầu lấy hàng sau khi xác nhận."
+            okText="Xác nhận"
+            cancelText="Để sau"
+            onConfirm={() =>
+              confirmOrder.mutate({ id: row.id, expectedVersion: row.version })
+            }
+          >
+            <TableActionButton
+              label={`Duyệt đơn ${row.orderNo}`}
+              icon={<CheckOutlined />}
+              loading={confirmOrder.isPending && confirmOrder.variables?.id === row.id}
+            />
+          </Popconfirm>
+        </PermissionGate>
+      ),
+      { title: '', width: 120 },
+    ),
+  ];
+
   return (
     <Card
       className="!rounded-2xl !border-amber-200/70 !bg-gradient-to-br !from-white !to-amber-50/30 !shadow-card"
@@ -102,65 +145,7 @@ export function PendingOrdersCard() {
           pagination={false}
           dataSource={rows}
           scroll={{ x: 760 }}
-          columns={[
-            {
-              title: 'Mã đơn',
-              dataIndex: 'orderNo',
-              width: 160,
-              render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
-            },
-            {
-              title: 'Khách hàng',
-              key: 'recipient',
-              width: 200,
-              ellipsis: true,
-              render: (_: unknown, row) => (
-                <div className="min-w-0">
-                  <div className="truncate">{row.recipient.name}</div>
-                  <div className="text-xs text-slate-500">{row.recipient.phone}</div>
-                </div>
-              ),
-            },
-            {
-              title: 'Tổng tiền',
-              dataIndex: 'grandTotal',
-              width: 150,
-              align: 'right',
-              render: (value: string) => money.format(Number(value)),
-            },
-            {
-              title: 'Đặt lúc',
-              dataIndex: 'placedAt',
-              width: 150,
-              render: (value: string) => formatDateTime(value),
-            },
-            {
-              title: '',
-              key: 'actions',
-              width: 120,
-              align: 'right',
-              fixed: 'right',
-              render: (_: unknown, row) => (
-                <PermissionGate permission="order.manage">
-                  <Popconfirm
-                    title="Xác nhận đơn này?"
-                    description="Kho sẽ bắt đầu lấy hàng sau khi xác nhận."
-                    okText="Xác nhận"
-                    cancelText="Để sau"
-                    onConfirm={() =>
-                      confirmOrder.mutate({ id: row.id, expectedVersion: row.version })
-                    }
-                  >
-                    <TableActionButton
-                      label={`Duyệt đơn ${row.orderNo}`}
-                      icon={<CheckOutlined />}
-                      loading={confirmOrder.isPending && confirmOrder.variables?.id === row.id}
-                    />
-                  </Popconfirm>
-                </PermissionGate>
-              ),
-            },
-          ]}
+          columns={columns}
         />
       )}
     </Card>

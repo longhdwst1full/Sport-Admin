@@ -9,7 +9,7 @@ import {
 } from '../constants/knowledge.constants';
 import type { AttachKnowledgePostInput } from '../model/knowledge-document.types';
 import { CmsPostSelect } from './cms-post-select';
-import { KnowledgeBranchSelect } from './knowledge-branch-select';
+import { BranchSelect } from '@/features/organization';
 
 interface FormValues {
   postId?: string;
@@ -90,7 +90,7 @@ export function AttachKnowledgePostModal({
           </Radio.Group>
         </Form.Item>
         <Form.Item name="branchId" label="Chi nhánh áp dụng" extra={`Bỏ trống = ${ALL_BRANCHES_LABEL.toLowerCase()}.`}>
-          <KnowledgeBranchSelect placeholder={ALL_BRANCHES_LABEL} />
+          <BranchSelect allowClear placeholder={ALL_BRANCHES_LABEL} />
         </Form.Item>
       </Form>
     </Modal>

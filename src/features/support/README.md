@@ -28,7 +28,7 @@ Ngoài phạm vi: tạo ticket hộ khách (`support.ticket.create` chưa có m�
 - `model/support-ticket.mapper.ts` là nơi duy nhất đọc DTO: `null` → `undefined`, `isInternal` → `internal`.
   Query hook dùng `select`, nên **cache giữ DTO thô**; mutation ghi response DTO vào key chi tiết.
 - `version` là chuỗi số (bigint) — giữ nguyên chuỗi, không ép `Number`.
-- DTO chỉ có `branchId`; tên chi nhánh tra qua `hooks/use-branch-labels.ts` (lookup chi nhánh đang hoạt
+- DTO chỉ có `branchId`; tên chi nhánh tra qua `useBranchLabels` của `@/features/organization` (lookup chi nhánh đang hoạt
   động, tối đa 50). Chi nhánh không có trong lookup hiện `#<id>`.
 
 ## Vòng đời và quyền

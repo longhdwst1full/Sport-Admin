@@ -1,4 +1,5 @@
 import type { StatusPresentation } from '@/foundation/management';
+import { toOptions } from '@/shared/utils/options';
 import {
   BannerPlacement,
   BannerStatus,
@@ -36,10 +37,7 @@ export const bannerPlacementLabels: Record<BannerPlacement, string> = {
   [BannerPlacement.CATEGORY_TOP]: 'Đầu trang danh mục',
 };
 
-export const bannerPlacementOptions = Object.values(BannerPlacement).map((value) => ({
-  value,
-  label: bannerPlacementLabels[value],
-}));
+export const bannerPlacementOptions = toOptions(bannerPlacementLabels);
 
 export const bannerStatusPresentation: Record<BannerStatus, StatusPresentation> = {
   [BannerStatus.DRAFT]: { label: 'Bản nháp', color: 'gold' },
@@ -47,10 +45,7 @@ export const bannerStatusPresentation: Record<BannerStatus, StatusPresentation> 
   [BannerStatus.ARCHIVED]: { label: 'Đã lưu trữ', color: 'default' },
 };
 
-export const bannerStatusOptions = Object.values(BannerStatus).map((value) => ({
-  value,
-  label: bannerStatusPresentation[value].label,
-}));
+export const bannerStatusOptions = toOptions(bannerStatusPresentation);
 
 /** Mã lỗi ổn định của API (`api/src/modules/cms/banners/banner.constants.ts`) mà UI phản ứng riêng. */
 export const BANNER_ERROR_CODE = {

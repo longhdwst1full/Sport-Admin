@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
-import { ReloadOutlined } from '@ant-design/icons';
-import { Button, Input, Select, Tooltip } from 'antd';
+import { useMemo } from 'react';
+import { Select } from 'antd';
 import { useSearchParams } from 'react-router-dom';
-import { useDebounce } from 'use-debounce';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
+import { FilterBar, RefreshButton } from '@/foundation/table';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { SupportBranchSelect } from '../components/support-branch-select';
+import { useSearchState } from '@/shared/hooks/use-search-state';
+import { BranchSelect } from '@/features/organization';
 import { SupportTicketDetailDrawer } from '../components/support-ticket-detail-drawer';
 import { SupportTicketTable } from '../components/support-ticket-table';
 import { SupportTicketPriority, SupportTicketStatus } from '@/generated/api/support/support.schemas';
@@ -33,9 +34,8 @@ export function SupportTicketsPage() {
   const assigneeId = params.get('assignee') ?? undefined;
   const branchId = params.get('branch') ?? undefined;
   const openId = params.get('id') ?? undefined;
-  const [search, setSearch] = useState('');
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  const [page, setPage] = useListPageReset([debouncedSearch, status, priority, assigneeId, branchId]);
+  const search = useSearchState();
+  const [page, setPage] = useListPageReset([search.debounced, status, priority, assigneeId, branchId]);
   const assignees = useSupportAssigneeOptions(true, branchId);
 
   const updateParam = (key: string, value?: string) => {
@@ -52,7 +52,7 @@ export function SupportTicketsPage() {
     priority,
     assigneeUserId: assigneeId,
     branchId,
-    search: debouncedSearch || undefined,
+    search: search.debounced,
   });
   const rows = useMemo(() => list.data?.items ?? [], [list.data]);
 
@@ -63,12 +63,11 @@ export function SupportTicketsPage() {
         title="Hàng đợi hỗ trợ"
         description="Tiếp nhận, giao việc, trả lời và đóng yêu cầu hỗ trợ của khách hàng."
         filters={(
-          <div className="flex w-full flex-wrap gap-3">
-            <Input.Search
-              allowClear
+          <FilterBar actions={<RefreshButton onRefresh={list.refetch} loading={list.isFetching} />}>
+            <SearchInput
               className="min-w-64 flex-1"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              value={search.value}
+              onChange={search.setValue}
               placeholder="Mã ticket, tiêu đề, tên hoặc SĐT khách"
             />
             <Select
@@ -98,20 +97,13 @@ export function SupportTicketsPage() {
               loading={assignees.loading}
               options={assignees.options}
             />
-            <SupportBranchSelect
+            <BranchSelect
+              allowClear
               className="min-w-48"
               value={branchId}
               onChange={(value) => updateParam('branch', value)}
             />
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                aria-label="Làm mới"
-                loading={list.isFetching}
-                onClick={() => void list.refetch()}
-              />
-            </Tooltip>
-          </div>
+          </FilterBar>
         )}
       >
         {list.isError && (

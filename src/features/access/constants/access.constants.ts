@@ -1,4 +1,5 @@
-import { AssignableStaffRoleCode } from '@/generated/api/iam/iam.schemas';
+import type { StatusPresentation } from '@/foundation/management';
+import { AssignableStaffRoleCode, type UserDtoStatus } from '@/generated/api/iam/iam.schemas';
 
 /**
  * Nhãn hiển thị cho vai trò cấp dưới gán được (BRANCH_MANAGER/STAFF).
@@ -35,4 +36,10 @@ export const STAFF_CREATION_ERROR_CODE = {
 
 export const STAFF_CREATION_ERROR_MESSAGES: Record<string, string> = {
   [STAFF_CREATION_ERROR_CODE.EMAIL_RESERVED]: 'Email này dành cho tài khoản quản trị gốc.',
+};
+
+export const USER_STATUS_PRESENTATION: Record<UserDtoStatus, StatusPresentation> = {
+  ACTIVE: { color: 'green', label: 'Hoạt động' },
+  LOCKED: { color: 'red', label: 'Đã khóa' },
+  INACTIVE: { color: 'default', label: 'Ngừng hoạt động' },
 };

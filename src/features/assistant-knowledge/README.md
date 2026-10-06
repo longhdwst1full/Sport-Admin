@@ -29,7 +29,7 @@ có), reindex thủ công, cấu hình trợ lý (nằm ở Tham số hệ thố
   tải thêm. Bài ARCHIVED bị khoá.
 - `model/knowledge-document.mapper.ts`: DTO ↔ view model/params; chi nhánh trống gửi `branchId: null`.
 - DTO chỉ có `sourceType` + `sourceId` (không có tiêu đề bài gốc) và `branchId` (không có tên); tên chi nhánh
-  tra qua `hooks/use-branch-labels.ts`.
+  tra qua `useBranchLabels` của `@/features/organization`.
 
 ## Vòng đời, concurrency, idempotency
 

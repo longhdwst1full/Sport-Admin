@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { CheckCircleFilled, PlayCircleOutlined, UploadOutlined, VideoCameraOutlined } from '@ant-design/icons';
-import { App, Button, Empty, Image, Input, Modal, Pagination, Skeleton, Typography, Upload } from 'antd';
-import { useDebounce } from 'use-debounce';
+import { App, Button, Empty, Image, Modal, Pagination, Skeleton, Typography, Upload } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { useListAdminMediaAssets } from '@/generated/api/media/media';
 import type { MediaAssetSummaryDto } from '@/generated/api/media/media.schemas';
 import { uploadImage } from '@/lib/media/upload-image';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { IMAGE_FALLBACK_SRC } from '../constants/media-library.constants';
 import { VideoUploadButton } from './video-upload-button';
 
@@ -50,15 +52,14 @@ export function MediaLibraryPickerModal({
   onConfirm: (selected: PickedMediaAsset[]) => void;
 }) {
   const { message } = App.useApp();
-  const [search, setSearch] = useState('');
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  const [page, setPage] = useState(1);
+  const search = useSearchState();
+  const [page, setPage] = useListPageReset([search.debounced]);
   const [selected, setSelected] = useState<PickedMediaAsset[]>(initialSelected);
   const canUpload = useCan('media.asset.upload');
   const { uploading, customRequest } = useImageUpload(uploadImage);
 
   const assets = useListAdminMediaAssets(
-    { page, limit: PICKER_PAGE_SIZE, search: debouncedSearch || undefined },
+    { page, limit: PICKER_PAGE_SIZE, search: search.debounced },
     { query: { enabled: open, retry: false } },
   );
   const items = assets.data?.items ?? [];
@@ -86,16 +87,12 @@ export function MediaLibraryPickerModal({
       destroyOnHidden
     >
       <div className="mb-3 flex flex-wrap gap-2">
-        <Input.Search
-          allowClear
+        <SearchInput
           className="min-w-64 flex-1"
-          value={search}
+          value={search.value}
           maxLength={100}
           placeholder="Tìm theo public id, thư mục hoặc alt text"
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setPage(1);
-          }}
+          onChange={search.setValue}
         />
         {allowedKinds.includes('IMAGE') && (
           <Upload

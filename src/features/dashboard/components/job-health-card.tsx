@@ -1,6 +1,7 @@
 import { WarningOutlined } from '@ant-design/icons';
 import { Alert, Card, Skeleton, Tag, Tooltip, Typography } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import type { ColumnsType } from 'antd/es/table';
 import { AdminTable } from '@/foundation/table';
 import { useListJobHealth } from '@/generated/api/system/system';
 import { formatDateTime } from '@/lib/format/datetime';
@@ -20,6 +21,47 @@ const jobLabel: Record<string, string> = {
   'notification-dispatch': 'Gửi thông báo',
 };
 
+
+const JOB_HEALTH_COLUMNS: ColumnsType<JobHealthDto> = [
+  {
+    title: 'Tác vụ',
+    dataIndex: 'name',
+    render: (value: string) => (
+      <Tooltip title={value}>
+        <span>{jobLabel[value] ?? value}</span>
+      </Tooltip>
+    ),
+  },
+  {
+    title: 'Trạng thái',
+    dataIndex: 'health',
+    width: 130,
+    render: (value: JobHealthDto['health']) => (
+      <Tag color={healthMeta[value].color}>{healthMeta[value].label}</Tag>
+    ),
+  },
+  {
+    title: 'Thành công gần nhất',
+    width: 160,
+    render: (_, row) => (
+      <span>
+        {formatDateTime(row.lastSuccessAt)}
+        {typeof row.minutesSinceSuccess === 'number' && (
+          <Typography.Text type="secondary"> ({row.minutesSinceSuccess}′)</Typography.Text>
+        )}
+      </span>
+    ),
+  },
+  {
+    title: 'Lỗi liên tiếp',
+    dataIndex: 'consecutiveFailures',
+    width: 110,
+    align: 'right',
+    render: (value: number) => value > 0
+      ? <Typography.Text type="danger">{value}</Typography.Text>
+      : '—',
+  },
+];
 
 /**
  * Sức khoẻ các job nền, đặt ngay ở Bảng điều khiển.
@@ -63,46 +105,7 @@ export function JobHealthCard() {
           pagination={false}
           size="small"
           locale={{ emptyText: 'Chưa có tác vụ nền nào.' }}
-          columns={[
-            {
-              title: 'Tác vụ',
-              dataIndex: 'name',
-              render: (value: string) => (
-                <Tooltip title={value}>
-                  <span>{jobLabel[value] ?? value}</span>
-                </Tooltip>
-              ),
-            },
-            {
-              title: 'Trạng thái',
-              dataIndex: 'health',
-              width: 130,
-              render: (value: JobHealthDto['health']) => (
-                <Tag color={healthMeta[value].color}>{healthMeta[value].label}</Tag>
-              ),
-            },
-            {
-              title: 'Thành công gần nhất',
-              width: 160,
-              render: (_, row) => (
-                <span>
-                  {formatDateTime(row.lastSuccessAt)}
-                  {typeof row.minutesSinceSuccess === 'number' && (
-                    <Typography.Text type="secondary"> ({row.minutesSinceSuccess}′)</Typography.Text>
-                  )}
-                </span>
-              ),
-            },
-            {
-              title: 'Lỗi liên tiếp',
-              dataIndex: 'consecutiveFailures',
-              width: 110,
-              align: 'right',
-              render: (value: number) => value > 0
-                ? <Typography.Text type="danger">{value}</Typography.Text>
-                : '—',
-            },
-          ]}
+          columns={JOB_HEALTH_COLUMNS}
         />
       )}
     </Card>

@@ -4,21 +4,26 @@ import {
   DeleteOutlined,
   EyeInvisibleOutlined,
   EyeOutlined,
-  ReloadOutlined,
   SettingOutlined,
   StarFilled,
   StarOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Popconfirm, Rate, Space, Tooltip } from 'antd';
+import { App, Button, Popconfirm, Rate, Space } from 'antd';
 import { useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { ManagementPage, StatusTag } from '@/foundation/management';
+import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
-import { TableActionButton } from '@/foundation/table';
-import { AdminTable } from '@/foundation/table';
-import { ColumnSettingsModal, type ColumnItem } from '@/foundation/table/column-settings-modal';
+import type { ColumnsType } from 'antd/es/table';
+import {
+  AdminTable,
+  col,
+  ColumnSettingsModal,
+  RefreshButton,
+  TableActionButton,
+  useColumnVisibility,
+} from '@/foundation/table';
 import {
   getListAdminReviewsQueryKey,
   useDeleteAdminReview,
@@ -27,29 +32,74 @@ import {
 } from '@/generated/api/reviews/reviews';
 import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 import { ReviewDetailDrawer } from '../components/review-detail-drawer';
+import { REVIEW_COLUMN_ITEMS } from '../constants/review.constants';
 import { getReviewMetrics, REVIEW_STATUS_PRESENTATION } from '../model/review-moderation.policy';
 import { getApiErrorMessage } from '@/lib/api/error';
 
-const REVIEW_COLUMNS: ColumnItem[] = [
-  { id: 'customer', label: 'Khách hàng', fixed: true },
-  { id: 'rating', label: 'Đánh giá sao' },
-  { id: 'content', label: 'Nội dung nhận xét' },
-  { id: 'comments', label: 'Số phản hồi' },
-  { id: 'status', label: 'Trạng thái' },
+/** Cột dữ liệu (không phụ thuộc handler); `key` khớp `REVIEW_COLUMN_ITEMS` để ẩn/hiện được. */
+const REVIEW_TABLE_COLUMNS: ColumnsType<ProductReviewDto> = [
+  {
+    title: 'Khách hàng',
+    key: 'customer',
+    fixed: 'left',
+    width: 220,
+    render: (_: unknown, row: ProductReviewDto) => (
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs">
+          {row.customerDisplayName ? row.customerDisplayName.slice(0, 1).toUpperCase() : 'K'}
+        </div>
+        <div className="min-w-0">
+          <span className="font-semibold text-slate-800 text-xs block truncate">
+            {row.customerDisplayName}
+          </span>
+          <div className="text-[11px] text-slate-400">
+            {row.verifiedPurchase ? (
+              <span className="text-emerald-600 font-medium">✓ Đã mua hàng</span>
+            ) : (
+              'Chưa xác minh đơn'
+            )}
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Đánh giá',
+    key: 'rating',
+    dataIndex: 'rating',
+    width: 160,
+    render: (value: number) => <Rate disabled value={value} className="text-sm" />,
+  },
+  {
+    title: 'Nội dung nhận xét',
+    key: 'content',
+    dataIndex: 'content',
+    render: (value: string) => (
+      <p className="text-xs text-slate-700 leading-relaxed max-w-xl m-0 line-clamp-3">
+        {value}
+      </p>
+    ),
+  },
+  {
+    title: 'Phản hồi',
+    key: 'comments',
+    dataIndex: 'comments',
+    align: 'center',
+    width: 100,
+    render: (value: unknown[]) => (
+      <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-medium">
+        {value?.length ?? 0}
+      </span>
+    ),
+  },
+  col.status<ProductReviewDto, ProductReviewDto['status']>('status', 'Trạng thái', REVIEW_STATUS_PRESENTATION, { width: 140 }),
 ];
 
 export function ReviewsPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const query = useListAdminReviews();
-  const [columnModalOpen, setColumnModalOpen] = useState(false);
-  const [colVisibility, setColVisibility] = useState<Record<string, boolean>>({
-    customer: true,
-    rating: true,
-    content: true,
-    comments: true,
-    status: true,
-  });
+  const columnVisibility = useColumnVisibility(REVIEW_COLUMN_ITEMS);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detail, setDetail] = useState<ProductReviewDto>();
 
@@ -120,99 +170,18 @@ export function ReviewsPage() {
     setSelectedIds([]);
   }
 
-  const columns = [
-    ...(colVisibility.customer !== false
-      ? [
-          {
-            title: 'Khách hàng',
-            key: 'customer',
-            fixed: 'left' as const,
-            width: 220,
-            render: (_: unknown, row: ProductReviewDto) => (
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs">
-                  {row.customerDisplayName ? row.customerDisplayName.slice(0, 1).toUpperCase() : 'K'}
-                </div>
-                <div className="min-w-0">
-                  <span className="font-semibold text-slate-800 text-xs block truncate">
-                    {row.customerDisplayName}
-                  </span>
-                  <div className="text-[11px] text-slate-400">
-                    {row.verifiedPurchase ? (
-                      <span className="text-emerald-600 font-medium">✓ Đã mua hàng</span>
-                    ) : (
-                      'Chưa xác minh đơn'
-                    )}
-                  </div>
-                </div>
-              </div>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.rating !== false
-      ? [
-          {
-            title: 'Đánh giá',
-            dataIndex: 'rating',
-            width: 160,
-            render: (value: number) => <Rate disabled value={value} className="text-sm" />,
-          },
-        ]
-      : []),
-    ...(colVisibility.content !== false
-      ? [
-          {
-            title: 'Nội dung nhận xét',
-            dataIndex: 'content',
-            render: (value: string) => (
-              <p className="text-xs text-slate-700 leading-relaxed max-w-xl m-0 line-clamp-3">
-                {value}
-              </p>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.comments !== false
-      ? [
-          {
-            title: 'Phản hồi',
-            dataIndex: 'comments',
-            align: 'center' as const,
-            width: 100,
-            render: (value: unknown[]) => (
-              <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-medium">
-                {value?.length ?? 0}
-              </span>
-            ),
-          },
-        ]
-      : []),
-    ...(colVisibility.status !== false
-      ? [
-          {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            width: 140,
-            render: (value: string) => (
-              <StatusTag
-                status={value}
-                presentations={REVIEW_STATUS_PRESENTATION}
-              />
-            ),
-          },
-        ]
-      : []),
-    {
-      title: '',
-      key: 'detail',
-      width: 72,
-      align: 'right' as const,
-      render: (_: unknown, row: ProductReviewDto) => (
-        <TableActionButton label="Xem chi tiết đánh giá" icon={<EyeOutlined />} onClick={() => setDetail(row)} />
-      ),
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      columnVisibility.apply([
+        ...REVIEW_TABLE_COLUMNS,
+        col.actions<ProductReviewDto>(
+          (row) => <TableActionButton label="Xem chi tiết đánh giá" icon={<EyeOutlined />} onClick={() => setDetail(row)} />,
+          { key: 'detail', title: '', width: 72, fixed: undefined },
+        ),
+      ]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `apply` đổi theo visibility
+    [columnVisibility.visibility],
+  );
 
   return (
     <PageTransition>
@@ -220,18 +189,7 @@ export function ReviewsPage() {
         eyebrow="Ý kiến khách hàng"
         title="Đánh giá & Nhận xét"
         description="Đánh giá của khách đã mua hiển thị ngay trên storefront; hậu kiểm ở đây là ẩn đánh giá vi phạm hoặc khôi phục lại."
-        actions={
-          <div className="flex gap-2">
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => void query.refetch()}
-                loading={query.isFetching}
-                aria-label="Làm mới"
-              />
-            </Tooltip>
-          </div>
-        }
+        actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}
         metrics={[
           {
             key: 'total',
@@ -266,7 +224,7 @@ export function ReviewsPage() {
           <div className="flex w-full justify-end">
             <Button
               icon={<SettingOutlined />}
-              onClick={() => setColumnModalOpen(true)}
+              onClick={columnVisibility.open}
               className="text-slate-600"
             >
               Tùy chỉnh cột
@@ -341,22 +299,7 @@ export function ReviewsPage() {
           }}
         />
 
-        <ColumnSettingsModal
-          isOpen={columnModalOpen}
-          onClose={() => setColumnModalOpen(false)}
-          columns={REVIEW_COLUMNS}
-          visibility={colVisibility}
-          onChange={setColVisibility}
-          onReset={() =>
-            setColVisibility({
-              customer: true,
-              rating: true,
-              content: true,
-              comments: true,
-              status: true,
-            })
-          }
-        />
+        <ColumnSettingsModal {...columnVisibility.modalProps} columns={REVIEW_COLUMN_ITEMS} />
       </ManagementPage>
 
       <ReviewDetailDrawer

@@ -1,10 +1,10 @@
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Divider, Drawer, Form, Skeleton, Space, Tabs, Tag } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm, type FieldPath } from 'react-hook-form';
-import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
 import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../constants/product-list.constants';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
@@ -172,14 +172,10 @@ export function ProductWorkspaceDrawer({
   const canAdjustStock = useCan('inventory.stock.adjust');
   const canManagePrice = useCan('catalog.price.manage');
   const [activeSlug, setActiveSlug] = useState(slug);
-  const [brandSearch, setBrandSearch] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
-  const [branchSearch, setBranchSearch] = useState('');
-  const [warehouseSearch, setWarehouseSearch] = useState('');
-  const [debouncedBrand] = useDebounce(brandSearch.trim(), 300);
-  const [debouncedCategory] = useDebounce(categorySearch.trim(), 300);
-  const [debouncedBranch] = useDebounce(branchSearch.trim(), 300);
-  const [debouncedWarehouse] = useDebounce(warehouseSearch.trim(), 300);
+  const brandSearch = useSearchState('', 300);
+  const categorySearch = useSearchState('', 300);
+  const branchSearch = useSearchState('', 300);
+  const warehouseSearch = useSearchState('', 300);
   const [specificationErrors, setSpecificationErrors] = useState<string[]>([]);
   const [pendingOpeningStock, setPendingOpeningStock] = useState<PendingOpeningStock>();
   const openingStockIdempotencyKey = useRef(crypto.randomUUID());
@@ -209,11 +205,11 @@ export function ProductWorkspaceDrawer({
   const variants = form.watch('variants');
   const hasOpeningStock = variants.some(({ openingQuantity }) => openingQuantity > 0);
   const brands = useSearchActiveAdminBrands(
-    { search: debouncedBrand || undefined, page: 1, limit: 20 },
+    { search: brandSearch.debounced, page: 1, limit: 20 },
     { query: { ...CACHE_POLICY.LOOKUP, enabled: open } },
   );
   const categories = useSearchActiveAdminCategories(
-    { search: debouncedCategory || undefined, page: 1, limit: 20 },
+    { search: categorySearch.debounced, page: 1, limit: 20 },
     { query: { ...CACHE_POLICY.LOOKUP, enabled: open } },
   );
   const attributesQuery = useListAdminAttributes({ query: { ...CACHE_POLICY.LOOKUP, enabled: open } });
@@ -224,13 +220,13 @@ export function ProductWorkspaceDrawer({
   });
   const canPublish = setupStatus.data?.canPublish ?? false;
   const branches = useSearchActiveAdminBranches(
-    { search: debouncedBranch || undefined, page: 1, limit: 50 },
+    { search: branchSearch.debounced, page: 1, limit: 50 },
     { query: { ...CACHE_POLICY.REFERENCE, enabled: open && !isEdit && canAdjustStock } },
   );
   const warehouses = useSearchActiveAdminWarehouses(
     {
       branchId: initialBranchId,
-      search: debouncedWarehouse || undefined,
+      search: warehouseSearch.debounced,
       page: 1,
       limit: 50,
     },
@@ -489,8 +485,8 @@ export function ProductWorkspaceDrawer({
               product={product}
               brands={brands}
               categories={categories}
-              onBrandSearch={setBrandSearch}
-              onCategorySearch={setCategorySearch}
+              onBrandSearch={brandSearch.setValue}
+              onCategorySearch={categorySearch.setValue}
             />
             <ProductMediaTab form={form} product={product} disabled={mutationPending} onMediaChanged={refreshProduct} />
             <ProductSpecificationsTab form={form} attributes={attributes} loading={attributesQuery.isPending} errors={specificationErrors} />
@@ -519,8 +515,8 @@ export function ProductWorkspaceDrawer({
                 hasOpeningStock={hasOpeningStock}
                 branches={branches}
                 warehouses={warehouses}
-                onBranchSearch={setBranchSearch}
-                onWarehouseSearch={setWarehouseSearch}
+                onBranchSearch={branchSearch.setValue}
+                onWarehouseSearch={warehouseSearch.setValue}
               />
             )}
             {/* Combo chỉ có nghĩa với sản phẩm BUNDLE; sản phẩm thường không hiện khối này ở cả Tạo lẫn Sửa. */}

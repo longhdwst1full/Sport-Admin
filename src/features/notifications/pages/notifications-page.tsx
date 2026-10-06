@@ -4,14 +4,15 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   MailOutlined,
-  ReloadOutlined,
   StopOutlined,
 } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select, Tooltip } from 'antd';
+import { Alert, App, Button, Select } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDebounce } from 'use-debounce';
 import { useCan } from '@/core/auth/permissions';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
+import { FilterBar, RefreshButton } from '@/foundation/table';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import {
   getListAdminNotificationsQueryKey,
   useListAdminNotifications,
@@ -33,16 +34,15 @@ export function NotificationsPage() {
   const queryClient = useQueryClient();
   const canRequeue = useCan('system.parameter.manage');
   const [pageSize, setPageSize] = useState(NOTIFICATION_DEFAULT_PAGE_SIZE);
-  const [search, setSearch] = useState('');
+  const search = useSearchState();
   const [status, setStatus] = useState<ListAdminNotificationsStatus>();
   const [requeueingId, setRequeueingId] = useState<string>();
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  const [page, setPage] = useListPageReset([debouncedSearch, status, pageSize]);
+  const [page, setPage] = useListPageReset([search.debounced, status, pageSize]);
 
   const notifications = useListAdminNotifications({
     page,
     limit: pageSize,
-    search: debouncedSearch || undefined,
+    search: search.debounced,
     status,
   });
   const rows = notifications.data?.items ?? [];
@@ -107,12 +107,11 @@ export function NotificationsPage() {
         },
       ]}
       filters={
-        <div className="flex w-full flex-wrap gap-3">
-          <Input.Search
-            allowClear
+        <FilterBar actions={<RefreshButton onRefresh={notifications.refetch} loading={notifications.isFetching} />}>
+          <SearchInput
             className="min-w-64 flex-1"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            value={search.value}
+            onChange={search.setValue}
             placeholder="Loại sự kiện, loại hoặc ID nghiệp vụ"
           />
           <Select
@@ -123,15 +122,7 @@ export function NotificationsPage() {
             placeholder="Trạng thái hàng đợi"
             options={notificationStatusOptions}
           />
-          <Tooltip title="Làm mới dữ liệu">
-            <Button
-              aria-label="Làm mới"
-              icon={<ReloadOutlined />}
-              loading={notifications.isFetching}
-              onClick={() => void notifications.refetch()}
-            />
-          </Tooltip>
-        </div>
+        </FilterBar>
       }
     >
       {notifications.isError && (

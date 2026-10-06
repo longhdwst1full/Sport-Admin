@@ -1,9 +1,7 @@
 import { CloudUploadOutlined, InboxOutlined } from '@ant-design/icons';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Typography, type TableColumnType } from 'antd';
-import { StatusTag } from '@/foundation/management';
-import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
-import { formatDateTime } from '@/lib/format/datetime';
+import { AdminTable, col, TableActionButton } from '@/foundation/table';
 import {
   ALL_BRANCHES_LABEL,
   KNOWLEDGE_PAGE_SIZE,
@@ -11,7 +9,7 @@ import {
   knowledgeSourceTypeLabels,
   knowledgeStatusPresentation,
 } from '../constants/knowledge.constants';
-import { useBranchLabels } from '../hooks/use-branch-labels';
+import { useBranchLabels } from '@/features/organization';
 import { availableKnowledgeActions, type KnowledgeAction } from '../model/knowledge-actions.policy';
 import type { KnowledgeDocument } from '../model/knowledge-document.types';
 
@@ -42,58 +40,39 @@ export function KnowledgeDocumentTable({
   onAction: (document: KnowledgeDocument, action: KnowledgeAction) => void;
 }) {
   const branchLabel = useBranchLabels();
-  const columns: TableColumnType<KnowledgeDocument>[] = [
-    {
-      key: 'title',
-      title: 'Tiêu đề',
-      render: (_, row) => <Typography.Text strong>{row.title}</Typography.Text>,
-    },
-    {
-      key: 'source',
-      title: 'Nguồn',
-      width: 160,
-      // CONTRACT: DTO chỉ trả loại nguồn + id bài CMS, chưa kèm tiêu đề/slug bài gốc.
-      render: (_, row) => (
-        <div>
-          <div>{knowledgeSourceTypeLabels[row.sourceType]}</div>
-          {row.sourceId && <div className="text-xs text-slate-500">#{row.sourceId}</div>}
-        </div>
-      ),
-    },
-    {
-      key: 'audience',
-      title: 'Đối tượng',
-      width: 130,
-      render: (_, row) => <StatusTag status={row.audience} presentations={knowledgeAudiencePresentation} />,
-    },
-    {
-      key: 'branch',
-      title: 'Chi nhánh',
-      width: 170,
-      render: (_, row) => branchLabel(row.branchId) ?? <span className="text-slate-500">{ALL_BRANCHES_LABEL}</span>,
-    },
-    {
-      key: 'status',
-      title: 'Trạng thái',
-      width: 130,
-      render: (_, row) => <StatusTag status={row.status} presentations={knowledgeStatusPresentation} />,
-    },
-    { key: 'version', title: 'Phiên bản', width: 100, dataIndex: 'version' },
-    { key: 'chunkCount', title: 'Số đoạn', width: 90, dataIndex: 'chunkCount' },
-    {
-      key: 'reindexedAt',
-      title: 'Lập chỉ mục lúc',
-      width: 160,
-      render: (_, row) => formatDateTime(row.reindexedAt),
-    },
-    {
-      key: 'action',
-      title: '',
-      width: 96,
-      fixed: 'right',
-      render: (_, row) => (
-        <TableActions>
-          {availableKnowledgeActions(row, permissions).map((action) => (
+  const columns = useMemo<TableColumnType<KnowledgeDocument>[]>(
+    () => [
+      {
+        key: 'title',
+        title: 'Tiêu đề',
+        render: (_, row) => <Typography.Text strong>{row.title}</Typography.Text>,
+      },
+      {
+        key: 'source',
+        title: 'Nguồn',
+        width: 160,
+        // CONTRACT: DTO chỉ trả loại nguồn + id bài CMS, chưa kèm tiêu đề/slug bài gốc.
+        render: (_, row) => (
+          <div>
+            <div>{knowledgeSourceTypeLabels[row.sourceType]}</div>
+            {row.sourceId && <div className="text-xs text-slate-500">#{row.sourceId}</div>}
+          </div>
+        ),
+      },
+      col.status<KnowledgeDocument, KnowledgeDocument['audience']>('audience', 'Đối tượng', knowledgeAudiencePresentation, { width: 130 }),
+      {
+        key: 'branch',
+        title: 'Chi nhánh',
+        width: 170,
+        render: (_, row) => branchLabel(row.branchId) ?? <span className="text-slate-500">{ALL_BRANCHES_LABEL}</span>,
+      },
+      col.status<KnowledgeDocument, KnowledgeDocument['status']>('status', 'Trạng thái', knowledgeStatusPresentation, { width: 130 }),
+      col.text<KnowledgeDocument>('version', 'Phiên bản', { width: 100 }),
+      col.text<KnowledgeDocument>('chunkCount', 'Số đoạn', { width: 90 }),
+      col.dateTime<KnowledgeDocument>('reindexedAt', 'Lập chỉ mục lúc'),
+      col.actions<KnowledgeDocument>(
+        (row) =>
+          availableKnowledgeActions(row, permissions).map((action) => (
             <TableActionButton
               key={action}
               label={actionMeta[action].label}
@@ -102,11 +81,12 @@ export function KnowledgeDocumentTable({
               disabled={actionsDisabled}
               onClick={() => onAction(row, action)}
             />
-          ))}
-        </TableActions>
+          )),
+        { title: '', width: 96, align: undefined },
       ),
-    },
-  ];
+    ],
+    [actionsDisabled, branchLabel, onAction, permissions],
+  );
 
   return (
     <AdminTable

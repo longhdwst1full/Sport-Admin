@@ -2,9 +2,7 @@ import { useEffect, useMemo } from 'react';
 import {
   Alert,
   App,
-  Button,
   DatePicker,
-  Drawer,
   Form,
   Input,
   InputNumber,
@@ -30,6 +28,7 @@ import {
   type BannerFormValues,
   type BannerImageValue,
 } from '../model/banner-form.mapper';
+import { FormDrawer } from '@/foundation/overlay';
 
 /**
  * Bọc `ImageUploadField` (trả URL + assetId) thành một giá trị form. CONTRACT: API cần `assetId` của
@@ -146,22 +145,15 @@ export function BannerEditorDrawer({
   };
 
   return (
-    <Drawer
+    <FormDrawer
       title={editing ? `Sửa banner ${editing.code}` : 'Tạo banner'}
-      width={720}
       open={open}
       onClose={onClose}
-      destroyOnHidden
-      extra={(
-        <Button
-          type="primary"
-          loading={save.isPending}
-          disabled={isEdit && !editing}
-          onClick={() => form.submit()}
-        >
-          {isEdit ? 'Lưu thay đổi' : 'Tạo banner'}
-        </Button>
-      )}
+      onSubmit={() => form.submit()}
+      submitting={save.isPending}
+      submitDisabled={isEdit && !editing}
+      submitText={isEdit ? 'Lưu thay đổi' : 'Tạo banner'}
+      isDirty={() => form.isFieldsTouched()}
     >
       {isEdit && detail.isError && (
         <Alert className="mb-3" type="error" showIcon message="Không tải được banner" description={bannerCommandErrorMessage(detail.error)} />
@@ -264,6 +256,6 @@ export function BannerEditorDrawer({
           </Form>
         </>
       )}
-    </Drawer>
+    </FormDrawer>
   );
 }

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Checkbox, Form, Input, InputNumber, Modal, Radio, Select, Table, Typography } from 'antd';
+import { Alert, App, Checkbox, Form, Input, InputNumber, Modal, Radio, Select, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { AdminTable } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import {
   createAdminReturn,
@@ -13,7 +14,7 @@ import {
 import type { ReturnDetailDto, ReturnEligibilityDto, ReturnEligibilityLineDto } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import type { UploadedSignedImage } from '@/lib/media/upload-signed-image';
-import { RETURN_PERMISSION, returnFaultLabels, returnReasonLabels } from '../constants/return.constants';
+import { RETURN_PERMISSION, returnFaultOptions, returnReasonOptions } from '../constants/return.constants';
 import { CREATE_RETURN_TABLE_COLUMNS, type CreateReturnColumnId } from '../constants/return-table-columns';
 import { buildTableColumns } from '../model/build-table-columns';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
@@ -140,7 +141,7 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
           />
         )}
 
-        <Table
+        <AdminTable
           rowKey="orderItemId"
           size="small"
           pagination={false}
@@ -151,7 +152,7 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
 
         <div className="grid gap-x-4 sm:grid-cols-2">
           <Form.Item name="reasonCode" label="Lý do" rules={[{ required: true, message: 'Chọn lý do' }]}>
-            <Select options={Object.entries(returnReasonLabels).map(([value, label]) => ({ value, label }))} />
+            <Select options={returnReasonOptions} />
           </Form.Item>
           {canDecide && (
             <Form.Item
@@ -160,7 +161,7 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
               extra="Phiếu do bạn tạo được duyệt ngay."
               rules={[{ required: true, message: 'Chọn lỗi thuộc về ai' }]}
             >
-              <Radio.Group options={Object.entries(returnFaultLabels).map(([value, label]) => ({ value, label }))} />
+              <Radio.Group options={returnFaultOptions} />
             </Form.Item>
           )}
         </div>

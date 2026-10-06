@@ -1,9 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { ApartmentOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Descriptions, Form, InputNumber, Select, Space } from 'antd';
-import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { useDebounce } from 'use-debounce';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import * as yup from 'yup';
 import { PermissionGate } from '@/core/auth/permissions';
 import { FormSection } from '@/foundation/layout/form-section';
@@ -40,13 +39,12 @@ const emptyBundle: BundleFormValues = { bundleVariantId: '', items: [{ component
  */
 export function ProductBundleManager({ product, onChanged }: { product: ProductDetailDto; onChanged: () => Promise<void> }) {
   const { message } = App.useApp();
-  const [componentSearch, setComponentSearch] = useState('');
-  const [debouncedComponentSearch] = useDebounce(componentSearch.trim(), 300);
+  const componentSearch = useSearchState('', 300);
   const isDraft = product.status === 'DRAFT';
   const bundleForm = useForm<BundleFormValues>({ resolver: yupResolver(bundleSchema), defaultValues: emptyBundle });
   const bundleItems = useFieldArray({ control: bundleForm.control, name: 'items' });
   const componentOptions = useSearchActiveAdminProductVariants(
-    { search: debouncedComponentSearch || undefined, page: 1, limit: 20 },
+    { search: componentSearch.debounced, page: 1, limit: 20 },
     { query: { enabled: isDraft } },
   );
   const createBundle = useCreateAdminProductBundle({
@@ -123,7 +121,7 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
                             {...field}
                             showSearch
                             filterOption={false}
-                            onSearch={setComponentSearch}
+                            onSearch={componentSearch.setValue}
                             loading={componentOptions.isFetching}
                             options={(componentOptions.data?.items ?? []).map((option) => ({
                               value: option.id,

@@ -1,41 +1,29 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  DeleteOutlined,
   LockOutlined,
-  KeyOutlined,
   PlusOutlined,
-  QrcodeOutlined,
   SafetyCertificateOutlined,
-  StopOutlined,
   TeamOutlined,
-  UnlockOutlined,
   UserOutlined,
-  UserSwitchOutlined,
 } from '@ant-design/icons';
-import { Alert, Avatar, Button, Space, Tabs, Tag, Typography } from 'antd';
+import { Alert, Button, Tabs } from 'antd';
 import { useAuth } from '@/core/auth/auth-context';
 import { AdminTable } from '@/foundation/table';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { ManagementPage, StatusTag } from '@/foundation/management';
-import { TableActionButton, TableActions } from '@/foundation/table';
+import { ManagementPage } from '@/foundation/management';
 import {
   useListAdminPermissions,
   useListAdminRoles,
   useListAdminUsers,
 } from '@/generated/api/iam/iam';
-import type { UserDto, UserDtoStatus, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
+import type { UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
 import { RoleAssignmentDrawer } from '../components/role-assignment-drawer';
 import { RoleAssignmentRevokeModal } from '../components/role-assignment-revoke-modal';
 import { StaffCreationDrawer } from '../components/staff-creation-drawer';
 import { StaffLifecycleModal, type StaffLifecycleAction } from '../components/staff-lifecycle-modal';
+import { useRoleColumns, useUserColumns } from '../hooks/use-access-columns';
 import { useStaffMfaActions } from '../hooks/use-staff-mfa-actions';
-
-const userStatuses: Record<UserDtoStatus, { color: string; label: string }> = {
-  ACTIVE: { color: 'green', label: 'Hoạt động' },
-  LOCKED: { color: 'red', label: 'Đã khóa' },
-  INACTIVE: { color: 'default', label: 'Ngừng hoạt động' },
-};
 
 export function AccessPage() {
   const [activeTab, setActiveTab] = useState('users');
@@ -54,7 +42,7 @@ export function AccessPage() {
   const usersQuery = useListAdminUsers();
   const rolesQuery = useListAdminRoles({ query: { enabled: canViewRoles } });
   const permissionsQuery = useListAdminPermissions({ query: { enabled: canViewRoles } });
-  const users = usersQuery.data?.items ?? [];
+  const users = useMemo(() => usersQuery.data?.items ?? [], [usersQuery.data]);
   // Suy ra từ query để drawer phân quyền thấy ngay assignment vừa thêm/sửa/thu hồi.
   const assignmentUser = users.find((user) => user.id === assignmentUserId);
   const { developmentBypass } = useAuth();
@@ -62,6 +50,16 @@ export function AccessPage() {
   const permissions = permissionsQuery.data?.items ?? [];
   const loading =
     usersQuery.isPending || (canViewRoles && (rolesQuery.isPending || permissionsQuery.isPending));
+  const userColumns = useUserColumns({
+    canAssignRoles,
+    canManageUsers,
+    canManageMfa,
+    onAssign: (user) => setAssignmentUserId(user.id),
+    onRevoke: (user, assignment) => setRevokeTarget({ user, assignment }),
+    onLifecycle: (action, user) => setLifecycle({ action, user }),
+    staffMfa,
+  });
+  const roleColumns = useRoleColumns(users);
   const hasError =
     usersQuery.isError || (canViewRoles && (rolesQuery.isError || permissionsQuery.isError));
 
@@ -139,142 +137,7 @@ export function AccessPage() {
                 dataSource={users}
                 pagination={false}
                 scroll={{ x: 900 }}
-                columns={[
-                  {
-                    title: 'Người dùng',
-                    dataIndex: 'displayName',
-                    width: 240,
-                    render: (value, row) => (
-                      <Space>
-                        <Avatar>{value.slice(0, 1)}</Avatar>
-                        <div>
-                          <Typography.Text strong>{value}</Typography.Text>
-                          <div className="text-xs text-slate-500">{row.maskedEmail}</div>
-                        </div>
-                      </Space>
-                    ),
-                  },
-                  {
-                    title: 'Vai trò',
-                    dataIndex: 'assignments',
-                    width: 210,
-                    render: (assignments: UserRoleAssignmentDto[], user: UserDto) => (
-                      <Space size={[4, 4]} wrap>
-                        {assignments.map((assignment) => (
-                          <Space.Compact key={assignment.id}>
-                            <Tag color="blue" style={{ marginInlineEnd: 0 }}>{assignment.roleCode}</Tag>
-                            {canAssignRoles && assignment.roleCode !== 'OWNER' && (
-                              <Button
-                                size="small"
-                                danger
-                                type="link"
-                                onClick={() => setRevokeTarget({ user, assignment })}
-                              >
-                                Thu hồi
-                              </Button>
-                            )}
-                          </Space.Compact>
-                        ))}
-                      </Space>
-                    ),
-                  },
-                  {
-                    title: 'Phạm vi dữ liệu',
-                    dataIndex: 'assignments',
-                    width: 180,
-                    render: (assignments: UserRoleAssignmentDto[]) =>
-                      assignments.map((assignment) => assignment.scopeType).join(', ') ||
-                      'Chưa gán',
-                  },
-                  {
-                    title: 'Bảo mật đăng nhập',
-                    width: 190,
-                    render: (_, user) => (
-                      <div>
-                        {user.mustChangePassword
-                          ? <Tag color="gold">Phải đổi mật khẩu</Tag>
-                          : <Tag color="green">Mật khẩu đã đổi</Tag>}
-                        <div className="mt-1 text-xs text-slate-500">
-                          Sai liên tiếp: {user.failedLoginAttempts}/5
-                        </div>
-                        {user.lockReason && (
-                          <div className="mt-1 text-xs text-red-600">Lý do: {user.lockReason}</div>
-                        )}
-                      </div>
-                    ),
-                  },
-                  {
-                    title: 'Permission version',
-                    dataIndex: 'permissionVersion',
-                    align: 'center',
-                    width: 150,
-                  },
-                  {
-                    title: 'Trạng thái',
-                    dataIndex: 'status',
-                    width: 140,
-                    render: (value: UserDtoStatus) => (
-                      <StatusTag status={value} presentations={userStatuses} />
-                    ),
-                  },
-                  ...(canAssignRoles || canManageUsers || canManageMfa
-                    ? [
-                        {
-                          title: '',
-                          key: 'actions',
-                          width: canManageMfa ? 200 : 130,
-                          fixed: 'right' as const,
-                          render: (_: unknown, user: UserDto) => {
-                            const isOwner = user.assignments.some(
-                              ({ roleCode }) => roleCode === 'OWNER',
-                            );
-                            return (
-                              <TableActions>
-                                {canAssignRoles && !isOwner && (
-                                  <TableActionButton label={`Phân quyền cho ${user.displayName}`} icon={<UserSwitchOutlined />} onClick={() => setAssignmentUserId(user.id)} />
-                                )}
-                                {canManageMfa && !isOwner && user.userType === 'STAFF' && (
-                                  <>
-                                    <TableActionButton
-                                      label={`Xem QR 2FA của ${user.displayName}`}
-                                      icon={<QrcodeOutlined />}
-                                      onClick={() => staffMfa.viewQr(user)}
-                                    />
-                                    <TableActionButton
-                                      label={`Cấp lại QR 2FA cho ${user.displayName}`}
-                                      icon={<KeyOutlined />}
-                                      onClick={() => staffMfa.reissueQr(user)}
-                                    />
-                                    <TableActionButton
-                                      label={`Đặt lại 2FA của ${user.displayName}`}
-                                      danger
-                                      icon={<StopOutlined />}
-                                      onClick={() => staffMfa.resetMfa(user)}
-                                    />
-                                  </>
-                                )}
-                                {canManageUsers && !isOwner && user.status === 'ACTIVE' && (
-                                  <TableActionButton
-                                    label={`Xóa tài khoản ${user.displayName}`}
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    onClick={() => setLifecycle({ action: 'DELETE', user })}
-                                  />
-                                )}
-                                {canManageUsers && !isOwner && user.status === 'LOCKED' && (
-                                  <TableActionButton
-                                    label={`Mở khóa ${user.displayName}`}
-                                    icon={<UnlockOutlined />}
-                                    onClick={() => setLifecycle({ action: 'UNLOCK', user })}
-                                  />
-                                )}
-                              </TableActions>
-                            );
-                          },
-                        },
-                      ]
-                    : []),
-                ]}
+                columns={userColumns}
               />
             ),
           },
@@ -290,46 +153,7 @@ export function AccessPage() {
                       dataSource={roles}
                       pagination={false}
                       scroll={{ x: 900 }}
-                      columns={[
-                        {
-                          title: 'Vai trò',
-                          dataIndex: 'name',
-                          width: 220,
-                          render: (value, row) => (
-                            <div>
-                              <strong>{value}</strong>
-                              <div className="text-xs text-slate-500">{row.description}</div>
-                            </div>
-                          ),
-                        },
-                        {
-                          title: 'Loại',
-                          dataIndex: 'system',
-                          width: 120,
-                          render: (system) => <Tag>{system ? 'Hệ thống' : 'Tùy chỉnh'}</Tag>,
-                        },
-                        {
-                          title: 'Người dùng',
-                          key: 'users',
-                          align: 'center',
-                          width: 110,
-                          render: (_, role) =>
-                            users.filter((user) =>
-                              user.assignments.some((assignment) => assignment.roleId === role.id),
-                            ).length,
-                        },
-                        {
-                          title: 'Permission keys',
-                          dataIndex: 'permissionCodes',
-                          render: (values: string[]) => (
-                            <Space size={[4, 4]} wrap>
-                              {values.map((value) => (
-                                <Tag key={value}>{value}</Tag>
-                              ))}
-                            </Space>
-                          ),
-                        },
-                      ]}
+                      columns={roleColumns}
                     />
                   ),
                 },

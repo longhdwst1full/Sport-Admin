@@ -3,7 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Tag } from 'antd';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { FormSection } from '@/foundation/layout/form-section';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import { ProductType, type ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
 import {
   getListInventoryBalancesQueryKey,
@@ -14,6 +15,19 @@ import {
 } from '@/generated/api/inventory/inventory';
 import type { CreateStockAdjustmentDto, InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+
+const BALANCE_COLUMNS: ColumnsType<InventoryBalanceDto> = [
+  col.text<InventoryBalanceDto>('sku', 'SKU'),
+  col.text<InventoryBalanceDto>('warehouseCode', 'Kho'),
+  col.number<InventoryBalanceDto>('onHand', 'Tồn thực'),
+  col.number<InventoryBalanceDto>('reserved', 'Đang giữ'),
+  {
+    title: 'Khả dụng',
+    dataIndex: 'available',
+    align: 'right',
+    render: (value: number) => <Tag color={value > 0 ? 'green' : 'default'}>{value}</Tag>,
+  },
+];
 
 /** Phiếu tồn đầu chưa ghi được sau khi sản phẩm đã tạo; giữ nguyên payload và khoá để ghi lại. */
 export interface PendingOpeningStock {
@@ -113,18 +127,7 @@ export function ProductStockPanel({
             loading={balances.isPending}
             dataSource={rows}
             locale={{ emptyText: 'Chưa có tồn ở kho nào' }}
-            columns={[
-              { title: 'SKU', dataIndex: 'sku' },
-              { title: 'Kho', dataIndex: 'warehouseCode' },
-              { title: 'Tồn thực', dataIndex: 'onHand', align: 'right' },
-              { title: 'Đang giữ', dataIndex: 'reserved', align: 'right' },
-              {
-                title: 'Khả dụng',
-                dataIndex: 'available',
-                align: 'right',
-                render: (value: number) => <Tag color={value > 0 ? 'green' : 'default'}>{value}</Tag>,
-              },
-            ]}
+            columns={BALANCE_COLUMNS}
           />
         ) : (
           <Alert type="info" showIcon message="Tài khoản chưa có quyền xem tồn kho" />

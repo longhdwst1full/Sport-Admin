@@ -6,6 +6,7 @@ import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { canReplyToReview, REVIEW_STATUS_PRESENTATION } from '../model/review-moderation.policy';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const AUTHOR_TYPE_LABELS: Record<string, string> = {
   CUSTOMER: 'Khách hàng',
@@ -54,7 +55,7 @@ export function ReviewDetailDrawer({
     <Drawer
       open={Boolean(review)}
       onClose={closeDrawer}
-      width={680}
+      width={DRAWER_WIDTH.md}
       destroyOnHidden
       title={review ? `Đánh giá #${review.id}` : 'Chi tiết đánh giá'}
     >

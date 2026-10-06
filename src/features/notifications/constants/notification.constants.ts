@@ -1,3 +1,4 @@
+import { toOptions, type SelectOption } from '@/shared/utils/options';
 import type {
   AdminNotificationDtoStatus,
   ListAdminNotificationsStatus,
@@ -15,13 +16,8 @@ export const notificationStatusPresentation: Record<
   DEAD: { label: 'Dừng xử lý', color: 'error' },
 };
 
-export const notificationStatusOptions: Array<{
-  value: ListAdminNotificationsStatus;
-  label: string;
-}> = Object.entries(notificationStatusPresentation).map(([value, presentation]) => ({
-  value: value as ListAdminNotificationsStatus,
-  label: presentation.label,
-}));
+export const notificationStatusOptions: SelectOption<ListAdminNotificationsStatus>[] =
+  toOptions(notificationStatusPresentation);
 
 export const notificationEventLabels: Record<string, string> = {
   'auth.password_reset_requested': 'Đặt lại mật khẩu',

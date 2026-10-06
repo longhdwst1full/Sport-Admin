@@ -8,6 +8,7 @@ import { useCopilotChat } from '../hooks/use-copilot-chat';
 import { copilotErrorKind, copilotErrorMessage } from '../model/copilot-error';
 import type { CopilotPageHints } from '../model/copilot.types';
 import { CopilotMessageList } from './copilot-message-list';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 function hintTags(hints: CopilotPageHints | undefined): string[] {
   if (!hints) return [];
@@ -52,7 +53,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Drawer
       title="Trợ lý Copilot"
-      width={520}
+      width={DRAWER_WIDTH.sm}
       open={open}
       onClose={onClose}
       extra={(

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { useDebounce } from 'use-debounce';
 import {
   useListAdminCategories,
   useListAdminProducts,
 } from '@/generated/api/catalog/catalog';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { PRODUCT_LIST_DEFAULT_PAGE_SIZE } from '../constants/product-list.constants';
 import { toProductListRow } from '../model/product-list.mapper';
 
@@ -12,23 +13,19 @@ import { toProductListRow } from '../model/product-list.mapper';
  * TanStack Query vẫn là nguồn server state; hook chỉ giữ state điều khiển của màn hình.
  */
 export function useProductList() {
-  const [name, setNameState] = useState('');
-  const [sku, setSkuState] = useState('');
-  const [productNo, setProductNoState] = useState('');
-  const [category, setCategoryState] = useState<string>();
-  const [page, setPage] = useState(1);
+  const name = useSearchState();
+  const sku = useSearchState();
+  const productNo = useSearchState();
+  const [category, setCategory] = useState<string>();
   const [pageSize, setPageSize] = useState(PRODUCT_LIST_DEFAULT_PAGE_SIZE);
-
-  const [debouncedName] = useDebounce(name.trim(), 350);
-  const [debouncedSku] = useDebounce(sku.trim(), 350);
-  const [debouncedProductNo] = useDebounce(productNo.trim(), 350);
+  const [page, setPage] = useListPageReset([name.debounced, sku.debounced, productNo.debounced, category]);
 
   const query = useListAdminProducts({
     page,
     limit: pageSize,
-    name: debouncedName || undefined,
-    sku: debouncedSku || undefined,
-    productNo: debouncedProductNo || undefined,
+    name: name.debounced,
+    sku: sku.debounced,
+    productNo: productNo.debounced,
     category,
   });
   const categories = useListAdminCategories();
@@ -48,28 +45,15 @@ export function useProductList() {
     [categories.data?.items],
   );
 
-  const resetPage = () => setPage(1);
   return {
-    name,
-    setName: (value: string) => {
-      setNameState(value);
-      resetPage();
-    },
-    sku,
-    setSku: (value: string) => {
-      setSkuState(value);
-      resetPage();
-    },
-    productNo,
-    setProductNo: (value: string) => {
-      setProductNoState(value);
-      resetPage();
-    },
+    name: name.value,
+    setName: name.setValue,
+    sku: sku.value,
+    setSku: sku.setValue,
+    productNo: productNo.value,
+    setProductNo: productNo.setValue,
     category,
-    setCategory: (value?: string) => {
-      setCategoryState(value);
-      resetPage();
-    },
+    setCategory,
     page,
     pageSize,
     onPageChange: (nextPage: number, nextPageSize: number) => {

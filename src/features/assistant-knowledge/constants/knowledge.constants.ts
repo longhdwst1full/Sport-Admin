@@ -1,4 +1,5 @@
 import type { StatusPresentation } from '@/foundation/management';
+import { toOptions } from '@/shared/utils/options';
 import type { KnowledgeAudience, KnowledgeSourceType, KnowledgeStatus } from '@/generated/api/assistant/assistant.schemas';
 import type { ContentPostType } from '@/generated/api/content/content.schemas';
 
@@ -49,13 +50,9 @@ export const knowledgeStatusPresentation: Record<KnowledgeStatus, StatusPresenta
   ARCHIVED: { label: 'Đã lưu trữ', color: 'default' },
 };
 
-export const knowledgeAudienceOptions = Object.entries(knowledgeAudiencePresentation).map(
-  ([value, { label }]) => ({ value, label }),
-);
+export const knowledgeAudienceOptions = toOptions(knowledgeAudiencePresentation);
 
-export const knowledgeStatusOptions = Object.entries(knowledgeStatusPresentation).map(
-  ([value, { label }]) => ({ value, label }),
-);
+export const knowledgeStatusOptions = toOptions(knowledgeStatusPresentation);
 
 /** Nhãn loại bài CMS cho bộ lọc của ô chọn bài; enum lấy từ SDK content đã sinh. */
 export const contentPostTypeLabels: Record<ContentPostType, string> = {
@@ -65,6 +62,8 @@ export const contentPostTypeLabels: Record<ContentPostType, string> = {
   ABOUT: 'Giới thiệu',
   POLICY: 'Chính sách',
 };
+
+export const contentPostTypeOptions = toOptions(contentPostTypeLabels);
 
 export const knowledgeSourceTypeLabels: Record<KnowledgeSourceType, string> = {
   CMS_POST: 'Bài CMS',

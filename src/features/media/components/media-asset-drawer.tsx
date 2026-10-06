@@ -19,6 +19,7 @@ import {
   IMAGE_FALLBACK_SRC,
 } from '../constants/media-library.constants';
 import { formatAssetSize } from '../model/media-format';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 /**
  * Chi tiết một ảnh: nơi đang dùng và xoá khỏi Cloudinary.
@@ -35,7 +36,7 @@ export function MediaAssetDrawer({
   canManage: boolean;
   onClose: () => void;
 }) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const [reason, setReason] = useState('');
   const asset = useGetAdminMediaAsset(assetId ?? '', { query: { enabled: Boolean(assetId) } });
@@ -73,7 +74,7 @@ export function MediaAssetDrawer({
         setReason('');
         onClose();
       }}
-      width={560}
+      width={DRAWER_WIDTH.sm}
       title="Chi tiết ảnh"
       destroyOnHidden
     >
@@ -143,7 +144,21 @@ export function MediaAssetDrawer({
                 disabled={!deletable || trimmedReason.length < MEDIA_DELETE_REASON.MIN}
                 loading={remove.isPending}
                 onClick={() =>
-                  remove.mutate({ id: data.id, data: { expectedVersion: data.version, reason: trimmedReason } })
+                  modal.confirm({
+                    title: 'Xoá vĩnh viễn ảnh này?',
+                    content: 'Ảnh bị xoá khỏi Cloudinary và không khôi phục được.',
+                    okText: 'Xoá ảnh',
+                    okButtonProps: { danger: true },
+                    cancelText: 'Huỷ',
+                    // Lỗi đã báo qua `onError` của mutation; nuốt reject để modal đóng thay vì treo.
+                    onOk: () =>
+                      remove
+                        .mutateAsync({
+                          id: data.id,
+                          data: { expectedVersion: data.version, reason: trimmedReason },
+                        })
+                        .catch(() => undefined),
+                  })
                 }
               >
                 Xoá ảnh

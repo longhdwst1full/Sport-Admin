@@ -8,7 +8,7 @@ import {
   supportTicketPriorityPresentation,
   supportTicketStatusPresentation,
 } from '../constants/support.constants';
-import { useBranchLabels } from '../hooks/use-branch-labels';
+import { useBranchLabels } from '@/features/organization';
 import { useSupportTicket } from '../hooks/use-support-tickets';
 import { useSupportTicketCommand, type SupportTicketCommand } from '../hooks/use-support-ticket-command';
 import {
@@ -21,6 +21,7 @@ import type { SupportTicketDetail } from '../model/support-ticket.types';
 import { SupportReplyBox } from './support-reply-box';
 import { SupportTicketActionModal } from './support-ticket-action-modal';
 import { SupportTicketThread } from './support-ticket-thread';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const actionButtons: Record<SupportTicketAction, { label: string; type?: 'primary' }> = {
   assign: { label: 'Giao việc' },
@@ -75,7 +76,7 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
     <Drawer
       open={Boolean(ticketId)}
       onClose={closeDrawer}
-      width={880}
+      width={DRAWER_WIDTH.lg}
       title={ticket ? (
         <div className="flex flex-wrap items-center gap-3">
           <span>{ticket.ticketNo}</span>

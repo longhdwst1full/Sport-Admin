@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
-import { LinkOutlined, ReloadOutlined } from '@ant-design/icons';
-import { App, Button, Select, Tooltip } from 'antd';
+import { LinkOutlined } from '@ant-design/icons';
+import { App, Button, Select } from 'antd';
 import { useSearchParams } from 'react-router-dom';
 import { usePermissions } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
+import { FilterBar, RefreshButton } from '@/foundation/table';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { AttachKnowledgePostModal } from '../components/attach-knowledge-post-modal';
 import { KnowledgeDocumentTable } from '../components/knowledge-document-table';
 import { KnowledgeAudience, KnowledgeStatus } from '@/generated/api/assistant/assistant.schemas';
-import { KnowledgeBranchSelect } from '../components/knowledge-branch-select';
+import { BranchSelect } from '@/features/organization';
 import {
   ALL_BRANCHES_LABEL,
   KNOWLEDGE_PAGE_SIZE,
@@ -128,7 +129,7 @@ export function KnowledgePage() {
           </Button>
         )}
         filters={(
-          <div className="flex w-full flex-wrap gap-3">
+          <FilterBar actions={<RefreshButton onRefresh={list.refetch} loading={list.isFetching} />}>
             <Select
               allowClear
               className="min-w-44"
@@ -145,21 +146,14 @@ export function KnowledgePage() {
               placeholder="Đối tượng"
               options={knowledgeAudienceOptions}
             />
-            <KnowledgeBranchSelect
+            <BranchSelect
+              allowClear
               className="min-w-48"
               placeholder={ALL_BRANCHES_LABEL}
               value={branchId}
               onChange={(value) => updateParam('branch', value)}
             />
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                aria-label="Làm mới"
-                loading={list.isFetching}
-                onClick={() => void list.refetch()}
-              />
-            </Tooltip>
-          </div>
+          </FilterBar>
         )}
       >
         {list.isError && (

@@ -6,7 +6,8 @@ import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { PermissionGate } from '@/core/auth/permissions';
 import { FormSection } from '@/foundation/layout/form-section';
-import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col, TableActionButton } from '@/foundation/table';
 import {
   useArchiveAdminProductVariant,
   useCreateAdminProductVariant,
@@ -14,6 +15,7 @@ import {
 } from '@/generated/api/catalog/catalog';
 import { ProductType, type ProductDetailDto, type ProductVariantDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatMoney } from '@/lib/format/money';
 import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../../constants/product-list.constants';
 import { ProductPricePanel } from '../product-price-panel';
 import { VariantEditDrawer } from '../variant-edit-drawer';
@@ -40,9 +42,7 @@ const newVariantSchema: yup.ObjectSchema<NewVariantValues> = yup.object({
   heightMm: yup.number().integer('Chiều cao phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
 });
 
-const emptyNewVariant: NewVariantValues = { name: '', sku: '', barcode: '', weightGrams: 0 };
-const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
-const DIMENSIONS = [
+const emptyNewVariant: NewVariantValues = { name: '', sku: '', barcode: '', weightGrams: 0 };const DIMENSIONS = [
   ['weightGrams', 'Khối lượng (g)', 0],
   ['lengthMm', 'Dài (mm)', 1],
   ['widthMm', 'Rộng (mm)', 1],
@@ -130,6 +130,53 @@ export function ProductVariantsManager({
     });
   };
 
+  // Cột phụ thuộc trạng thái sản phẩm và các mutation của khối này nên dựng lại mỗi render, không memo.
+  const variantColumns: ColumnsType<ProductVariantDto> = [
+    col.text<ProductVariantDto>('sku', 'SKU'),
+    col.text<ProductVariantDto>('name', 'Tên biến thể'),
+    col.text<ProductVariantDto>('barcode', 'Barcode'),
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      render: (value: string) => <Tag color={value === 'ACTIVE' ? 'green' : 'default'}>{value}</Tag>,
+    },
+    {
+      title: 'Giá đã VAT',
+      dataIndex: 'effectivePrice',
+      align: 'right',
+      render: (value?: string | null) => (value ? formatMoney(value) : <Tag color="orange">Chưa có giá</Tag>),
+    },
+    ...(isBundle
+      ? [{
+          title: 'Combo',
+          key: 'bundle',
+          render: (_: unknown, variant: ProductVariantDto) =>
+            variant.bundle ? `${variant.bundle.components.length} thành phần` : <Tag color="orange">Chưa khai</Tag>,
+        }]
+      : []),
+    col.actions<ProductVariantDto>(
+      (variant) => (
+        <PermissionGate permission="catalog.product.manage">
+          <TableActionButton
+            label={`Sửa SKU ${variant.sku}`}
+            icon={<EditOutlined />}
+            disabled={isArchived}
+            onClick={() => setEditingVariant(variant)}
+          />
+          <TableActionButton
+            label={variant.status === 'ACTIVE' ? 'Lưu trữ SKU' : 'Kích hoạt SKU'}
+            icon={variant.status === 'ACTIVE' ? <StopOutlined /> : <CheckCircleOutlined />}
+            danger={variant.status === 'ACTIVE'}
+            disabled={isArchived}
+            loading={archiveVariant.isPending || reactivateVariant.isPending}
+            onClick={() => confirmVariantLifecycle(variant)}
+          />
+        </PermissionGate>
+      ),
+      { title: '', width: 100 },
+    ),
+  ];
+
   return (
     <div className="space-y-4">
       <FormSection
@@ -144,57 +191,7 @@ export function ProductVariantsManager({
           pagination={false}
           dataSource={product.variants}
           locale={{ emptyText: 'Chưa có SKU' }}
-          columns={[
-            { title: 'SKU', dataIndex: 'sku' },
-            { title: 'Tên biến thể', dataIndex: 'name' },
-            { title: 'Barcode', dataIndex: 'barcode', render: (value?: string) => value ?? '—' },
-            {
-              title: 'Trạng thái',
-              dataIndex: 'status',
-              render: (value: string) => <Tag color={value === 'ACTIVE' ? 'green' : 'default'}>{value}</Tag>,
-            },
-            {
-              title: 'Giá đã VAT',
-              dataIndex: 'effectivePrice',
-              align: 'right',
-              render: (value?: string | null) => (value ? money.format(Number(value)) : <Tag color="orange">Chưa có giá</Tag>),
-            },
-            ...(isBundle
-              ? [{
-                  title: 'Combo',
-                  key: 'bundle',
-                  render: (_: unknown, variant: ProductVariantDto) =>
-                    variant.bundle ? `${variant.bundle.components.length} thành phần` : <Tag color="orange">Chưa khai</Tag>,
-                }]
-              : []),
-            {
-              title: '',
-              key: 'actions',
-              align: 'right',
-              width: 100,
-              fixed: 'right',
-              render: (_, variant) => (
-                <PermissionGate permission="catalog.product.manage">
-                  <TableActions>
-                    <TableActionButton
-                      label={`Sửa SKU ${variant.sku}`}
-                      icon={<EditOutlined />}
-                      disabled={isArchived}
-                      onClick={() => setEditingVariant(variant)}
-                    />
-                    <TableActionButton
-                      label={variant.status === 'ACTIVE' ? 'Lưu trữ SKU' : 'Kích hoạt SKU'}
-                      icon={variant.status === 'ACTIVE' ? <StopOutlined /> : <CheckCircleOutlined />}
-                      danger={variant.status === 'ACTIVE'}
-                      disabled={isArchived}
-                      loading={archiveVariant.isPending || reactivateVariant.isPending}
-                      onClick={() => confirmVariantLifecycle(variant)}
-                    />
-                  </TableActions>
-                </PermissionGate>
-              ),
-            },
-          ]}
+          columns={variantColumns}
         />
 
         {isDraft ? (

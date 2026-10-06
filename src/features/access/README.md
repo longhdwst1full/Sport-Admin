@@ -19,7 +19,7 @@
 - `components/staff-creation-drawer.tsx`, `role-assignment-drawer.tsx` sở hữu form; `*-modal.tsx` sở hữu xác nhận hành động huỷ/khoá.
 - `model/staff-creation.mapper.ts`, `role-assignment.mapper.ts` là nơi duy nhất đọc tên field của DTO, có unit test đi kèm.
 - `constants/access.constants.ts` chỉ giữ nhãn trình bày vai trò (tag, màu, mô tả dự phòng). Tên vai trò và số quyền luôn đọc từ `listAdminRoles`, không có danh sách vai trò fallback.
-- `components/access-branch-select.tsx` là ô chọn chi nhánh ACTIVE (tìm server, cuộn tải thêm) dùng cho dòng phạm vi bổ sung và drawer phân quyền.
+- Ô chọn chi nhánh ACTIVE dùng `BranchSelect` của `@/features/organization` (`labelFormat="code-name"`); call site tự chuyển xoá chọn thành `''` cho form.
 
 ## Luồng phân quyền (không có API nguyên tử mới)
 

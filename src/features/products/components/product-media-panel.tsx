@@ -10,7 +10,8 @@ import {
 } from '@/generated/api/catalog/catalog';
 import type { ProductDetailDto, ProductMediaDto } from '@/generated/api/catalog/catalog.schemas';
 import { useCan } from '@/core/auth/permissions';
-import { AdminTable, TableActionButton, TableActions } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col, TableActionButton } from '@/foundation/table';
 import { uploadImage } from '@/lib/media/upload-image';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { reorderProductMedia } from '../model/product-media.policy';
@@ -106,6 +107,68 @@ export function ProductMediaPanel({
     });
   };
 
+  // Cột phụ thuộc phiên bản sản phẩm và các mutation của khối này nên dựng lại mỗi render, không memo.
+  const mediaColumns: ColumnsType<ProductMediaDto> = [
+    { title: 'Ảnh', width: 74, render: (_, row) => <Image width={52} height={52} className="object-cover" src={row.thumbnailUrl ?? row.secureUrl} /> },
+    col.text<ProductMediaDto>('altText', 'Alt text', { width: undefined }),
+    {
+      title: 'Phạm vi',
+      dataIndex: 'variantId',
+      render: (variantId) => variantId
+        ? product.variants.find(({ id }) => id === variantId)?.sku ?? 'SKU không tồn tại'
+        : 'Toàn sản phẩm',
+    },
+    { title: 'Ảnh chính', dataIndex: 'isPrimary', align: 'center', render: (value) => value ? <Tag color="gold">Chính</Tag> : '—' },
+    {
+      title: 'Thứ tự',
+      width: 110,
+      render: (_, row, index) => (
+        <Space size={0}>
+          <Button type="text" icon={<UpOutlined />} disabled={pending || index === 0} onClick={() => move(index, -1)} />
+          <Button type="text" icon={<DownOutlined />} disabled={pending || index === product.media.length - 1} onClick={() => move(index, 1)} />
+        </Space>
+      ),
+    },
+    col.actions<ProductMediaDto>(
+      (row) => (
+        <>
+          <TableActionButton label="Sửa thông tin ảnh" icon={<EditOutlined />} disabled={pending} onClick={() => setEditing(row)} />
+          {!row.isPrimary && (
+            <TableActionButton
+              label="Đặt làm ảnh chính"
+              icon={<StarOutlined />}
+              disabled={pending}
+              onClick={() => update.mutate({
+                id: product.id,
+                mediaId: row.id,
+                data: { isPrimary: true, expectedProductVersion: product.version },
+              })}
+            />
+          )}
+          <TableActionButton
+            label="Xóa ảnh"
+            danger
+            icon={<DeleteOutlined />}
+            disabled={pending}
+            onClick={() => modal.confirm({
+              title: 'Xóa vĩnh viễn ảnh?',
+              content: 'Ảnh sẽ bị xóa khỏi sản phẩm và Cloudinary. Hệ thống sẽ chặn nếu ảnh còn được nghiệp vụ khác sử dụng.',
+              okText: 'Xóa ảnh',
+              okButtonProps: { danger: true },
+              cancelText: 'Hủy',
+              onOk: () => remove.mutateAsync({
+                id: product.id,
+                mediaId: row.id,
+                data: { expectedProductVersion: product.version },
+              }),
+            })}
+          />
+        </>
+      ),
+      { title: '', width: 130 },
+    ),
+  ];
+
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-end gap-3">
@@ -130,75 +193,13 @@ export function ProductMediaPanel({
         </Upload>
       </div>
 
-      <AdminTable
+      <AdminTable<ProductMediaDto>
         rowKey="id"
         size="small"
         pagination={false}
         dataSource={product.media}
         locale={{ emptyText: 'Chưa có ảnh sản phẩm' }}
-        columns={[
-          { title: 'Ảnh', width: 74, render: (_, row) => <Image width={52} height={52} className="object-cover" src={row.thumbnailUrl ?? row.secureUrl} /> },
-          { title: 'Alt text', dataIndex: 'altText', render: (value) => value || '—' },
-          {
-            title: 'Phạm vi',
-            dataIndex: 'variantId',
-            render: (variantId) => variantId
-              ? product.variants.find(({ id }) => id === variantId)?.sku ?? 'SKU không tồn tại'
-              : 'Toàn sản phẩm',
-          },
-          { title: 'Ảnh chính', dataIndex: 'isPrimary', align: 'center', render: (value) => value ? <Tag color="gold">Chính</Tag> : '—' },
-          {
-            title: 'Thứ tự',
-            width: 110,
-            render: (_, row, index) => (
-              <Space size={0}>
-                <Button type="text" icon={<UpOutlined />} disabled={pending || index === 0} onClick={() => move(index, -1)} />
-                <Button type="text" icon={<DownOutlined />} disabled={pending || index === product.media.length - 1} onClick={() => move(index, 1)} />
-              </Space>
-            ),
-          },
-          {
-            title: '',
-            width: 130,
-            fixed: 'right',
-            align: 'right',
-            render: (_, row) => (
-              <TableActions>
-                <TableActionButton label="Sửa thông tin ảnh" icon={<EditOutlined />} disabled={pending} onClick={() => setEditing(row)} />
-                {!row.isPrimary && (
-                  <TableActionButton
-                    label="Đặt làm ảnh chính"
-                    icon={<StarOutlined />}
-                    disabled={pending}
-                    onClick={() => update.mutate({
-                      id: product.id,
-                      mediaId: row.id,
-                      data: { isPrimary: true, expectedProductVersion: product.version },
-                    })}
-                  />
-                )}
-                <TableActionButton
-                  label="Xóa ảnh"
-                  danger
-                  icon={<DeleteOutlined />}
-                  disabled={pending}
-                  onClick={() => modal.confirm({
-                    title: 'Xóa vĩnh viễn ảnh?',
-                    content: 'Ảnh sẽ bị xóa khỏi sản phẩm và Cloudinary. Hệ thống sẽ chặn nếu ảnh còn được nghiệp vụ khác sử dụng.',
-                    okText: 'Xóa ảnh',
-                    okButtonProps: { danger: true },
-                    cancelText: 'Hủy',
-                    onOk: () => remove.mutateAsync({
-                      id: product.id,
-                      mediaId: row.id,
-                      data: { expectedProductVersion: product.version },
-                    }),
-                  })}
-                />
-              </TableActions>
-            ),
-          },
-        ]}
+        columns={mediaColumns}
       />
 
       <Modal

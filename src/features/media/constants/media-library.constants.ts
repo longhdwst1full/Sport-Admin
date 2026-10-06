@@ -1,4 +1,5 @@
 import type { StatusPresentation } from '@/foundation/management';
+import { toOptions } from '@/shared/utils/options';
 import type { MediaAssetStatus, MediaUsageType } from '@/generated/api/media/media.schemas';
 
 export const MEDIA_LIBRARY_PAGE_SIZE = 30;
@@ -23,10 +24,7 @@ export const mediaStatusPresentation: Record<MediaAssetStatus, StatusPresentatio
   INACTIVE: { label: 'Đã xoá khỏi Cloudinary', color: 'default' },
 };
 
-export const mediaStatusOptions = (Object.keys(mediaStatusPresentation) as MediaAssetStatus[]).map((value) => ({
-  value,
-  label: mediaStatusPresentation[value].label,
-}));
+export const mediaStatusOptions = toOptions(mediaStatusPresentation);
 
 export const mediaUsageLabels: Record<MediaUsageType, string> = {
   PRODUCT: 'Sản phẩm',

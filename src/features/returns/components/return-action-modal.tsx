@@ -1,21 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Alert, Checkbox, Form, Input, Modal, Radio, Select, Table, Typography } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Checkbox, Form, Input, Modal, Radio, Select, Typography } from 'antd';
 import { createAdminReturnRefundProofUpload } from '@/generated/api/returns/returns';
 import type {
   ReturnCondition,
-  ReturnItemDisposition,
   RefundMethod,
   ReturnDetailDto,
   ReturnItemDto,
 } from '@/generated/api/returns/returns.schemas';
+import { AdminTable } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import type { UploadedSignedImage } from '@/lib/media/upload-signed-image';
 import {
-  inspectionConditionLabels,
+  damagedDispositionOptions,
+  inspectionConditionOptions,
   inspectionDispositionLabels,
   refundMethodLabels,
-  returnFaultLabels,
+  returnFaultOptions,
 } from '../constants/return.constants';
 import { INSPECTION_TABLE_COLUMNS, type InspectionColumnId } from '../constants/return-table-columns';
 import type { ReturnCommand } from '../hooks/use-return-command';
@@ -67,6 +68,10 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
   const method = Form.useWatch('method', form);
   const amount = Form.useWatch('amount', form);
   const conditions = Form.useWatch('items', form);
+  const refundMethodOptions = useMemo(
+    () => detail.allowedRefundMethods.map((value) => ({ value, label: refundMethodLabels[value] })),
+    [detail.allowedRefundMethods],
+  );
 
   useEffect(() => {
     if (!action) return;
@@ -136,10 +141,7 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
     ),
     condition: (_item, index) => (
       <Form.Item name={['items', index, 'condition']} noStyle rules={[{ required: true }]}>
-        <Select
-          className="w-full"
-          options={Object.entries(inspectionConditionLabels).map(([value, label]) => ({ value, label }))}
-        />
+        <Select className="w-full" options={inspectionConditionOptions} />
       </Form.Item>
     ),
     disposition: (_item, index) => {
@@ -154,11 +156,7 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
       }
       return (
         <Form.Item name={['items', index, 'disposition']} noStyle rules={[{ required: true, message: 'Chọn cách xử lý hàng hỏng' }]}>
-          <Select<ReturnItemDisposition>
-            className="w-full"
-            placeholder="Chọn"
-            options={(['HOLD', 'WRITE_OFF'] as const).map((value) => ({ value, label: inspectionDispositionLabels[value] }))}
-          />
+          <Select className="w-full" placeholder="Chọn" options={damagedDispositionOptions} />
         </Form.Item>
       );
     },
@@ -193,9 +191,7 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
               extra="Lỗi cửa hàng thì số tiền hoàn cộng thêm phí giao ban đầu."
               rules={[{ required: true, message: 'Chọn lỗi thuộc về ai' }]}
             >
-              <Radio.Group
-                options={Object.entries(returnFaultLabels).map(([value, label]) => ({ value, label }))}
-              />
+              <Radio.Group options={returnFaultOptions} />
             </Form.Item>
             {noteField}
           </>
@@ -237,7 +233,7 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
               showIcon
               message="Chỉ hàng còn bán được mới nhập lại kho bán. Hàng hỏng chọn giữ lại hoặc huỷ; hàng không nhận được không được hoàn tiền."
             />
-            <Table
+            <AdminTable
               rowKey="id"
               size="small"
               pagination={false}
@@ -256,9 +252,7 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
               <div className="font-semibold">Tối đa còn hoàn: <CurrencyAmount amount={refundable} /></div>
             </div>
             <Form.Item name="method" label="Phương thức" rules={[{ required: true }]}>
-              <Radio.Group
-                options={detail.allowedRefundMethods.map((value) => ({ value, label: refundMethodLabels[value] }))}
-              />
+              <Radio.Group options={refundMethodOptions} />
             </Form.Item>
             <Form.Item
               name="amount"

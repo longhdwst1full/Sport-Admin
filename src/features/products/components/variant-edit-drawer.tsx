@@ -1,5 +1,5 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { App, Button, Drawer, Form, Input, InputNumber } from 'antd';
+import { App, Form, Input, InputNumber } from 'antd';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -7,6 +7,7 @@ import { useUpdateAdminProductVariant } from '@/generated/api/catalog/catalog';
 import type { ProductVariantDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import { toUpdateVariantDto, toVariantEditValues, type VariantEditValues } from '../model/variant-edit.mapper';
+import { FormDrawer } from '@/foundation/overlay';
 
 const schema: yup.ObjectSchema<VariantEditValues> = yup.object({
   name: yup.string().trim().required('Nhập tên phiên bản').max(255),
@@ -32,7 +33,7 @@ export function VariantEditDrawer({
     handleSubmit,
     reset,
     setError,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<VariantEditValues>({ resolver: yupResolver(schema) });
   const update = useUpdateAdminProductVariant({
     mutation: {
@@ -64,20 +65,15 @@ export function VariantEditDrawer({
   });
 
   return (
-    <Drawer
+    <FormDrawer
       open={Boolean(variant)}
       title={`Sửa SKU — ${variant?.sku ?? ''}`}
-      width={520}
-      destroyOnHidden
+      size="sm"
       onClose={onClose}
-      footer={(
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose}>Hủy</Button>
-          <Button type="primary" loading={update.isPending} onClick={() => void submit()}>
-            Lưu thay đổi
-          </Button>
-        </div>
-      )}
+      onSubmit={() => void submit()}
+      submitting={update.isPending}
+      submitText="Lưu thay đổi"
+      isDirty={() => isDirty}
     >
       <Form layout="vertical">
         <Form.Item label="Tên phiên bản" required validateStatus={errors.name ? 'error' : undefined} help={errors.name?.message}>
@@ -105,6 +101,6 @@ export function VariantEditDrawer({
           ))}
         </div>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

@@ -20,12 +20,14 @@ import {
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { AdminTable } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { formatMoney, moneyFormatter } from '@/lib/format/money';
 import { orderStatusPresentation } from '@/features/orders';
 import type { OrderStatus } from '@/generated/api/orders/orders.schemas';
 import { DashboardStatCard } from '../components/dashboard-stat-card';
 import { JobHealthCard } from '../components/job-health-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
 import { ReportExportButton } from '../components/report-export-button';
+import { BRANCH_REVENUE_COLUMNS, TOP_CUSTOMER_COLUMNS, TOP_PRODUCT_COLUMNS } from '../components/report-table-columns';
 
 // `recharts` nặng ~390 kB. Tách khỏi chunk của trang để thẻ số liệu và bảng phía trên vẽ được ngay;
 // đồ thị tự tải sau và dùng đúng `Skeleton` như trạng thái đang tải dữ liệu nên không nhảy layout.
@@ -64,12 +66,6 @@ const PERIOD_DESCRIPTION: Record<Granularity, string> = {
   QUARTER: '8 quý gần nhất',
   YEAR: '5 năm gần nhất',
 };
-
-const money = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-  maximumFractionDigits: 0,
-});
 
 const todayLabel = new Intl.DateTimeFormat('vi-VN', {
   weekday: 'long',
@@ -133,9 +129,9 @@ export function DashboardPage() {
       // Số chính là doanh thu thuần: hoàn tiền không đổi trạng thái đơn, nên con số gộp vẫn đếm cả
       // đơn đã hoàn toàn bộ.
       label: 'Doanh thu thuần (30 ngày)',
-      value: canSeeRevenue ? money.format(Number(revenue.data?.netRevenue ?? 0)) : '—',
+      value: canSeeRevenue ? formatMoney(revenue.data?.netRevenue ?? 0) : '—',
       hint: canSeeRevenue
-        ? `${revenue.data?.completedOrderCount ?? 0} đơn hoàn tất · đã hoàn ${money.format(Number(revenue.data?.refundedAmount ?? 0))}`
+        ? `${revenue.data?.completedOrderCount ?? 0} đơn hoàn tất · đã hoàn ${formatMoney(revenue.data?.refundedAmount ?? 0)}`
         : 'Cần quyền xem doanh thu',
       icon: <DollarOutlined />,
       tone: 'brand' as const,
@@ -143,7 +139,7 @@ export function DashboardPage() {
     },
     {
       label: 'Dự thu',
-      value: canSeeRevenue ? money.format(Number(revenue.data?.expectedRevenue ?? 0)) : '—',
+      value: canSeeRevenue ? formatMoney(revenue.data?.expectedRevenue ?? 0) : '—',
       hint: canSeeRevenue
         ? `${revenue.data?.expectedOrderCount ?? 0} đơn đã giao, chờ hoàn tất`
         : 'Cần quyền xem doanh thu',
@@ -306,7 +302,7 @@ export function DashboardPage() {
               <Empty description={`Chưa có đơn nào hoàn tất trong ${PERIOD_DESCRIPTION[granularity]}`} />
             ) : (
               <Suspense fallback={<Skeleton active />}>
-                <RevenueAreaChart data={revenueSeries} money={money} />
+                <RevenueAreaChart data={revenueSeries} money={moneyFormatter} />
               </Suspense>
             )}
           </Card>
@@ -374,40 +370,7 @@ export function DashboardPage() {
             size="small"
             pagination={false}
             dataSource={revenue.data?.byBranch ?? []}
-            columns={[
-              { title: 'Chi nhánh', dataIndex: 'branchName' },
-              {
-                title: 'Đã hoàn tất',
-                dataIndex: 'completedRevenue',
-                align: 'right',
-                render: (value: string) => money.format(Number(value)),
-              },
-              { title: 'Số đơn', dataIndex: 'completedOrderCount', width: 90, align: 'right' },
-              {
-                title: 'Dự thu',
-                dataIndex: 'expectedRevenue',
-                align: 'right',
-                render: (value: string) => (
-                  <span className="text-slate-500">{money.format(Number(value))}</span>
-                ),
-              },
-              {
-                title: 'Đã hoàn tiền',
-                dataIndex: 'refundedAmount',
-                align: 'right',
-                render: (value: string) => (
-                  <span className={Number(value) > 0 ? 'text-rose-600' : 'text-slate-400'}>
-                    {money.format(Number(value))}
-                  </span>
-                ),
-              },
-              {
-                title: 'Thuần',
-                dataIndex: 'netRevenue',
-                align: 'right',
-                render: (value: string) => <span className="font-semibold">{money.format(Number(value))}</span>,
-              },
-            ]}
+            columns={BRANCH_REVENUE_COLUMNS}
           />
         </Card>
       )}
@@ -474,31 +437,7 @@ export function DashboardPage() {
                 loading={topCustomers.isPending}
                 dataSource={topCustomers.data?.items ?? []}
                 locale={{ emptyText: 'Chưa có khách nào hoàn tất đơn trong khoảng này' }}
-                columns={[
-                  {
-                    title: 'Khách hàng',
-                    dataIndex: 'name',
-                    ellipsis: true,
-                    render: (value: string, row: { customerNo: string }) => (
-                      <div>
-                        <div className="font-semibold text-slate-800">{value}</div>
-                        <div className="font-mono text-xs text-slate-500">{row.customerNo}</div>
-                      </div>
-                    ),
-                  },
-                  { title: 'Số đơn', dataIndex: 'orderCount', width: 80, align: 'right' },
-                  {
-                    title: 'Đã chi',
-                    dataIndex: 'revenue',
-                    width: 140,
-                    align: 'right',
-                    render: (value: string) => (
-                      <span className="font-semibold text-emerald-700">
-                        {money.format(Number(value))}
-                      </span>
-                    ),
-                  },
-                ]}
+                columns={TOP_CUSTOMER_COLUMNS}
               />
             )}
           </Card>
@@ -539,18 +478,7 @@ export function DashboardPage() {
                 locale={{
                   emptyText: 'Chưa có sản phẩm nào bán được trong đơn đã thu tiền',
                 }}
-                columns={[
-                  { title: 'SKU', dataIndex: 'sku', width: 130 },
-                  { title: 'Sản phẩm', dataIndex: 'productName', ellipsis: true },
-                  { title: 'SL', dataIndex: 'quantitySold', width: 70, align: 'right' },
-                  {
-                    title: 'Doanh thu',
-                    dataIndex: 'revenue',
-                    width: 130,
-                    align: 'right',
-                    render: (value: string) => money.format(Number(value)),
-                  },
-                ]}
+                columns={TOP_PRODUCT_COLUMNS}
               />
             )}
           </Card>

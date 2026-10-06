@@ -1,5 +1,6 @@
-import { BarcodeOutlined, SearchOutlined, TagOutlined } from '@ant-design/icons';
-import { Input, Select } from 'antd';
+import { BarcodeOutlined, TagOutlined } from '@ant-design/icons';
+import { Select } from 'antd';
+import { SearchInput } from '@/foundation/inputs/search-input';
 
 export function ProductListToolbar({
   name,
@@ -26,29 +27,20 @@ export function ProductListToolbar({
 }) {
   return (
     <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <Input
-        allowClear
-        prefix={<SearchOutlined className="text-slate-400" />}
-        value={name}
-        placeholder="Nhập tên sản phẩm..."
-        className="!w-full"
-        onChange={(event) => onNameChange(event.target.value)}
-      />
-      <Input
-        allowClear
-        prefix={<BarcodeOutlined className="text-slate-400" />}
+      <SearchInput value={name} placeholder="Nhập tên sản phẩm..." className="!w-full" onChange={onNameChange} />
+      <SearchInput
         value={sku}
+        icon={<BarcodeOutlined className="text-slate-400" />}
         placeholder="Nhập mã SKU..."
         className="!w-full"
-        onChange={(event) => onSkuChange(event.target.value)}
+        onChange={onSkuChange}
       />
-      <Input
-        allowClear
-        prefix={<TagOutlined className="text-slate-400" />}
+      <SearchInput
         value={productNo}
+        icon={<TagOutlined className="text-slate-400" />}
         placeholder="Nhập mã sản phẩm..."
         className="!w-full"
-        onChange={(event) => onProductNoChange(event.target.value)}
+        onChange={onProductNoChange}
       />
       <Select
         allowClear

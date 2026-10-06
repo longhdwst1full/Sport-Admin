@@ -1,4 +1,5 @@
 import type { StatusPresentation } from '@/foundation/management';
+import { toOptions } from '@/shared/utils/options';
 import type {
   SupportMessageAuthorType,
   SupportTicketPriority,
@@ -65,10 +66,6 @@ export const supportAuthorTypeLabels: Record<SupportMessageAuthorType, string> =
   SYSTEM: 'Hệ thống',
 };
 
-export const supportTicketStatusOptions = Object.entries(supportTicketStatusPresentation).map(
-  ([value, { label }]) => ({ value, label }),
-);
+export const supportTicketStatusOptions = toOptions(supportTicketStatusPresentation);
 
-export const supportTicketPriorityOptions = Object.entries(supportTicketPriorityPresentation).map(
-  ([value, { label }]) => ({ value, label }),
-);
+export const supportTicketPriorityOptions = toOptions(supportTicketPriorityPresentation);

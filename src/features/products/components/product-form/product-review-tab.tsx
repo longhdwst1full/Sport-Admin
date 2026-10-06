@@ -1,11 +1,11 @@
 import { Alert, Descriptions, Empty, Tag, Typography } from 'antd';
 import type { UseFormReturn } from 'react-hook-form';
 import { ProductType, type ProductDetailDto, type ProductSetupStatusDto } from '@/generated/api/catalog/catalog.schemas';
-import { AdminTable } from '@/foundation/table';
+import { formatMoney } from '@/lib/format/money';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import { PRODUCT_READINESS_LABEL } from '../../constants/product-list.constants';
 import type { ProductFormValues } from '../../model/product-form.mapper';
-
-const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
 interface ReviewVariantRow {
   key: string;
@@ -16,6 +16,36 @@ interface ReviewVariantRow {
   openingQuantity?: number;
   status?: string;
 }
+
+const VARIANT_SUMMARY_COLUMNS: ColumnsType<ReviewVariantRow> = [
+  {
+    title: 'SKU',
+    dataIndex: 'sku',
+    width: 130,
+    render: (value?: string) => value || <Typography.Text type="secondary">Tự sinh</Typography.Text>,
+  },
+  col.text<ReviewVariantRow>('name', 'Tên biến thể', { width: undefined }),
+  col.text<ReviewVariantRow>('barcode', 'Barcode', { width: 140 }),
+  {
+    title: 'Giá bán',
+    dataIndex: 'price',
+    width: 150,
+    align: 'right',
+    render: (value?: string | null) => (value ? formatMoney(value) : <Tag color="orange">Chưa có giá</Tag>),
+  },
+];
+
+/** Sản phẩm đã có: cột cuối là trạng thái SKU. */
+const EXISTING_VARIANT_COLUMNS: ColumnsType<ReviewVariantRow> = [
+  ...VARIANT_SUMMARY_COLUMNS,
+  { title: 'Trạng thái', dataIndex: 'status', width: 110, render: (value: string) => <Tag>{value}</Tag> },
+];
+
+/** Đang tạo: cột cuối là tồn đầu sẽ ghi. */
+const NEW_VARIANT_COLUMNS: ColumnsType<ReviewVariantRow> = [
+  ...VARIANT_SUMMARY_COLUMNS,
+  col.text<ReviewVariantRow>('openingQuantity', 'Tồn đầu', { width: 100, align: 'right' }),
+];
 
 /**
  * Tab 5 — đọc lại trước khi lưu, cùng bố cục ở Tạo và Sửa.
@@ -119,26 +149,7 @@ export function ProductReviewTab({
             rowKey="key"
             pagination={false}
             dataSource={rows}
-            columns={[
-              {
-                title: 'SKU',
-                dataIndex: 'sku',
-                width: 130,
-                render: (value?: string) => value || <Typography.Text type="secondary">Tự sinh</Typography.Text>,
-              },
-              { title: 'Tên biến thể', dataIndex: 'name', render: (value: string) => value || '—' },
-              { title: 'Barcode', dataIndex: 'barcode', width: 140, render: (value?: string) => value || '—' },
-              {
-                title: 'Giá bán',
-                dataIndex: 'price',
-                width: 150,
-                align: 'right' as const,
-                render: (value?: string | null) => (value ? money.format(Number(value)) : <Tag color="orange">Chưa có giá</Tag>),
-              },
-              product
-                ? { title: 'Trạng thái', dataIndex: 'status', width: 110, render: (value: string) => <Tag>{value}</Tag> }
-                : { title: 'Tồn đầu', dataIndex: 'openingQuantity', width: 100, align: 'right' as const },
-            ]}
+            columns={product ? EXISTING_VARIANT_COLUMNS : NEW_VARIANT_COLUMNS}
           />
         )}
       </div>

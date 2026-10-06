@@ -1,18 +1,18 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { ClockCircleOutlined, DollarOutlined, InboxOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons';
-import { Alert, Button, Input, Select, Tooltip } from 'antd';
+import { ClockCircleOutlined, DollarOutlined, InboxOutlined, WarningOutlined } from '@ant-design/icons';
+import { Alert, Select } from 'antd';
 import { useSearchParams } from 'react-router-dom';
-import { useDebounce } from 'use-debounce';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
+import { FilterBar, RefreshButton } from '@/foundation/table';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { useGetAdminReturnQueueSummary, useListAdminReturns } from '@/generated/api/returns/returns';
 import { ReturnStatus } from '@/generated/api/returns/returns.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { ReturnDetailDrawer } from '../components/return-detail-drawer';
 import { ReturnTable } from '../components/return-table';
-import { RETURN_PAGE_SIZE, returnStatusPresentation } from '../constants/return.constants';
-
-const statusOptions = Object.entries(returnStatusPresentation).map(([value, { label }]) => ({ value, label }));
+import { RETURN_PAGE_SIZE, returnStatusOptions } from '../constants/return.constants';
 
 function parseStatus(value: string | null): ReturnStatus | undefined {
   return value && value in ReturnStatus ? (value as ReturnStatus) : undefined;
@@ -26,9 +26,8 @@ export function ReturnsPage() {
   const [params, setParams] = useSearchParams();
   const status = parseStatus(params.get('status'));
   const openId = params.get('id') ?? undefined;
-  const [search, setSearch] = useState('');
-  const [debouncedSearch] = useDebounce(search.trim(), 350);
-  const [page, setPage] = useListPageReset([debouncedSearch, status]);
+  const search = useSearchState();
+  const [page, setPage] = useListPageReset([search.debounced, status]);
 
   const updateParam = (key: string, value?: string) => {
     const next = new URLSearchParams(params);
@@ -42,7 +41,7 @@ export function ReturnsPage() {
     page,
     limit: RETURN_PAGE_SIZE,
     status,
-    search: debouncedSearch || undefined,
+    search: search.debounced,
   });
   const rows = useMemo(() => list.data?.items ?? [], [list.data]);
   const counts = summary.data;
@@ -68,12 +67,18 @@ export function ReturnsPage() {
           metric('overdue', 'Lượt hoàn chờ > 24 giờ', counts?.overdueRefunds, <WarningOutlined />, 'red'),
         ]}
         filters={(
-          <div className="flex w-full flex-wrap gap-3">
-            <Input.Search
-              allowClear
+          <FilterBar
+            actions={(
+              <RefreshButton
+                loading={list.isFetching}
+                onRefresh={() => Promise.all([list.refetch(), summary.refetch()])}
+              />
+            )}
+          >
+            <SearchInput
               className="min-w-64 flex-1"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              value={search.value}
+              onChange={search.setValue}
               placeholder="Mã phiếu, mã đơn, tên hoặc SĐT khách"
             />
             <Select
@@ -82,20 +87,9 @@ export function ReturnsPage() {
               value={status}
               onChange={(value?: string) => updateParam('status', value)}
               placeholder="Trạng thái"
-              options={statusOptions}
+              options={returnStatusOptions}
             />
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                aria-label="Làm mới"
-                loading={list.isFetching}
-                onClick={() => {
-                  void list.refetch();
-                  void summary.refetch();
-                }}
-              />
-            </Tooltip>
-          </div>
+          </FilterBar>
         )}
       >
         {list.isError && (

@@ -6,7 +6,6 @@ import {
   Avatar,
   Button,
   Checkbox,
-  Drawer,
   Empty,
   Form,
   Input,
@@ -18,6 +17,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   SafetyCertificateOutlined,
+  ShopOutlined,
 } from '@ant-design/icons';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -46,7 +46,8 @@ import {
   toAssignUserRoleDto,
   toAssignmentFormValues,
 } from '../model/role-assignment.mapper';
-import { AccessBranchSelect } from './access-branch-select';
+import { BranchSelect } from '@/features/organization';
+import { FormDrawer } from '@/foundation/overlay';
 
 interface RoleAssignmentDrawerProps {
   user?: UserDto;
@@ -86,7 +87,7 @@ export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssi
     reset,
     setError,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<AssignmentEditorValues>({
     resolver: yupResolver(schema),
     defaultValues: EMPTY_VALUES,
@@ -214,9 +215,9 @@ export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssi
   });
 
   return (
-    <Drawer
+    <FormDrawer
       open={open}
-      width={560}
+      size="sm"
       title={
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
@@ -231,22 +232,11 @@ export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssi
         </div>
       }
       onClose={onClose}
-      destroyOnHidden
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose} className="!rounded-xl">
-            Đóng
-          </Button>
-          <Button
-            type="primary"
-            loading={saving}
-            onClick={() => void submit()}
-            className="!rounded-xl !bg-emerald-600 hover:!bg-emerald-500 !font-semibold !px-5"
-          >
-            {saving ? 'Đang lưu...' : editing ? 'Lưu thay đổi' : 'Gán vai trò'}
-          </Button>
-        </div>
-      }
+      onSubmit={() => void submit()}
+      submitting={saving}
+      submitText={saving ? 'Đang lưu...' : editing ? 'Lưu thay đổi' : 'Gán vai trò'}
+      cancelText="Đóng"
+      isDirty={() => isDirty}
     >
       {/* Target User Info Header */}
       {user && (
@@ -413,9 +403,13 @@ export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssi
             name="branchId"
             control={control}
             render={({ field }) => (
-              <AccessBranchSelect
-                value={field.value}
-                onChange={field.onChange}
+              <BranchSelect
+                className="w-full"
+                placeholder="Chọn chi nhánh đang hoạt động"
+                labelFormat="code-name"
+                suffixIcon={<ShopOutlined className="text-slate-400" />}
+                value={field.value || undefined}
+                onChange={(next) => field.onChange(next ?? '')}
                 seedLabel={field.value ? branchLabel(field.value) : undefined}
                 status={errors.branchId ? 'error' : undefined}
               />
@@ -471,6 +465,6 @@ export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssi
           </div>
         </div>
       </Form>
-    </Drawer>
+    </FormDrawer>
   );
 }

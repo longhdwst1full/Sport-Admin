@@ -1,4 +1,5 @@
 import type { StatusPresentation } from '@/foundation/management';
+import { toOptions, type SelectOption } from '@/shared/utils/options';
 import type {
   ReturnFault,
   ReturnCondition,
@@ -97,3 +98,13 @@ export const returnEligibilityReasonLabels: Record<NonNullable<ReturnIneligibleR
 
 /** Mã lỗi phải tải lại dữ liệu: người khác vừa thao tác trên cùng phiếu. */
 export const RETURN_VERSION_CONFLICT = 'RETURN_VERSION_CONFLICT';
+
+export const returnStatusOptions = toOptions(returnStatusPresentation);
+export const returnReasonOptions = toOptions(returnReasonLabels);
+export const returnFaultOptions = toOptions(returnFaultLabels);
+export const inspectionConditionOptions = toOptions(inspectionConditionLabels);
+
+/** UX: hàng hỏng chỉ được chọn giữ lại hoặc huỷ; nhập lại kho bán do API cố định cho hàng còn bán được. */
+export const damagedDispositionOptions: SelectOption<ReturnItemDisposition>[] = (['HOLD', 'WRITE_OFF'] as const).map(
+  (value) => ({ value, label: inspectionDispositionLabels[value] }),
+);

@@ -4,9 +4,7 @@ import { AsyncPagedSelect } from '@/foundation/inputs/async-paged-select';
 import { listAdminPosts } from '@/generated/api/content/content';
 import type { ContentPostSummaryDto, ContentPostType } from '@/generated/api/content/content.schemas';
 import { formatDate } from '@/lib/format/datetime';
-import { contentPostTypeLabels } from '../constants/knowledge.constants';
-
-const postTypeOptions = Object.entries(contentPostTypeLabels).map(([value, label]) => ({ value, label }));
+import { contentPostTypeLabels, contentPostTypeOptions } from '../constants/knowledge.constants';
 
 /**
  * Chọn bài CMS để gắn vào kho tri thức, dùng `listAdminPosts` đã có trong SDK content.
@@ -40,7 +38,7 @@ export function CmsPostSelect({
           onChange?.(undefined);
         }}
         placeholder="Loại bài"
-        options={postTypeOptions}
+        options={contentPostTypeOptions}
         disabled={disabled}
       />
       <AsyncPagedSelect<ContentPostSummaryDto>

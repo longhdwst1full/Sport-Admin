@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Drawer, Form, Input, Select, Skeleton } from 'antd';
+import { App, Form, Input, Select, Skeleton } from 'antd';
 import { useEffect, useState } from 'react';
 import {
   createAdminPost,
@@ -17,6 +17,13 @@ import { ImageUploadField } from '@/features/media';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { toCoverPayload } from '../model/content-post-cover';
+import { FormDrawer } from '@/foundation/overlay';
+
+/** Bài website chỉ nhận các loại trong `ContentPostType`; nhãn giữ nguyên mã enum cho biên tập viên. */
+const CONTENT_POST_TYPE_OPTIONS = Object.values(ContentPostType).map((value) => ({
+  value,
+  label: value.replaceAll('_', ' '),
+}));
 
 export function ContentEditorDrawer({
   open,
@@ -111,22 +118,15 @@ export function ContentEditorDrawer({
   };
 
   return (
-    <Drawer
+    <FormDrawer
       title={editing ? `Sửa bài viết ${editing.slug}` : 'Soạn bài viết'}
-      width={820}
+      size="lg"
       open={open}
       onClose={onClose}
-      destroyOnHidden
-      extra={
-        <Button
-          type="primary"
-          loading={savePost.isPending}
-          disabled={Boolean(editing) && !editingFull}
-          onClick={submit}
-        >
-          Tạo và xuất bản
-        </Button>
-      }
+      onSubmit={submit}
+      submitting={savePost.isPending}
+      submitDisabled={Boolean(editing) && !editingFull}
+      submitText="Tạo và xuất bản"
     >
       {editing && !editingFull ? (
         <Skeleton active paragraph={{ rows: 8 }} />
@@ -140,10 +140,7 @@ export function ContentEditorDrawer({
           <Select
             value={postType}
             onChange={setPostType}
-            options={Object.values(ContentPostType).map((value) => ({
-              value,
-              label: value.replaceAll('_', ' '),
-            }))}
+            options={CONTENT_POST_TYPE_OPTIONS}
           />
         </Form.Item>
         <Form.Item label="Mô tả ngắn" required>
@@ -181,6 +178,6 @@ export function ContentEditorDrawer({
         </Form.Item>
       </Form>
       )}
-    </Drawer>
+    </FormDrawer>
   );
 }
