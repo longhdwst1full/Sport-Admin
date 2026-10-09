@@ -150,7 +150,9 @@ function TicketSummary({ ticket }: { ticket: SupportTicketDetail }) {
     <Card size="small" className="rounded-2xl">
       <Typography.Title level={5} className="!mt-0">{ticket.subject}</Typography.Title>
       <Descriptions size="small" column={{ xs: 1, sm: 2 }}>
-        <Descriptions.Item label="Khách hàng">{ticket.customerName} · {ticket.customerNo}</Descriptions.Item>
+        <Descriptions.Item label="Khách hàng">
+          {ticket.customerName} · {ticket.isGuest ? 'Khách vãng lai' : ticket.customerNo}
+        </Descriptions.Item>
         <Descriptions.Item label="Điện thoại">{ticket.customerPhone ?? '—'}</Descriptions.Item>
         <Descriptions.Item label="Email">{ticket.customerEmail ?? '—'}</Descriptions.Item>
         <Descriptions.Item label="Chi nhánh">{branchLabel(ticket.branchId) ?? '—'}</Descriptions.Item>

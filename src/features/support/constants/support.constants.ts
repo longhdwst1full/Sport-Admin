@@ -64,6 +64,7 @@ export const supportAuthorTypeLabels: Record<SupportMessageAuthorType, string> =
   CUSTOMER: 'Khách hàng',
   STAFF: 'Nhân viên',
   SYSTEM: 'Hệ thống',
+  GUEST: 'Khách vãng lai',
 };
 
 export const supportTicketStatusOptions = toOptions(supportTicketStatusPresentation);

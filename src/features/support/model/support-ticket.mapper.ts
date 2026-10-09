@@ -21,6 +21,7 @@ export function toSupportTicketSummary(dto: AdminSupportTicketSummaryDto): Suppo
     ticketNo: dto.ticketNo,
     subject: dto.subject,
     customerName: dto.customerName,
+    isGuest: dto.isGuest,
     branchId: optional(dto.branchId),
     status: dto.status,
     priority: dto.priority,
@@ -50,7 +51,8 @@ function toSupportTicketMessage(dto: AdminSupportTicketMessageDto): SupportTicke
 export function toSupportTicketDetail(dto: AdminSupportTicketDetailDto): SupportTicketDetail {
   return {
     ...toSupportTicketSummary(dto),
-    customerNo: dto.customerNo,
+    // Phiếu tư vấn của khách vãng lai (D100) không gắn hồ sơ khách: không có mã khách.
+    customerNo: dto.customerNo ?? undefined,
     customerPhone: optional(dto.customerPhone),
     customerEmail: optional(dto.customerEmail),
     messages: dto.messages.map(toSupportTicketMessage),

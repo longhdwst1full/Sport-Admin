@@ -2416,11 +2416,37 @@ components:
         - componentSku
         - componentName
         - quantity
+    CatalogBrandFacetDto:
+      type: object
+      properties:
+        slug:
+          type: string
+          example: adidas
+        name:
+          type: string
+          example: Adidas
+        count:
+          type: number
+          example: 12
+      required:
+        - slug
+        - name
+        - count
     CatalogMasterStatus:
       type: string
       enum:
         - ACTIVE
         - INACTIVE
+    CatalogProductFacetsDto:
+      type: object
+      properties:
+        brands:
+          description: Thương hiệu ACTIVE có sản phẩm khớp danh mục/tìm kiếm/thông số hiện tại (bỏ qua chính bộ lọc brand, giá và inStock); xếp theo số lượng giảm dần rồi tên
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogBrandFacetDto"
+      required:
+        - brands
     CategoryDto:
       type: object
       properties:
@@ -2929,6 +2955,12 @@ components:
             $ref: "#/components/schemas/ProductSummaryDto"
         meta:
           $ref: "#/components/schemas/ProductListMetaDto"
+        facets:
+          nullable: true
+          description: Chỉ có ở listCatalogProducts khi `includeFacets=true`
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/CatalogProductFacetsDto"
       required:
         - items
         - meta

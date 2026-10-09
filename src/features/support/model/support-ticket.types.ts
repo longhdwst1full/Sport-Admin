@@ -13,6 +13,8 @@ export interface SupportTicketSummary {
   ticketNo: string;
   subject: string;
   customerName: string;
+  /** Phiếu tư vấn từ form công khai, không gắn hồ sơ khách (D100). */
+  isGuest: boolean;
   /** Không có nghĩa là ticket không gắn chi nhánh nào. */
   branchId?: string;
   status: SupportTicketStatus;
@@ -36,7 +38,8 @@ export interface SupportTicketMessage {
 }
 
 export interface SupportTicketDetail extends SupportTicketSummary {
-  customerNo: string;
+  /** Không có khi phiếu do khách vãng lai gửi (`isGuest`). */
+  customerNo?: string;
   customerPhone?: string;
   customerEmail?: string;
   messages: SupportTicketMessage[];

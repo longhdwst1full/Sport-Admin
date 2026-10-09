@@ -562,12 +562,18 @@ components:
         source:
           allOf:
             - $ref: "#/components/schemas/SupportTicketSource"
+        isGuest:
+          type: boolean
+          description: true = phiếu tư vấn của khách vãng lai (source CONSULTATION), không có hồ sơ khách
         customerId:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
+          nullable: true
+          description: null với phiếu khách vãng lai
         customerName:
           type: string
+          description: Tên hồ sơ khách, hoặc tên khách vãng lai tự khai
         branchId:
           type: string
           pattern: ^[1-9][0-9]*$
@@ -588,9 +594,12 @@ components:
           nullable: true
         customerNo:
           type: string
+          nullable: true
+          description: null với phiếu khách vãng lai
         customerPhone:
           type: string
           nullable: true
+          description: SĐT hồ sơ khách hoặc SĐT khách vãng lai (E.164)
         customerEmail:
           type: string
           nullable: true
@@ -624,9 +633,8 @@ components:
         - updatedAt
         - version
         - source
-        - customerId
+        - isGuest
         - customerName
-        - customerNo
         - messages
     AdminSupportTicketListDto:
       type: object
@@ -707,12 +715,18 @@ components:
         source:
           allOf:
             - $ref: "#/components/schemas/SupportTicketSource"
+        isGuest:
+          type: boolean
+          description: true = phiếu tư vấn của khách vãng lai (source CONSULTATION), không có hồ sơ khách
         customerId:
           type: string
           pattern: ^[1-9][0-9]*$
           example: "1"
+          nullable: true
+          description: null với phiếu khách vãng lai
         customerName:
           type: string
+          description: Tên hồ sơ khách, hoặc tên khách vãng lai tự khai
         branchId:
           type: string
           pattern: ^[1-9][0-9]*$
@@ -736,7 +750,7 @@ components:
         - updatedAt
         - version
         - source
-        - customerId
+        - isGuest
         - customerName
     AssignSupportTicketDto:
       type: object
@@ -770,6 +784,7 @@ components:
       type: string
       enum:
         - CUSTOMER
+        - GUEST
         - STAFF
         - SYSTEM
     SupportTicketCommandDto:
@@ -792,6 +807,7 @@ components:
       type: string
       enum:
         - CHAT
+        - CONSULTATION
     SupportTicketStatus:
       type: string
       enum:
