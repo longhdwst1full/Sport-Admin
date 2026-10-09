@@ -136,7 +136,7 @@ test.describe('ADMIN UI TABLE — Standard Table UX & Styling', () => {
     const shell = new AdminShellPage(page);
     await shell.open('/products');
 
-    const refreshBtn = page.getByRole('button', { name: 'Làm mới danh sách' });
+    const refreshBtn = page.getByRole('button', { name: 'Làm mới' });
     await expect(refreshBtn).toBeVisible();
 
     const request = page.waitForRequest((req) => req.url().includes('/api/v1/admin/products'));

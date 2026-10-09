@@ -59,14 +59,22 @@ test.describe('CONTENT — Quản lý bài viết & CMS', () => {
     await expect(shell.menuItem('Bài viết')).toHaveCount(0);
   });
 
-  test('CMS-04: Tab Facebook gửi channel=FACEBOOK và giữ trên URL', async ({ page }) => {
+  test('CMS-04: Tab Mạng xã hội gửi channel=ALL và giữ trên URL', async ({ page }) => {
     const shell = new AdminShellPage(page);
     await shell.open('/content');
 
-    const request = page.waitForRequest((req) => req.url().includes('/content/social/posts') && req.url().includes('channel=FACEBOOK'));
-    await page.getByRole('tab', { name: 'Facebook' }).click();
+    const request = page.waitForRequest((req) => req.url().includes('/content/social/posts') && req.url().includes('channel=ALL'));
+    await page.getByRole('tab', { name: 'Mạng xã hội' }).click();
     await request;
-    await expect(page).toHaveURL(/tab=facebook/);
+    await expect(page).toHaveURL(/tab=social/);
+  });
+
+  test('CMS-04b: Link cũ ?tab=facebook mở tab Mạng xã hội', async ({ page }) => {
+    const shell = new AdminShellPage(page);
+    const request = page.waitForRequest((req) => req.url().includes('/content/social/posts') && req.url().includes('channel=ALL'));
+    await shell.open('/content?tab=facebook');
+    await request;
+    await expect(page.getByRole('tab', { name: 'Mạng xã hội' })).toHaveAttribute('aria-selected', 'true');
   });
 
   test('CMS-05: Người gửi duyệt tự đăng được (duyệt là đăng, không maker-checker)', async ({ page }) => {

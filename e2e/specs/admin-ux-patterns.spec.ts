@@ -116,7 +116,7 @@ test.describe('ADMIN UX PATTERNS — Cross-cutting UX Behaviors', () => {
     await shell.open('/products');
 
     // Nút toggle hamburger trên mobile
-    const toggleBtn = page.getByLabel('Toggle menu');
+    const toggleBtn = page.getByRole('button', { name: 'Mở thanh bên' });
     await expect(toggleBtn).toBeVisible();
   });
 
