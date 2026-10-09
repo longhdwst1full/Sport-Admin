@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import {
   Avatar,
   Badge,
@@ -41,10 +41,14 @@ import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { PageContainer } from '@/foundation/layout/page-container';
 import { NavigationTabs } from '@/layouts/components/navigation-tabs';
 import { CommandPalette } from '@/layouts/components/command-palette';
-import { SettingsModal } from '@/layouts/components/settings-modal';
 import { getInitials } from '@/shared/utils';
 
 const { Content, Header, Sider } = Layout;
+
+// Modal cài đặt (Tabs/Card/Descriptions) chỉ mở theo thao tác: tải lần đầu khi bấm, không nằm trong bundle khởi động.
+const SettingsModal = lazy(() =>
+  import('@/layouts/components/settings-modal').then((module) => ({ default: module.SettingsModal })),
+);
 
 export function AdminLayout() {
   const collapsed = useAppSelector((state) => state.layout.sidebarCollapsed);
@@ -54,6 +58,7 @@ export function AdminLayout() {
   const permissions = usePermissions();
   const auth = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsMounted, setSettingsMounted] = useState(false);
 
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== 'undefined' && window.innerWidth < 768,
@@ -350,7 +355,10 @@ export function AdminLayout() {
                     size="small"
                     aria-label="Cài đặt hệ thống"
                     icon={<SettingOutlined />}
-                    onClick={() => setSettingsOpen(true)}
+                    onClick={() => {
+                      setSettingsMounted(true);
+                      setSettingsOpen(true);
+                    }}
                     className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
                   />
                 </Tooltip>
@@ -390,7 +398,11 @@ export function AdminLayout() {
 
 
       {/* ── Settings Modal ─────────────────────────────────────── */}
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {settingsMounted && (
+        <Suspense fallback={null}>
+          <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        </Suspense>
+      )}
     </Layout>
     </CopilotPageContextProvider>
   );

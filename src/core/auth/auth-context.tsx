@@ -75,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // gọi làm mới vào từng màn — thêm màn mới sẽ không phải nhớ làm lại.
   useEffect(() => {
     const unsubscribe = queryClient.getMutationCache().subscribe((event) => {
-      if (event.mutation?.state.status !== 'success') return;
+      // Chỉ đúng lần chuyển sang success; các event observer/removed sau đó không được làm mới lại `/me`.
+      if (event.type !== 'updated' || event.action.type !== 'success') return;
       const operation = event.mutation.options.mutationKey?.[0];
       if (typeof operation === 'string' && PERMISSION_CHANGING_OPERATIONS.has(operation)) {
         void queryClient.invalidateQueries({ queryKey: getGetAdminCurrentUserQueryKey() });

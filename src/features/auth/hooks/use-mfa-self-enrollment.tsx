@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { Alert, App, Modal } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -7,10 +7,21 @@ import {
   startAdminMfaSelfEnrollment,
 } from '@/generated/api/auth/auth';
 import type { MfaProvisioningDto } from '@/generated/api/auth/auth.schemas';
-import { MfaCodeInput } from '../components/mfa-code-input';
-import { MfaQrPanel } from '../components/mfa-qr-panel';
 import { MFA_CODE_PATTERN } from '../constants/mfa.constants';
 import { getMfaErrorMessage, isRetryableMfaCodeError } from '../model/mfa-error';
+
+// Hook chạy trên thanh tiêu đề của mọi trang: QR (qrcode.react) và ô OTP (antd Input) chỉ cần khi
+// mở modal, nên tách khỏi bundle khởi động. Tải trước song song với lệnh gọi API sinh QR.
+const loadMfaQrPanel = () => import('../components/mfa-qr-panel');
+const loadMfaCodeInput = () => import('../components/mfa-code-input');
+const MfaQrPanel = lazy(() => loadMfaQrPanel().then((module) => ({ default: module.MfaQrPanel })));
+const MfaCodeInput = lazy(() => loadMfaCodeInput().then((module) => ({ default: module.MfaCodeInput })));
+
+function preloadSelfEnrollmentUi() {
+  // Lỗi tải chunk để `lazy` tự báo khi render; ở đây chỉ tải trước.
+  loadMfaQrPanel().catch(() => undefined);
+  loadMfaCodeInput().catch(() => undefined);
+}
 
 /**
  * Nhân viên đang đăng nhập tự bật 2FA: sinh QR → quét → nhập mã đầu tiên để kích hoạt.
@@ -37,6 +48,7 @@ export function useMfaSelfEnrollment() {
   const startSelfEnrollment = async () => {
     if (starting) return;
     setStarting(true);
+    preloadSelfEnrollmentUi();
     try {
       setProvisioning(await startAdminMfaSelfEnrollment());
     } catch (reason) {
@@ -83,6 +95,7 @@ export function useMfaSelfEnrollment() {
       destroyOnHidden
     >
       {provisioning && (
+        <Suspense fallback={null}>
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
             Quét mã QR bằng Google Authenticator, sau đó nhập mã 6 chữ số để kích hoạt.
@@ -105,6 +118,7 @@ export function useMfaSelfEnrollment() {
           </div>
           {error && <Alert type="error" showIcon message={error} />}
         </div>
+        </Suspense>
       )}
     </Modal>
   );
