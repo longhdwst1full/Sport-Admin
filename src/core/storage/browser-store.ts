@@ -31,14 +31,20 @@ export function createBrowserStore<T>(
 
   return {
     read() {
-      const raw = resolveStorage(area)?.getItem(key);
+      let raw: string | null | undefined;
+      try {
+        raw = resolveStorage(area)?.getItem(key);
+      } catch {
+        // Storage bị chặn khi đọc (Safari private, chính sách trình duyệt).
+        return undefined;
+      }
       if (!raw) return undefined;
       try {
         const parsed = JSON.parse(raw) as unknown;
         return parse ? parse(parsed) : (parsed as T);
       } catch {
         // Dữ liệu hỏng hoặc sai schema: dọn để lần sau không lỗi lặp lại.
-        resolveStorage(area)?.removeItem(key);
+        this.clear();
         return undefined;
       }
     },
@@ -50,7 +56,11 @@ export function createBrowserStore<T>(
       }
     },
     clear() {
-      resolveStorage(area)?.removeItem(key);
+      try {
+        resolveStorage(area)?.removeItem(key);
+      } catch {
+        // Storage bị chặn: không có gì để dọn.
+      }
     },
   };
 }

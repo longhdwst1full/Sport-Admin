@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getAdminCurrentUser,
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // đổi và vòng xoay chủ động chết lặng lẽ.
   }, [tokenVersion]);
 
-  const establishSession = async (
+  const establishSession = useCallback(async (
     tokens: TokenPairDto,
     remember?: boolean,
   ): Promise<CurrentUserDto> => {
@@ -168,9 +168,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.removeQueries({ queryKey });
       throw error;
     }
-  };
+  }, [queryClient]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     const refreshToken = readAuthTokens()?.refreshToken;
     try {
       if (refreshToken || usesAuthCookieTransport()) {
@@ -180,23 +180,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearAuthTokens();
       queryClient.clear();
     }
-  };
+  }, [queryClient]);
+
+  // Giá trị context ổn định: chỉ đổi khi phiên/user đổi, để mọi `useAuth` không render lại theo từng
+  // lần AuthProvider render (xoay token, trạng thái fetch /me).
+  const currentUser = currentUserQuery.data;
+  const isPending = currentUserQuery.isPending;
+  const value = useMemo(
+    () => ({
+      currentUser,
+      // Phải còn chứng chỉ phiên: chỉ dựa vào `data` là tin vào bản ghi cũ mà react-query
+      // giữ lại sau khi phiên đã mất.
+      authenticated: (hasTokens || usesAuthCookieTransport()) && Boolean(currentUser),
+      loading: restoringCookieSession || (hasTokens && isPending),
+      developmentBypass,
+      establishSession,
+      signOut,
+    }),
+    [currentUser, hasTokens, isPending, restoringCookieSession, developmentBypass, establishSession, signOut],
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        currentUser: currentUserQuery.data,
-        // Phải còn chứng chỉ phiên: chỉ dựa vào `data` là tin vào bản ghi cũ mà react-query
-        // giữ lại sau khi phiên đã mất.
-        authenticated:
-          (hasTokens || usesAuthCookieTransport()) && Boolean(currentUserQuery.data),
-        loading:
-          restoringCookieSession || (hasTokens && currentUserQuery.isPending),
-        developmentBypass,
-        establishSession,
-        signOut,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

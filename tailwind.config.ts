@@ -58,16 +58,6 @@ export default {
           sunken: 'var(--ba-canvas)',
           overlay: 'rgba(20, 23, 27, 0.6)',
         },
-        sidebar: {
-          DEFAULT: '#0f172a',
-          lighter: '#1e293b',
-          hover: '#1e293b',
-          active: '#059669',
-          'active-bg': 'rgba(5, 150, 105, 0.15)',
-          text: '#94a3b8',
-          'text-active': 'var(--ba-paper)',
-          border: 'rgba(255, 255, 255, 0.06)',
-        },
       },
       boxShadow: {
         /* Chỉ hai mức thật; bí danh cũ trỏ về đó để thẻ hết mỗi cái một bóng. */

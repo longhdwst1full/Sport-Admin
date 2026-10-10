@@ -28,29 +28,29 @@ const toneConfig: Record<
   blue: {
     iconBg: 'bg-gradient-to-br from-blue-500 to-cyan-400',
     iconText: 'text-white',
-    accent: '#3b82f6',
+    accent: 'var(--ba-blue-400)',
   },
   green: {
     iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-400',
     iconText: 'text-white',
-    accent: '#059669',
+    accent: 'var(--ba-green-500)',
   },
   orange: {
     iconBg: 'bg-gradient-to-br from-amber-500 to-orange-400',
     iconText: 'text-white',
-    accent: '#f59e0b',
+    accent: 'var(--ba-yellow-400)',
   },
   red: {
     iconBg: 'bg-gradient-to-br from-rose-500 to-pink-400',
     iconText: 'text-white',
-    accent: '#ef4444',
+    accent: 'var(--ba-red-500)',
   },
 };
 
 const defaultToneConfig = {
   iconBg: 'bg-gradient-to-br from-slate-400 to-slate-500',
   iconText: 'text-white',
-  accent: '#64748b',
+  accent: 'var(--ba-ink-secondary)',
 };
 
 export function ManagementPage({

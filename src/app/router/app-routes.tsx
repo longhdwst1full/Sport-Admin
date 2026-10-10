@@ -1,9 +1,22 @@
 import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { AdminLayout } from '@/layouts/admin-layout';
 import { PermissionRoute } from '@/core/auth/permission-route';
 import { AuthenticatedRoute } from '@/core/auth/authenticated-route';
 
+// Khung admin (menu, tab, command palette, copilot) chỉ tải sau đăng nhập; /login không kéo theo.
+const AdminLayout = lazy(async () => {
+  const [layout, policy] = await Promise.all([
+    import('@/layouts/admin-layout'),
+    import('@/app/config/reference-data-policy-gate'),
+  ]);
+  return {
+    default: () => (
+      <policy.ReferenceDataPolicyGate>
+        <layout.AdminLayout />
+      </policy.ReferenceDataPolicyGate>
+    ),
+  };
+});
 const LoginPage = lazy(() =>
   import('@/features/auth').then((module) => ({ default: module.LoginPage })),
 );

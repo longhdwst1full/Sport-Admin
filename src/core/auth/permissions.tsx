@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode, useMemo } from 'react';
 import { useAuth } from './auth-context';
 
 class PermissionSet extends Set<string> {
@@ -34,15 +34,18 @@ const PermissionContext = createContext<ReadonlySet<string>>(new Set());
 
 export function PermissionProvider({ children }: { children: ReactNode }) {
   const { currentUser, developmentBypass } = useAuth();
-  const currentUserPermissions = Array.isArray(currentUser?.permissions)
-    ? currentUser.permissions
-    : [];
-  const permissions = createPermissionSet(
-    currentUserPermissions.length > 0
-      ? currentUserPermissions.join(',')
-      : // SECURITY: quyền giả lập chỉ cho máy dev; production không bao giờ lấy quyền từ biến build.
-        import.meta.env.DEV ? (import.meta.env.VITE_DEV_PERMISSIONS ?? '') : '',
-    developmentBypass,
+  const joined = Array.isArray(currentUser?.permissions) ? currentUser.permissions.join(',') : '';
+  // Memo theo chuỗi quyền: Set mới mỗi lần render làm mọi `useCan`/`PermissionGate` render lại.
+  const permissions = useMemo(
+    () =>
+      createPermissionSet(
+        joined.length > 0
+          ? joined
+          : // SECURITY: quyền giả lập chỉ cho máy dev; production không bao giờ lấy quyền từ biến build.
+            import.meta.env.DEV ? (import.meta.env.VITE_DEV_PERMISSIONS ?? '') : '',
+        developmentBypass,
+      ),
+    [joined, developmentBypass],
   );
   return <PermissionContext.Provider value={permissions}>{children}</PermissionContext.Provider>;
 }

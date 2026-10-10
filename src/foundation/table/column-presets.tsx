@@ -41,6 +41,8 @@ export const col = {
       title,
       align: 'right',
       width: 120,
+      // Chữ số đều bề ngang để số xếp thẳng cột.
+      className: 'tabular-nums',
       render: (value: unknown) =>
         isEmpty(value) ? EMPTY_CELL : Number(value).toLocaleString('vi-VN'),
       ...extra,
@@ -55,6 +57,7 @@ export const col = {
       title,
       align: 'right',
       width: 140,
+      className: 'tabular-nums',
       render: (value: number | string | null | undefined) =>
         isEmpty(value) ? EMPTY_CELL : <CurrencyAmount amount={value} />,
       ...extra,
@@ -111,6 +114,8 @@ export const col = {
       fixed: 'right',
       align: 'right',
       width: 120,
+      // Chữ số đều bề ngang để số xếp thẳng cột.
+      className: 'tabular-nums',
       render: (_: unknown, row: T) => <TableActions>{render(row)}</TableActions>,
       ...extra,
     };

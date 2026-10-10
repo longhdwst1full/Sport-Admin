@@ -12,4 +12,11 @@ export const CookieKey = {
 export const LocalStorageKey = {
   LAYOUT: 'dctd-admin-layout-v2',
   PREFERENCES: 'baoan_admin_preferences',
+  /** Tên đăng nhập đã ghi nhớ (chỉ định danh, không bao giờ mật khẩu). */
+  REMEMBERED_IDENTIFIER: 'dctd.admin.remembered-identifier',
+} as const;
+
+export const SessionStorageKey = {
+  /** Trang quay về sau khi kết nối TikTok (OAuth) xong. */
+  TIKTOK_CONNECT_RETURN: 'dctd.admin.tiktok-connect-return',
 } as const;

@@ -1,3 +1,5 @@
+import { isAxiosError, isCancel } from 'axios';
+import { getApiErrorMessage } from '@/lib/api/error';
 import { createAdminMediaUpload, finalizeAdminMediaUpload } from '@/generated/api/media/media';
 import type { MediaAssetDto, MediaUploadMimeType } from '@/generated/api/media/media.schemas';
 import {
@@ -38,4 +40,21 @@ export async function uploadVideo(file: File, options: ChunkedUploadOptions = {}
     version: uploaded.version,
     signature: uploaded.signature,
   });
+}
+
+/** Lượt tải bị huỷ (AbortSignal, axios cancel hoặc DOMException AbortError) — không phải lỗi cần báo. */
+export function isUploadAbortError(error: unknown, signal: AbortSignal): boolean {
+  return signal.aborted || isCancel(error) || (error instanceof DOMException && error.name === 'AbortError');
+}
+
+/**
+ * Thông điệp lỗi tải video: phần tải lên Cloudinary trả AxiosError thô với body `{ error: { message } }`;
+ * lỗi API (khởi tạo/hoàn tất) đi qua `getApiErrorMessage`.
+ */
+export function getVideoUploadErrorMessage(error: unknown, fallback: string): string {
+  if (isAxiosError<{ error?: { message?: unknown } }>(error)) {
+    const cloudinaryMessage = error.response?.data?.error?.message;
+    return typeof cloudinaryMessage === 'string' && cloudinaryMessage ? cloudinaryMessage : fallback;
+  }
+  return getApiErrorMessage(error, fallback);
 }

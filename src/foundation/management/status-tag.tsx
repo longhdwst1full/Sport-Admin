@@ -1,9 +1,22 @@
 import React from 'react';
 import { Tooltip } from 'antd';
 
+/**
+ * Tone ngữ nghĩa cho trạng thái — dùng thay tên màu để cùng một ý nghĩa có cùng màu ở mọi module:
+ * - `neutral`: nháp, đã huỷ, không hoạt động (kết thúc không lỗi / chưa bắt đầu)
+ * - `warning`: chờ xử lý, cần người duyệt/hành động
+ * - `info`: đã xác nhận / đã duyệt, đang ở bước tiếp theo
+ * - `progress`: đang chạy, đang giao, đang xử lý
+ * - `success`: hoàn tất, đang hoạt động, đã nhận
+ * - `danger`: thất bại, bị từ chối, lỗi
+ * - `accent`: trạng thái đặc biệt sau hoàn tất (hoàn tiền, trả hàng)
+ */
+export type StatusTone = 'neutral' | 'warning' | 'info' | 'progress' | 'success' | 'danger' | 'accent';
+
 export interface StatusPresentation {
   label: string;
-  color: string;
+  /** Ưu tiên `StatusTone`; tên màu antd cũ vẫn nhận để chuyển dần. */
+  color: StatusTone | (string & {});
   icon?: React.ReactNode;
 }
 
@@ -54,6 +67,11 @@ const dotColorMap: Record<string, { badge: string; dot: string }> = {
 
 /** Preset ngữ nghĩa của antd `<Tag>` dùng chung bảng màu với preset tên màu; thiếu alias là rơi về xám. */
 const COLOR_ALIASES: Record<string, string> = {
+  neutral: 'default',
+  info: 'blue',
+  progress: 'cyan',
+  danger: 'red',
+  accent: 'purple',
   success: 'green',
   emerald: 'green',
   error: 'red',

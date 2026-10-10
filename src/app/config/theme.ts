@@ -58,7 +58,7 @@ export const ADMIN_THEME: ThemeConfig = {
 
     // ── Typography ──────────────────────────────────────────
     fontFamily:
-      "'Be Vietnam Pro', 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
+      "'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
   },
 
   components: {

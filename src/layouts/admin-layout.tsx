@@ -236,7 +236,7 @@ export function AdminLayout() {
                   size={collapsed ? 30 : 32}
                   className="!flex !items-center !justify-center !text-xs !font-bold shrink-0"
                   style={{
-                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    background: 'var(--ba-action-gradient)',
                     boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)',
                   }}
                 >
@@ -288,7 +288,7 @@ export function AdminLayout() {
         {/* ── Main Content Column ───────────────────────────────── */}
         <Layout className="h-full min-h-0 min-w-0 flex flex-col">
           {/* ── Header (JARVIS Workspace Tab Bar) ──────────────── */}
-          <Header className="!flex !h-[46px] !items-stretch !border-b !border-[#cbd5e1] !bg-[#edf2f7] !px-0 !leading-none shadow-none z-10 shrink-0 select-none">
+          <Header className="!flex !h-[46px] !items-stretch !border-b !border-[var(--ba-shell-header-border)] !bg-[var(--ba-shell-header-bg)] !px-0 !leading-none shadow-none z-10 shrink-0 select-none">
             {/* Sidebar toggle button (when collapsed on any screen) */}
             {collapsed && (
               <Button
@@ -306,7 +306,7 @@ export function AdminLayout() {
             <div className="flex min-w-0 flex-1 items-stretch justify-between">
               <NavigationTabs navigationItems={visibleItems} />
 
-              <div className="flex shrink-0 items-center gap-1.5 border-l border-slate-300/80 pl-2.5 pr-3 bg-[#eef2f6]">
+              <div className="flex shrink-0 items-center gap-1.5 border-l border-slate-300/80 pl-2.5 pr-3 bg-[var(--ba-shell-toolbar-bg)]">
                 {import.meta.env.DEV && (
                   <Tag
                     className="!mr-1 !rounded !border-amber-200 !bg-amber-50 !px-1.5 !py-0 !text-[10px] !font-semibold !text-amber-700"
@@ -371,7 +371,7 @@ export function AdminLayout() {
                     size={28}
                     className="!flex !items-center !justify-center !text-[11px] !font-bold shrink-0 cursor-pointer"
                     style={{
-                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      background: 'var(--ba-action-gradient)',
                       boxShadow: '0 1px 4px rgba(245, 158, 11, 0.3)',
                     }}
                   >
@@ -386,7 +386,7 @@ export function AdminLayout() {
           </Header>
 
           {/* ── Content Area (Internal scroll strictly within 100vh) ── */}
-          <Content className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#f8fafc] p-3.5 sm:p-5 lg:p-6">
+          <Content className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[var(--ba-shell-content-bg)] p-3.5 sm:p-5 lg:p-6">
             <PageContainer>
               <div className="dctd-page-enter flex min-h-0 flex-1 flex-col" key={location.pathname}>
                 <Outlet />

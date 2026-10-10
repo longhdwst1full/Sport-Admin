@@ -1,4 +1,5 @@
-import { Result } from 'antd';
+import { LockOutlined } from '@ant-design/icons';
+import { ResultPanel } from '@/foundation/feedback/result-panel';
 import type { ReactNode } from 'react';
 import { usePermissions } from './permissions';
 
@@ -23,8 +24,8 @@ export function PermissionRoute({
   if (required.some((code) => granted.has(code))) return children;
 
   return (
-    <Result
-      status="403"
+    <ResultPanel
+      icon={<LockOutlined />}
       title="Bạn không có quyền truy cập"
       subTitle={`Quyền cần thiết: ${required.join(' hoặc ')}`}
     />

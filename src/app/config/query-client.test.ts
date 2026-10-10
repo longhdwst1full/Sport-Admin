@@ -9,10 +9,17 @@ import {
 import { getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { CACHE_POLICY, REFERENCE_DATA } from '@/shared/constants/query-cache-policy';
 import { createAdminQueryClient } from './query-client';
+import { applyReferenceDataPolicy } from './reference-data-policy';
+
+function createClient() {
+  const client = createAdminQueryClient();
+  applyReferenceDataPolicy(client);
+  return client;
+}
 
 describe('createAdminQueryClient: cache dữ liệu tham chiếu', () => {
   it('cache lâu danh mục tham chiếu với mọi bộ tham số, giữ mặc định 20 giây cho dữ liệu vận hành', () => {
-    const client = createAdminQueryClient();
+    const client = createClient();
 
     const staleTimeOf = (queryKey: readonly unknown[]) => client.defaultQueryOptions({ queryKey }).staleTime;
 
@@ -26,7 +33,7 @@ describe('createAdminQueryClient: cache dữ liệu tham chiếu', () => {
   });
 
   it('mutation Orval thành công làm mới cả danh sách lẫn ô chọn đang hoạt động của nhóm', async () => {
-    const client = createAdminQueryClient();
+    const client = createClient();
     const active = getSearchActiveAdminBrandsQueryKey({ page: 1, limit: 20 });
     client.setQueryData(getListAdminBrandsQueryKey(), { items: [] });
     client.setQueryData(active, { items: [] });

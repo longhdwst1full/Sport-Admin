@@ -4,6 +4,15 @@ import type { RichTextEditorProps } from './rich-text-editor';
 
 const DEFAULT_EDITOR_URL = 'https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js';
 
+/** Caption mạng xã hội là văn bản thuần: bỏ định dạng chữ, dán thành chữ thuần, giữ link/emoji. */
+const PLAIN_TEXT_CONFIG = {
+  toolbar: [['Undo', 'Redo'], ['Link', 'Unlink'], ['EmojiPanel', 'SpecialChar']],
+  extraPlugins: 'emoji',
+  forcePasteAsPlainText: true,
+  removePlugins: ['ExportPdf', 'elementspath'],
+  resize_enabled: false,
+};
+
 interface CKEditorInstanceLike {
   getData: () => string;
   setData: (html: string) => void;
@@ -15,6 +24,8 @@ export function RichTextEditorImplementation({
   disabled = false,
   placeholder = 'Nhập nội dung...',
   editorUrl = DEFAULT_EDITOR_URL,
+  variant = 'full',
+  height,
 }: RichTextEditorProps) {
   const editorRef = useRef<CKEditorInstanceLike | null>(null);
   const lastValueRef = useRef('');
@@ -38,7 +49,8 @@ export function RichTextEditorImplementation({
   const config = useMemo(
     () => ({
       skin: 'moono-lisa',
-      height: '320px',
+      height: `${height ?? (variant === 'plain' ? 220 : 320)}px`,
+      ...(variant === 'plain' ? PLAIN_TEXT_CONFIG : {}),
       versionCheck: false,
       removePlugins: ['ExportPdf'],
       entities: false,
@@ -61,7 +73,7 @@ export function RichTextEditorImplementation({
         'Verdana/Verdana, Geneva, sans-serif;' +
         'SVN-Poppins/SVN-Poppins, sans-serif;',
     }),
-    [placeholder],
+    [placeholder, variant, height],
   );
 
   return (
@@ -80,7 +92,8 @@ export function RichTextEditorImplementation({
           editorRef.current = editor;
           try {
             editor?.setData(nextValue);
-            lastValueRef.current = nextValue;
+            // Lưu bản đã chuẩn hoá của CKEditor (vd. thêm/bỏ khoảng trắng) làm mốc so sánh.
+            lastValueRef.current = editor?.getData() ?? nextValue;
           } catch {
             // Keep the form usable if CKEditor is still finalizing its editable area.
           }
@@ -88,6 +101,9 @@ export function RichTextEditorImplementation({
         onChange={(event: CKEditorEventPayload<'change'>) => {
           const editor = event.editor as unknown as CKEditorInstanceLike | null;
           const html = editor?.getData() ?? '';
+          // CKEditor phát `change` cả khi nạp/chuẩn hoá dữ liệu ban đầu: chỉ báo ra ngoài khi nội dung
+          // thật sự khác, để form không bị coi là đã sửa (hỏi "bỏ thay đổi?") khi người dùng chưa gõ gì.
+          if (html === lastValueRef.current) return;
           lastValueRef.current = html;
           onChangeRef.current?.(html);
         }}

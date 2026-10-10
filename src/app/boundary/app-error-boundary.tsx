@@ -1,4 +1,5 @@
-import { Button, Result, Spin } from 'antd';
+import { Button, Spin } from 'antd';
+import { ResultPanel } from '@/foundation/feedback/result-panel';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { clearAuthTokens } from '@/core/auth/auth-token.store';
 
@@ -70,8 +71,7 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, AppErro
               <span className="text-4xl">⚠️</span>
             </div>
 
-            <Result
-              status="500"
+            <ResultPanel
               title={
                 <span className="text-xl font-bold text-slate-800">
                   Không thể tải trang quản trị
@@ -84,7 +84,7 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, AppErro
                     : 'Ứng dụng gặp lỗi khi tải dữ liệu hoặc giao diện. Hãy thử tải lại trang.'}
                 </span>
               }
-              extra={[
+              extra={<>{[
                 <Button
                   key="reload"
                   type="primary"
@@ -105,7 +105,7 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, AppErro
                 >
                   Đăng nhập lại
                 </Button>,
-              ]}
+              ]}</>}
             />
           </div>
         </div>

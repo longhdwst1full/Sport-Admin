@@ -7,6 +7,13 @@ export interface RichTextEditorProps {
   disabled?: boolean;
   placeholder?: string;
   editorUrl?: string;
+  /**
+   * `plain`: soạn văn bản thuần (caption mạng xã hội) — toolbar tối giản (hoàn tác, link, emoji, ký tự
+   * đặc biệt), dán luôn thành chữ thuần, không định dạng chữ. Chỗ gọi tự chuyển HTML ⇄ text bằng
+   * `htmlToPlainText` / `plainTextToHtml` (`@/shared/utils`).
+   */
+  variant?: 'full' | 'plain';
+  height?: number;
 }
 
 const RichTextEditorImplementation = lazy(() =>
