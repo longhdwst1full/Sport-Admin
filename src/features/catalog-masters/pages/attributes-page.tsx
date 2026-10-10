@@ -18,6 +18,8 @@ import { AttributeStatus, type AttributeDto } from '@/generated/api/catalog/cata
 import { getApiErrorMessage } from '@/lib/api/error';
 import { AttributeFormDrawer } from '../components/attribute-form-drawer';
 import { ATTRIBUTE_STATUSES, ATTRIBUTE_TYPE_LABEL } from '../constants/catalog-masters.constants';
+import { useMasterListUrl } from '../hooks/use-master-list-url';
+import { filterCatalogMasters } from '../model/catalog-masters.mapper';
 
 const ATTRIBUTE_DATA_COLUMNS: ColumnsType<AttributeDto> = [
   { title: 'Mã', dataIndex: 'code', render: (value: string) => <span className="font-mono text-xs">{value}</span> },
@@ -40,15 +42,14 @@ const ATTRIBUTE_DATA_COLUMNS: ColumnsType<AttributeDto> = [
 export function AttributesPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const list = useMasterListUrl();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<AttributeDto>();
   const attributesQuery = useListAdminAttributes();
-  const items = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    return (attributesQuery.data?.items ?? []).filter(({ code, name }) =>
-      !keyword || code.toLowerCase().includes(keyword) || name.toLowerCase().includes(keyword));
-  }, [attributesQuery.data?.items, search]);
+  const items = useMemo(
+    () => filterCatalogMasters(attributesQuery.data?.items ?? [], list.keyword, ['code', 'name']),
+    [attributesQuery.data?.items, list.keyword],
+  );
   const toggle = useUpdateAdminAttribute({
     mutation: {
       onSuccess: async () => {
@@ -110,7 +111,7 @@ export function AttributesPage() {
         ]}
         filters={(
           <FilterBar actions={<RefreshButton onRefresh={attributesQuery.refetch} loading={attributesQuery.isFetching} />}>
-            <SearchInput value={search} placeholder="Tìm theo mã hoặc tên..." onChange={setSearch} />
+            <SearchInput value={list.searchValue} placeholder="Tìm theo mã hoặc tên..." onChange={list.onSearch} />
           </FilterBar>
         )}
       >
@@ -121,7 +122,7 @@ export function AttributesPage() {
             rowKey="id"
             loading={attributesQuery.isPending}
             dataSource={items}
-            pagination={{ pageSize: 20, hideOnSinglePage: true }}
+            pagination={list.pagination}
             columns={columns}
           />
         )}

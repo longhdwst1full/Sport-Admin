@@ -1,6 +1,8 @@
 import { AppstoreOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
+import type { ColumnType } from 'antd/es/table';
+import { col } from '@/foundation/table';
 import {
   useActivateAdminCategory,
   useDeactivateAdminCategory,
@@ -12,6 +14,34 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 import { CategoryFormDrawer } from '../components/master-data-form-drawers';
 import { MasterDataListPage } from '../components/master-data-list-page';
+
+const CATEGORY_COLUMNS: ColumnType<CategoryDto>[] = [
+  {
+    title: 'Tên danh mục',
+    dataIndex: 'name',
+    render: (value: string, row) => (
+      <div style={{ paddingLeft: row.depth * 18 }}>
+        <strong className="text-slate-800">{value}</strong>
+        <div className="text-xs text-slate-400 font-mono">/{row.slug}</div>
+      </div>
+    ),
+  },
+  {
+    title: 'Cấp',
+    dataIndex: 'depth',
+    width: 90,
+    align: 'center',
+    render: (depth: number) => (
+      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-medium">Cấp {depth}</span>
+    ),
+  },
+  col.number<CategoryDto>('sortOrder', 'Thứ tự', { width: 100, align: 'center' }),
+];
+
+const CATEGORY_DELETE_CONFIRM = {
+  title: 'Xoá danh mục này?',
+  description: 'Danh mục con được nâng lên cha; danh mục gốc bị xoá thì con của nó thành gốc.',
+};
 
 export function CategoriesPage() {
   const { message } = App.useApp();
@@ -45,30 +75,7 @@ export function CategoriesPage() {
       activeMetric={{ key: 'active-categories', label: 'Danh mục kích hoạt' }}
       query={categoriesQuery}
       scrollX={860}
-      columns={[
-        {
-          title: 'Tên danh mục',
-          dataIndex: 'name',
-          render: (value, row) => (
-            <div style={{ paddingLeft: row.depth * 18 }}>
-              <strong className="text-slate-800">{value}</strong>
-              <div className="text-xs text-slate-400 font-mono">/{row.slug}</div>
-            </div>
-          ),
-        },
-        {
-          title: 'Cấp',
-          dataIndex: 'depth',
-          width: 90,
-          align: 'center',
-          render: (d: number) => (
-            <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-medium">
-              Cấp {d}
-            </span>
-          ),
-        },
-        { title: 'Thứ tự', dataIndex: 'sortOrder', width: 100, align: 'center' },
-      ]}
+      columns={CATEGORY_COLUMNS}
       toggleDescription="Danh mục con sẽ được nâng lên làm con của danh mục cha."
       onToggleStatus={(row) =>
         (row.status === 'ACTIVE' ? deactivateCategory : activateCategory).mutate({
@@ -76,11 +83,7 @@ export function CategoriesPage() {
           data: { expectedVersion: row.version },
         })
       }
-      deleteConfirm={{
-        title: 'Xoá danh mục này?',
-        description:
-          'Danh mục con được nâng lên cha; danh mục gốc bị xoá thì con của nó thành gốc.',
-      }}
+      deleteConfirm={CATEGORY_DELETE_CONFIRM}
       onDelete={(row) =>
         deleteCategory.mutate({ id: row.id, data: { expectedVersion: row.version } })
       }

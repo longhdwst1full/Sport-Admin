@@ -18,7 +18,7 @@ export function ReportExportButton({
   disabled,
   label = 'Tải báo cáo',
 }: {
-  /** Đường dẫn endpoint export, ví dụ `/api/v1/admin/reports/revenue/export`. */
+  /** Đường dẫn endpoint export, lấy từ `REPORT_EXPORT_PATH`. */
   path: string;
   params: Record<string, string | number | undefined>;
   /** Tên dùng khi server không gửi `Content-Disposition` (proxy lược header chẳng hạn). */

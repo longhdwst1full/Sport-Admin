@@ -1,11 +1,10 @@
 # Organization — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-09-27
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Thêm cấu hình "Quận/huyện giao miễn phí" (`freeDeliveryDistrictCodes`, D62) trong
-> `organization-form-drawer`.
+> **Change summary:** Thêm thanh lọc (tìm + trạng thái, lọc tại chỗ, nằm trên URL) và nút làm mới; trạng thái dùng tone chuẩn.
 
 ## Phạm vi
 
@@ -60,5 +59,6 @@ Branch và warehouse là gốc của scope phân quyền, tồn kho và fulfillm
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.2.0 | 2026-10-10 | Thêm thanh lọc (tìm + trạng thái, lọc tại chỗ, nằm trên URL) và nút làm mới; trạng thái dùng tone chuẩn. |
 | 1.1.0 | 2026-09-27 | Thêm cấu hình "Quận/huyện giao miễn phí" (D62). |
 | 1.0.0 | 2026-09-13 | Tạo note. |

@@ -1,9 +1,10 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Tag, Typography } from 'antd';
+import { Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
 import type { OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
+import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { orderStatusPresentation, paymentStatusPresentation } from '../constants/order.constants';
 
@@ -103,22 +104,14 @@ const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
     title: 'Thanh toán',
     key: 'payment',
     width: 170,
-    render: (_, row) => {
-      const state = paymentStatusPresentation[row.paymentStatus] ?? {
-        label: row.paymentStatus,
-        color: 'default',
-      };
-      return (
-        <div className="space-y-1">
-          <Tag color={state.color} className="m-0 text-[11px] font-medium">
-            {state.label}
-          </Tag>
-          <div className="text-[10px] text-slate-400">
-            {row.paymentMethod === 'COD' ? 'Tiền mặt khi nhận (COD)' : 'Chuyển khoản'}
-          </div>
+    render: (_, row) => (
+      <div className="space-y-1">
+        <StatusTag status={row.paymentStatus} presentations={paymentStatusPresentation} />
+        <div className="text-[10px] text-slate-400">
+          {row.paymentMethod === 'COD' ? 'Tiền mặt khi nhận (COD)' : 'Chuyển khoản'}
         </div>
-      );
-    },
+      </div>
+    ),
   },
   col.status<OrderSummaryDto, OrderSummaryDto['status']>(
     'status',
@@ -171,7 +164,6 @@ export function OrderTable({
         pageSize,
         total,
         showSizeChanger: true,
-        pageSizeOptions: ['20', '50', '100'],
         responsive: true,
         showTotal: (value) => `Tổng ${value} đơn hàng`,
         onChange: onPageChange,

@@ -20,9 +20,9 @@ import {
   TableActionButton,
   col,
 } from '@/foundation/table';
-import { useSearchState } from '@/shared/hooks/use-search-state';
 import { filterCatalogMasters, type SearchableCatalogMaster } from '../model/catalog-masters.mapper';
 import { MASTER_STATUSES } from '../constants/catalog-masters.constants';
+import { useMasterListUrl } from '../hooks/use-master-list-url';
 
 /** Cột mã dạng chip, chung cho Thương hiệu và Danh mục. */
 function masterCodeColumn<T>(): ColumnType<T> {
@@ -38,7 +38,7 @@ function masterCodeColumn<T>(): ColumnType<T> {
   };
 }
 
-export interface MasterDataRow extends SearchableCatalogMaster {
+interface MasterDataRow extends SearchableCatalogMaster {
   id: string;
   status: string;
   version: number;
@@ -53,7 +53,7 @@ interface MasterDataListQuery<T> {
   refetch: () => unknown;
 }
 
-export interface MasterDataListPageProps<T extends MasterDataRow> {
+interface MasterDataListPageProps<T extends MasterDataRow> {
   title: string;
   description: string;
   /** Tên thực thể viết thường, dùng trong nhãn nút/xác nhận (ví dụ `thương hiệu`). */
@@ -62,7 +62,7 @@ export interface MasterDataListPageProps<T extends MasterDataRow> {
   totalMetric: Pick<ManagementMetric, 'key' | 'label' | 'icon' | 'tone'>;
   activeMetric: Pick<ManagementMetric, 'key' | 'label'>;
   query: MasterDataListQuery<T>;
-  /** Cột riêng của từng màn, nằm giữa cột mã và cột trạng thái. */
+  /** Cột riêng của từng màn, nằm giữa cột mã và cột trạng thái; khai ở mức module để không dựng lại. */
   columns: ColumnType<T>[];
   scrollX: number;
   toggleDescription: string;
@@ -94,14 +94,14 @@ export function MasterDataListPage<T extends MasterDataRow>({
   deletingId,
   renderDrawer,
 }: MasterDataListPageProps<T>) {
-  const search = useSearchState('', 250);
+  const list = useMasterListUrl();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<T>();
 
   const items = query.data?.items;
   const rows = useMemo(
-    () => filterCatalogMasters(items ?? [], search.debounced ?? ''),
-    [items, search.debounced],
+    () => filterCatalogMasters(items ?? [], list.keyword),
+    [items, list.keyword],
   );
   const activeCount = (items ?? []).filter((row) => row.status === 'ACTIVE').length;
 
@@ -145,7 +145,7 @@ export function MasterDataListPage<T extends MasterDataRow>({
                 onConfirm={() => onDelete(row)}
               >
                 <TableActionButton
-                  label={`Xóa ${entity} ${row.name}`}
+                  label={`Xoá ${entity} ${row.name}`}
                   danger
                   icon={<DeleteOutlined />}
                   loading={deletingId === row.id}
@@ -181,8 +181,8 @@ export function MasterDataListPage<T extends MasterDataRow>({
         filters={
           <FilterBar actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}>
             <SearchInput
-              value={search.value}
-              onChange={search.setValue}
+              value={list.searchValue}
+              onChange={list.onSearch}
               placeholder="Tìm theo mã, tên hoặc slug..."
             />
           </FilterBar>
@@ -196,7 +196,7 @@ export function MasterDataListPage<T extends MasterDataRow>({
             loading={query.isPending}
             dataSource={rows}
             scroll={{ x: scrollX }}
-            pagination={{ pageSize: 10, hideOnSinglePage: true }}
+            pagination={list.pagination}
             columns={tableColumns}
           />
         )}

@@ -1,10 +1,10 @@
 # Fulfillments — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Tạo trang hàng đợi giao vận; trước đó `listAdminFulfillments` đã generate nhưng không màn hình nào gọi.
+> **Change summary:** Lọc/trang trên URL, `fulfillmentStatusPresentation` chuyển từ `shared` về feature, trạng thái vận đơn của đơn inject qua `FulfillmentStatusTag`.
 
 ## Phạm vi
 
@@ -21,9 +21,9 @@ Trang này **chỉ đọc**: mọi hành động vẫn đi qua `OrderDetailDrawe
 
 ## Ranh giới
 
-`pages/fulfillments-page.tsx` (filter/paging) → `components/fulfillment-table.tsx` (trình bày) → `OrderDetailDrawer` nhập trực tiếp từ `@/features/orders/components/order-detail-drawer`.
+`pages/fulfillments-page.tsx` (filter/paging; `search`, `status`, `page` nằm trên URL) → `components/fulfillment-table.tsx` (trình bày) → `OrderDetailDrawer` từ barrel `@/features/orders`.
 
-Import chéo giữa Orders và Fulfillments phải trỏ thẳng vào module đích, **không đi qua barrel**. Barrel `@/features/orders` kéo theo `orders-page`, còn `@/features/fulfillments` kéo theo `fulfillments-page`; mà `order-detail-drawer` lại cần `fulfillmentStatusPresentation`. Đi qua barrel là khép vòng phụ thuộc giữa hai chunk và Rollup cảnh báo sai thứ tự khởi tạo.
+Chiều phụ thuộc tĩnh chỉ là `fulfillments → orders`. `OrderDetailDrawer` không import gì từ `fulfillments`: nơi gọi inject `renderFulfillmentPanel` (panel giao vận) và `renderShipmentStatus` (`FulfillmentStatusTag`). `orders-page` nạp hai component này bằng `lazy()` qua barrel `@/features/fulfillments` để không khép vòng chunk.
 
 ## Generated operation
 
@@ -41,16 +41,17 @@ Route gác bằng `fulfillment.view` (scope `GLOBAL;BRANCH;WAREHOUSE;OWN`). Back
 
 - [ ] Không thêm nút chuyển trạng thái trực tiếp ở bảng; hành động thuộc workflow panel.
 - [ ] Nhãn trạng thái map tách khỏi mã trong `constants/`; đổi chữ không được đổi so sánh.
-- [ ] Thêm trạng thái mới phải cập nhật `fulfillmentStatusPresentation`, nếu không bảng hiện mã thô.
+- [ ] Thêm trạng thái mới phải cập nhật `fulfillmentStatusPresentation` (kiểu `Record<FulfillmentStatus, StatusPresentation>` bắt lỗi biên dịch); tone theo hướng dẫn `StatusTone`.
 
 ## Revision history
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.1.0 | 2026-10-10 | URL filters, `StatusTag`/tone, modal thao tác dùng `FormModal`, bỏ `shared/constants/fulfillment-status-presentation`. |
 | 1.0.0 | 2026-09-13 | Tạo feature, lấp khoảng trống `listAdminFulfillments` chưa được dùng. |
 
 ## Vận đơn GHN tự tạo (D14)
 
-- `carrierShipmentStatus` (`PENDING`/`CREATING`/`CREATED`/`CREATE_FAILED`, `null` = không áp dụng) hiện bằng `CarrierShipmentStatusTag` ở danh sách và panel giao vận của đơn; lỗi gần nhất lấy từ `carrierShipmentError`.
+- `carrierShipmentStatus` (`PENDING`/`CREATING`/`CREATED`/`CREATE_FAILED`, `null` = không áp dụng) hiện bằng `CarrierShipmentStatusTag` ở danh sách và panel giao vận của đơn; lỗi gần nhất lấy từ `carrierShipmentError`; mã lạ hiện "Không xác định".
 - Nút "Tạo lại vận đơn" chỉ hiện khi `CREATE_FAILED` và có quyền `fulfillment.ship`; gọi `retryAdminFulfillmentCarrierShipment`, API trả 409 nếu không còn ở trạng thái lỗi.
 - Khi vận đơn đã `CREATED`, bước bàn giao không hỏi mã vận đơn và không tạo vận đơn thứ hai.

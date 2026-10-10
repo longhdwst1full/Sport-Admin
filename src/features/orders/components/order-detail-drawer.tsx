@@ -12,20 +12,7 @@ import {
   ShoppingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import {
-  Alert,
-  App,
-  Avatar,
-  Button,
-  Card,
-  Drawer,
-  Space,
-  Spin,
-  Steps,
-  Tag,
-  Timeline,
-  Tooltip,
-} from 'antd';
+import { App, Avatar, Button, Card, Drawer, Space, Steps, Timeline, Tooltip } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import {
   cancelAdminOrder,
@@ -39,19 +26,18 @@ import type { OrderItemDto } from '@/generated/api/orders/orders.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
+import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { StatusTag } from '@/foundation/management';
 import {
+  orderActorTypeLabels,
   orderStatusPresentation,
   paymentStatusPresentation,
 } from '../constants/order.constants';
 import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
 import { OrderReturnPanel } from '@/features/returns';
 import { PrintableOrderReceipt, printOrderReceipt } from '@/features/receipt';
-// Nhãn trạng thái vận đơn sống ở shared (không phải trong `features/fulfillments`) vì đây chỉ
-// đọc `OrderShipmentDto.status`, không phải use case của fulfillments — xem comment tại nguồn.
-import { fulfillmentStatusPresentation } from '@/shared/constants/fulfillment-status-presentation';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
-import type { FulfillmentStatus } from '@/generated/api/fulfillments/fulfillments.schemas';
 import type { ReactNode } from 'react';
 import { DRAWER_WIDTH } from '@/foundation/overlay';
 
@@ -61,6 +47,9 @@ interface OrderDetailDrawerProps {
   // CONTRACT: OrderDetailDrawer không tự import panel vận đơn (feature `fulfillments`) để tránh
   // vòng phụ thuộc orders↔fulfillments — nơi gọi (orders-page/fulfillments-page) inject panel này.
   renderFulfillmentPanel?: (orderId: string) => ReactNode;
+  // CONTRACT: `OrderShipmentDto.status` là string thô ở domain orders; nhãn/tone thuộc `fulfillments`
+  // nên nơi gọi inject `FulfillmentStatusTag` (cùng lý do vòng phụ thuộc như panel ở trên).
+  renderShipmentStatus?: (status: string) => ReactNode;
 }
 
 const ORDER_STEPS = [
@@ -130,7 +119,12 @@ const ORDER_ITEM_COLUMNS: ColumnsType<OrderItemDto> = [
   col.money<OrderItemDto>('lineTotal', 'Thành tiền', { width: 130, className: 'font-semibold text-slate-800' }),
 ];
 
-export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: OrderDetailDrawerProps) {
+export function OrderDetailDrawer({
+  orderId,
+  onClose,
+  renderFulfillmentPanel,
+  renderShipmentStatus,
+}: OrderDetailDrawerProps) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('order.manage');
@@ -166,7 +160,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
       setReason('');
       void message.success(
         action === 'cancel'
-          ? 'Đã hủy đơn hàng'
+          ? 'Đã huỷ đơn hàng'
           : action === 'confirm'
             ? 'Đã xác nhận đơn hàng thành công'
             : 'Đã hoàn tất đơn hàng thành công',
@@ -223,23 +217,21 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
       open={Boolean(orderId)}
       title={null}
       onClose={closeDrawer}
-      destroyOnClose
+      destroyOnHidden
       styles={{ body: { padding: 0 } }}
     >
       {detail.isLoading && (
-        <div className="flex min-h-80 items-center justify-center">
-          <Spin size="large" />
+        <div className="p-6">
+          <DetailSkeleton />
         </div>
       )}
 
       {detail.isError && (
         <div className="p-6">
-          <Alert
-            type="error"
-            showIcon
+          <QueryErrorAlert
             message="Không tải được chi tiết đơn hàng"
-            description={getApiErrorMessage(detail.error, 'Vui lòng thử lại.')}
-            action={<Button onClick={() => void detail.refetch()}>Thử lại</Button>}
+            error={detail.error}
+            retry={() => void detail.refetch()}
           />
         </div>
       )}
@@ -275,10 +267,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
               </div>
 
               <div className="flex flex-col items-end gap-2">
-                <StatusTag
-                  status={order.status}
-                  presentations={orderStatusPresentation as Record<string, { label: string; color: string }>}
-                />
+                <StatusTag status={order.status} presentations={orderStatusPresentation} />
                 <Button
                   size="small"
                   icon={<PrinterOutlined />}
@@ -295,7 +284,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
               {isCancelled ? (
                 <div className="flex items-center gap-2 text-rose-300 text-sm font-medium">
                   <CloseCircleOutlined className="text-base" />
-                  <span>Đơn hàng đã hủy</span>
+                  <span>Đơn hàng đã huỷ</span>
                 </div>
               ) : (
                 <Steps
@@ -360,12 +349,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Trạng thái thanh toán:</span>
-                    <Tag
-                      color={paymentStatusPresentation[order.paymentStatus]?.color ?? 'default'}
-                      className="m-0 font-medium text-[11px]"
-                    >
-                      {paymentStatusPresentation[order.paymentStatus]?.label ?? order.paymentStatus}
-                    </Tag>
+                    <StatusTag status={order.paymentStatus} presentations={paymentStatusPresentation} />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Phương thức:</span>
@@ -381,10 +365,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                     <>
                       <div className="flex items-center justify-between border-t border-slate-100 pt-2">
                         <span className="text-slate-500">Giao vận:</span>
-                        {/* CONTRACT: OrderShipmentDto.status là string thô ở domain orders; giá trị thực luôn thuộc FulfillmentStatus của domain fulfillments. */}
-                        <Tag color={fulfillmentStatusPresentation[order.shipment.status as FulfillmentStatus]?.color ?? 'default'} className="m-0 font-medium text-[11px]">
-                          {fulfillmentStatusPresentation[order.shipment.status as FulfillmentStatus]?.label ?? order.shipment.status}
-                        </Tag>
+                        {renderShipmentStatus?.(order.shipment.status)}
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-slate-500">Vận đơn:</span>
@@ -481,10 +462,10 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                     children: (
                       <div>
                         <span className="font-semibold text-slate-800">
-                          {orderStatusPresentation[history.toStatus]?.label ?? history.toStatus}
+                          {orderStatusPresentation[history.toStatus].label}
                         </span>
                         <div className="text-[11px] text-slate-400">
-                          {formatDateTime(history.createdAt)} · {history.actorType}
+                          {formatDateTime(history.createdAt)} · {orderActorTypeLabels[history.actorType] ?? 'Không xác định'}
                         </div>
                         {history.reason && (
                           <div className="mt-1 text-slate-600 bg-slate-50 p-2 rounded text-[11px] border border-slate-100">
@@ -514,7 +495,7 @@ export function OrderDetailDrawer({ orderId, onClose, renderFulfillmentPanel }: 
                 onClick={() => setAction('cancel')}
                 className="font-medium"
               >
-                Hủy đơn
+                Huỷ đơn
               </Button>
               <Space wrap>
                 <Button onClick={closeDrawer}>Đóng</Button>

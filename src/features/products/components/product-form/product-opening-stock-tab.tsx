@@ -1,9 +1,11 @@
 import { InboxOutlined } from '@ant-design/icons';
 import { Alert, Form, InputNumber, Select } from 'antd';
+import { useMemo } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { FormSection } from '@/foundation/layout/form-section';
 import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import type { ProductFormValues } from '../../model/product-form.mapper';
+import { toLookupOptions } from '../../model/product-lookup-options';
 import type { SearchOptionsQuery } from './types';
 
 /**
@@ -35,6 +37,11 @@ export function ProductOpeningStockTab({
   onWarehouseSearch: (value: string) => void;
 }) {
   const variants = form.watch('variants');
+  const branchOptions = useMemo(() => toLookupOptions(branches.data?.items, (item) => item.id), [branches.data?.items]);
+  const warehouseOptions = useMemo(
+    () => toLookupOptions(warehouses.data?.items, (item) => item.code),
+    [warehouses.data?.items],
+  );
 
   if (productType === ProductType.BUNDLE) {
     return (
@@ -82,10 +89,7 @@ export function ProductOpeningStockTab({
                 onSearch={onBranchSearch}
                 loading={branches.isFetching}
                 placeholder="Chọn chi nhánh"
-                options={(branches.data?.items ?? []).map((item) => ({
-                  value: item.id,
-                  label: `${item.code} — ${item.label}`,
-                }))}
+                options={branchOptions}
                 onChange={(value) => {
                   field.onChange(value);
                   form.setValue('initialWarehouseCode', undefined, { shouldValidate: true });
@@ -113,10 +117,7 @@ export function ProductOpeningStockTab({
                 onSearch={onWarehouseSearch}
                 loading={warehouses.isFetching}
                 placeholder={initialBranchId ? 'Chọn kho' : 'Chọn chi nhánh trước'}
-                options={(warehouses.data?.items ?? []).map((item) => ({
-                  value: item.code,
-                  label: `${item.code} — ${item.label}`,
-                }))}
+                options={warehouseOptions}
               />
             )}
           />

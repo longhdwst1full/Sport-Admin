@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { PlayCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import { Alert, Button, Descriptions, Drawer, Empty, Image, Skeleton, Statistic, Tag, Typography } from 'antd';
+import { PlayCircleOutlined } from '@ant-design/icons';
+import { Alert, Button, Descriptions, Empty, Image, Statistic, Tag, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { StatusTag } from '@/foundation/management';
+import { DetailDrawer } from '@/foundation/overlay';
+import { RefreshButton } from '@/foundation/table';
 import { useGetAdminSocialPost } from '@/generated/api/content/content';
 import { FacebookPublicationStatus, SocialMediaDtoKind } from '@/generated/api/content/content.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
@@ -15,6 +18,8 @@ import {
   SOCIAL_PERMISSION,
   type SocialChannel,
   TIKTOK_ENABLED,
+  WEBSITE_VISIBILITY,
+  websiteVisibilityPresentation,
 } from '../constants/social.constants';
 import { SOCIAL_ACTION_BUTTON } from '../constants/social-action-buttons';
 import {
@@ -29,7 +34,6 @@ import { SocialActionModal, type SocialModalAction } from './social-action-modal
 import { SocialPostEditorDrawer, type SocialEditorTarget } from './social-post-editor-drawer';
 import { TikTokPublicationSection } from './tiktok-publication-section';
 import { IMAGE_FALLBACK_SRC } from '@/features/media';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const metricValue = (value: number | null | undefined) => (value == null ? '—' : value);
 
@@ -86,25 +90,27 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
   };
 
   return (
-    <Drawer
+    <DetailDrawer
       title={post ? post.title : 'Chi tiết bài viết'}
-      width={DRAWER_WIDTH.md}
+      size="md"
       open
       onClose={onClose}
-      destroyOnHidden
-      extra={
-        <Button icon={<SyncOutlined />} loading={detail.isFetching} onClick={() => void detail.refetch()}>
-          Tải lại
-        </Button>
-      }
+      actions={<RefreshButton onRefresh={detail.refetch} loading={detail.isFetching} />}
+      loading={!post}
+      // Lỗi tải lần đầu thay cả nội dung; lỗi khi tải lại vẫn giữ dữ liệu cũ kèm cảnh báo bên dưới.
+      error={post ? undefined : detail.error ?? undefined}
+      onRetry={() => void detail.refetch()}
     >
-      {detail.isError && (
-        <Alert className="mb-3" type="error" showIcon message="Không tải được bài viết" description={socialCommandErrorMessage(detail.error)} />
-      )}
-      {!post ? (
-        detail.isLoading && <Skeleton active paragraph={{ rows: 10 }} />
-      ) : (
+      {post && (
         <>
+          {detail.isError && (
+            <QueryErrorAlert
+              error={detail.error}
+              message="Không tải lại được bài viết"
+              description={socialCommandErrorMessage(detail.error)}
+              retry={() => void detail.refetch()}
+            />
+          )}
           {actions.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
               {actions.map(({ action }) => {
@@ -155,7 +161,10 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
           <Descriptions size="small" column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 2 }} bordered className="mb-4">
             <Descriptions.Item label="Loại bài">{postTypeLabels[post.postType]}</Descriptions.Item>
             <Descriptions.Item label="Website">
-              {post.isPublished ? <Tag color="green">Đang hiển thị</Tag> : <Tag>Không hiển thị</Tag>}
+              <StatusTag
+                status={post.isPublished ? WEBSITE_VISIBILITY.VISIBLE : WEBSITE_VISIBILITY.HIDDEN}
+                presentations={websiteVisibilityPresentation}
+              />
             </Descriptions.Item>
             {facebook ? (
               <>
@@ -212,7 +221,15 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
                   {facebook.media.map((item) => (
                     <div key={item.id} className="relative overflow-hidden rounded-xl border border-slate-200">
                       {item.url ? (
-                        <Image fallback={IMAGE_FALLBACK_SRC} width={92} height={92} src={item.thumbnailUrl ?? item.url} className="object-cover" />
+                        <Image
+                          fallback={IMAGE_FALLBACK_SRC}
+                          width={92}
+                          height={92}
+                          loading="lazy"
+                          src={item.thumbnailUrl ?? item.url}
+                          alt=""
+                          className="object-cover"
+                        />
                       ) : (
                         <div className="flex h-[92px] w-[92px] items-center justify-center text-[11px] text-slate-400">Đã gỡ</div>
                       )}
@@ -246,16 +263,15 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
           <Typography.Paragraph type="secondary" className="text-xs">
             Cập nhật lần cuối {formatDateTime(post.updatedAt)}
           </Typography.Paragraph>
+          <SocialActionModal
+            post={post}
+            action={pending?.action}
+            channel={pending?.channel}
+            onClose={() => setPending(undefined)}
+          />
+          {editor && <SocialPostEditorDrawer target={editor} onClose={() => setEditor(undefined)} />}
         </>
       )}
-
-      <SocialActionModal
-        post={post}
-        action={pending?.action}
-        channel={pending?.channel}
-        onClose={() => setPending(undefined)}
-      />
-      {editor && <SocialPostEditorDrawer target={editor} onClose={() => setEditor(undefined)} />}
-    </Drawer>
+    </DetailDrawer>
   );
 }

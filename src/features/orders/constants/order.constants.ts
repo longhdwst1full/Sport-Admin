@@ -1,7 +1,5 @@
 import type { ColumnItem } from '@/foundation/table';
-import type { OrderStatus, OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
-
-export const ORDER_PAGE_SIZE = 20;
+import type { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
 
 /** Cột tuỳ chỉnh được của bảng đơn; `id` trùng `key` cột trong `OrderTable`. */
 export const ORDER_COLUMN_ITEMS: ColumnItem[] = [
@@ -28,15 +26,18 @@ export const orderTabs: Array<{
   { key: 'DELIVERED', label: 'Đã giao' },
 ];
 
-export const orderStatusPresentation: Record<OrderStatus, { label: string; color: string }> = {
-  PENDING_CONFIRMATION: { label: 'Chờ xác nhận', color: 'gold' },
-  CONFIRMED: { label: 'Đã xác nhận', color: 'blue' },
-  PICKING: { label: 'Đang lấy hàng', color: 'cyan' },
-  PACKED: { label: 'Đã đóng gói', color: 'geekblue' },
-  SHIPPED: { label: 'Đang vận chuyển', color: 'purple' },
-  DELIVERED: { label: 'Đã giao', color: 'green' },
-  COMPLETED: { label: 'Hoàn thành', color: 'success' },
-  CANCELLED: { label: 'Đã hủy', color: 'default' },
+// Nhãn/tone trạng thái đơn nằm ở `order-status` để payments dùng chung mà không tạo vòng orders ⇄ payments.
+export { orderStatusPresentation } from '@/features/order-status';
+
+/**
+ * CONTRACT: `OrderStatusHistoryDto.actorType` là string thô; giá trị backend đang ghi là
+ * USER/CUSTOMER/GUEST/SYSTEM. Giá trị lạ hiện `Không xác định` thay vì mã tiếng Anh.
+ */
+export const orderActorTypeLabels: Record<string, string> = {
+  USER: 'Nhân viên',
+  CUSTOMER: 'Khách hàng',
+  GUEST: 'Khách vãng lai',
+  SYSTEM: 'Hệ thống',
 };
 
 // paymentStatusPresentation là single source ở feature payments (rule 08); import qua barrel `@/features/payments`.

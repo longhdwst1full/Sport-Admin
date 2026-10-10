@@ -12,8 +12,6 @@ import type {
   ReturnAction,
 } from '@/generated/api/returns/returns.schemas';
 
-export const RETURN_PAGE_SIZE = 20;
-
 /** Mã quyền dùng để ẩn/hiện thao tác. PERMISSION: API vẫn chặn lại mọi lệnh. */
 export const RETURN_PERMISSION = {
   VIEW: 'return.view',
@@ -30,13 +28,13 @@ export const RETURN_PERMISSION = {
  * sánh nghiệp vụ. Kiểu `Record<Enum, …>` bắt lỗi khi contract thêm trạng thái mà quên nhãn.
  */
 export const returnStatusPresentation: Record<ReturnStatus, StatusPresentation> = {
-  REQUESTED: { label: 'Chờ duyệt', color: 'gold' },
-  APPROVED: { label: 'Chờ nhận hàng', color: 'blue' },
-  REJECTED: { label: 'Từ chối', color: 'red' },
-  RECEIVED: { label: 'Chờ hoàn tiền', color: 'purple' },
-  REFUNDED: { label: 'Đã hoàn tiền', color: 'cyan' },
-  CLOSED: { label: 'Đã đóng', color: 'green' },
-  CANCELLED: { label: 'Đã huỷ', color: 'default' },
+  REQUESTED: { label: 'Chờ duyệt', color: 'warning' },
+  APPROVED: { label: 'Chờ nhận hàng', color: 'info' },
+  REJECTED: { label: 'Từ chối', color: 'danger' },
+  RECEIVED: { label: 'Chờ hoàn tiền', color: 'success' },
+  REFUNDED: { label: 'Đã hoàn tiền', color: 'accent' },
+  CLOSED: { label: 'Đã đóng', color: 'neutral' },
+  CANCELLED: { label: 'Đã huỷ', color: 'neutral' },
 };
 
 export const returnReasonLabels: Record<ReturnReasonCode, string> = {
@@ -72,9 +70,9 @@ export const refundMethodLabels: Record<RefundMethod, string> = {
 };
 
 export const refundStatusPresentation: Record<RefundStatus, StatusPresentation> = {
-  PENDING: { label: 'Chờ xác nhận', color: 'gold' },
-  SUCCEEDED: { label: 'Đã hoàn', color: 'green' },
-  FAILED: { label: 'Không thực hiện được', color: 'red' },
+  PENDING: { label: 'Chờ xác nhận', color: 'warning' },
+  SUCCEEDED: { label: 'Đã hoàn', color: 'success' },
+  FAILED: { label: 'Không thực hiện được', color: 'danger' },
 };
 
 export const returnActionLabels: Record<ReturnAction, string> = {

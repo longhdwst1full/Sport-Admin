@@ -9,13 +9,14 @@ import {
   PoweroffOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Descriptions, Popconfirm, Typography } from 'antd';
+import { App, Button, Descriptions, Popconfirm, Select, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 import { PermissionGate, useCan, useCanAll } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
-import { AdminTable, TableActionButton, col } from '@/foundation/table';
+import { AdminTable, FilterBar, RefreshButton, TableActionButton, col } from '@/foundation/table';
 import {
   getListAdminBranchesQueryKey,
   getListAdminWarehousesQueryKey,
@@ -24,10 +25,15 @@ import {
   useListAdminBranches,
   useListAdminWarehouses,
 } from '@/generated/api/organization/organization';
-import type { BranchDto, OrganizationStatus } from '@/generated/api/organization/organization.schemas';
+import { OrganizationStatus, type BranchDto } from '@/generated/api/organization/organization.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { OrganizationFormDrawer } from '../components/organization-form-drawer';
-import { BRANCH_WAREHOUSE_MANAGE, ORGANIZATION_STATUSES } from '../constants/organization.constants';
+import {
+  BRANCH_WAREHOUSE_MANAGE,
+  ORGANIZATION_STATUS_OPTIONS,
+  ORGANIZATION_STATUSES,
+} from '../constants/organization.constants';
 import { toBranchWarehouseRows, type BranchWarehouseRow } from '../model/branch-warehouse.mapper';
 
 const BRANCH_WAREHOUSE_DATA_COLUMNS: ColumnsType<BranchWarehouseRow> = [
@@ -71,7 +77,25 @@ export function OrganizationPage() {
   const warehousesQuery = useListAdminWarehouses({ query: { enabled: canViewWarehouses } });
   const branches = useMemo(() => branchesQuery.data?.items ?? [], [branchesQuery.data]);
   const warehouses = useMemo(() => warehousesQuery.data?.items ?? [], [warehousesQuery.data]);
-  const rows = useMemo(() => toBranchWarehouseRows(branches, warehouses), [branches, warehouses]);
+  // Danh sách trả trọn một lần (topology V1 nhỏ) nên lọc tại chỗ; ô tìm (`q`) và trạng thái nằm trên URL.
+  const search = useUrlSearch(['q']);
+  const { url } = search;
+  const keyword = (url.get('q') ?? '').toLocaleLowerCase('vi');
+  const status = url.getEnum('status', OrganizationStatus);
+  const allRows = useMemo(() => toBranchWarehouseRows(branches, warehouses), [branches, warehouses]);
+  const rows = useMemo(
+    () =>
+      allRows.filter(
+        (row) =>
+          (!status || row.status === status) &&
+          (!keyword ||
+            [row.branchCode, row.branchName, row.warehouseCode, row.warehouseName, row.address]
+              .join(' ')
+              .toLocaleLowerCase('vi')
+              .includes(keyword)),
+      ),
+    [allRows, keyword, status],
+  );
   const regionCount = new Set(branches.map((branch) => branch.address.province)).size;
   const hasError = branchesQuery.isError || (canViewWarehouses && warehousesQuery.isError);
   const refresh = async () => {
@@ -117,7 +141,7 @@ export function OrganizationPage() {
                 }}
               />
               <Popconfirm
-                title={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho?' : 'Kích hoạt lại chi nhánh và kho?'}
+                title={row.status === OrganizationStatus.ACTIVE ? 'Ngừng chi nhánh và kho?' : 'Kích hoạt lại chi nhánh và kho?'}
                 description="Hai bản ghi sẽ đổi trạng thái trong cùng transaction."
                 disabled={!row.warehouse}
                 onConfirm={() => {
@@ -129,13 +153,13 @@ export function OrganizationPage() {
                       warehouseExpectedVersion: row.warehouse.version,
                     },
                   };
-                  if (row.status === 'ACTIVE') deactivateBranch(variables);
+                  if (row.status === OrganizationStatus.ACTIVE) deactivateBranch(variables);
                   else activateBranch(variables);
                 }}
               >
                 <TableActionButton
-                  label={row.status === 'ACTIVE' ? 'Ngừng chi nhánh và kho' : 'Kích hoạt chi nhánh và kho'}
-                  danger={row.status === 'ACTIVE'}
+                  label={row.status === OrganizationStatus.ACTIVE ? 'Ngừng chi nhánh và kho' : 'Kích hoạt chi nhánh và kho'}
+                  danger={row.status === OrganizationStatus.ACTIVE}
                   disabled={!row.warehouse}
                   icon={<PoweroffOutlined />}
                 />
@@ -193,14 +217,36 @@ export function OrganizationPage() {
           tone: 'blue',
         },
       ]}
+      filters={
+        <FilterBar
+          actions={
+            <RefreshButton
+              loading={branchesQuery.isFetching || warehousesQuery.isFetching}
+              onRefresh={() => Promise.all([branchesQuery.refetch(), canViewWarehouses && warehousesQuery.refetch()])}
+            />
+          }
+        >
+          <SearchInput
+            value={search.values.q}
+            onChange={search.setter('q')}
+            placeholder="Mã/tên chi nhánh, kho hoặc địa chỉ"
+          />
+          <Select
+            allowClear
+            className="min-w-44"
+            placeholder="Trạng thái"
+            value={status}
+            options={ORGANIZATION_STATUS_OPTIONS}
+            onChange={(value?: string) => url.set('status', value)}
+          />
+        </FilterBar>
+      }
     >
       {hasError && (
-        <div className="mb-4">
-          <QueryErrorAlert
-            error={branchesQuery.error ?? warehousesQuery.error}
-            retry={() => void Promise.all([branchesQuery.refetch(), warehousesQuery.refetch()])}
-          />
-        </div>
+        <QueryErrorAlert
+          error={branchesQuery.error ?? warehousesQuery.error}
+          retry={() => void Promise.all([branchesQuery.refetch(), canViewWarehouses && warehousesQuery.refetch()])}
+        />
       )}
       <AdminTable
         rowKey="branchId"

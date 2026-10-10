@@ -1,9 +1,27 @@
 import { CheckCircleFilled, PrinterOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Modal, Table, Tag } from 'antd';
-import { AdminTable } from '@/foundation/table';
-import type { OrderDetailDto } from '@/generated/api/orders/orders.schemas';
+import type { ColumnsType } from 'antd/es/table';
+import { MODAL_WIDTH } from '@/foundation/overlay';
+import { AdminTable, EMPTY_CELL, col } from '@/foundation/table';
+import { PosPaymentMethod, type OrderDetailDto, type OrderItemDto } from '@/generated/api/orders/orders.schemas';
 import { PrintableOrderReceipt, printOrderReceipt } from '@/features/receipt';
+import { parseEnum } from '@/shared/utils/parse-enum';
 import { moneyFormatter, posPaymentMethodLabels } from '../constants/pos.constants';
+
+const RECEIPT_ITEM_COLUMNS: ColumnsType<OrderItemDto> = [
+  col.text<OrderItemDto>('productName', 'Sản phẩm', {
+    width: undefined,
+    render: (_value, item) => (
+      <div>
+        <div className="font-semibold">{item.productName}</div>
+        <div className="font-mono text-xs text-slate-500">{item.sku}</div>
+      </div>
+    ),
+  }),
+  col.number<OrderItemDto>('quantity', 'SL', { width: 60, align: 'center' }),
+  col.money<OrderItemDto>('unitPrice', 'Đơn giá', { width: 130 }),
+  col.money<OrderItemDto>('lineTotal', 'Thành tiền', { width: 140 }),
+];
 
 /**
  * Biên lai in ra từ chính dữ liệu đơn Backend trả về, không dựng lại từ giỏ hàng trên
@@ -18,14 +36,14 @@ export function PosReceiptModal({
   onClose: () => void;
   onNewOrder: () => void;
 }) {
-  const paymentLabel =
-    posPaymentMethodLabels[order?.paymentMethod as keyof typeof posPaymentMethodLabels] ??
-    order?.paymentMethod;
+  // CONTRACT: OrderDetailDto.paymentMethod là string thô; đơn tại quầy luôn thuộc PosPaymentMethod.
+  const paymentMethod = parseEnum(PosPaymentMethod, order?.paymentMethod);
+  const paymentLabel = paymentMethod ? posPaymentMethodLabels[paymentMethod] : EMPTY_CELL;
 
   return (
     <Modal
       open={Boolean(order)}
-      width={720}
+      width={MODAL_WIDTH.lg}
       onCancel={onClose}
       title={
         <span className="flex items-center gap-2">
@@ -66,30 +84,7 @@ export function PosReceiptModal({
             rowKey="id"
             pagination={false}
             dataSource={order.items}
-            columns={[
-              {
-                title: 'Sản phẩm',
-                render: (_value, item) => (
-                  <div>
-                    <div className="font-semibold">{item.productName}</div>
-                    <div className="font-mono text-xs text-slate-500">{item.sku}</div>
-                  </div>
-                ),
-              },
-              { title: 'SL', dataIndex: 'quantity', width: 60, align: 'center' },
-              {
-                title: 'Đơn giá',
-                width: 130,
-                align: 'right',
-                render: (_value, item) => moneyFormatter.format(Number(item.unitPrice)),
-              },
-              {
-                title: 'Thành tiền',
-                width: 140,
-                align: 'right',
-                render: (_value, item) => moneyFormatter.format(Number(item.lineTotal)),
-              },
-            ]}
+            columns={RECEIPT_ITEM_COLUMNS}
             summary={() => (
               <Table.Summary.Row>
                 <Table.Summary.Cell index={0} colSpan={3} align="right">

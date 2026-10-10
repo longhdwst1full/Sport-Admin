@@ -1,16 +1,17 @@
-import { ArrowDownOutlined, ArrowUpOutlined, ExportOutlined, ReloadOutlined } from '@ant-design/icons';
-import { App, Button, Card, DatePicker, Empty, Image, Select, Skeleton, Tooltip, Typography } from 'antd';
+import { ArrowDownOutlined, ArrowUpOutlined, ExportOutlined } from '@ant-design/icons';
+import { App, Card, DatePicker, Empty, Select, Skeleton, Tooltip, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { lazy, Suspense, useId, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { IMAGE_FALLBACK_SRC } from '@/features/media';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { ManagementPage } from '@/foundation/management';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable, col, EMPTY_CELL, RefreshButton } from '@/foundation/table';
 import { formatDateTime } from '@/lib/format/datetime';
 import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { SocialChannelIcons } from '../components/social-channel-icons';
+import { SocialPostTitleCell } from '../components/social-post-title-cell';
 import { SocialSyncButton } from '../components/social-sync-button';
 import {
   isSocialChannelEnabled,
@@ -43,7 +44,8 @@ const SocialComparisonChart = lazy(() =>
 
 const ALL_CHANNELS = 'all';
 const KPI_METRICS = Object.values(SOCIAL_METRIC);
-const CHART_METRICS = Object.values(SOCIAL_METRIC);
+const CHART_METRIC_OPTIONS = Object.values(SOCIAL_METRIC).map((metric) => ({ value: metric, label: socialMetricLabels[metric] }));
+const TOP_POST_METRICS = ['views', 'likes', 'comments', 'shares'] as const;
 
 const POST_CHANNEL_OF: Record<SocialChannel, (typeof POST_CHANNEL)[keyof typeof POST_CHANNEL]> = {
   [SOCIAL_CHANNEL.FACEBOOK]: POST_CHANNEL.FACEBOOK,
@@ -65,6 +67,41 @@ const channelOptions = [
           ),
         },
   ),
+];
+
+const TOP_POST_COLUMNS: ColumnsType<SocialTopPost> = [
+  {
+    title: 'Bài đăng',
+    key: 'title',
+    render: (_: unknown, row: SocialTopPost) => (
+      <SocialPostTitleCell title={row.title} imageUrl={row.thumbnailUrl}>
+        {row.publishedAt && <div className="text-[11px] text-slate-500">{formatDateTime(row.publishedAt)}</div>}
+      </SocialPostTitleCell>
+    ),
+  },
+  col.text<SocialTopPost>('channel', 'Kênh', {
+    width: 70,
+    align: 'center',
+    render: (channel: SocialChannel) => <SocialChannelIcons channels={[POST_CHANNEL_OF[channel]]} />,
+  }),
+  ...TOP_POST_METRICS.map((key) =>
+    col.number<SocialTopPost>(key, socialMetricLabels[key], {
+      width: 100,
+      render: (value: number | null) => <span className="text-xs">{formatMetric(value)}</span>,
+    }),
+  ),
+  col.text<SocialTopPost>('permalinkUrl', '', {
+    key: 'link',
+    width: 130,
+    render: (url: string | null | undefined) =>
+      url ? (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs">
+          <ExportOutlined aria-hidden /> Xem bài gốc
+        </a>
+      ) : (
+        <span className="text-xs text-slate-400">{EMPTY_CELL}</span>
+      ),
+  }),
 ];
 
 function KpiCard({
@@ -125,16 +162,17 @@ export function SocialDashboardPage() {
   const [params] = useSearchParams();
   const { patch: updateParams } = useUrlFilters();
   const filters = parseSocialDashboardFilters(params);
+  const { from, to, channel } = filters;
   const [chartMetric, setChartMetric] = useState<SocialMetric>(SOCIAL_METRIC.VIEWS);
   const dashboard = useSocialDashboard(filters);
   const { data } = dashboard;
   const channels = visibleChannels(filters);
   const ids = useId();
   const hasData = hasDashboardData(data);
+  // `filters` là object mới mỗi render; khoá memo theo từng giá trị.
   const series = useMemo(
-    () => toComparisonSeries(data.daily, chartMetric, filters),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- filters được tính lại mỗi render; khoá theo giá trị
-    [data.daily, chartMetric, filters.from, filters.to, filters.channel],
+    () => toComparisonSeries(data.daily, chartMetric, { from, to, channel }),
+    [data.daily, chartMetric, from, to, channel],
   );
 
   return (
@@ -145,14 +183,7 @@ export function SocialDashboardPage() {
         description="Theo dõi hiệu quả bài đăng Facebook và TikTok theo khoảng ngày."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Tooltip title="Làm mới dữ liệu">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={dashboard.refetch}
-                loading={dashboard.isFetching}
-                aria-label="Làm mới"
-              />
-            </Tooltip>
+            <RefreshButton onRefresh={dashboard.refetch} loading={dashboard.isFetching} />
             <SocialSyncButton />
           </div>
         }
@@ -226,7 +257,7 @@ export function SocialDashboardPage() {
                 aria-label="Chỉ số biểu đồ"
                 value={chartMetric}
                 onChange={setChartMetric}
-                options={CHART_METRICS.map((metric) => ({ value: metric, label: socialMetricLabels[metric] }))}
+                options={CHART_METRIC_OPTIONS}
               />
             }
           >
@@ -252,60 +283,7 @@ export function SocialDashboardPage() {
               pagination={false}
               scroll={{ x: 820 }}
               locale={{ emptyText: hasData ? 'Không có bài trong khoảng ngày này.' : 'Chưa có số liệu bài đăng.' }}
-              columns={[
-                {
-                  title: 'Bài đăng',
-                  key: 'title',
-                  render: (_: unknown, row: SocialTopPost) => (
-                    <div className="flex items-center gap-3">
-                      <Image
-                        width={48}
-                        height={48}
-                        className="rounded-md object-cover"
-                        src={row.thumbnailUrl ?? IMAGE_FALLBACK_SRC}
-                        fallback={IMAGE_FALLBACK_SRC}
-                        alt={row.title}
-                        preview={false}
-                      />
-                      <div className="min-w-0">
-                        <div className="max-w-[260px] truncate text-xs font-semibold text-slate-800">{row.title}</div>
-                        {row.publishedAt && (
-                          <div className="text-[11px] text-slate-500">{formatDateTime(row.publishedAt)}</div>
-                        )}
-                      </div>
-                    </div>
-                  ),
-                },
-                {
-                  title: 'Kênh',
-                  key: 'channel',
-                  width: 70,
-                  align: 'center' as const,
-                  render: (_: unknown, row: SocialTopPost) => (
-                    <SocialChannelIcons channels={[POST_CHANNEL_OF[row.channel]]} />
-                  ),
-                },
-                ...(['views', 'likes', 'comments', 'shares'] as const).map((key) => ({
-                  title: socialMetricLabels[key],
-                  key,
-                  width: 100,
-                  align: 'right' as const,
-                  render: (_: unknown, row: SocialTopPost) => <span className="text-xs">{formatMetric(row[key])}</span>,
-                })),
-                {
-                  title: '',
-                  key: 'link',
-                  width: 130,
-                  render: (_: unknown, row: SocialTopPost) =>
-                    row.permalinkUrl ? (
-                      <a href={row.permalinkUrl} target="_blank" rel="noopener noreferrer" className="text-xs">
-                        <ExportOutlined aria-hidden /> Xem bài gốc
-                      </a>
-                    ) : (
-                      <span className="text-xs text-slate-400">—</span>
-                    ),
-                },
-              ]}
+              columns={TOP_POST_COLUMNS}
             />
           </Card>
         </div>

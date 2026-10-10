@@ -1,3 +1,5 @@
+import type { ProductType } from '@/generated/api/catalog/catalog.schemas';
+import { toOptions } from '@/shared/utils/options';
 import {
   ADMIN_TABLE_DEFAULT_PAGE_SIZE,
   ADMIN_TABLE_PAGE_SIZE_OPTIONS,
@@ -21,3 +23,9 @@ export const PRODUCT_READINESS_LABEL: Record<string, string> = {
   MISSING_PRIMARY_IMAGE: 'Cần có ảnh chính',
   NO_AVAILABLE_STOCK: 'Chưa chi nhánh nào có tồn khả dụng — vẫn xuất bản được, website sẽ hiện hết hàng',
 };
+
+/** Loại sản phẩm cho ô chọn ở form; nhãn tiếng Việt thay cho mã enum. */
+export const PRODUCT_TYPE_OPTIONS = toOptions<ProductType>({
+  STANDARD: 'Sản phẩm thường',
+  BUNDLE: 'Combo cố định',
+});

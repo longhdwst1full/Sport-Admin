@@ -1,5 +1,4 @@
 import { lazy, Suspense, useState } from 'react';
-import { useDebouncedCallback } from 'use-debounce';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { PosOrderDrawer } from '@/features/pos';
@@ -12,34 +11,32 @@ import {
   ShoppingCartOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Alert, Button, Tabs } from 'antd';
+import { Button, Tabs } from 'antd';
 import { useListAdminOrders } from '@/generated/api/orders/orders';
 import { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
 import {
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
   ColumnSettingsModal,
   FilterBar,
   RefreshButton,
   useColumnVisibility,
 } from '@/foundation/table';
 import { PageTransition } from '@/foundation/layout/page-transition';
-import { getApiErrorMessage } from '@/lib/api/error';
-import { SEARCH_DEBOUNCE_MS, useSearchState } from '@/shared/hooks/use-search-state';
-import { useUrlFilters } from '@/shared/hooks/use-url-filters';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
-import {
-  moneyFormatter,
-  ORDER_COLUMN_ITEMS,
-  ORDER_PAGE_SIZE,
-  orderTabs,
-} from '../constants/order.constants';
+import { moneyFormatter, ORDER_COLUMN_ITEMS, orderTabs } from '../constants/order.constants';
 
 // Nạp lười để phá vòng chunk tĩnh orders ↔ fulfillments (FulfillmentsPage lại import OrderDetailDrawer
 // từ barrel orders); vẫn đi qua barrel theo RULE-FA-03.
 const FulfillmentWorkflowPanel = lazy(() =>
   import('@/features/fulfillments').then((module) => ({ default: module.FulfillmentWorkflowPanel })),
+);
+const FulfillmentStatusTag = lazy(() =>
+  import('@/features/fulfillments').then((module) => ({ default: module.FulfillmentStatusTag })),
 );
 
 type OrderTab = 'ALL' | OrderStatusGroup;
@@ -50,31 +47,14 @@ type OrderTab = 'ALL' | OrderStatusGroup;
  * lên URL; query đọc URL. Đổi bộ lọc thì xoá `page`. Kích thước trang chỉ sống trong màn.
  */
 export function OrdersPage() {
-  const url = useUrlFilters();
+  // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend: nhập cả mã đơn lẫn
+  // số điện thoại sẽ thu hẹp kết quả chứ không mở rộng như ô gộp trước đây.
+  const search = useUrlSearch(['orderNo', 'name', 'phone']);
+  const { url } = search;
   const tab: OrderTab = url.getEnum('status', OrderStatusGroup) ?? 'ALL';
   const page = url.getNumber('page', 1);
   const [createOpen, setCreateOpen] = useState(false);
-  // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend: nhập cả mã đơn lẫn
-  // số điện thoại sẽ thu hẹp kết quả chứ không mở rộng như ô gộp trước đây.
-  const orderNo = useSearchState(url.get('orderNo') ?? '');
-  const recipientName = useSearchState(url.get('name') ?? '');
-  const recipientPhone = useSearchState(url.get('phone') ?? '');
-  // Gọi lúc hết debounce với closure mới nhất nên đọc đúng giá trị cả ba ô.
-  const commitSearch = useDebouncedCallback(
-    () =>
-      url.patch({
-        orderNo: orderNo.value.trim(),
-        name: recipientName.value.trim(),
-        phone: recipientPhone.value.trim(),
-        page: undefined,
-      }),
-    SEARCH_DEBOUNCE_MS,
-  );
-  const typed = (setValue: (value: string) => void) => (value: string) => {
-    setValue(value);
-    commitSearch();
-  };
-  const [pageSize, setPageSize] = useState(ORDER_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(ADMIN_TABLE_DEFAULT_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
   // Đơn đang mở ở drawer chi tiết là ngữ cảnh gợi ý cho Copilot.
   useCopilotPageHints(selectedId ? { orderId: selectedId } : undefined);
@@ -139,7 +119,7 @@ export function OrdersPage() {
                   onClick={columnsState.open}
                   className="text-slate-600"
                 >
-                  Tùy chỉnh cột
+                  Tuỳ chỉnh cột
                 </Button>
                 <PermissionGate permission="order.manage">
                   <Button
@@ -154,21 +134,21 @@ export function OrdersPage() {
             }
           >
             <SearchInput
-              value={orderNo.value}
+              value={search.values.orderNo}
               placeholder="Nhập mã đơn hàng..."
-              onChange={typed(orderNo.setValue)}
+              onChange={search.setter('orderNo')}
             />
             <SearchInput
               icon={<UserOutlined className="text-slate-400" />}
-              value={recipientName.value}
+              value={search.values.name}
               placeholder="Nhập tên người nhận..."
-              onChange={typed(recipientName.setValue)}
+              onChange={search.setter('name')}
             />
             <SearchInput
               icon={<PhoneOutlined className="text-slate-400" />}
-              value={recipientPhone.value}
+              value={search.values.phone}
               placeholder="Nhập số điện thoại..."
-              onChange={typed(recipientPhone.setValue)}
+              onChange={search.setter('phone')}
             />
           </FilterBar>
         }
@@ -181,16 +161,10 @@ export function OrdersPage() {
         />
 
         {orders.isError && (
-          <Alert
-            className="mb-5"
-            type="error"
-            showIcon
+          <QueryErrorAlert
             message="Không tải được danh sách đơn hàng"
-            description={getApiErrorMessage(
-              orders.error,
-              'Vui lòng kiểm tra phiên đăng nhập và phạm vi chi nhánh.',
-            )}
-            action={<Button onClick={() => void orders.refetch()}>Thử lại</Button>}
+            error={orders.error}
+            retry={() => void orders.refetch()}
           />
         )}
 
@@ -217,6 +191,11 @@ export function OrdersPage() {
         renderFulfillmentPanel={(orderId) => (
           <Suspense fallback={null}>
             <FulfillmentWorkflowPanel orderId={orderId} />
+          </Suspense>
+        )}
+        renderShipmentStatus={(status) => (
+          <Suspense fallback={null}>
+            <FulfillmentStatusTag status={status} />
           </Suspense>
         )}
       />

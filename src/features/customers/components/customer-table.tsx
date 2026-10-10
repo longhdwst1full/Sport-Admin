@@ -1,18 +1,13 @@
-import { Avatar, Popconfirm, Tag, Tooltip } from 'antd';
+import { Avatar, Popconfirm, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import { AdminTable, TableActionButton, col } from '@/foundation/table';
-import { CheckCircleOutlined, DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton, col } from '@/foundation/table';
+import { DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import { useCan } from '@/core/auth/permissions';
-import type { StatusPresentation } from '@/foundation/management';
-import { CUSTOMER_PAGE_SIZE, customerKindPresentation } from '../constants/customer.constants';
+import { CustomerStatus, type CustomerKind } from '@/generated/api/customers/customers.schemas';
+import { customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
 import type { CustomerRowView } from '../model/customer.mapper';
 import { getCustomerDeleteBlockReason } from '../model/customer.policy';
-
-const CUSTOMER_TABLE_STATUS: Record<'ACTIVE' | 'INACTIVE', StatusPresentation> = {
-  ACTIVE: { label: 'Hoạt động', color: 'green', icon: <CheckCircleOutlined className="text-emerald-600" /> },
-  INACTIVE: { label: 'Ngừng hoạt động', color: 'default', icon: <StopOutlined className="text-slate-500" /> },
-};
 
 interface CustomerColumnHandlers {
   onEdit: (row: CustomerRowView) => void;
@@ -52,15 +47,7 @@ function useCustomerColumns({ onEdit, onToggleStatus, onDelete, busyId }: Custom
           </div>
         ),
       },
-      {
-        key: 'kind',
-        title: 'Loại',
-        width: 120,
-        render: (_value: unknown, row) => {
-          const view = customerKindPresentation[row.kind];
-          return <Tag color={view?.color}>{view?.label ?? row.kind}</Tag>;
-        },
-      },
+      col.status<CustomerRowView, CustomerKind>('kind', 'Loại', customerKindPresentation, { width: 120 }),
       col.number<CustomerRowView>('orderCount', 'Số đơn', { width: 90, align: 'center' }),
       {
         key: 'lifetimeValue',
@@ -72,8 +59,8 @@ function useCustomerColumns({ onEdit, onToggleStatus, onDelete, busyId }: Custom
         ),
       },
       col.text<CustomerRowView>('lastOrderLabel', 'Mua gần nhất', { key: 'lastOrder', width: 130 }),
-      col.status<CustomerRowView, 'ACTIVE' | 'INACTIVE'>('status', 'Trạng thái', CUSTOMER_TABLE_STATUS, {
-        width: 140,
+      col.status<CustomerRowView, CustomerStatus>('status', 'Trạng thái', customerStatusPresentation, {
+        width: 150,
       }),
       col.actions<CustomerRowView>(
         (row) => {
@@ -88,16 +75,16 @@ function useCustomerColumns({ onEdit, onToggleStatus, onDelete, busyId }: Custom
                 disabled={busyId === row.id}
                 onClick={() => onEdit(row)}
               />
-              <Tooltip title={row.status === 'ACTIVE' ? 'Ngừng hoạt động' : 'Mở lại'}>
+              <Tooltip title={row.status === CustomerStatus.ACTIVE ? 'Ngừng hoạt động' : 'Mở lại'}>
                 <Popconfirm
-                  title={row.status === 'ACTIVE' ? 'Ngừng hoạt động khách này?' : 'Mở lại hồ sơ khách này?'}
+                  title={row.status === CustomerStatus.ACTIVE ? 'Ngừng hoạt động khách này?' : 'Mở lại hồ sơ khách này?'}
                   description="Lịch sử mua hàng vẫn được giữ nguyên."
                   onConfirm={() => onToggleStatus(row)}
                 >
                   <TableActionButton
-                    label={row.status === 'ACTIVE' ? 'Ngừng hoạt động' : 'Mở lại'}
+                    label={row.status === CustomerStatus.ACTIVE ? 'Ngừng hoạt động' : 'Mở lại'}
                     disabled={busyId === row.id}
-                    icon={row.status === 'ACTIVE' ? <StopOutlined /> : <UndoOutlined />}
+                    icon={row.status === CustomerStatus.ACTIVE ? <StopOutlined /> : <UndoOutlined />}
                   />
                 </Popconfirm>
               </Tooltip>
@@ -110,7 +97,7 @@ function useCustomerColumns({ onEdit, onToggleStatus, onDelete, busyId }: Custom
                   onConfirm={() => onDelete(row)}
                 >
                   <TableActionButton
-                    label={deleteBlockReason ?? `Xóa khách hàng ${row.name}`}
+                    label={deleteBlockReason ?? `Xoá khách hàng ${row.name}`}
                     danger
                     icon={<DeleteOutlined />}
                     // Khách đã mua hàng là một phần của lịch sử đơn; Backend cũng từ chối xoá.
@@ -173,10 +160,9 @@ export function CustomerTable({
       onRow={(row) => ({ onClick: () => onOpen(row.id), style: { cursor: 'pointer' } })}
       pagination={{
         current: page,
-        pageSize: CUSTOMER_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
-        showSizeChanger: true,
-        pageSizeOptions: ['10', '20', '50', '100'],
+        showSizeChanger: false,
         onChange: onPageChange,
         showTotal: (value) => `${value} khách hàng`,
       }}

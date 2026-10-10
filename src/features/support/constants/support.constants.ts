@@ -6,8 +6,6 @@ import type {
   SupportTicketStatus,
 } from '@/generated/api/support/support.schemas';
 
-export const SUPPORT_TICKET_PAGE_SIZE = 20;
-
 /** Mã quyền dùng để ẩn/hiện màn hình và thao tác. PERMISSION: API vẫn chặn lại mọi lệnh. */
 export const SUPPORT_PERMISSION = {
   VIEW: 'support.ticket.view',
@@ -47,17 +45,17 @@ export const SUPPORT_STALE_ERROR_CODES: ReadonlySet<string> = new Set([
 
 /** Nhãn tách khỏi mã trạng thái; `Record<Enum, …>` bắt lỗi khi contract thêm giá trị mà quên nhãn. */
 export const supportTicketStatusPresentation: Record<SupportTicketStatus, StatusPresentation> = {
-  OPEN: { label: 'Mới', color: 'gold' },
-  ASSIGNED: { label: 'Đang xử lý', color: 'blue' },
-  RESOLVED: { label: 'Đã giải quyết', color: 'purple' },
-  CLOSED: { label: 'Đã đóng', color: 'default' },
+  OPEN: { label: 'Mới', color: 'warning' },
+  ASSIGNED: { label: 'Đang xử lý', color: 'progress' },
+  RESOLVED: { label: 'Đã giải quyết', color: 'success' },
+  CLOSED: { label: 'Đã đóng', color: 'neutral' },
 };
 
 export const supportTicketPriorityPresentation: Record<SupportTicketPriority, StatusPresentation> = {
-  LOW: { label: 'Thấp', color: 'default' },
-  NORMAL: { label: 'Bình thường', color: 'cyan' },
-  HIGH: { label: 'Cao', color: 'orange' },
-  URGENT: { label: 'Khẩn cấp', color: 'red' },
+  LOW: { label: 'Thấp', color: 'neutral' },
+  NORMAL: { label: 'Bình thường', color: 'info' },
+  HIGH: { label: 'Cao', color: 'warning' },
+  URGENT: { label: 'Khẩn cấp', color: 'danger' },
 };
 
 export const supportAuthorTypeLabels: Record<SupportMessageAuthorType, string> = {

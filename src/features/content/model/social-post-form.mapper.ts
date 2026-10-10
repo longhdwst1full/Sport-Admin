@@ -12,6 +12,7 @@ import {
   type UpdateFacebookDraftDto,
   type UpdateTikTokDraftDto,
 } from '@/generated/api/content/content.schemas';
+import { htmlToPlainText, plainTextToHtml } from '@/shared/utils';
 import { SOCIAL_LIMITS } from '../constants/social.constants';
 
 export type SocialMediaKind = 'IMAGE' | 'VIDEO';
@@ -25,6 +26,7 @@ export interface SocialMediaValue {
 
 export interface SocialPostFormValues {
   title?: string;
+  /** HTML của CKEditor (variant `plain`); caption gửi API là văn bản thuần — đổi ở `captionOf`. */
   body: string;
   /** Chèn vào cuối caption khi lưu — contract không có trường link riêng (link đặt trong caption). */
   link?: string;
@@ -79,6 +81,29 @@ export function composeCaption(body: string, link?: string): string {
 
 const optionalText = (value?: string) => value?.trim() || undefined;
 
+/** CONTRACT: caption mạng xã hội là văn bản thuần — HTML editor đổi thành text rồi mới ghép link. */
+const captionOf = (values: Pick<SocialPostFormValues, 'body' | 'link'>) =>
+  composeCaption(htmlToPlainText(values.body), values.link);
+
+/** Số ký tự caption tính trên văn bản thuần (giới hạn của Facebook/TikTok), không tính thẻ HTML. */
+export const captionLength = (html: string | null | undefined) => htmlToPlainText(html).length;
+
+/** Luật kiểm caption trên văn bản thuần: bắt buộc (không chỉ khoảng trắng) và độ dài tối đa. */
+export function captionRules({ max, required, maxMessage }: { max: number; required?: string; maxMessage?: string }) {
+  return [
+    {
+      validator: (_: unknown, value?: string) => {
+        const length = captionLength(value);
+        if (required && length === 0) return Promise.reject(new Error(required));
+        if (length > max) {
+          return Promise.reject(new Error(maxMessage ?? `Nội dung tối đa ${max.toLocaleString('vi-VN')} ký tự.`));
+        }
+        return Promise.resolve();
+      },
+    },
+  ];
+}
+
 /** Tạo bài SOCIAL đa kênh: `tiktok` chỉ gửi khi có kênh TIKTOK. */
 export function toCreateSocialPostDto(
   values: SocialPostFormValues,
@@ -87,7 +112,7 @@ export function toCreateSocialPostDto(
 ): CreateSocialPostDto {
   return {
     title: optionalText(values.title),
-    body: composeCaption(values.body, values.link),
+    body: captionOf(values),
     mediaAssetIds: values.media.map((item) => item.id),
     ...(channels.length ? { channels } : {}),
     ...(tiktok && channels.includes('TIKTOK') ? { tiktok } : {}),
@@ -114,7 +139,7 @@ export function toUpdateTikTokDraftDto(
 ): UpdateTikTokDraftDto {
   return {
     expectedVersion,
-    ...(editsCaption ? { title: optionalText(values.title), body: composeCaption(values.body, values.link) } : {}),
+    ...(editsCaption ? { title: optionalText(values.title), body: captionOf(values) } : {}),
     mediaAssetIds: values.media.map((item) => item.id),
     options,
   };
@@ -133,7 +158,7 @@ export function toUpdateFacebookDraftDto(
   return {
     expectedVersion,
     ...(isSocial ? { title: optionalText(values.title) } : {}),
-    ...(isSocial && !captionLocked ? { body: composeCaption(values.body, values.link) } : {}),
+    ...(isSocial && !captionLocked ? { body: captionOf(values) } : {}),
     mediaAssetIds: values.media.map((item) => item.id),
   };
 }
@@ -157,14 +182,14 @@ export function toSocialFormValues(detail: SocialPostDetailDto, channel: 'facebo
   if (channel === 'tiktok') {
     return {
       title: detail.title,
-      body: detail.body,
+      body: plainTextToHtml(detail.body),
       publishType: FacebookPublishType.VIDEO,
       media: toMediaValues(detail.tiktok?.media ?? []),
     };
   }
   return {
     title: detail.title,
-    body: detail.body,
+    body: plainTextToHtml(detail.body),
     publishType: detail.facebook?.publishType ?? FacebookPublishType.FEED,
     media: toMediaValues(detail.facebook?.media ?? []),
   };

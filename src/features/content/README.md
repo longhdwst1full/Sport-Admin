@@ -1,10 +1,13 @@
 # Content — maintenance note
 
-> **Document version:** 3.7.0
+> **Document version:** 3.8.0
 >
-> **Last updated:** 2026-10-06
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** TikTok theo Content Sharing Guidelines: mục "Công bố nội dung thương mại" (Your brand / Branded content,
+> **Change summary:** Caption mạng xã hội soạn bằng CKEditor `variant="plain"` (form giữ HTML, mapper gửi văn bản
+> thuần qua `htmlToPlainText`; giới hạn/bộ đếm tính trên văn bản thuần); màn bài viết tách `useContentPosts`/
+> `useContentPostColumns`/`ContentPostFilters`; modal lệnh dùng `FormModal`; trạng thái theo `StatusTone`; phân trang
+> `ADMIN_TABLE_DEFAULT_PAGE_SIZE`; trang quay về TikTok lưu qua `createBrowserStore`. Trước đó: TikTok theo Content Sharing Guidelines: mục "Công bố nội dung thương mại" (Your brand / Branded content,
 > khoá "Chỉ mình tôi" khi có Branded content) + "Video do AI tạo" trong `TikTokSettingsPanel`; modal Đăng/Đăng lại TikTok hiện
 > tài khoản nhận video và ô xác nhận Music Usage Confirmation/Branded Content Policy (gửi `consent`, khoá nút tới khi tích).
 > Trước đó: Nút "Đồng bộ ngay" (`runAdminSocialSync`) ở dashboard và tab Mạng xã hội; dashboard hiện % so với kỳ trước,
@@ -16,7 +19,10 @@ Tạo/liệt kê/xoá bài viết nội dung (`Admin Content`).
 
 ## Ranh giới
 
-`pages/content-page.tsx` (list + filter) → `components/content-editor-drawer.tsx` (soạn thảo, nạp lazy).
+`pages/content-page.tsx` (orchestration) → `hooks/use-content-posts.ts` (URL filter, search, query, mutation ẩn/hiện +
+lưu trữ) + `hooks/use-content-post-columns.tsx` (cột) + `components/content-post-filters.tsx` →
+`components/content-editor-drawer.tsx` (soạn thảo, nạp lazy). `components/social-post-title-cell.tsx` dùng chung cho bảng
+bài viết và bảng bài nổi bật của dashboard.
 
 ## Generated operation
 
@@ -86,7 +92,10 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
   chuyển sang Video. `TikTokSettingsPanel` gọi `getAdminTikTokCreatorInfo`: hiện tên tài khoản, chỉ các quyền riêng tư
   TikTok cho phép, KHÔNG chọn sẵn quyền riêng tư (bắt buộc chọn khi đã tải được creator info), khoá tương tác tài khoản đã
   tắt (`applyCreatorConstraints`). Caption là `posts.body` dùng chung: kênh kia đã rời nháp thì ô nội dung bị khoá
-  (`captionLockedFor`) và không gửi `body` (tránh 400 `SOCIAL_CONTENT_EDIT_NOT_ALLOWED`).
+  (`captionLockedFor`) và không gửi `body` (tránh 400 `SOCIAL_CONTENT_EDIT_NOT_ALLOWED`). CONTRACT: ô caption là
+  `SocialCaptionInput` (CKEditor `variant="plain"`); form giữ HTML (`plainTextToHtml` khi đổ), DTO gửi văn bản thuần
+  (`htmlToPlainText` trong `captionOf`); `captionRules` đếm/bắt buộc trên văn bản thuần. Modal "Sửa nội dung trên FB"
+  dùng cùng ô và cùng mapping (`toSocialCommand`).
 - Chi tiết (`social-post-detail-drawer.tsx` + `tiktok-publication-section.tsx`): khối TikTok (trạng thái, tiến độ
   pha/chunk/initCount khi PUBLISHING, lỗi, permalink `rel="noopener noreferrer"`, chỉ số, video) và nút theo
   `availableTikTokActions` (bản sao `TT_TRANSITIONS`). Modal (`social-action-modal.tsx`, `channel="tiktok"`): không hẹn
@@ -94,7 +103,7 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
   (cần quyền đăng + lý do). Facebook chi tiết hiện thêm likes/comments/shares/views/syncedAt.
 - Tài khoản TikTok (`tiktok-account-card.tsx`, ở tab Mạng xã hội, cần `social.post.manage`): trạng thái/tên/scopes/hạn
   token; Kết nối/Ngắt kết nối cần `social.post.publish`. Kết nối: `startAdminTikTokConnect` → chuyển sang `authorizeUrl`
-  (lưu trang quay về ở sessionStorage) → TikTok redirect về **`/content/social/tiktok/callback`** (`TIKTOK_CALLBACK_PATH`,
+  (lưu trang quay về ở sessionStorage qua `model/tiktok-connect-return.ts` → `createBrowserStore`) → TikTok redirect về **`/content/social/tiktok/callback`** (`TIKTOK_CALLBACK_PATH`,
   route quyền `social.post.publish`, `pages/tiktok-callback-page.tsx`) → `completeAdminTikTokConnect` đúng một lần → quay
   về kèm toast. `TIKTOK_REDIRECT_URI` = origin Admin + đường dẫn này; phải cùng người bấm Kết nối.
 - Dashboard `/social-dashboard` (`cms.content.view`): `useSocialDashboard` gọi `getAdminSocialDashboard` +
@@ -135,6 +144,7 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 | Version | Date | Change summary |
 | --- | --- | --- |
 | 3.7.0 | 2026-10-06 | TikTok: công bố nội dung thương mại, AIGC, xác nhận Music Usage/Branded Content Policy trước khi đăng. |
+| 3.8.0 | 2026-10-10 | Caption CKEditor plain, tách màn bài viết/modal lệnh, StatusTone, page size chung, browser store cho TikTok. |
 | 3.6.0 | 2026-10-06 | "Đồng bộ ngay", % so kỳ trước, "Đồng bộ lần cuối", chỉ số Bài/video trên biểu đồ, ảnh nhỏ top bài. |
 | 3.5.0 | 2026-10-05 | Nối API TikTok (bản đăng, tài khoản/OAuth callback) và Dashboard mạng xã hội. |
 | 3.4.0 | 2026-10-05 | Tab "Mạng xã hội", cột/lọc Kênh, panel TikTok (khoá), màn Dashboard mạng xã hội với hook placeholder. |

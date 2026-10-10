@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import { EnvironmentOutlined, PlusOutlined as AddIcon, StopOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Form, Input, Skeleton, Space, Switch, Tag } from 'antd';
+import { Alert, App, Button, Form, Input, Space, Switch } from 'antd';
+import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { FormSection } from '@/foundation/layout/form-section';
+import { StatusTag } from '@/foundation/management/status-tag';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createAdminCustomer,
@@ -12,6 +15,8 @@ import {
   useDeactivateAdminCustomer,
   useGetAdminCustomer,
 } from '@/generated/api/customers/customers';
+import { CustomerStatus } from '@/generated/api/customers/customers.schemas';
+import { customerBlockPresentation } from '../constants/customer.constants';
 import { CustomerAvatarField } from './customer-avatar-field';
 import type { CustomerRowView } from '../model/customer.mapper';
 import {
@@ -66,7 +71,7 @@ export function CustomerFormDrawer({
     query: { enabled: open && Boolean(editing?.id) },
   });
   const current = detail.data;
-  const blocked = (current?.status ?? editing?.status) === 'INACTIVE';
+  const blocked = (current?.status ?? editing?.status) === CustomerStatus.INACTIVE;
 
   useEffect(() => {
     if (!open) return;
@@ -132,6 +137,8 @@ export function CustomerFormDrawer({
   };
 
   const loadingDetail = Boolean(editing) && detail.isPending;
+  // Sửa mà chưa đọc được chi tiết thì không có version để gửi: khoá nút lưu, không rơi về tạo mới.
+  const detailUnavailable = Boolean(editing) && !current;
 
   return (
     <FormDrawer
@@ -143,11 +150,13 @@ export function CustomerFormDrawer({
       onClose={onClose}
       onSubmit={() => form.submit()}
       submitting={mutation.isPending}
-      submitDisabled={loadingDetail}
+      submitDisabled={detailUnavailable}
       isDirty={() => form.isFieldsTouched()}
     >
-      {loadingDetail ? (
-        <Skeleton active paragraph={{ rows: 8 }} />
+      {editing && detail.isError ? (
+        <QueryErrorAlert error={detail.error} retry={() => void detail.refetch()} />
+      ) : loadingDetail ? (
+        <DetailSkeleton />
       ) : (
         <Form
           form={form}
@@ -254,9 +263,7 @@ export function CustomerFormDrawer({
                     disabled={!current || statusPending}
                     onChange={toggleBlocked}
                   />
-                  <Tag color={blocked ? 'red' : 'green'}>
-                    {blocked ? 'Đang chặn' : 'Đang hoạt động'}
-                  </Tag>
+                  <StatusTag status={blocked ? 'BLOCKED' : 'ACTIVE'} presentations={customerBlockPresentation} />
                 </Space>
               </Form.Item>
             )}

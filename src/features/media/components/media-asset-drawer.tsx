@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Descriptions, Drawer, Empty, Image, Input, List, Skeleton, Tag, Typography } from 'antd';
+import { App, Button, Descriptions, Empty, Image, Input, List, Tag, Typography } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { StatusTag } from '@/foundation/management';
 import {
@@ -19,7 +19,7 @@ import {
   IMAGE_FALLBACK_SRC,
 } from '../constants/media-library.constants';
 import { formatAssetSize } from '../model/media-format';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { DetailDrawer } from '@/foundation/overlay';
 
 /**
  * Chi tiết một ảnh: nơi đang dùng và xoá khỏi Cloudinary.
@@ -68,30 +68,26 @@ export function MediaAssetDrawer({
   const deletable = Boolean(data && data.status === 'ACTIVE' && data.usageCount === 0);
 
   return (
-    <Drawer
+    <DetailDrawer
       open={Boolean(assetId)}
       onClose={() => {
         setReason('');
         onClose();
       }}
-      width={DRAWER_WIDTH.sm}
+      size="sm"
       title="Chi tiết ảnh"
-      destroyOnHidden
+      status={data && <StatusTag status={data.status} presentations={mediaStatusPresentation} />}
+      loading={asset.isLoading}
+      error={asset.isError ? asset.error : undefined}
+      onRetry={() => void asset.refetch()}
     >
-      {asset.isLoading && <Skeleton active />}
-      {asset.isError && (
-        <Alert type="error" showIcon message="Không tải được ảnh" description={getApiErrorMessage(asset.error)} />
-      )}
       {data && (
         <div className="flex flex-col gap-5">
           <div className="flex justify-center rounded-lg bg-slate-50 p-3">
             <Image fallback={IMAGE_FALLBACK_SRC} src={data.secureUrl} alt={data.altText ?? data.publicId} className="max-h-72 object-contain" />
           </div>
           <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label="Trạng thái">
-              <StatusTag status={data.status} presentations={mediaStatusPresentation} />
-            </Descriptions.Item>
-            <Descriptions.Item label="Public id">
+            <Descriptions.Item label="Mã công khai">
               <Typography.Text copyable className="break-all">{data.publicId}</Typography.Text>
             </Descriptions.Item>
             <Descriptions.Item label="Kích thước">{formatAssetSize(data)}</Descriptions.Item>
@@ -167,6 +163,6 @@ export function MediaAssetDrawer({
           )}
         </div>
       )}
-    </Drawer>
+    </DetailDrawer>
   );
 }

@@ -160,7 +160,7 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
                       disabled={bundleItems.fields.length === 1}
                       onClick={() => bundleItems.remove(index)}
                     >
-                      Xóa
+                      Xoá
                     </Button>
                   </div>
                 ))}

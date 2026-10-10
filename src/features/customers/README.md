@@ -1,10 +1,10 @@
 # Customers — maintenance note
 
-> **Document version:** 3.0.0
+> **Document version:** 3.1.0
 >
-> **Last updated:** 2026-09-21
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Form khách gộp ảnh đại diện, sổ địa chỉ (chọn tỉnh/quận/phường theo danh mục hãng vận chuyển) và công tắc chặn hồ sơ; email và SĐT trở thành bắt buộc.
+> **Change summary:** Tìm kiếm qua `useUrlSearch`; drawer chi tiết dùng `DetailDrawer`, trạng thái đơn/thanh toán gần đây hiển thị nhãn tiếng Việt; form sửa khoá lưu khi chưa tải được chi tiết; page size chuẩn 30.
 
 ## Phạm vi
 
@@ -28,7 +28,7 @@ Ngoài phạm vi: gộp khách trùng và quản lý credential của tài kho�
   mục địa giới mà vận đơn dùng, nên địa chỉ đã lưu tạo được vận đơn mà không phải map tay.
 - Lọc chạy server-side: mỗi ô là một điều kiện riêng, cộng dồn bằng AND — giống màn đơn hàng.
 - Backend kiểm `customer.view`; route FE gate cùng quyền chỉ để cải thiện UX.
-- Tạo/sửa/ngừng/mở/xóa dùng generated mutation và quyền `customer.manage`.
+- Tạo/sửa/ngừng/mở/xoá dùng generated mutation và quyền `customer.manage`.
 - Nút tạo hồ sơ độc lập chỉ hiện cho scope GLOBAL. Người dùng theo chi nhánh tạo khách qua POS/đơn
   hàng vì customer không có `branch_id` riêng.
 - Mutation thành công invalidate cả list và detail; delete loại detail cache để không hiện dữ liệu cũ.
@@ -47,9 +47,9 @@ Ngoài phạm vi: gộp khách trùng và quản lý credential của tài kho�
 ## Quy tắc mutation
 
 - Form luôn yêu cầu tên và ít nhất email hoặc SĐT; backend kiểm lại cùng invariant.
-- Có thể xóa email nếu vẫn còn SĐT và ngược lại.
+- Có thể xoá email nếu vẫn còn SĐT và ngược lại.
 - Update/lifecycle/delete gửi `expectedVersion` để báo conflict khi hai người cùng sửa.
-- MEMBER hoặc khách đã có đơn không được xóa; dùng Ngừng hoạt động để giữ lịch sử.
+- MEMBER hoặc khách đã có đơn không được xoá; dùng Ngừng hoạt động để giữ lịch sử.
 - Không hiển thị action quản lý nếu thiếu `customer.manage`; backend vẫn kiểm permission/scope.
 
 ## Số liệu hiển thị
@@ -89,6 +89,7 @@ NEEDS_VERIFICATION hay BLOCKED như fixture từng hiển thị.
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.1.0 | 2026-10-10 | Tìm kiếm qua `useUrlSearch`; drawer chi tiết dùng `DetailDrawer`, trạng thái đơn/thanh toán gần đây hiển thị nhãn tiếng Việt; form sửa khoá lưu khi chưa tải được chi tiết; page size chuẩn 30. |
 | 2.1.1 | 2026-09-18 | Accessible name cho Drawer và Playwright luồng khách hàng. |
 | 2.1.0 | 2026-09-18 | Hoàn thiện CRUD, GLOBAL-only standalone create, contact invariant và cache invalidation. |
 | 2.0.0 | 2026-09-15 | Gỡ fixture, nối `listAdminCustomers`/`getAdminCustomer`; bỏ hai trường không có nguồn. |

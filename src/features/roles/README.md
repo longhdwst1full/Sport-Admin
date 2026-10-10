@@ -1,10 +1,10 @@
 # Roles — maintenance note
 
-> **Document version:** 1.3.0
+> **Document version:** 1.4.0
 >
-> **Last updated:** 2026-10-03
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Xoá vai trò theo API D98: nút Xoá bật theo `canDelete` của server, hộp xác nhận nêu `activeAssignmentCount` sẽ chuyển về Nhân viên, toast theo `affectedUsers`, map lỗi `IAM_ROLE_*`; bỏ thao tác "ngừng vai trò hệ thống" qua DELETE.
+> **Change summary:** Ô tìm vai trò (lọc tại chỗ, `q` trên URL); xoá vai trò dùng `useConfirmWithReason`; lỗi tải dùng `QueryErrorAlert`; bỏ `permissionLabel`/`permissionModuleLabels` không dùng.
 
 ## Phạm vi
 
@@ -59,6 +59,7 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.4.0 | 2026-10-10 | Ô tìm vai trò (lọc tại chỗ, `q` trên URL); xoá vai trò dùng `useConfirmWithReason`; lỗi tải dùng `QueryErrorAlert`; bỏ `permissionLabel`/`permissionModuleLabels` không dùng. |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý vai trò. |
 | 1.0.1 | 2026-09-18 | Cho phép thu gọn cây quyền và ghi rõ cách nhóm theo màn hình. |
 | 1.1.0 | 2026-09-19 | Thêm lifecycle an toàn cho vai trò hệ thống, xác nhận theo hậu quả và cây quyền mở rộng trong bảng. |

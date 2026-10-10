@@ -1,16 +1,21 @@
-import { useEffect } from 'react';
-import { App, Descriptions, Form, Input, Modal, Typography } from 'antd';
+import { App, Descriptions, Form, Input, Typography } from 'antd';
 import { StatusTag } from '@/foundation/management';
+import { FormModal } from '@/foundation/overlay';
 import type { BannerDto } from '@/generated/api/content/content.schemas';
 import { BANNER_LIMITS, bannerPlacementLabels, bannerStatusPresentation } from '../constants/banner.constants';
 import { useSetBannerStatus } from '../hooks/use-banner-commands';
 import { BANNER_ACTION_TARGET, type BannerAction } from '../model/banner-actions.policy';
 import { bannerCommandErrorMessage } from '../model/banner-command-error';
 
-const ACTION_META: Record<
-  BannerAction,
-  { title: string; okText: string; consequence: string; reasonRequired: boolean; danger?: boolean }
-> = {
+interface BannerActionMeta {
+  title: string;
+  okText: string;
+  consequence: string;
+  reasonRequired: boolean;
+  danger?: boolean;
+}
+
+const ACTION_META: Record<BannerAction, BannerActionMeta> = {
   publish: {
     title: 'Xuất bản banner',
     okText: 'Xuất bản',
@@ -36,7 +41,7 @@ const ACTION_META: Record<
  * Xác nhận đổi trạng thái: hiện trạng thái hiện tại, hành động và hệ quả (`04-permissions-transitions.md`).
  * UX: gỡ xuống/lưu trữ bắt buộc lý do (ghi audit); xuất bản lý do tuỳ chọn. Modal chỉ đóng khi thành công.
  * CONCURRENCY: `banner` lấy từ danh sách hiện tại, nên sau lỗi stale (danh sách tự tải lại) bấm lại
- * dùng version mới.
+ * dùng version mới. Nội dung được key theo banner + lệnh để form và trạng thái mutation luôn mới khi mở.
  */
 export function BannerStatusModal({
   banner,
@@ -47,18 +52,14 @@ export function BannerStatusModal({
   action?: BannerAction;
   onClose: () => void;
 }) {
+  if (!banner || !action) return null;
+  return <BannerStatusForm key={`${banner.id}:${action}`} banner={banner} action={action} onClose={onClose} />;
+}
+
+function BannerStatusForm({ banner, action, onClose }: { banner: BannerDto; action: BannerAction; onClose: () => void }) {
   const { message } = App.useApp();
   const [form] = Form.useForm<{ reason?: string }>();
   const setStatus = useSetBannerStatus();
-  const { reset } = setStatus;
-
-  useEffect(() => {
-    if (!action) return;
-    form.resetFields();
-    reset();
-  }, [action, banner?.id, form, reset]);
-
-  if (!banner || !action) return null;
   const meta = ACTION_META[action];
 
   const submit = ({ reason }: { reason?: string }) => {
@@ -84,16 +85,16 @@ export function BannerStatusModal({
   };
 
   return (
-    <Modal
+    <FormModal
       open
+      size="sm"
       title={meta.title}
       okText={meta.okText}
-      cancelText="Huỷ"
       okButtonProps={{ danger: meta.danger }}
-      confirmLoading={setStatus.isPending}
-      onOk={() => form.submit()}
-      onCancel={onClose}
-      destroyOnHidden
+      submitting={setStatus.isPending}
+      onSubmit={() => form.submit()}
+      onClose={onClose}
+      isDirty={() => form.isFieldsTouched(['reason'])}
     >
       <Descriptions size="small" column={1} className="mb-3">
         <Descriptions.Item label="Banner">{banner.title || banner.code}</Descriptions.Item>
@@ -112,6 +113,6 @@ export function BannerStatusModal({
           <Input.TextArea rows={3} maxLength={BANNER_LIMITS.REASON_MAX} showCount />
         </Form.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

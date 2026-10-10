@@ -1,18 +1,18 @@
 import { useMemo, type ReactNode } from 'react';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { ClockCircleOutlined, DollarOutlined, InboxOutlined, WarningOutlined } from '@ant-design/icons';
-import { Alert, Select } from 'antd';
+import { Select } from 'antd';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
-import { FilterBar, RefreshButton } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, FilterBar, RefreshButton } from '@/foundation/table';
 import { useSearchState } from '@/shared/hooks/use-search-state';
 import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { useGetAdminReturnQueueSummary, useListAdminReturns } from '@/generated/api/returns/returns';
 import { ReturnStatus } from '@/generated/api/returns/returns.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
 import { ReturnDetailDrawer } from '../components/return-detail-drawer';
 import { ReturnTable } from '../components/return-table';
-import { RETURN_PAGE_SIZE, returnStatusOptions } from '../constants/return.constants';
+import { returnStatusOptions } from '../constants/return.constants';
 
 /**
  * Hàng đợi đổi trả. Bộ lọc trạng thái và phiếu đang mở nằm trên URL để nhân viên gửi link cho nhau
@@ -28,7 +28,7 @@ export function ReturnsPage() {
   const summary = useGetAdminReturnQueueSummary({ query: { retry: false } });
   const list = useListAdminReturns({
     page,
-    limit: RETURN_PAGE_SIZE,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
     status,
     search: search.debounced,
   });
@@ -46,7 +46,7 @@ export function ReturnsPage() {
   return (
     <>
       <ManagementPage
-        eyebrow="After-sales"
+        eyebrow="Hậu mãi"
         title="Đổi trả & hoàn tiền"
         description="Duyệt yêu cầu trả, nhận và kiểm hàng, hoàn tiền có chứng từ để đối chiếu."
         metrics={[
@@ -82,7 +82,11 @@ export function ReturnsPage() {
         )}
       >
         {list.isError && (
-          <Alert className="mb-5" type="error" showIcon message="Không tải được danh sách phiếu trả" description={getApiErrorMessage(list.error)} />
+          <QueryErrorAlert
+            message="Không tải được danh sách phiếu trả"
+            error={list.error}
+            retry={() => void list.refetch()}
+          />
         )}
         <ReturnTable
           rows={rows}

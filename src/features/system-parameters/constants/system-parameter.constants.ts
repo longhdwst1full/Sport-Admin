@@ -1,11 +1,10 @@
+import type { StatusPresentation } from '@/foundation/management/status-tag';
 import type {
   SystemParameterGroup,
   SystemParameterStatus,
   SystemParameterValueType,
 } from '@/generated/api/system/system.schemas';
 import { toOptions } from '@/shared/utils/options';
-
-export const SYSTEM_PARAMETER_PAGE_SIZE = 20;
 
 /**
  * Nhãn nhóm tách khỏi mã (`08-enums-constants.md`). `Record<SystemParameterGroup, …>` bắt lỗi compile khi contract thêm nhóm mà quên nhãn — trước đây
@@ -44,11 +43,12 @@ const valueTypeLabels: Record<SystemParameterValueType, string> = {
 export const parameterValueTypeLabels: Record<string, string> = valueTypeLabels;
 export const PARAMETER_VALUE_TYPE_OPTIONS = toOptions(valueTypeLabels);
 
-const statusPresentation: Record<SystemParameterStatus, { label: string; color: string }> = {
+export const parameterStatusPresentation: Record<SystemParameterStatus, StatusPresentation> = {
   ACTIVE: { label: 'Đang dùng', color: 'success' },
-  INACTIVE: { label: 'Ngừng dùng', color: 'default' },
+  INACTIVE: { label: 'Ngừng dùng', color: 'neutral' },
 };
+export const PARAMETER_STATUS_OPTIONS = toOptions(parameterStatusPresentation);
 
-export const parameterStatusPresentation: Record<string, { label: string; color: string }> =
-  statusPresentation;
-export const PARAMETER_STATUS_OPTIONS = toOptions(statusPresentation);
+/** Lý do sửa/ngừng dùng là tuỳ chọn, nhưng nếu nhập thì API yêu cầu 5–500 ký tự. */
+export const PARAMETER_REASON_MIN_LENGTH = 5;
+export const PARAMETER_REASON_MAX_LENGTH = 500;

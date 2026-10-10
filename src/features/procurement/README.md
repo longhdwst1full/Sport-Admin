@@ -1,10 +1,10 @@
 # Admin Procurement — maintenance note
 
-> **Document version:** 1.2.0
+> **Document version:** 1.3.0
 >
-> **Last updated:** 2026-09-30
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Phiếu nhập theo PO dùng detail API để chọn dòng còn nhận; lookup tìm server-side, chưa có dropdown pagination/UAT.
+> **Change summary:** Tab đang mở, ô tìm, bộ lọc và trang nằm trên URL (chỉ mount tab đang chọn); khung danh sách/lệnh/lưu nháp dùng chung (`ProcurementListPanel`, `useProcurementListState`, `useDocumentCommand`, `useDocumentSave`); lookup tách theo loại và chỉ chạy khi form mở; trạng thái qua `StatusTag` + presentation map; huỷ chứng từ qua `useConfirmWithReason`.
 
 ## Phạm vi
 
@@ -49,6 +49,7 @@
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-10-10 | Tab đang mở, ô tìm, bộ lọc và trang nằm trên URL (chỉ mount tab đang chọn); khung danh sách/lệnh/lưu nháp dùng chung (`ProcurementListPanel`, `useProcurementListState`, `useDocumentCommand`, `useDocumentSave`); lookup tách theo loại và chỉ chạy khi form mở; trạng thái qua `StatusTag` + presentation map; huỷ chứng từ qua `useConfirmWithReason`. | REFACTOR-ADMIN-POLISH |
 | 1.2.0 | 2026-09-30 | Ghi nhận mapping phiếu nhập theo PO và lookup search chưa hoàn tất pagination. | PROC-FE-01/02 |
 | 1.1.0 | 2026-09-30 | Liên kết checklist hoàn thiện và ghi rõ chưa UAT trình duyệt. | PLAN-20260930-PROCUREMENT-UAT-RESTORE |
 | 1.0.0 | 2026-09-30 | Tạo feature Procurement Admin từ 28 generated operation. | V2 Procurement Core |

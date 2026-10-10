@@ -1,3 +1,5 @@
+import type { PaymentStatus } from '@/generated/api/orders/orders.schemas';
+
 /** Tên hiển thị trên biên lai; khớp tên thương hiệu dùng ở BrandLogo. */
 export const RECEIPT_STORE_NAME = 'Bảo An Sport';
 
@@ -14,7 +16,7 @@ export const RECEIPT_PAYMENT_METHOD_LABELS: Record<string, string> = {
   VNPAY: 'VNPay',
 };
 
-export const RECEIPT_PAYMENT_STATUS_LABELS: Record<string, string> = {
+export const RECEIPT_PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   SUCCESS: 'Đã thanh toán',
   PENDING: 'Chưa thanh toán',
   AWAITING_CONFIRMATION: 'Chờ xác nhận',

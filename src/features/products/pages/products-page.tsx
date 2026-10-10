@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
-import { getApiErrorMessage } from '@/lib/api/error';
 import { ProductListTable } from '../components/product-list-table';
 import { ProductListToolbar } from '../components/product-list-toolbar';
 import { ProductWorkspaceDrawer } from '../components/product-workspace-drawer';
@@ -13,8 +12,14 @@ import { useProductList } from '../hooks/use-product-list';
 import { useProductListActions } from '../hooks/use-product-list-actions';
 
 export function ProductsPage() {
-  // Một workspace cho cả Tạo (không slug) và Sửa (có slug).
-  const [workspace, setWorkspace] = useState<{ open: boolean; slug?: string }>({ open: false });
+  // Một workspace cho cả Tạo (không slug) và Sửa (có slug). `session` tăng mỗi lần mở để drawer
+  // remount với state + khoá idempotency mới; đóng giữ nguyên `session` cho animation đóng.
+  const [workspace, setWorkspace] = useState<{ open: boolean; slug?: string; session: number }>({
+    open: false,
+    session: 0,
+  });
+  const openWorkspace = (slug?: string) =>
+    setWorkspace((current) => ({ open: true, slug, session: current.session + 1 }));
   const list = useProductList();
   const prefetchProductForm = useProductFormPrefetch();
   const actions = useProductListActions();
@@ -37,7 +42,7 @@ export function ProductsPage() {
               // dữ liệu thay vì để họ nhìn ô chọn quay vòng.
               onMouseEnter={prefetchProductForm}
               onFocus={prefetchProductForm}
-              onClick={() => setWorkspace({ open: true })}
+              onClick={() => openWorkspace()}
             >
               Thêm sản phẩm
             </Button>
@@ -91,9 +96,9 @@ export function ProductsPage() {
       >
         {list.query.isError && (
           <QueryErrorAlert
+            error={list.query.error}
             message="Không tải được danh sách sản phẩm"
-            description={getApiErrorMessage(list.query.error, 'Vui lòng thử lại.')}
-            onRetry={() => void list.query.refetch()}
+            retry={() => void list.query.refetch()}
           />
         )}
         <ProductListTable
@@ -106,7 +111,7 @@ export function ProductsPage() {
           visibilityBusyId={actions.visibilityBusyId}
           archiveBusyId={actions.archiveBusyId}
           onPageChange={list.onPageChange}
-          onOpen={(slug) => setWorkspace({ open: true, slug })}
+          onOpen={openWorkspace}
           onToggleVisibility={actions.toggleVisibility}
           onArchive={actions.confirmArchive}
           onPublish={actions.confirmPublish}
@@ -115,9 +120,10 @@ export function ProductsPage() {
       </ManagementPage>
 
       <ProductWorkspaceDrawer
+        key={workspace.session}
         open={workspace.open}
         slug={workspace.slug}
-        onClose={() => setWorkspace({ open: false })}
+        onClose={() => setWorkspace((current) => ({ ...current, open: false }))}
       />
     </>
   );

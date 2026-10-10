@@ -16,7 +16,7 @@ Phiếu đọc từ trên xuống, đúng thứ tự nhân viên làm việc:
 | Khách hàng | `pos-customer-panel.tsx` | Tìm theo SĐT, khách mới nhập tay; kèm hình thức nhận hàng và địa chỉ giao. |
 | Sản phẩm | `pos-product-picker.tsx` + `pos-cart-table.tsx` | Tìm theo SKU/tên, bảng dòng hàng với SL, đơn giá, thành tiền. |
 | Thanh toán | `pos-payment-panel.tsx` | Tiền mặt (nhập tiền khách đưa → tiền thối), chuyển khoản, COD (chỉ đơn giao). |
-| Chân phiếu | Drawer footer | Tổng thanh toán + **Hủy** / **Tạo & hoàn tất đơn**. |
+| Chân phiếu | Drawer footer | Tổng thanh toán + **Huỷ** / **Tạo & hoàn tất đơn**. |
 
 `model/pos-checkout.ts` giữ kiểu dữ liệu của phiếu; `model/pos-cash.ts` tính tiền thối (có test).
 

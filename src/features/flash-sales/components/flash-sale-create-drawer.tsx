@@ -3,9 +3,10 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   Alert, Button, DatePicker, Form, Input, InputNumber, Radio, Select, Typography,
 } from 'antd';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
-import { useDebounce } from 'use-debounce';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import {
   applyPercent,
@@ -16,6 +17,14 @@ import {
 } from '../constants/flash-sale.constants';
 import { FormDrawer } from '@/foundation/overlay';
 import type { CreateCampaignValues, StagedItem } from '../model/flash-sale.mapper';
+
+const STAGED_ITEM_COLUMNS: ColumnsType<StagedItem> = [
+  col.text<StagedItem>('sku', 'SKU', { width: 140 }),
+  col.text<StagedItem>('name', 'Sản phẩm', { width: undefined }),
+  col.money<StagedItem>('basePrice', 'Giá gốc', { width: 130 }),
+  col.money<StagedItem>('salePrice', 'Giá flash', { width: 130, className: 'font-semibold text-emerald-700' }),
+  col.number<StagedItem>('quota', 'Số suất', { width: 90 }),
+];
 
 export function FlashSaleCreateDrawer({
   open,
@@ -36,11 +45,10 @@ export function FlashSaleCreateDrawer({
   const [salePrice, setSalePrice] = useState<number>();
   const [quota, setQuota] = useState<number>();
   const [perCustomerLimit, setPerCustomerLimit] = useState<number>();
-  const [variantSearch, setVariantSearch] = useState('');
-  const [debouncedSearch] = useDebounce(variantSearch.trim(), 350);
+  const variantSearch = useSearchState();
 
   const variantsQuery = useSearchActiveAdminProductVariants(
-    { search: debouncedSearch || undefined, page: 1, limit: 50 },
+    { search: variantSearch.debounced, page: 1, limit: 50 },
     { query: { enabled: open } },
   );
   const options = useMemo(() => variantsQuery.data?.items ?? [], [variantsQuery.data]);
@@ -50,6 +58,25 @@ export function FlashSaleCreateDrawer({
   );
   const picked = useMemo(() => options.find((o) => o.id === variantId), [options, variantId]);
   const basePrice = picked?.priceAmount ? Number(picked.priceAmount) : undefined;
+  const columns = useMemo<ColumnsType<StagedItem>>(
+    () => [
+      ...STAGED_ITEM_COLUMNS,
+      col.actions<StagedItem>(
+        (row) => (
+          <TableActionButton
+            danger
+            label={`Bỏ suất ${row.sku}`}
+            icon={<DeleteOutlined />}
+            onClick={() =>
+              setItems((current) => current.filter((item) => item.productVariantId !== row.productVariantId))
+            }
+          />
+        ),
+        { title: '', width: 56 },
+      ),
+    ],
+    [],
+  );
 
   function reset() {
     form.resetFields();
@@ -174,7 +201,7 @@ export function FlashSaleCreateDrawer({
             placeholder="Tìm theo SKU"
             className="!min-w-64"
             value={variantId}
-            onSearch={setVariantSearch}
+            onSearch={variantSearch.setValue}
             loading={variantsQuery.isFetching}
             onChange={(value: string) => {
               setVariantId(value);
@@ -199,7 +226,7 @@ export function FlashSaleCreateDrawer({
             onChange={(value) => setSalePrice(value ?? undefined)}
             disabled={pricingMode === 'PERCENT_LIST'}
           />
-          <InputNumber min={1} placeholder="Quota" className="!w-28" value={quota}
+          <InputNumber min={1} placeholder="Số suất" className="!w-28" value={quota}
             onChange={(value) => setQuota(value ?? undefined)} />
           <InputNumber min={1} placeholder="Giới hạn/khách" className="!w-36" value={perCustomerLimit}
             onChange={(value) => setPerCustomerLimit(value ?? undefined)} />
@@ -221,34 +248,7 @@ export function FlashSaleCreateDrawer({
         pagination={false}
         dataSource={items}
         locale={{ emptyText: 'Chưa thêm suất bán nào. Có thể tạo chiến dịch trống rồi thêm sau.' }}
-        columns={[
-          { title: 'SKU', dataIndex: 'sku', width: 140 },
-          { title: 'Sản phẩm', dataIndex: 'name' },
-          {
-            title: 'Giá gốc', dataIndex: 'basePrice', width: 130, align: 'right',
-            render: (value?: number) => (value ? moneyFormatter.format(value) : '—'),
-          },
-          {
-            title: 'Giá flash', dataIndex: 'salePrice', width: 130, align: 'right',
-            render: (value: number) => (
-              <strong className="text-emerald-700">{moneyFormatter.format(value)}</strong>
-            ),
-          },
-          { title: 'Quota', dataIndex: 'quota', width: 80, align: 'right' },
-          {
-            title: '', key: 'remove', width: 50, align: 'right',
-            render: (_, row) => (
-              <Button
-                type="text" danger size="small" icon={<DeleteOutlined />}
-                onClick={() =>
-                  setItems((current) =>
-                    current.filter((item) => item.productVariantId !== row.productVariantId),
-                  )
-                }
-              />
-            ),
-          },
-        ]}
+        columns={columns}
       />
     </FormDrawer>
   );

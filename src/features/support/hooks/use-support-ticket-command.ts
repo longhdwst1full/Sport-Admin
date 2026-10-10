@@ -39,7 +39,7 @@ export function useSupportTicketCommand(ticket: Pick<SupportTicketDetail, 'id' |
   return useMutation<AdminSupportTicketDetailDto, unknown, SupportTicketCommand>({
     retry: false,
     mutationFn: (command) => {
-      if (!ticket) throw new Error('Chưa tải được ticket');
+      if (!ticket) throw new Error('Chưa tải được phiếu hỗ trợ');
       const expectedVersion = ticket.version;
       idempotencyRef.current = nextIdempotencyKey(
         idempotencyRef.current,

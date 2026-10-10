@@ -1,13 +1,5 @@
 import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 
-// Đánh giá của khách đã mua vào thẳng APPROVED và hiển thị ngay (hậu kiểm); PENDING chỉ còn ở dữ
-// liệu cũ trước khi đổi hành vi, không còn là trạng thái mới nào đi vào nữa.
-export const REVIEW_STATUS_PRESENTATION: Record<string, { color: string; label: string }> = {
-  PENDING: { color: 'gold', label: 'Chờ duyệt (dữ liệu cũ)' },
-  APPROVED: { color: 'green', label: 'Đang hiển thị' },
-  REJECTED: { color: 'red', label: 'Đã ẩn' },
-};
-
 export function getReviewMetrics(items: readonly ProductReviewDto[]) {
   const total = items.length;
   const approved = items.filter((item) => item.status === 'APPROVED').length;

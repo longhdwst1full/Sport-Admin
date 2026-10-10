@@ -9,7 +9,7 @@ import {
   StarOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Popconfirm, Rate, Space } from 'antd';
+import { App, Button, Popconfirm, Rate, Select, Space } from 'antd';
 import { useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -17,6 +17,7 @@ import { ManagementPage } from '@/foundation/management';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import type { ColumnsType } from 'antd/es/table';
 import {
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
   AdminTable,
   col,
   ColumnSettingsModal,
@@ -31,10 +32,11 @@ import {
   useListAdminReviews,
   useModerateAdminReview,
 } from '@/generated/api/reviews/reviews';
-import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
+import { ReviewModerationStatus, type ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { ReviewDetailDrawer } from '../components/review-detail-drawer';
-import { REVIEW_COLUMN_ITEMS } from '../constants/review.constants';
-import { getReviewMetrics, REVIEW_STATUS_PRESENTATION } from '../model/review-moderation.policy';
+import { REVIEW_COLUMN_ITEMS, REVIEW_STATUS_OPTIONS, REVIEW_STATUS_PRESENTATION } from '../constants/review.constants';
+import { getReviewMetrics } from '../model/review-moderation.policy';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 /** Cột dữ liệu (không phụ thuộc handler); `key` khớp `REVIEW_COLUMN_ITEMS` để ẩn/hiện được. */
@@ -99,6 +101,9 @@ const REVIEW_TABLE_COLUMNS: ColumnsType<ProductReviewDto> = [
 export function ReviewsPage() {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
+  const url = useUrlFilters();
+  const statusFilter = url.getEnum('status', ReviewModerationStatus);
+  const page = url.getNumber('page', 1);
   const query = useListAdminReviews();
   const columnVisibility = useColumnVisibility(REVIEW_COLUMN_ITEMS);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -107,6 +112,12 @@ export function ReviewsPage() {
   const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
   const metrics = useMemo(() => getReviewMetrics(items), [items]);
+  // API trả toàn bộ danh sách (chưa có tham số lọc/phân trang); lọc trạng thái chạy ở client, còn
+  // trạng thái và trang nằm trên URL để F5/gửi link giữ nguyên vị trí.
+  const visibleItems = useMemo(
+    () => (statusFilter ? items.filter((item) => item.status === statusFilter) : items),
+    [items, statusFilter],
+  );
 
   const moderate = useModerateAdminReview({
     mutation: {
@@ -126,7 +137,7 @@ export function ReviewsPage() {
         void message.success('Đã ẩn đánh giá khỏi website.');
       },
       onError: (error) =>
-        void message.error(getApiErrorMessage(error, 'Không thể xóa đánh giá.')),
+        void message.error(getApiErrorMessage(error, 'Không thể xoá đánh giá.')),
     },
   });
 
@@ -137,7 +148,7 @@ export function ReviewsPage() {
 
   /**
    * Khôi phục/ẩn chạy tuần tự chứ không song song: mỗi đánh giá là một lệnh ghi riêng
-   * có kiểm tra version, bắn đồng loạt sẽ làm khóa hàng và khó biết dòng nào hỏng.
+   * có kiểm tra version, bắn đồng loạt sẽ làm khoá hàng và khó biết dòng nào hỏng.
    * Đánh giá đã lên thẳng APPROVED từ lúc khách gửi; hai action này chỉ là hậu kiểm
    * (khôi phục hiển thị / ẩn khỏi storefront), không còn ý nghĩa "duyệt lần đầu".
    */
@@ -171,18 +182,17 @@ export function ReviewsPage() {
     setSelectedIds([]);
   }
 
-  const columns = useMemo(
-    () =>
-      columnVisibility.apply([
-        ...REVIEW_TABLE_COLUMNS,
-        col.actions<ProductReviewDto>(
-          (row) => <TableActionButton label="Xem chi tiết đánh giá" icon={<EyeOutlined />} onClick={() => setDetail(row)} />,
-          { key: 'detail', title: '', width: 72, fixed: undefined },
-        ),
-      ]),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `apply` đổi theo visibility
-    [columnVisibility.visibility],
+  const allColumns = useMemo<ColumnsType<ProductReviewDto>>(
+    () => [
+      ...REVIEW_TABLE_COLUMNS,
+      col.actions<ProductReviewDto>(
+        (row) => <TableActionButton label="Xem chi tiết đánh giá" icon={<EyeOutlined />} onClick={() => setDetail(row)} />,
+        { key: 'detail', title: '', width: 72, fixed: undefined },
+      ),
+    ],
+    [],
   );
+  const columns = columnVisibility.apply(allColumns);
 
   return (
     <PageTransition>
@@ -230,11 +240,20 @@ export function ReviewsPage() {
                   onClick={columnVisibility.open}
                   className="text-slate-600"
                 >
-                  Tùy chỉnh cột
+                  Tuỳ chỉnh cột
                 </Button>
               </>
             }
-          />
+          >
+            <Select
+              allowClear
+              className="min-w-48"
+              value={statusFilter}
+              onChange={(value?: string) => url.patch({ status: value, page: undefined })}
+              placeholder="Trạng thái"
+              options={REVIEW_STATUS_OPTIONS}
+            />
+          </FilterBar>
         }
       >
         {query.isError && (
@@ -294,9 +313,14 @@ export function ReviewsPage() {
         <AdminTable
           rowKey="id"
           loading={query.isPending}
-          dataSource={items}
+          dataSource={visibleItems}
           scroll={{ x: 980 }}
-          pagination={{ pageSize: 15, showSizeChanger: false }}
+          pagination={{
+            current: page,
+            pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+            showSizeChanger: false,
+            onChange: (next) => url.set('page', next === 1 ? undefined : next),
+          }}
           columns={columns}
           rowSelection={{
             selectedRowKeys: selectedIds,

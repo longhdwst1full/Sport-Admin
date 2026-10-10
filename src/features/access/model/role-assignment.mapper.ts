@@ -2,8 +2,10 @@ import {
   AssignUserRoleDtoScopeType,
   AssignableStaffRoleCode,
   type AssignUserRoleDto,
+  type RoleDto,
   type UserRoleAssignmentDto,
 } from '@/generated/api/iam/iam.schemas';
+import { parseEnum } from '@/shared/utils/parse-enum';
 
 export interface AssignmentFormValues {
   roleCode: AssignableStaffRoleCode | '';
@@ -18,6 +20,18 @@ export function toAssignUserRoleDto(values: AssignmentFormValues): AssignUserRol
   };
 }
 
+/** Mã vai trò có thuộc nhóm cấp dưới gán được (BRANCH_MANAGER/STAFF) hay không. */
+export function isAssignableRoleCode(code: string): code is AssignableStaffRoleCode {
+  return parseEnum(AssignableStaffRoleCode, code) !== undefined;
+}
+
+/** Vai trò từ `listAdminRoles` đã thu hẹp về nhóm gán được. */
+export type AssignableRole = RoleDto & { code: AssignableStaffRoleCode };
+
+export function pickAssignableRoles(roles: readonly RoleDto[]): AssignableRole[] {
+  return roles.filter((role): role is AssignableRole => isAssignableRoleCode(role.code));
+}
+
 /** Khoá nhận diện một assignment theo đúng ràng buộc unique phía server: vai trò + chi nhánh. */
 export function assignmentIdentity(roleCode: string, branchId: string | undefined): string {
   return `${roleCode}@${branchId ?? ''}`;
@@ -29,7 +43,7 @@ export function assignmentIdentity(roleCode: string, branchId: string | undefine
  */
 export function isEditableAssignment(assignment: UserRoleAssignmentDto): boolean {
   return (
-    (Object.values(AssignableStaffRoleCode) as string[]).includes(assignment.roleCode) &&
+    isAssignableRoleCode(assignment.roleCode) &&
     assignment.scopeType === AssignUserRoleDtoScopeType.BRANCH &&
     Boolean(assignment.branchId)
   );
@@ -38,7 +52,7 @@ export function isEditableAssignment(assignment: UserRoleAssignmentDto): boolean
 /** Đưa assignment hiện có về giá trị form để sửa. */
 export function toAssignmentFormValues(assignment: UserRoleAssignmentDto): AssignmentFormValues {
   return {
-    roleCode: assignment.roleCode as AssignableStaffRoleCode,
+    roleCode: isAssignableRoleCode(assignment.roleCode) ? assignment.roleCode : '',
     branchId: assignment.branchId ?? '',
   };
 }

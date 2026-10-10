@@ -2,11 +2,9 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Form, Input, InputNumber, Select } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
-import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import {
   getGetStockTransferQueryKey,
   getListStockTransfersQueryKey,
@@ -16,6 +14,7 @@ import {
 import type { StockTransferDetailDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { FormDrawer } from '@/foundation/overlay';
+import { useVariantOptions } from '../hooks/use-variant-options';
 import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
 interface StockTransferLineValues {
@@ -72,8 +71,6 @@ export function StockTransferCreateDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const idempotencyKey = useRef(crypto.randomUUID());
-  const [skuSearch, setSkuSearch] = useState('');
-  const [debouncedSkuSearch] = useDebounce(skuSearch.trim(), 300);
   const form = useForm<StockTransferValues>({
     resolver: yupResolver(schema),
     defaultValues: emptyValues,
@@ -88,16 +85,8 @@ export function StockTransferCreateDrawer({
     } : emptyValues);
   }, [form, open, transfer]);
   const lines = useFieldArray({ control: form.control, name: 'items' });
-  const warehouses = useWarehouseOptions();
-  const variants = useSearchActiveAdminProductVariants({
-    search: debouncedSkuSearch || undefined,
-    page: 1,
-    limit: 50,
-  });
-  const variantOptions = (variants.data?.items ?? []).map((item) => ({
-    value: item.code,
-    label: `${item.code} — ${item.label}`,
-  }));
+  const warehouses = useWarehouseOptions({ enabled: open });
+  const variants = useVariantOptions({ enabled: open });
   const mutation = useCreateStockTransfer({
     request: { headers: { 'Idempotency-Key': idempotencyKey.current } },
     mutation: {
@@ -185,13 +174,13 @@ export function StockTransferCreateDrawer({
             <div key={line.id} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1fr_150px_40px]">
               <Form.Item className="mb-0" label="SKU" required validateStatus={form.formState.errors.items?.[index]?.sku ? 'error' : undefined} help={form.formState.errors.items?.[index]?.sku?.message}>
                 <Controller name={`items.${index}.sku`} control={form.control} render={({ field }) => (
-                  <Select {...field} showSearch filterOption={false} onSearch={setSkuSearch} loading={variants.isFetching} options={variantOptions} placeholder="Tìm SKU đang hoạt động" />
+                  <Select {...field} showSearch filterOption={false} onSearch={variants.onSearch} loading={variants.query.isFetching} options={variants.options} placeholder="Tìm SKU đang hoạt động" />
                 )} />
               </Form.Item>
               <Form.Item className="mb-0" label="Số lượng" required validateStatus={form.formState.errors.items?.[index]?.requestedQuantity ? 'error' : undefined} help={form.formState.errors.items?.[index]?.requestedQuantity?.message}>
                 <Controller name={`items.${index}.requestedQuantity`} control={form.control} render={({ field }) => <InputNumber {...field} className="w-full" precision={0} min={1} />} />
               </Form.Item>
-              <Button className="mt-8" danger type="text" aria-label="Xóa SKU" icon={<DeleteOutlined />} disabled={lines.fields.length === 1} onClick={() => lines.remove(index)} />
+              <Button className="mt-8" danger type="text" aria-label="Xoá SKU" icon={<DeleteOutlined />} disabled={lines.fields.length === 1} onClick={() => lines.remove(index)} />
             </div>
           ))}
         </div>

@@ -1,10 +1,10 @@
 # System parameters — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-10-02
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Nhóm `NOTIFICATION` (mẫu email NOT-02): giá trị được để trống (= nội dung mặc định), nhập nhiều dòng, hiện mô tả biến được phép. Trước đó: Bỏ bắt buộc lý do khi sửa/ngừng dùng; vẫn gửi expectedVersion và ghi audit.
+> **Change summary:** Ô tìm, nhóm, trạng thái và trang nằm trên URL; modal dùng `FormModal`; ngừng dùng qua `useConfirmWithReason` (lý do tuỳ chọn, nếu nhập tối thiểu 5 ký tự — sửa lỗi chặn mọi lý do đã nhập); page size chuẩn 30.
 
 ## Phạm vi
 
@@ -51,6 +51,7 @@ Sửa xong là có hiệu lực ngay ở lần đọc kế tiếp (backend xoá 
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.2.0 | 2026-10-10 | Ô tìm, nhóm, trạng thái và trang nằm trên URL; modal dùng `FormModal`; ngừng dùng qua `useConfirmWithReason` (lý do tuỳ chọn, nếu nhập tối thiểu 5 ký tự — sửa lỗi chặn mọi lý do đã nhập); page size chuẩn 30. |
 | 1.1.0 | 2026-10-02 | Nhóm `NOTIFICATION` (mẫu email NOT-02): giá trị được để trống (= nội dung mặc định), nhập nhiều dòng, hiện mô tả biến được phép. |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý tham số. |
 | 1.0.1 | 2026-09-18 | Lý do là tuỳ chọn khi sửa/ngừng dùng; giữ audit. |

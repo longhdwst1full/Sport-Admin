@@ -7,13 +7,13 @@ export function supportCommandErrorMessage(error: unknown): string {
     case SUPPORT_ERROR_CODE.VERSION_CONFLICT:
     case SUPPORT_ERROR_CODE.CONCURRENT_UPDATE:
     case SUPPORT_ERROR_CODE.INVALID_TRANSITION:
-      return 'Ticket vừa được người khác cập nhật. Dữ liệu đã tải lại, vui lòng xem lại rồi thao tác.';
+      return 'Phiếu hỗ trợ vừa được người khác cập nhật. Dữ liệu đã tải lại, vui lòng xem lại rồi thao tác.';
     case SUPPORT_ERROR_CODE.TICKET_CLOSED:
-      return 'Ticket đã đóng, không thao tác thêm được.';
+      return 'Phiếu hỗ trợ đã đóng, không thao tác thêm được.';
     case SUPPORT_ERROR_CODE.IDEMPOTENCY_CONFLICT:
       return 'Lệnh trước đó chưa khớp với nội dung vừa gửi. Vui lòng gửi lại.';
     case SUPPORT_ERROR_CODE.ASSIGNEE_INVALID:
-      return 'Người được chọn không nhận được ticket này (ngoài phạm vi chi nhánh hoặc thiếu quyền hỗ trợ).';
+      return 'Người được chọn không nhận được phiếu hỗ trợ này (ngoài phạm vi chi nhánh hoặc thiếu quyền hỗ trợ).';
     default:
       return getApiErrorMessage(error);
   }

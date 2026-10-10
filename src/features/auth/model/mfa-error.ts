@@ -9,7 +9,7 @@ import {
 /** Người dùng đóng hộp nhập mã: không phải lỗi nghiệp vụ, caller bỏ qua không báo. */
 export class MfaCodeCancelledError extends Error {
   constructor() {
-    super('Đã hủy nhập mã xác thực');
+    super('Đã huỷ nhập mã xác thực');
     this.name = 'MfaCodeCancelledError';
   }
 }

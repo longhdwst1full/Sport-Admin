@@ -257,7 +257,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
             </div>
             <div className="flex gap-2">
               <Button size="large" disabled={mutation.isPending} onClick={closeDrawer}>
-                Hủy
+                Huỷ
               </Button>
               <Button
                 size="large"

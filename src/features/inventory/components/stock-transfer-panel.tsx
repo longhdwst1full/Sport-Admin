@@ -1,11 +1,11 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Card, Tag, Typography } from 'antd';
+import { Card, Typography } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
 import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { useListStockTransfers } from '@/generated/api/inventory/inventory';
-import type { StockTransferStatus, StockTransferSummaryDto } from '@/generated/api/inventory/inventory.schemas';
+import { StockTransferStatus, type StockTransferSummaryDto } from '@/generated/api/inventory/inventory.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
 import { useInventoryDocumentFilters } from '../hooks/use-inventory-document-filters';
 import { stockTransferStatusMeta, stockTransferStatusOptions } from '../constants/stock-transfer.constants';
@@ -16,7 +16,7 @@ const COLUMNS: ColumnsType<StockTransferSummaryDto> = [
   { title: 'Số phiếu', dataIndex: 'transferNo', width: 250, render: (value) => <Typography.Text code>{value}</Typography.Text> },
   col.text<StockTransferSummaryDto>('fromWarehouseCode', 'Kho xuất', { width: 130 }),
   col.text<StockTransferSummaryDto>('toWarehouseCode', 'Kho nhận', { width: 130 }),
-  { title: 'Trạng thái', dataIndex: 'status', width: 150, render: (value: keyof typeof stockTransferStatusMeta) => <Tag color={stockTransferStatusMeta[value].color}>{stockTransferStatusMeta[value].label}</Tag> },
+  col.status<StockTransferSummaryDto, StockTransferStatus>('status', 'Trạng thái', stockTransferStatusMeta),
   col.number<StockTransferSummaryDto>('itemCount', 'Số SKU', { width: 90 }),
   col.text<StockTransferSummaryDto>('reason', 'Lý do', { width: undefined, ellipsis: true }),
   col.text<StockTransferSummaryDto>('createdByDisplayName', 'Người tạo', { width: 160 }),
@@ -31,7 +31,7 @@ export function StockTransferPanel({
   selectedId?: string;
   onSelectedIdChange: (id?: string) => void;
 }) {
-  const filters = useInventoryDocumentFilters<StockTransferStatus>();
+  const filters = useInventoryDocumentFilters('transfer', StockTransferStatus);
   const query = useListStockTransfers(filters.params);
 
   const columns = useMemo(

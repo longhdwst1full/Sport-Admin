@@ -2,6 +2,7 @@ import { InboxOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Tag } from 'antd';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { FormSection } from '@/foundation/layout/form-section';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
@@ -119,6 +120,9 @@ export function ProductStockPanel({
         description="Chỉ xem. Nhập thêm, điều chỉnh hoặc chuyển kho ở màn Tồn kho để có phiếu và lý do."
         icon={<InboxOutlined />}
       >
+        {canViewStock && balances.isError && (
+          <QueryErrorAlert error={balances.error} message="Không tải được tồn kho" retry={() => void balances.refetch()} />
+        )}
         {canViewStock ? (
           <AdminTable<InventoryBalanceDto>
             size="small"

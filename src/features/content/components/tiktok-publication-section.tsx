@@ -170,7 +170,15 @@ export function TikTokPublicationSection({
               {tiktok.media.map((item) => (
                 <div key={item.id} className="relative overflow-hidden rounded-xl border border-slate-200">
                   {item.url ? (
-                    <Image fallback={IMAGE_FALLBACK_SRC} width={92} height={92} src={item.thumbnailUrl ?? item.url} className="object-cover" />
+                    <Image
+                      fallback={IMAGE_FALLBACK_SRC}
+                      width={92}
+                      height={92}
+                      loading="lazy"
+                      src={item.thumbnailUrl ?? item.url}
+                      alt=""
+                      className="object-cover"
+                    />
                   ) : (
                     <div className="flex h-[92px] w-[92px] items-center justify-center text-[11px] text-slate-400">Đã gỡ</div>
                   )}

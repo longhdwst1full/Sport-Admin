@@ -86,7 +86,7 @@ export function useMfaSelfEnrollment() {
       open={Boolean(provisioning)}
       title="Bật xác thực 2 lớp"
       okText="Kích hoạt"
-      cancelText="Hủy"
+      cancelText="Huỷ"
       okButtonProps={{ disabled: !MFA_CODE_PATTERN.test(code) }}
       confirmLoading={submitting}
       onOk={() => void confirm(code)}

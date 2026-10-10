@@ -6,8 +6,11 @@ import {
   RollbackOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Descriptions, Input, Modal, Select, Space, Tag, Timeline, Typography } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Input, Select, Space, Timeline, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { StatusTag } from '@/foundation/management';
+import { FormModal } from '@/foundation/overlay';
 import {
   deliverAdminFulfillment,
   failAdminFulfillmentDelivery,
@@ -34,9 +37,6 @@ import {
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 
 type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive';
-
-// Nhãn trạng thái vận đơn dùng chung với feature fulfillments (rule 08) — không định nghĩa lại ở đây.
-const statusPresentation = fulfillmentStatusPresentation;
 
 const actionPresentation: Record<FulfillmentAction, { title: string; okText: string; note: string }> = {
   pick: { title: 'Bắt đầu lấy hàng', okText: 'Bắt đầu lấy', note: 'Đơn phải được xác nhận trước khi nhân viên bắt đầu lấy hàng.' },
@@ -142,15 +142,16 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
     onSuccess: async (updated) => {
       await applyUpdated(updated);
       void message.success('Đã cập nhật trạng thái giao vận');
-      closeModal();
+      // onSuccess chạy khi mutation vẫn còn isPending (query-core await onSuccess trước khi dispatch success),
+      // nên phải gọi bản reset không chặn; closeModal chỉ dành cho thao tác huỷ của người dùng.
+      resetModal();
     },
     onError: (error) => {
       void message.error(getApiErrorMessage(error, 'Không cập nhật được giao vận.'));
     },
   });
 
-  const closeModal = () => {
-    if (mutation.isPending) return;
+  const resetModal = () => {
     mutation.reset();
     idempotencyRef.current = undefined;
     setAction(undefined);
@@ -160,22 +161,23 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
     setReasonCode('CUSTOMER_UNAVAILABLE');
     setCondition('SELLABLE');
   };
+  const closeModal = () => {
+    if (mutation.isPending) return;
+    resetModal();
+  };
 
   if (fulfillmentQuery.isLoading) return <Card loading className="rounded-2xl" />;
   if (fulfillmentQuery.isError) {
     return (
-      <Alert
-        type="error"
-        showIcon
+      <QueryErrorAlert
         message="Không tải được quy trình giao vận"
-        description={getApiErrorMessage(fulfillmentQuery.error, 'Vui lòng thử tải lại dữ liệu giao vận.')}
-        action={<Button onClick={() => void fulfillmentQuery.refetch()}>Thử lại</Button>}
+        error={fulfillmentQuery.error}
+        retry={() => void fulfillmentQuery.refetch()}
       />
     );
   }
   if (!fulfillment) return null;
 
-  const status = statusPresentation[fulfillment.status] ?? { label: fulfillment.status, color: 'default' };
   const requiresReason = action === 'fail' || action === 'receive';
   const isValid = !requiresReason || note.trim().length >= 5;
 
@@ -185,7 +187,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       title={(
         <div className="flex flex-wrap items-center justify-between gap-2 py-1">
           <span>Giao vận · {fulfillment.fulfillmentNo}</span>
-          <Tag color={status.color}>{status.label}</Tag>
+          <StatusTag status={fulfillment.status} presentations={fulfillmentStatusPresentation} />
         </div>
       )}
     >
@@ -217,10 +219,10 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       <Timeline
         className="mt-5"
         items={fulfillment.history.map((item) => ({
-          color: item.toStatus === fulfillment.status ? '#006c5b' : 'gray',
+          color: item.toStatus === fulfillment.status ? 'green' : 'gray',
           children: (
             <div>
-              <strong>{statusPresentation[item.toStatus]?.label ?? item.toStatus}</strong>
+              <strong>{fulfillmentStatusPresentation[item.toStatus].label}</strong>
               <div className="text-xs text-slate-500">{formatDateTime(item.createdAt)}</div>
               {item.reason && <div className="mt-1 text-sm text-slate-600">{item.reason}</div>}
             </div>
@@ -238,15 +240,15 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
         </div>
       )}
 
-      <Modal
+      <FormModal
         open={Boolean(action)}
         title={action ? actionPresentation[action].title : ''}
         okText={action ? actionPresentation[action].okText : 'Xác nhận'}
-        cancelText="Đóng"
-        confirmLoading={mutation.isPending}
+        submitting={mutation.isPending}
         okButtonProps={{ danger: action === 'fail', disabled: !isValid }}
-        onCancel={closeModal}
-        onOk={() => mutation.mutate()}
+        onClose={closeModal}
+        onSubmit={() => mutation.mutate()}
+        isDirty={() => Boolean(note.trim() || carrierCode.trim() || trackingNo.trim())}
       >
         {action && <Typography.Paragraph type="secondary">{actionPresentation[action].note}</Typography.Paragraph>}
         <Space direction="vertical" size="middle" className="w-full">
@@ -304,7 +306,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
             />
           </div>
         </Space>
-      </Modal>
+      </FormModal>
     </Card>
   );
 }

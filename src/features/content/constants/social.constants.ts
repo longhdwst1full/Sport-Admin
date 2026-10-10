@@ -1,6 +1,8 @@
 import type { StatusPresentation } from '@/foundation/management';
+import { toOptions } from '@/shared/utils/options';
 import {
   AnyContentPostType,
+  ContentPostStatus,
   FacebookPublicationOrigin,
   FacebookPublicationStatus,
   FacebookPublishType,
@@ -8,8 +10,6 @@ import {
   TikTokPrivacyLevel,
   TikTokPublishPhase,
 } from '@/generated/api/content/content.schemas';
-
-export const SOCIAL_PAGE_SIZE = 20;
 
 /** PERMISSION: chỉ điều khiển affordance; API kiểm lại quyền ở mọi lệnh (D97, không maker-checker). */
 export const SOCIAL_PERMISSION = {
@@ -106,21 +106,37 @@ export const SOCIAL_LIMITS = {
 /** Post id Graph API của Page (`{pageId}_{postId}`) — dùng khi đối soát nhập tay. */
 export const FB_POST_ID_PATTERN = /^\d+_\d+$/;
 
+/** Trạng thái bản đăng (dùng chung Facebook/TikTok). UNCERTAIN cần người Đối soát nên là `warning`. */
 export const fbStatusPresentation: Record<FacebookPublicationStatus, StatusPresentation> = {
-  [FacebookPublicationStatus.DRAFT]: { label: 'Nháp', color: 'default' },
-  [FacebookPublicationStatus.PENDING_APPROVAL]: { label: 'Chờ duyệt', color: 'gold' },
-  [FacebookPublicationStatus.SCHEDULED]: { label: 'Đã hẹn giờ', color: 'blue' },
-  [FacebookPublicationStatus.PUBLISHING]: { label: 'Đang đăng', color: 'cyan' },
-  [FacebookPublicationStatus.UNCERTAIN]: { label: 'Chưa rõ kết quả', color: 'orange' },
-  [FacebookPublicationStatus.PUBLISHED]: { label: 'Đã đăng', color: 'green' },
-  [FacebookPublicationStatus.FAILED]: { label: 'Lỗi', color: 'red' },
-  [FacebookPublicationStatus.DELETED]: { label: 'Đã xoá', color: 'default' },
+  [FacebookPublicationStatus.DRAFT]: { label: 'Nháp', color: 'neutral' },
+  [FacebookPublicationStatus.PENDING_APPROVAL]: { label: 'Chờ duyệt', color: 'warning' },
+  [FacebookPublicationStatus.SCHEDULED]: { label: 'Đã hẹn giờ', color: 'info' },
+  [FacebookPublicationStatus.PUBLISHING]: { label: 'Đang đăng', color: 'progress' },
+  [FacebookPublicationStatus.UNCERTAIN]: { label: 'Chưa rõ kết quả', color: 'warning' },
+  [FacebookPublicationStatus.PUBLISHED]: { label: 'Đã đăng', color: 'success' },
+  [FacebookPublicationStatus.FAILED]: { label: 'Lỗi', color: 'danger' },
+  [FacebookPublicationStatus.DELETED]: { label: 'Đã xoá', color: 'neutral' },
 };
 
-export const fbStatusOptions = Object.values(FacebookPublicationStatus).map((value) => ({
-  value,
-  label: fbStatusPresentation[value].label,
-}));
+export const fbStatusOptions = toOptions(fbStatusPresentation);
+
+/** Trạng thái bài website (cột "Website" của màn bài viết). */
+export const contentPostStatusPresentation: Record<ContentPostStatus, StatusPresentation> = {
+  [ContentPostStatus.PUBLISHED]: { label: 'Đang xuất bản', color: 'success' },
+  [ContentPostStatus.ARCHIVED]: { label: 'Đã lưu trữ', color: 'neutral' },
+};
+
+/** Cờ hiển thị trên website (tách khỏi trạng thái bài). */
+export const WEBSITE_VISIBILITY = {
+  VISIBLE: 'VISIBLE',
+  HIDDEN: 'HIDDEN',
+} as const;
+export type WebsiteVisibility = (typeof WEBSITE_VISIBILITY)[keyof typeof WEBSITE_VISIBILITY];
+
+export const websiteVisibilityPresentation: Record<WebsiteVisibility, StatusPresentation> = {
+  [WEBSITE_VISIBILITY.VISIBLE]: { label: 'Đang hiển thị', color: 'success' },
+  [WEBSITE_VISIBILITY.HIDDEN]: { label: 'Không hiển thị', color: 'neutral' },
+};
 
 export const fbPublishTypeLabels: Record<FacebookPublishType, string> = {
   [FacebookPublishType.FEED]: 'Bài viết',
@@ -129,10 +145,7 @@ export const fbPublishTypeLabels: Record<FacebookPublishType, string> = {
   [FacebookPublishType.REEL]: 'Reel',
 };
 
-export const fbPublishTypeOptions = Object.values(FacebookPublishType).map((value) => ({
-  value,
-  label: fbPublishTypeLabels[value],
-}));
+export const fbPublishTypeOptions = toOptions(fbPublishTypeLabels);
 
 /**
  * Loại đăng chọn được khi soạn. Video/Reel dùng video tải lên ngay trong picker (tải theo phần);
@@ -153,10 +166,7 @@ export const fbOriginLabels: Record<FacebookPublicationOrigin, string> = {
   [FacebookPublicationOrigin.FACEBOOK_IMPORT]: 'Nhập từ Facebook',
 };
 
-export const fbOriginOptions = Object.values(FacebookPublicationOrigin).map((value) => ({
-  value,
-  label: fbOriginLabels[value],
-}));
+export const fbOriginOptions = toOptions(fbOriginLabels);
 
 export const postTypeLabels: Record<AnyContentPostType, string> = {
   [AnyContentPostType.NEWS]: 'Tin tức',
@@ -167,10 +177,7 @@ export const postTypeLabels: Record<AnyContentPostType, string> = {
   [AnyContentPostType.SOCIAL]: 'Chỉ mạng xã hội',
 };
 
-export const postTypeOptions = Object.values(AnyContentPostType).map((value) => ({
-  value,
-  label: postTypeLabels[value],
-}));
+export const postTypeOptions = toOptions(postTypeLabels);
 
 /** Mã lỗi ổn định của API (`SOCIAL_ERROR` trong `cms/social/social.constants.ts`). */
 export const SOCIAL_ERROR_CODE = {
@@ -241,6 +248,20 @@ export const TIKTOK_PARAMETER_CODES = ['TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRE
  * (origin Admin + đường dẫn này) và Redirect URI khai ở TikTok Developer Portal.
  */
 export const TIKTOK_CALLBACK_PATH = '/content/social/tiktok/callback';
-/** sessionStorage: nơi quay về sau khi kết nối TikTok xong. */
-export const TIKTOK_CONNECT_RETURN_KEY = 'dctd.admin.tiktok-connect-return';
 export const TIKTOK_CONNECT_DEFAULT_RETURN = '/content?tab=social';
+
+/** Trạng thái kết nối tài khoản TikTok (suy ra từ `TikTokAccountDto`, xem `toTikTokConnectionState`). */
+export const TIKTOK_CONNECTION = {
+  APP_NOT_CONFIGURED: 'APP_NOT_CONFIGURED',
+  CONNECTED: 'CONNECTED',
+  RECONNECT_REQUIRED: 'RECONNECT_REQUIRED',
+  NOT_CONNECTED: 'NOT_CONNECTED',
+} as const;
+export type TikTokConnectionState = (typeof TIKTOK_CONNECTION)[keyof typeof TIKTOK_CONNECTION];
+
+export const tiktokConnectionPresentation: Record<TikTokConnectionState, StatusPresentation> = {
+  [TIKTOK_CONNECTION.APP_NOT_CONFIGURED]: { label: 'Chưa cấu hình ứng dụng', color: 'warning' },
+  [TIKTOK_CONNECTION.CONNECTED]: { label: 'Đã kết nối', color: 'success' },
+  [TIKTOK_CONNECTION.RECONNECT_REQUIRED]: { label: 'Cần kết nối lại', color: 'danger' },
+  [TIKTOK_CONNECTION.NOT_CONNECTED]: { label: 'Chưa kết nối', color: 'neutral' },
+};

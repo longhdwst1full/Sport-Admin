@@ -6,6 +6,7 @@ import {
   DASHBOARD_CARD_CLASS,
   GRANULARITY_OPTIONS,
   PERIOD_DESCRIPTION,
+  REPORT_EXPORT_PATH,
   type Granularity,
 } from '../constants/dashboard.constants';
 import type { ReportQueryState, ReportRange, RevenuePoint } from '../model/dashboard.mapper';
@@ -49,7 +50,7 @@ export function RevenueChartCard({
           />
           {/* File tải về dùng đúng khoảng và mức gom đang xem trên màn hình. */}
           <ReportExportButton
-            path="/api/v1/admin/reports/revenue/export"
+            path={REPORT_EXPORT_PATH.revenue}
             params={{ ...range, granularity }}
             fallbackFilename="bao-cao-doanh-thu"
             disabled={!canSeeRevenue}

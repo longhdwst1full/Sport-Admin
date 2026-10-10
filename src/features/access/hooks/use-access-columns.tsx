@@ -9,9 +9,15 @@ import {
 } from '@ant-design/icons';
 import { Avatar, Button, Space, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { StatusTag } from '@/foundation/management';
 import { col, TableActionButton } from '@/foundation/table';
 import type { RoleDto, UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
-import { USER_STATUS_PRESENTATION } from '../constants/access.constants';
+import {
+  PASSWORD_STATE_PRESENTATION,
+  roleCodeLabel,
+  SCOPE_TYPE_LABELS,
+  USER_STATUS_PRESENTATION,
+} from '../constants/access.constants';
 import type { StaffLifecycleAction } from '../components/staff-lifecycle-modal';
 
 /** Cột dữ liệu của bảng người dùng không phụ thuộc quyền/handler. */
@@ -21,16 +27,17 @@ const USER_INFO_COLUMNS: ColumnsType<UserDto> = [
     dataIndex: 'assignments',
     width: 180,
     render: (assignments: UserRoleAssignmentDto[]) =>
-      assignments.map((assignment) => assignment.scopeType).join(', ') || 'Chưa gán',
+      assignments.map((assignment) => SCOPE_TYPE_LABELS[assignment.scopeType]).join(', ') || 'Chưa gán',
   },
   {
     title: 'Bảo mật đăng nhập',
     width: 190,
     render: (_, user) => (
       <div>
-        {user.mustChangePassword
-          ? <Tag color="gold">Phải đổi mật khẩu</Tag>
-          : <Tag color="green">Mật khẩu đã đổi</Tag>}
+        <StatusTag
+          status={user.mustChangePassword ? 'MUST_CHANGE' : 'CHANGED'}
+          presentations={PASSWORD_STATE_PRESENTATION}
+        />
         <div className="mt-1 text-xs text-slate-500">
           Sai liên tiếp: {user.failedLoginAttempts}/5
         </div>
@@ -40,7 +47,7 @@ const USER_INFO_COLUMNS: ColumnsType<UserDto> = [
       </div>
     ),
   },
-  col.text<UserDto>('permissionVersion', 'Permission version', { align: 'center', width: 150 }),
+  col.text<UserDto>('permissionVersion', 'Phiên bản quyền', { align: 'center', width: 150 }),
   col.status<UserDto, UserDto['status']>('status', 'Trạng thái', USER_STATUS_PRESENTATION, { width: 140 }),
 ];
 
@@ -97,7 +104,7 @@ export function useUserColumns({
           <Space size={[4, 4]} wrap>
             {assignments.map((assignment) => (
               <Space.Compact key={assignment.id}>
-                <Tag color="blue" style={{ marginInlineEnd: 0 }}>{assignment.roleCode}</Tag>
+                <Tag color="blue" style={{ marginInlineEnd: 0 }}>{roleCodeLabel(assignment.roleCode)}</Tag>
                 {canAssignRoles && assignment.roleCode !== 'OWNER' && (
                   <Button size="small" danger type="link" onClick={() => onRevoke(user, assignment)}>
                     Thu hồi
@@ -145,7 +152,7 @@ export function useUserColumns({
                     )}
                     {canManageUsers && !isOwner && user.status === 'ACTIVE' && (
                       <TableActionButton
-                        label={`Xóa tài khoản ${user.displayName}`}
+                        label={`Xoá tài khoản ${user.displayName}`}
                         danger
                         icon={<DeleteOutlined />}
                         onClick={() => onLifecycle('DELETE', user)}
@@ -186,12 +193,12 @@ const ROLE_INFO_COLUMNS: ColumnsType<RoleDto> = [
     title: 'Loại',
     dataIndex: 'system',
     width: 120,
-    render: (system: boolean) => <Tag>{system ? 'Hệ thống' : 'Tùy chỉnh'}</Tag>,
+    render: (system: boolean) => <Tag>{system ? 'Hệ thống' : 'Tuỳ chỉnh'}</Tag>,
   },
 ];
 
 const ROLE_PERMISSION_COLUMN: ColumnsType<RoleDto>[number] = {
-  title: 'Permission keys',
+  title: 'Mã quyền',
   dataIndex: 'permissionCodes',
   render: (values: string[]) => (
     <Space size={[4, 4]} wrap>

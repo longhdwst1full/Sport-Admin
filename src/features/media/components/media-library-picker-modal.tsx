@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircleFilled, PlayCircleOutlined, UploadOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import { App, Button, Empty, Image, Modal, Pagination, Skeleton, Typography, Upload } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { MODAL_WIDTH } from '@/foundation/overlay';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { useListAdminMediaAssets } from '@/generated/api/media/media';
@@ -78,7 +79,7 @@ export function MediaLibraryPickerModal({
   return (
     <Modal
       open={open}
-      width={880}
+      width={MODAL_WIDTH.lg}
       title="Chọn từ Thư viện ảnh"
       okText={`Chọn (${selected.length}/${max})`}
       cancelText="Huỷ"
@@ -91,7 +92,7 @@ export function MediaLibraryPickerModal({
           className="min-w-64 flex-1"
           value={search.value}
           maxLength={100}
-          placeholder="Tìm theo public id, thư mục hoặc alt text"
+          placeholder="Tìm theo mã công khai, thư mục hoặc mô tả ảnh"
           onChange={search.setValue}
         />
         {allowedKinds.includes('IMAGE') && (
@@ -161,7 +162,7 @@ export function MediaLibraryPickerModal({
                     <VideoCameraOutlined />
                   </span>
                 ) : (
-                  <Image fallback={IMAGE_FALLBACK_SRC} preview={false} width="100%" height={96} src={asset.thumbnailUrl} className="object-cover" />
+                  <Image fallback={IMAGE_FALLBACK_SRC} preview={false} width="100%" height={96} loading="lazy" src={asset.thumbnailUrl} alt={asset.altText ?? asset.publicId} className="object-cover" />
                 )}
                 {kind === 'VIDEO' && (
                   <PlayCircleOutlined className="absolute left-1 top-1 rounded-full bg-black/50 p-1 text-white" />

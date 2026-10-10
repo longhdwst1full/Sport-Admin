@@ -1,9 +1,8 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { useMemo } from 'react';
 import { Typography, type TableColumnType } from 'antd';
-import { AdminTable, col, TableActionButton } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, col, TableActionButton } from '@/foundation/table';
 import {
-  SUPPORT_TICKET_PAGE_SIZE,
   supportTicketPriorityPresentation,
   supportTicketStatusPresentation,
 } from '../constants/support.constants';
@@ -32,7 +31,7 @@ export function SupportTicketTable({
     () => [
       {
         key: 'ticketNo',
-        title: 'Mã ticket',
+        title: 'Mã phiếu',
         width: 170,
         fixed: 'left',
         render: (_, row) => <Typography.Text strong>{row.ticketNo}</Typography.Text>,
@@ -55,7 +54,7 @@ export function SupportTicketTable({
       },
       col.dateTime<SupportTicketSummary>('createdAt', 'Tạo lúc'),
       col.actions<SupportTicketSummary>(
-        (row) => <TableActionButton label={`Xem ticket ${row.ticketNo}`} icon={<EyeOutlined />} onClick={() => onOpen(row.id)} />,
+        (row) => <TableActionButton label={`Xem phiếu hỗ trợ ${row.ticketNo}`} icon={<EyeOutlined />} onClick={() => onOpen(row.id)} />,
         { title: '', width: 72, align: undefined },
       ),
     ],
@@ -73,10 +72,10 @@ export function SupportTicketTable({
       onRow={(row) => ({ onDoubleClick: () => onOpen(row.id) })}
       pagination={{
         current: page,
-        pageSize: SUPPORT_TICKET_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
         showSizeChanger: false,
-        showTotal: (value) => `${value} ticket`,
+        showTotal: (value) => `${value} phiếu hỗ trợ`,
         onChange: onPageChange,
       }}
       columns={columns}

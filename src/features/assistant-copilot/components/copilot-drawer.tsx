@@ -32,8 +32,13 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
   const items = messages.data?.items ?? [];
   const pendingContent = send.isPending ? send.variables?.content : undefined;
 
-  // Trang mới công bố gợi ý khác → mặc định dùng lại gợi ý.
-  useEffect(() => setIncludeHints(true), [pageHints]);
+  // Trang mới công bố gợi ý khác → mặc định dùng lại gợi ý. Đặt lại ngay trong render theo mẫu
+  // "adjusting state when a prop changes" thay vì effect (RULE-HOOK-01).
+  const [hintsSource, setHintsSource] = useState(pageHints);
+  if (hintsSource !== pageHints) {
+    setHintsSource(pageHints);
+    setIncludeHints(true);
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.({ block: 'end' });

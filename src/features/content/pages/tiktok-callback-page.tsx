@@ -7,24 +7,8 @@ import {
   getGetAdminTikTokAccountQueryKey,
   getGetAdminTikTokCreatorInfoQueryKey,
 } from '@/generated/api/content/content';
-import { safeReturnPath } from '@/core/auth/return-path';
-import {
-  TIKTOK_CONNECT_DEFAULT_RETURN,
-  TIKTOK_CONNECT_RETURN_KEY,
-} from '../constants/social.constants';
 import { socialCommandErrorMessage } from '../model/social-command-error';
-
-/** Chỉ nhận đường dẫn nội bộ (`safeReturnPath`) để không thành open redirect. */
-function takeReturnPath(): string {
-  try {
-    const stored = sessionStorage.getItem(TIKTOK_CONNECT_RETURN_KEY);
-    sessionStorage.removeItem(TIKTOK_CONNECT_RETURN_KEY);
-    if (stored) return safeReturnPath(stored, TIKTOK_CONNECT_DEFAULT_RETURN);
-  } catch {
-    // Storage bị chặn: quay về mặc định.
-  }
-  return TIKTOK_CONNECT_DEFAULT_RETURN;
-}
+import { takeTikTokReturnPath } from '../model/tiktok-connect-return';
 
 /**
  * Trang nhận redirect OAuth của TikTok (`TIKTOK_REDIRECT_URI` trỏ vào đây). Đọc `code` + `state` rồi gọi
@@ -44,7 +28,7 @@ export function TikTokCallbackPage() {
     started.current = true;
     const code = params.get('code');
     const state = params.get('state');
-    const returnPath = takeReturnPath();
+    const returnPath = takeTikTokReturnPath();
 
     if (!code || !state) {
       const denied = params.get('error');

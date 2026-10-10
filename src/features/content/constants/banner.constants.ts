@@ -5,8 +5,6 @@ import {
   BannerStatus,
 } from '@/generated/api/content/content.schemas';
 
-export const BANNER_PAGE_SIZE = 20;
-
 /** PERMISSION: chỉ điều khiển affordance; API vẫn chặn `cms.content.*` ở mọi endpoint banner. */
 export const BANNER_PERMISSION = {
   VIEW: 'cms.content.view',
@@ -40,12 +38,24 @@ export const bannerPlacementLabels: Record<BannerPlacement, string> = {
 export const bannerPlacementOptions = toOptions(bannerPlacementLabels);
 
 export const bannerStatusPresentation: Record<BannerStatus, StatusPresentation> = {
-  [BannerStatus.DRAFT]: { label: 'Bản nháp', color: 'gold' },
-  [BannerStatus.PUBLISHED]: { label: 'Đã xuất bản', color: 'green' },
-  [BannerStatus.ARCHIVED]: { label: 'Đã lưu trữ', color: 'default' },
+  [BannerStatus.DRAFT]: { label: 'Bản nháp', color: 'neutral' },
+  [BannerStatus.PUBLISHED]: { label: 'Đã xuất bản', color: 'success' },
+  [BannerStatus.ARCHIVED]: { label: 'Đã lưu trữ', color: 'neutral' },
 };
 
 export const bannerStatusOptions = toOptions(bannerStatusPresentation);
+
+/** Banner PUBLISHED có đang chạy không (cờ `isLive` do API tính theo khung giờ). */
+export const BANNER_LIVENESS = {
+  LIVE: 'LIVE',
+  OUT_OF_WINDOW: 'OUT_OF_WINDOW',
+} as const;
+export type BannerLiveness = (typeof BANNER_LIVENESS)[keyof typeof BANNER_LIVENESS];
+
+export const bannerLivenessPresentation: Record<BannerLiveness, StatusPresentation> = {
+  [BANNER_LIVENESS.LIVE]: { label: 'Đang chạy', color: 'success' },
+  [BANNER_LIVENESS.OUT_OF_WINDOW]: { label: 'Ngoài khung giờ', color: 'neutral' },
+};
 
 /** Mã lỗi ổn định của API (`api/src/modules/cms/banners/banner.constants.ts`) mà UI phản ứng riêng. */
 export const BANNER_ERROR_CODE = {

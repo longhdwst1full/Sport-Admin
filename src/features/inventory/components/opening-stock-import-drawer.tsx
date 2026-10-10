@@ -2,7 +2,8 @@ import { InboxOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Progress, Select, Space, Typography, Upload } from 'antd';
 import { useRef, useState } from 'react';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { AdminTable, col } from '@/foundation/table';
 import { exportTableToCsv } from '@/foundation/export/export-table';
 import { searchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import {
@@ -24,6 +25,12 @@ import { FormDrawer } from '@/foundation/overlay';
 import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
 const nameFirstLabel = (item: ActiveLookupOptionDto) => `${item.label} (${item.code})`;
+
+const PREVIEW_COLUMNS: ColumnsType<OpeningStockLine> = [
+  col.text<OpeningStockLine>('row', 'Dòng', { width: 80 }),
+  col.text<OpeningStockLine>('sku', 'SKU'),
+  col.number<OpeningStockLine>('quantity', 'Số lượng'),
+];
 
 /**
  * Nhập tồn đầu hàng loạt từ CSV cho MỘT kho, ghi bằng phiếu OPENING_BALANCE theo lô 100 dòng.
@@ -186,11 +193,7 @@ export function OpeningStockImportDrawer({ open, onClose }: { open: boolean; onC
               size="small"
               dataSource={parsed.lines}
               pagination={{ pageSize: 20 }}
-              columns={[
-                { title: 'Dòng', dataIndex: 'row', width: 80 },
-                { title: 'SKU', dataIndex: 'sku' },
-                { title: 'Số lượng', dataIndex: 'quantity', align: 'right', width: 120 },
-              ]}
+              columns={PREVIEW_COLUMNS}
             />
           </>
         )}

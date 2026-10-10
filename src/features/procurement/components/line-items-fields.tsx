@@ -2,14 +2,13 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Form, Input, InputNumber, Select } from 'antd';
 import type { FormListFieldData } from 'antd';
 
-export interface LineItemsFieldsProps {
+interface LineItemsFieldsProps {
   variantOptions: Array<{ value: string; label: string }>;
   onVariantSearch: (value: string) => void;
   quantityName: 'orderedQty' | 'quantity';
   quantityLabel: string;
   unitCostRequired?: boolean;
   taxRate?: boolean;
-  purchaseOrderItem?: boolean;
   costName?: 'unitCost' | 'invoiceUnitCost';
   costLabel?: string;
 }
@@ -61,10 +60,6 @@ function LineRow({
       {props.taxRate ? (
         <Form.Item {...field} name={[field.name, 'taxRate']} label="VAT (%)" className="!mb-0">
           <Input min="0" max="100" inputMode="decimal" placeholder="0" />
-        </Form.Item>
-      ) : props.purchaseOrderItem ? (
-        <Form.Item {...field} name={[field.name, 'purchaseOrderItemId']} label="Dòng PO" className="!mb-0">
-          <Input placeholder="Tự khớp SKU" />
         </Form.Item>
       ) : <div />}
       <Button

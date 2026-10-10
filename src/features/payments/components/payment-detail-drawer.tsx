@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Image, Input, Modal, Space, Spin, Tag, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Empty, Form, Image, Input, Space, Typography } from 'antd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   confirmAdminPayment,
@@ -9,26 +9,42 @@ import {
   rejectAdminPayment,
 } from '@/generated/api/payments/payments';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
+import { OrderStatus } from '@/generated/api/orders/orders.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { MoneyInput } from '@/foundation/inputs/money-input';
-import { moneyFormatter, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
+import { StatusTag } from '@/foundation/management';
+import { DetailDrawer, FormModal, useConfirmWithReason } from '@/foundation/overlay';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { parseEnum } from '@/shared/utils/parse-enum';
+import {
+  moneyFormatter,
+  paymentEvidenceStatusPresentation,
+  paymentMethodLabels,
+  paymentStatusPresentation,
+} from '../constants/payment.constants';
+import { orderStatusPresentation } from '@/features/order-status';
 
-type Action = 'confirm' | 'reject';
+/**
+ * `receivedAmount` giữ dạng SỐ trong form để ô nhập nhóm được hàng nghìn, và chỉ đổi sang chuỗi
+ * đúng lúc gọi API — contract nhận chuỗi thập phân. Tiền VND không dùng phần lẻ nên không mất
+ * thông tin; nếu sau này có phần lẻ thì phải đổi lại cả ô nhập lẫn chỗ chuyển kiểu này.
+ */
+interface ConfirmValues {
+  receivedAmount: number;
+  reference: string;
+  note?: string;
+}
+
+type SettleRequest = { action: 'confirm'; values: ConfirmValues } | { action: 'reject'; reason: string };
 
 export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string; onClose: () => void }) {
   const queryClient = useQueryClient();
   const { message } = App.useApp();
-  const [action, setAction] = useState<Action>();
-  /**
-   * `receivedAmount` giữ dạng SỐ trong form để ô nhập nhóm được hàng nghìn, và chỉ đổi sang chuỗi
-   * đúng lúc gọi API — contract nhận chuỗi thập phân. Tiền VND không dùng phần lẻ nên không mất
-   * thông tin; nếu sau này có phần lẻ thì phải đổi lại cả ô nhập lẫn chỗ chuyển kiểu này.
-   */
-  const [form] = Form.useForm<{ receivedAmount: number; reference: string; note?: string; reason?: string }>();
+  const confirmWithReason = useConfirmWithReason();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [form] = Form.useForm<ConfirmValues>();
   const idempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
   const detail = useQuery({
     queryKey: getGetAdminPaymentQueryKey(paymentId),
@@ -39,17 +55,21 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
   const payment = detail.data;
   const mutation = useMutation({
     retry: false,
-    mutationFn: async (values: { receivedAmount: number; reference: string; note?: string; reason?: string }) => {
-      if (!payment || !action) throw new Error('Chưa tải được thanh toán');
-      const receivedAmount = String(values.receivedAmount ?? '');
-      const signature = action === 'confirm'
-        ? `${action}:${payment.id}:${payment.version}:${receivedAmount}:${values.reference.trim()}:${values.note?.trim() ?? ''}`
-        : `${action}:${payment.id}:${payment.version}:${values.reason?.trim() ?? ''}`;
+    mutationFn: async (request: SettleRequest) => {
+      if (!payment) throw new Error('Chưa tải được thanh toán');
+      const receivedAmount = request.action === 'confirm' ? String(request.values.receivedAmount ?? '') : '';
+      const signature = request.action === 'confirm'
+        ? `confirm:${payment.id}:${payment.version}:${receivedAmount}:${request.values.reference.trim()}:${request.values.note?.trim() ?? ''}`
+        : `reject:${payment.id}:${payment.version}:${request.reason}`;
       idempotencyRef.current = nextIdempotencyKey(idempotencyRef.current, signature);
       const options = { headers: { 'idempotency-key': idempotencyRef.current.key } };
-      return action === 'confirm'
-        ? confirmAdminPayment(payment.id, { expectedVersion: payment.version, receivedAmount, reference: values.reference, note: values.note }, options)
-        : rejectAdminPayment(payment.id, { expectedVersion: payment.version, reason: values.reason ?? '' }, options);
+      return request.action === 'confirm'
+        ? confirmAdminPayment(
+          payment.id,
+          { expectedVersion: payment.version, receivedAmount, reference: request.values.reference, note: request.values.note },
+          options,
+        )
+        : rejectAdminPayment(payment.id, { expectedVersion: payment.version, reason: request.reason }, options);
     },
     onSuccess: async (updated) => {
       queryClient.setQueryData(getGetAdminPaymentQueryKey(updated.id), updated);
@@ -57,25 +77,29 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       await queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() });
       await queryClient.invalidateQueries({ queryKey: getGetAdminOrderQueryKey(updated.orderId) });
       await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
-      closeAction();
+      // onSuccess chạy khi mutation vẫn còn isPending (query-core await onSuccess trước khi dispatch success),
+      // nên phải gọi bản reset không chặn; closeConfirm chỉ dành cho thao tác huỷ của người dùng.
+      resetAction();
     },
     onError: (error) => {
       void message.error(getApiErrorMessage(error, 'Không cập nhật được thanh toán.'));
     },
   });
-  const closeAction = () => {
-    if (mutation.isPending) return;
+  const resetAction = () => {
     mutation.reset();
     idempotencyRef.current = undefined;
     form.resetFields();
-    setAction(undefined);
+    setConfirmOpen(false);
+  };
+  const closeConfirm = () => {
+    if (mutation.isPending) return;
+    resetAction();
   };
   const closeDrawer = () => {
     if (mutation.isPending) return;
-    closeAction();
+    closeConfirm();
     onClose();
   };
-  const status = payment ? paymentStatusPresentation[payment.status] ?? { label: payment.status, color: 'default' } : undefined;
   // UX: COD chỉ mở thao tác thu tiền khi đơn đã giao; backend vẫn kiểm tra lại
   // để UI không bao giờ trở thành ranh giới bảo mật/nghiệp vụ duy nhất.
   // SECURITY: payment.confirm là quyền riêng với payment.view. Không có nó thì hai thao tác
@@ -86,32 +110,111 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       ? payment.orderStatus === 'DELIVERED'
       : ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status));
   const canReject = canSettle && payment && ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status);
+  const orderStatus = payment ? parseEnum(OrderStatus, payment.orderStatus) : undefined;
+
+  const reject = () => {
+    if (!payment) return;
+    confirmWithReason({
+      title: 'Từ chối bằng chứng',
+      consequence: `Bằng chứng chuyển khoản của thanh toán ${payment.paymentRef} sẽ bị từ chối.`,
+      okText: 'Từ chối',
+      minLength: 3,
+      onOk: (reason) => mutation.mutateAsync({ action: 'reject', reason }),
+    });
+  };
 
   return (
     <>
-      <Drawer open={Boolean(paymentId)} onClose={closeDrawer} width={DRAWER_WIDTH.md} title={payment ? `Thanh toán ${payment.paymentRef}` : 'Chi tiết thanh toán'} destroyOnHidden>
-        {detail.isLoading ? <div className="grid min-h-64 place-items-center"><Spin size="large" /></div> : detail.isError ? <Alert type="error" showIcon message="Không tải được thanh toán" description={getApiErrorMessage(detail.error)} /> : !payment ? <Empty /> : (
+      <DetailDrawer
+        open={Boolean(paymentId)}
+        onClose={closeDrawer}
+        size="md"
+        title={payment ? `Thanh toán ${payment.paymentRef}` : 'Chi tiết thanh toán'}
+        status={payment && <StatusTag status={payment.status} presentations={paymentStatusPresentation} />}
+        loading={detail.isLoading}
+        error={detail.isError ? detail.error : undefined}
+        onRetry={() => void detail.refetch()}
+      >
+        {!payment ? <Empty /> : (
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3"><div><Typography.Title level={4} className="!mb-1">{payment.orderNo}</Typography.Title><Typography.Text type="secondary">{paymentMethodLabels[payment.method] ?? payment.method}</Typography.Text></div>{status && <Tag color={status.color}>{status.label}</Tag>}</div>
+            <div>
+              <Typography.Title level={4} className="!mb-1">{payment.orderNo}</Typography.Title>
+              <Typography.Text type="secondary">{paymentMethodLabels[payment.method] ?? payment.method}</Typography.Text>
+            </div>
             <Descriptions bordered size="small" column={2} items={[
               { key: 'expected', label: 'Phải thu', children: moneyFormatter.format(Number(payment.expectedAmount)) },
               { key: 'received', label: 'Đã nhận', children: moneyFormatter.format(Number(payment.receivedAmount)) },
-              { key: 'orderStatus', label: 'Trạng thái đơn', children: payment.orderStatus },
+              { key: 'orderStatus', label: 'Trạng thái đơn', children: orderStatus ? <StatusTag status={orderStatus} presentations={orderStatusPresentation} /> : 'Không xác định' },
               { key: 'version', label: 'Phiên bản', children: payment.version },
               { key: 'expiry', label: 'Hết hạn', children: payment.expiresAt ? formatDateTime(payment.expiresAt) : 'Không áp dụng' },
             ]} />
             {payment.failureReason && <Alert type="warning" showIcon message={payment.failureReason} />}
-            <section><Typography.Title level={5}>Bằng chứng chuyển khoản</Typography.Title>{payment.evidences.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bằng chứng" /> : <div className="grid gap-4 sm:grid-cols-2">{payment.evidences.map((evidence) => <div key={evidence.id} className="rounded-xl border border-slate-200 p-3"><Image src={evidence.thumbnailUrl} preview={{ src: evidence.fileUrl }} className="max-h-48 rounded-lg object-contain" /><div className="mt-2 flex justify-between"><span>#{evidence.id}</span><Tag>{evidence.status}</Tag></div>{evidence.note && <p className="mt-2 text-sm text-slate-600">{evidence.note}</p>}</div>)}</div>}</section>
+            <section>
+              <Typography.Title level={5}>Bằng chứng chuyển khoản</Typography.Title>
+              {payment.evidences.length === 0 ? (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bằng chứng" />
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {payment.evidences.map((evidence) => (
+                    <div key={evidence.id} className="rounded-xl border border-slate-200 p-3">
+                      <Image
+                        src={evidence.thumbnailUrl}
+                        preview={{ src: evidence.fileUrl }}
+                        alt={`Bằng chứng #${evidence.id}`}
+                        loading="lazy"
+                        width="100%"
+                        height={192}
+                        className="rounded-lg object-contain"
+                      />
+                      <div className="mt-2 flex items-center justify-between">
+                        <span>#{evidence.id}</span>
+                        <StatusTag status={evidence.status} presentations={paymentEvidenceStatusPresentation} />
+                      </div>
+                      {evidence.note && <p className="mt-2 text-sm text-slate-600">{evidence.note}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
             {!canSettle && <Alert type="info" showIcon message="Bạn chỉ có quyền xem thanh toán; thao tác đối soát cần quyền payment.confirm." />}
-            <Space><Button type="primary" disabled={!canConfirm} onClick={() => { setAction('confirm'); form.setFieldsValue({ receivedAmount: Number(payment.expectedAmount) }); }}>Xác nhận đủ tiền</Button><Button danger disabled={!canReject} onClick={() => setAction('reject')}>Từ chối bằng chứng</Button></Space>
+            <Space>
+              <Button
+                type="primary"
+                disabled={!canConfirm}
+                onClick={() => {
+                  setConfirmOpen(true);
+                  form.setFieldsValue({ receivedAmount: Number(payment.expectedAmount) });
+                }}
+              >
+                Xác nhận đủ tiền
+              </Button>
+              <Button danger disabled={!canReject} loading={mutation.isPending && mutation.variables?.action === 'reject'} onClick={reject}>
+                Từ chối bằng chứng
+              </Button>
+            </Space>
           </div>
         )}
-      </Drawer>
-      <Modal open={Boolean(action)} title={action === 'confirm' ? 'Xác nhận thanh toán' : 'Từ chối bằng chứng'} onCancel={closeAction} onOk={() => form.submit()} okButtonProps={{ loading: mutation.isPending }} cancelButtonProps={{ disabled: mutation.isPending }} destroyOnHidden>
-        <Form form={form} layout="vertical" onFinish={(values) => mutation.mutate(values)}>
-          {action === 'confirm' ? <><Form.Item name="receivedAmount" label="Số tiền thực nhận" rules={[{ required: true, message: 'Vui lòng nhập số tiền thực nhận' }, { type: 'number', min: 1, message: 'Số tiền phải lớn hơn 0' }]}><MoneyInput className="!w-full" /></Form.Item><Form.Item name="reference" label="Mã giao dịch/đối soát" rules={[{ required: true, message: 'Vui lòng nhập mã đối soát' }]}><Input maxLength={255} /></Form.Item><Form.Item name="note" label="Ghi chú"><Input.TextArea rows={3} maxLength={1000} /></Form.Item></> : <Form.Item name="reason" label="Lý do từ chối" rules={[{ required: true, min: 3, message: 'Vui lòng nhập lý do ít nhất 3 ký tự' }]}><Input.TextArea rows={4} maxLength={500} /></Form.Item>}
+      </DetailDrawer>
+      <FormModal
+        open={confirmOpen}
+        title="Xác nhận thanh toán"
+        onClose={closeConfirm}
+        onSubmit={() => form.submit()}
+        submitting={mutation.isPending}
+        isDirty={() => form.isFieldsTouched()}
+      >
+        <Form form={form} layout="vertical" onFinish={(values) => mutation.mutate({ action: 'confirm', values })}>
+          <Form.Item name="receivedAmount" label="Số tiền thực nhận" rules={[{ required: true, message: 'Vui lòng nhập số tiền thực nhận' }, { type: 'number', min: 1, message: 'Số tiền phải lớn hơn 0' }]}>
+            <MoneyInput className="!w-full" />
+          </Form.Item>
+          <Form.Item name="reference" label="Mã giao dịch/đối soát" rules={[{ required: true, message: 'Vui lòng nhập mã đối soát' }]}>
+            <Input maxLength={255} />
+          </Form.Item>
+          <Form.Item name="note" label="Ghi chú">
+            <Input.TextArea rows={3} maxLength={1000} />
+          </Form.Item>
         </Form>
-      </Modal>
+      </FormModal>
     </>
   );
 }

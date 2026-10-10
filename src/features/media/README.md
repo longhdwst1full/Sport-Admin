@@ -14,7 +14,7 @@ Một component dùng chung: `ImageUploadField` — chọn file, upload và tr�
 
 ## Thư viện ảnh (`/media`)
 
-- `pages/media-library-page.tsx`: danh sách `listAdminMediaAssets` (tìm, lọc trạng thái, "chỉ ảnh không còn dùng").
+- `pages/media-library-page.tsx`: danh sách `listAdminMediaAssets` (tìm, lọc trạng thái, "chỉ ảnh không còn dùng"); lọc + trang nằm trên URL (`search`, `status`, `unused`, `page`).
   Route và menu cần `media.asset.view`.
 - `components/media-asset-drawer.tsx`: chi tiết `getAdminMediaAsset` và danh sách nơi đang dùng; xoá
   `deleteAdminMediaAsset` chỉ khi có `media.asset.manage`, ảnh ACTIVE và không còn nơi dùng, bắt buộc lý do.

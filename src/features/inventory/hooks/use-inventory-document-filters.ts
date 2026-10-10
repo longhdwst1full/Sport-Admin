@@ -1,37 +1,38 @@
-import { useState } from 'react';
 import { ADMIN_TABLE_DEFAULT_PAGE_SIZE } from '@/foundation/table';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
+import { useTabUrlFilters } from './use-tab-url-filters';
 
 /**
  * State bộ lọc chung của danh sách phiếu kho (chuyển kho, kiểm kê): tìm số phiếu, kho, trạng thái và
- * trang hiện tại — trang tự về 1 khi bộ lọc đổi. `params` truyền thẳng vào list query đã sinh.
+ * trang hiện tại, nằm trên URL theo tiền tố của tab — trang tự về 1 khi bộ lọc đổi. `params` truyền
+ * thẳng vào list query đã sinh.
  */
-export function useInventoryDocumentFilters<TStatus extends string>() {
-  const search = useSearchState('', 300);
-  const [warehouseCode, setWarehouseCode] = useState<string>();
-  const [status, setStatus] = useState<TStatus>();
-  const [page, setPage] = useListPageReset([search.debounced, warehouseCode, status]);
+export function useInventoryDocumentFilters<TStatus extends string>(
+  prefix: string,
+  statuses: Record<string, TStatus>,
+) {
+  const filters = useTabUrlFilters(prefix);
+  const warehouseCode = filters.get('warehouse');
+  const status = filters.getEnum('status', statuses);
 
   return {
-    search,
+    search: filters.search,
     warehouseCode,
-    setWarehouseCode,
+    setWarehouseCode: (value?: string) => filters.setFilter('warehouse', value),
     status,
-    setStatus,
+    setStatus: (value?: TStatus) => filters.setFilter('status', value),
     params: {
-      page,
+      page: filters.page,
       limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
-      search: search.debounced,
+      search: filters.search.debounced,
       warehouseCode,
       status,
     },
     pagination: (total: number) => ({
-      current: page,
+      current: filters.page,
       pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
       total,
       showSizeChanger: false,
-      onChange: setPage,
+      onChange: filters.setPage,
     }),
   };
 }

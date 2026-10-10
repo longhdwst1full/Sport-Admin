@@ -1,8 +1,13 @@
 import type {
   AdminCustomerDetailDto,
   AdminCustomerSummaryDto,
+  CustomerKind,
+  CustomerStatus,
 } from '@/generated/api/customers/customers.schemas';
+import { OrderStatus } from '@/generated/api/orders/orders.schemas';
+import { PaymentStatus } from '@/generated/api/payments/payments.schemas';
 import { formatDate } from '@/lib/format/datetime';
+import { parseEnum } from '@/shared/utils/parse-enum';
 import { moneyFormatter } from '../constants/customer.constants';
 
 export interface CustomerRowView {
@@ -12,8 +17,8 @@ export interface CustomerRowView {
   phone: string;
   email: string;
   /** Mã ổn định để so sánh; nhãn hiển thị tra riêng. */
-  kind: string;
-  status: string;
+  kind: CustomerKind;
+  status: CustomerStatus;
   marketingConsent: boolean;
   /** Ảnh đại diện để nhận diện nhanh trong bảng; rỗng thì hiện chữ cái đầu của tên. */
   avatarUrl?: string;
@@ -60,8 +65,9 @@ export interface CustomerAddressView {
 export interface CustomerOrderView {
   id: string;
   orderNo: string;
-  status: string;
-  paymentStatus: string;
+  /** CONTRACT: DTO khách hàng trả chuỗi; mã lạ (contract mới hơn UI) thành `undefined` → ô trống. */
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
   grandTotalLabel: string;
   placedLabel: string;
 }
@@ -86,8 +92,8 @@ export function toCustomerDetailView(dto: AdminCustomerDetailDto): CustomerDetai
     recentOrders: dto.recentOrders.map((order) => ({
       id: order.id,
       orderNo: order.orderNo,
-      status: order.status,
-      paymentStatus: order.paymentStatus,
+      status: parseEnum(OrderStatus, order.status),
+      paymentStatus: parseEnum(PaymentStatus, order.paymentStatus),
       grandTotalLabel: moneyFormatter.format(Number(order.grandTotal)),
       placedLabel: dateLabel(order.placedAt, '—'),
     })),

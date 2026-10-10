@@ -1,10 +1,10 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Tag, Typography } from 'antd';
+import { Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import { AdminTable, TableActionButton, col } from '@/foundation/table';
-import type { FulfillmentStatus, FulfillmentSummaryDto } from '@/generated/api/fulfillments/fulfillments.schemas';
-import { FULFILLMENT_PAGE_SIZE, fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton, col } from '@/foundation/table';
+import type { FulfillmentSummaryDto } from '@/generated/api/fulfillments/fulfillments.schemas';
+import { fulfillmentStatusPresentation } from '../constants/fulfillment.constants';
 import { CarrierShipmentStatusTag } from './carrier-shipment-status-tag';
 
 const COLUMNS: ColumnsType<FulfillmentSummaryDto> = [
@@ -51,15 +51,9 @@ const COLUMNS: ColumnsType<FulfillmentSummaryDto> = [
       </div>
     ),
   },
-  {
-    title: 'Trạng thái',
-    dataIndex: 'status',
+  col.status<FulfillmentSummaryDto, FulfillmentSummaryDto['status']>('status', 'Trạng thái', fulfillmentStatusPresentation, {
     width: 160,
-    render: (value: FulfillmentStatus) => {
-      const presentation = fulfillmentStatusPresentation[value];
-      return <Tag color={presentation?.color ?? 'default'}>{presentation?.label ?? value}</Tag>;
-    },
-  },
+  }),
   col.dateTime<FulfillmentSummaryDto>('createdAt', 'Tạo lúc', { width: 170 }),
 ];
 
@@ -99,7 +93,7 @@ export function FulfillmentTable({
       locale={{ emptyText: 'Không có phiếu giao vận phù hợp bộ lọc.' }}
       pagination={{
         current: page,
-        pageSize: FULFILLMENT_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
         showSizeChanger: false,
         showTotal: (value) => `${value} phiếu giao vận`,

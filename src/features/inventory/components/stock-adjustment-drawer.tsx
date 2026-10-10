@@ -1,11 +1,9 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Form, Input, InputNumber, Select } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
-import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import {
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
@@ -20,6 +18,7 @@ import {
 import { getApiErrorMessage } from '@/lib/api/error';
 import { FormDrawer } from '@/foundation/overlay';
 import { adjustmentReasonOptions, adjustmentTypeOptions } from '../constants/inventory.constants';
+import { useVariantOptions } from '../hooks/use-variant-options';
 import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
 interface StockAdjustmentValues {
@@ -70,8 +69,6 @@ export function StockAdjustmentDrawer({
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const [skuSearch, setSkuSearch] = useState('');
-  const [debouncedSkuSearch] = useDebounce(skuSearch.trim(), 300);
   const idempotencyKey = useRef(crypto.randomUUID());
   const form = useForm<StockAdjustmentValues>({
     resolver: yupResolver(schema),
@@ -88,12 +85,8 @@ export function StockAdjustmentDrawer({
   });
   const warehouseCode = form.watch('warehouseCode');
   const adjustmentType = form.watch('adjustmentType');
-  const warehouses = useWarehouseOptions();
-  const variantsQuery = useSearchActiveAdminProductVariants({
-    search: debouncedSkuSearch || undefined,
-    page: 1,
-    limit: 50,
-  });
+  const warehouses = useWarehouseOptions({ enabled: open });
+  const variants = useVariantOptions({ enabled: open });
 
   useEffect(() => {
     if (!open) return;
@@ -205,13 +198,10 @@ export function StockAdjustmentDrawer({
                 {...field}
                 showSearch
                 filterOption={false}
-                onSearch={setSkuSearch}
-                loading={variantsQuery.isFetching}
+                onSearch={variants.onSearch}
+                loading={variants.query.isFetching}
                 disabled={!warehouseCode}
-                options={(variantsQuery.data?.items ?? []).map((item) => ({
-                  value: item.code,
-                  label: `${item.code} — ${item.label}`,
-                }))}
+                options={variants.options}
               />
             )}
           />

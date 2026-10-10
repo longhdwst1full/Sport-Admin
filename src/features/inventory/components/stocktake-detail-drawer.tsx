@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Descriptions, Drawer, Input, Modal, Skeleton, Space, Tag, Tooltip, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Space, Tag, Tooltip, Typography } from 'antd';
 import { useState } from 'react';
 import { usePermissions } from '@/core/auth/permissions';
-import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { StatusTag } from '@/foundation/management';
+import { DetailDrawer, useConfirmWithReason } from '@/foundation/overlay';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
 import {
@@ -24,7 +25,6 @@ import {
 } from '../model/stocktake-actions.policy';
 import { formatStocktakeTime, stocktakeScopeLabel, stocktakeStatusMeta } from '../constants/stocktake.constants';
 import { StocktakeCountDrawer } from './stocktake-count-drawer';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const varianceTag = (value?: number | null) => {
   if (value === null || value === undefined) return <Tag>Chưa đếm</Tag>;
@@ -66,8 +66,7 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
   const actions = stocktake ? availableStocktakeActions(stocktake.status, permissions) : [];
   const approveGate = stocktakeApproveGate(stocktake?.status ?? 'DRAFT', stocktake?.canApprove);
   const [countOpen, setCountOpen] = useState(false);
-  const [cancelOpen, setCancelOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const confirmWithReason = useConfirmWithReason();
 
   const refresh = async (stocktakeId: string) => {
     await Promise.all([
@@ -104,8 +103,6 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
       ...handler('Không thể huỷ phiếu kiểm kê.'),
       onSuccess: async (result) => {
         await refresh(result.id);
-        setCancelOpen(false);
-        setCancelReason('');
         void message.success('Đã huỷ phiếu kiểm kê.');
       },
     },
@@ -144,17 +141,32 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
     });
   };
 
+  const confirmCancel = () => {
+    if (!stocktake) return;
+    confirmWithReason({
+      title: `Huỷ phiếu kiểm kê ${stocktake.stocktakeNo}?`,
+      consequence: 'Phiếu đã huỷ không đếm tiếp được; muốn kiểm lại thì tạo phiếu mới.',
+      okText: 'Huỷ phiếu',
+      placeholder: 'Lý do huỷ, tối thiểu 3 ký tự',
+      minLength: 3,
+      maxLength: 1000,
+      onOk: (reason) => cancel.mutateAsync({ id: stocktake.id, data: { version: stocktake.version, reason } }),
+    });
+  };
+
   return (
     <>
-      <Drawer
+      <DetailDrawer
         title={stocktake ? `Phiếu kiểm kê ${stocktake.stocktakeNo}` : 'Phiếu kiểm kê'}
-        width={DRAWER_WIDTH.lg}
+        status={stocktake && <StatusTag status={stocktake.status} presentations={stocktakeStatusMeta} />}
         open={Boolean(id)}
         onClose={onClose}
-        destroyOnHidden
-        extra={stocktake && (
+        loading={detail.isPending}
+        error={detail.isError ? detail.error : undefined}
+        onRetry={() => void detail.refetch()}
+        actions={stocktake && (
           <Space>
-            {actions.includes('cancel') && <Button danger disabled={pending} onClick={() => setCancelOpen(true)}>Huỷ phiếu</Button>}
+            {actions.includes('cancel') && <Button danger disabled={pending} onClick={confirmCancel}>Huỷ phiếu</Button>}
             {actions.includes('count') && <Button disabled={pending} onClick={() => setCountOpen(true)}>Nhập số đếm</Button>}
             {actions.includes('submit') && (
               <Tooltip title={stocktake.countedCount < stocktake.itemCount ? 'Phải đếm đủ mọi dòng trước khi nộp' : undefined}>
@@ -178,12 +190,9 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
           </Space>
         )}
       >
-        {detail.isError && <QueryErrorAlert error={detail.error} retry={() => void detail.refetch()} />}
-        {detail.isPending && <Skeleton active paragraph={{ rows: 8 }} />}
         {stocktake && (
           <>
             <Descriptions className="mb-4" size="small" column={3} bordered items={[
-              { key: 'status', label: 'Trạng thái', children: <Tag color={stocktakeStatusMeta[stocktake.status].color}>{stocktakeStatusMeta[stocktake.status].label}</Tag> },
               { key: 'warehouse', label: 'Kho', children: stocktake.warehouseCode },
               { key: 'scope', label: 'Phạm vi', children: stocktakeScopeLabel[stocktake.scopeType] },
               { key: 'progress', label: 'Đã đếm', children: `${stocktake.countedCount}/${stocktake.itemCount}` },
@@ -225,29 +234,9 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
             />
           </>
         )}
-      </Drawer>
+      </DetailDrawer>
 
       <StocktakeCountDrawer stocktake={stocktake} open={countOpen} onClose={() => setCountOpen(false)} />
-
-      <Modal
-        title="Huỷ phiếu kiểm kê"
-        open={cancelOpen}
-        okText="Huỷ phiếu"
-        cancelText="Đóng"
-        okButtonProps={{ danger: true, disabled: cancelReason.trim().length < 3, loading: cancel.isPending }}
-        onCancel={() => setCancelOpen(false)}
-        onOk={() => stocktake && cancel.mutate({ id: stocktake.id, data: { version: stocktake.version, reason: cancelReason.trim() } })}
-      >
-        <p className="mb-2">Phiếu đã huỷ không đếm tiếp được; muốn kiểm lại thì tạo phiếu mới.</p>
-        <Input.TextArea
-          rows={3}
-          maxLength={1000}
-          showCount
-          value={cancelReason}
-          onChange={(event) => setCancelReason(event.target.value)}
-          placeholder="Lý do huỷ, tối thiểu 3 ký tự"
-        />
-      </Modal>
     </>
   );
 }

@@ -1,5 +1,5 @@
-import { Alert, Col, Row } from 'antd';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { Col, Row } from 'antd';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { BranchRevenueCard } from '../components/branch-revenue-card';
 import { CompletedOrdersCard } from '../components/completed-orders-card';
 import { DashboardHero } from '../components/dashboard-hero';
@@ -8,8 +8,9 @@ import { JobHealthCard } from '../components/job-health-card';
 import { OrderStatusCard } from '../components/order-status-card';
 import { PendingOrdersCard } from '../components/pending-orders-card';
 import { RevenueChartCard } from '../components/revenue-chart-card';
-import { TopCustomersCard } from '../components/top-customers-card';
-import { TopProductsCard } from '../components/top-products-card';
+import { TOP_CUSTOMER_COLUMNS, TOP_PRODUCT_COLUMNS } from '../components/report-table-columns';
+import { TopRankingCard } from '../components/top-ranking-card';
+import { PERIOD_DESCRIPTION, REPORT_EXPORT_PATH } from '../constants/dashboard.constants';
 import { useDashboardReport } from '../hooks/use-dashboard-report';
 
 export function DashboardPage() {
@@ -22,11 +23,10 @@ export function DashboardPage() {
       <DashboardHero displayName={report.displayName} scopeLabel={report.scopeLabel} />
 
       {canSeeOperation && report.overviewState.isError && (
-        <Alert
-          type="error"
-          showIcon
+        <QueryErrorAlert
           message="Không tải được số liệu vận hành"
-          description={getApiErrorMessage(report.overviewState.error)}
+          error={report.overviewState.error}
+          retry={report.overviewState.retry}
         />
       )}
 
@@ -77,24 +77,36 @@ export function DashboardPage() {
           />
         </Col>
         <Col xs={24} xl={10}>
-          <TopCustomersCard
+          <TopRankingCard
+            title="Khách mua nhiều nhất"
+            description={`Theo tiền đã thực trả · ${PERIOD_DESCRIPTION[granularity]}`}
             canSeeRevenue={canSeeRevenue}
-            granularity={granularity}
             range={range}
             state={report.topCustomersState}
             rows={report.topCustomers}
+            rowKey="customerNo"
+            columns={TOP_CUSTOMER_COLUMNS}
+            emptyText="Chưa có khách nào hoàn tất đơn trong khoảng này"
+            exportPath={REPORT_EXPORT_PATH.topCustomers}
+            exportFilename="bao-cao-khach-mua-nhieu"
           />
         </Col>
       </Row>
 
       <Row gutter={[16, 16]}>
         <Col xs={24}>
-          <TopProductsCard
+          <TopRankingCard
+            title="Sản phẩm bán chạy"
+            description={`Xếp theo số lượng bán · ${PERIOD_DESCRIPTION[granularity]}`}
             canSeeRevenue={canSeeRevenue}
-            granularity={granularity}
             range={range}
             state={report.topProductsState}
             rows={report.topProducts}
+            rowKey="sku"
+            columns={TOP_PRODUCT_COLUMNS}
+            emptyText="Chưa có sản phẩm nào bán được trong đơn đã thu tiền"
+            exportPath={REPORT_EXPORT_PATH.topProducts}
+            exportFilename="bao-cao-san-pham-ban-chay"
           />
         </Col>
       </Row>

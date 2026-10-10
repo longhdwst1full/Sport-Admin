@@ -27,16 +27,22 @@ export interface PurchaseOrderActionInput {
  * SUBMITTED tách hai bước duyệt: PO cấp OWNER_FINANCE cần Owner duyệt trước rồi mới tới tài chính,
  * nên không bao giờ hiện đồng thời hai nút — hiện cả hai sẽ dẫn tới 409 chắc chắn.
  */
+const CLOSABLE_PO_STATUSES: readonly string[] = [
+  PurchaseOrderStatus.APPROVED,
+  PurchaseOrderStatus.PARTIALLY_RECEIVED,
+  PurchaseOrderStatus.RECEIVED,
+];
+
 export function purchaseOrderActions(input: PurchaseOrderActionInput | string): ProcurementAction[] {
-  const po = typeof input === 'string' ? { status: input } as PurchaseOrderActionInput : input;
+  const po: PurchaseOrderActionInput = typeof input === 'string' ? { status: input } : input;
   if (po.status === PurchaseOrderStatus.DRAFT) return ['edit', 'submit', 'cancel'];
   if (po.status === PurchaseOrderStatus.SUBMITTED) {
     const needsFinance = po.approvalLevel === PurchaseOrderApprovalLevel.OWNER_FINANCE;
     const ownerApproved = Boolean(po.approvals?.approvedBy);
     return [needsFinance && ownerApproved ? 'approveFinance' : 'approve', 'cancel'];
   }
-  if ([PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.PARTIALLY_RECEIVED, PurchaseOrderStatus.RECEIVED].includes(po.status as never)) {
-    return ['close', ...(po.status === PurchaseOrderStatus.APPROVED ? ['cancel' as const] : [])];
+  if (CLOSABLE_PO_STATUSES.includes(po.status)) {
+    return po.status === PurchaseOrderStatus.APPROVED ? ['close', 'cancel'] : ['close'];
   }
   return [];
 }

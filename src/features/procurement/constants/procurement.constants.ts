@@ -1,70 +1,86 @@
+import type { StatusPresentation } from '@/foundation/management/status-tag';
 import {
   DirectReceiptReason,
   GoodsReceiptCostAllocation,
   GoodsReceiptCostType,
   GoodsReceiptStatus,
   GoodsReceiptType,
+  PurchaseOrderApprovalLevel,
   PurchaseOrderStatus,
   SupplierReturnStatus,
   SupplierStatus,
 } from '@/generated/api/procurement/procurement.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
+import { toOptions } from '@/shared/utils/options';
 
-export const PROCUREMENT_PAGE_SIZE = 30;
+export const supplierStatusPresentation: Record<SupplierStatus, StatusPresentation> = {
+  [SupplierStatus.ACTIVE]: { label: 'Đang giao dịch', color: 'success' },
+  [SupplierStatus.INACTIVE]: { label: 'Ngừng giao dịch', color: 'neutral' },
+};
 
-export const supplierStatusOptions = [
-  { value: SupplierStatus.ACTIVE, label: 'Đang giao dịch' },
-  { value: SupplierStatus.INACTIVE, label: 'Ngừng giao dịch' },
-];
+export const purchaseOrderStatusPresentation: Record<PurchaseOrderStatus, StatusPresentation> = {
+  [PurchaseOrderStatus.DRAFT]: { label: 'Nháp', color: 'neutral' },
+  [PurchaseOrderStatus.SUBMITTED]: { label: 'Chờ duyệt', color: 'warning' },
+  [PurchaseOrderStatus.APPROVED]: { label: 'Đã duyệt', color: 'info' },
+  [PurchaseOrderStatus.PARTIALLY_RECEIVED]: { label: 'Nhận một phần', color: 'progress' },
+  [PurchaseOrderStatus.RECEIVED]: { label: 'Đã nhận đủ', color: 'success' },
+  [PurchaseOrderStatus.CLOSED]: { label: 'Đã đóng', color: 'neutral' },
+  [PurchaseOrderStatus.CANCELLED]: { label: 'Đã huỷ', color: 'neutral' },
+};
 
-export const purchaseOrderStatusOptions = [
-  { value: PurchaseOrderStatus.DRAFT, label: 'Nháp' },
-  { value: PurchaseOrderStatus.SUBMITTED, label: 'Chờ duyệt' },
-  { value: PurchaseOrderStatus.APPROVED, label: 'Đã duyệt' },
-  { value: PurchaseOrderStatus.PARTIALLY_RECEIVED, label: 'Nhận một phần' },
-  { value: PurchaseOrderStatus.RECEIVED, label: 'Đã nhận đủ' },
-  { value: PurchaseOrderStatus.CLOSED, label: 'Đã đóng' },
-  { value: PurchaseOrderStatus.CANCELLED, label: 'Đã huỷ' },
-];
+export const goodsReceiptStatusPresentation: Record<GoodsReceiptStatus, StatusPresentation> = {
+  [GoodsReceiptStatus.DRAFT]: { label: 'Nháp', color: 'neutral' },
+  [GoodsReceiptStatus.POSTED]: { label: 'Đã ghi sổ', color: 'success' },
+  [GoodsReceiptStatus.CANCELLED]: { label: 'Đã huỷ', color: 'neutral' },
+};
 
-export const goodsReceiptStatusOptions = [
-  { value: GoodsReceiptStatus.DRAFT, label: 'Nháp' },
-  { value: GoodsReceiptStatus.POSTED, label: 'Đã ghi sổ' },
-  { value: GoodsReceiptStatus.CANCELLED, label: 'Đã huỷ' },
-];
+export const supplierReturnStatusPresentation: Record<SupplierReturnStatus, StatusPresentation> = {
+  [SupplierReturnStatus.DRAFT]: { label: 'Nháp', color: 'neutral' },
+  [SupplierReturnStatus.APPROVED]: { label: 'Đã duyệt', color: 'info' },
+  [SupplierReturnStatus.SHIPPED]: { label: 'Đã xuất trả', color: 'progress' },
+  [SupplierReturnStatus.CLOSED]: { label: 'Đã đóng', color: 'neutral' },
+  [SupplierReturnStatus.CANCELLED]: { label: 'Đã huỷ', color: 'neutral' },
+};
 
-export const goodsReceiptTypeOptions = [
-  { value: GoodsReceiptType.WITH_PO, label: 'Nhập theo PO' },
-  { value: GoodsReceiptType.DIRECT_RECEIPT, label: 'Nhập trực tiếp' },
-];
+export const goodsReceiptTypeLabels: Record<GoodsReceiptType, string> = {
+  [GoodsReceiptType.WITH_PO]: 'Nhập theo PO',
+  [GoodsReceiptType.DIRECT_RECEIPT]: 'Nhập trực tiếp',
+};
 
-export const supplierReturnStatusOptions = [
-  { value: SupplierReturnStatus.DRAFT, label: 'Nháp' },
-  { value: SupplierReturnStatus.APPROVED, label: 'Đã duyệt' },
-  { value: SupplierReturnStatus.SHIPPED, label: 'Đã xuất trả' },
-  { value: SupplierReturnStatus.CLOSED, label: 'Đã đóng' },
-  { value: SupplierReturnStatus.CANCELLED, label: 'Đã huỷ' },
-];
+export const approvalLevelLabels: Record<PurchaseOrderApprovalLevel, string> = {
+  [PurchaseOrderApprovalLevel.BRANCH_MANAGER]: 'Quản lý chi nhánh',
+  [PurchaseOrderApprovalLevel.OWNER]: 'Chủ sở hữu',
+  [PurchaseOrderApprovalLevel.OWNER_FINANCE]: 'Chủ sở hữu + tài chính',
+};
 
-export const directReceiptReasonOptions = [
-  { value: DirectReceiptReason.SPOT_PURCHASE, label: 'Mua phát sinh' },
-  { value: DirectReceiptReason.URGENT_PURCHASE, label: 'Mua khẩn cấp' },
-  { value: DirectReceiptReason.WARRANTY_REPLACEMENT, label: 'Hàng đổi bảo hành' },
-  { value: DirectReceiptReason.SUPPLIER_GIFT, label: 'Nhà cung cấp tặng' },
-  { value: DirectReceiptReason.OTHER, label: 'Khác' },
-];
+export const directReceiptReasonLabels: Record<DirectReceiptReason, string> = {
+  [DirectReceiptReason.SPOT_PURCHASE]: 'Mua phát sinh',
+  [DirectReceiptReason.URGENT_PURCHASE]: 'Mua khẩn cấp',
+  [DirectReceiptReason.WARRANTY_REPLACEMENT]: 'Hàng đổi bảo hành',
+  [DirectReceiptReason.SUPPLIER_GIFT]: 'Nhà cung cấp tặng',
+  [DirectReceiptReason.OTHER]: 'Khác',
+};
 
-export const costAllocationOptions = [
-  { value: GoodsReceiptCostAllocation.VALUE, label: 'Theo giá trị hàng' },
-  { value: GoodsReceiptCostAllocation.QUANTITY, label: 'Theo số lượng' },
-];
+export const costAllocationLabels: Record<GoodsReceiptCostAllocation, string> = {
+  [GoodsReceiptCostAllocation.VALUE]: 'Theo giá trị hàng',
+  [GoodsReceiptCostAllocation.QUANTITY]: 'Theo số lượng',
+};
 
-export const receiptCostTypeOptions = [
-  { value: GoodsReceiptCostType.FREIGHT, label: 'Vận chuyển' },
-  { value: GoodsReceiptCostType.HANDLING, label: 'Bốc xếp' },
-  { value: GoodsReceiptCostType.DUTY, label: 'Thuế/phí nhập' },
-  { value: GoodsReceiptCostType.OTHER, label: 'Chi phí khác' },
-];
+export const receiptCostTypeLabels: Record<GoodsReceiptCostType, string> = {
+  [GoodsReceiptCostType.FREIGHT]: 'Vận chuyển',
+  [GoodsReceiptCostType.HANDLING]: 'Bốc xếp',
+  [GoodsReceiptCostType.DUTY]: 'Thuế/phí nhập',
+  [GoodsReceiptCostType.OTHER]: 'Chi phí khác',
+};
+
+export const supplierStatusOptions = toOptions(supplierStatusPresentation);
+export const purchaseOrderStatusOptions = toOptions(purchaseOrderStatusPresentation);
+export const goodsReceiptStatusOptions = toOptions(goodsReceiptStatusPresentation);
+export const supplierReturnStatusOptions = toOptions(supplierReturnStatusPresentation);
+export const goodsReceiptTypeOptions = toOptions(goodsReceiptTypeLabels);
+export const directReceiptReasonOptions = toOptions(directReceiptReasonLabels);
+export const costAllocationOptions = toOptions(costAllocationLabels);
+export const receiptCostTypeOptions = toOptions(receiptCostTypeLabels);
 
 interface LabelOption {
   value: string;
@@ -72,8 +88,8 @@ interface LabelOption {
 }
 
 /** Nhãn tiếng Việt của một enum contract; giá trị lạ (contract mới hơn UI) hiển thị nguyên mã. */
-export const optionLabel = (options: LabelOption[], value?: string | null, empty = '—'): string =>
-  value ? options.find((option) => option.value === value)?.label ?? value : empty;
+export const enumLabel = <T extends string>(labels: Record<T, string>, value?: T | null, empty = '—'): string =>
+  value ? labels[value] ?? value : empty;
 
 /** `MÃ · Tên` cho nhà cung cấp, kho và các tham chiếu cùng dạng. */
 export const partyLabel = (party: { code: string; name: string }): string => `${party.code} · ${party.name}`;
@@ -82,23 +98,17 @@ export const partyLabel = (party: { code: string; name: string }): string => `${
  * Danh sách lookup chỉ tải trang đầu/bản ghi ACTIVE, nên bản ghi đang sửa có thể không nằm trong đó.
  * Chèn nó lên đầu để Select hiển thị đúng tên thay vì ID trần.
  */
+export const withSelectedOption = (options: LabelOption[], selected?: LabelOption | null): LabelOption[] =>
+  selected && !options.some((option) => option.value === selected.value) ? [selected, ...options] : options;
+
 export const withSelectedParty = (
   options: LabelOption[],
   party?: { id: string; code: string; name: string } | null,
-): LabelOption[] =>
-  party && !options.some((option) => option.value === party.id)
-    ? [{ value: party.id, label: partyLabel(party) }, ...options]
-    : options;
+): LabelOption[] => withSelectedOption(options, party ? { value: party.id, label: partyLabel(party) } : null);
 
 /** `Người thực hiện · thời điểm`; `empty` là câu trạng thái khi bước đó chưa xảy ra. */
 export const actorAt = (displayName?: string | null, at?: string | null, empty = 'Chưa thực hiện'): string =>
   displayName ? `${displayName}${at ? ` · ${formatDateTime(at)}` : ''}` : empty;
 
-export const statusLabel = (value: string): string =>
-  [
-    ...supplierStatusOptions,
-    ...purchaseOrderStatusOptions,
-    ...goodsReceiptStatusOptions,
-    ...supplierReturnStatusOptions,
-  ].find((option) => option.value === value)?.label ?? value;
-
+/** Số ký tự tối thiểu của lý do huỷ chứng từ (khớp validate của API). */
+export const CANCEL_REASON_MIN_LENGTH = 3;

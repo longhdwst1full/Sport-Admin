@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { App } from 'antd';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { pickAdminFulfillment } from '@/generated/api/fulfillments/fulfillments';
 import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
 
 // AntD's Grid.useBreakpoint subscribes via matchMedia; jsdom doesn't implement it.
@@ -134,5 +136,53 @@ describe('FulfillmentWorkflowPanel retry carrier shipment button', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tạo lại vận đơn' }));
 
     await waitFor(() => expect(retryAdminFulfillmentCarrierShipmentMock).toHaveBeenCalledWith('f-1'));
+  });
+});
+
+describe('FulfillmentWorkflowPanel transition modal', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    useCanMock.mockReturnValue(true);
+  });
+
+  it('closes the action modal after the transition succeeds', async () => {
+    // Giữ request treo tới khi UI đã render trạng thái pending — giống độ trễ mạng thật,
+    // để onSuccess chạy với closure của lần render mà mutation.isPending === true.
+    let resolvePick: (value: unknown) => void = () => undefined;
+    vi.mocked(pickAdminFulfillment).mockImplementation(() => new Promise((resolve) => { resolvePick = resolve; }) as never);
+    useGetAdminFulfillmentByOrderMock.mockReturnValue({
+      data: baseFulfillment({ status: 'PENDING', carrierShipmentStatus: null, carrierShipmentError: null }),
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App>
+          <FulfillmentWorkflowPanel orderId="order-1" />
+        </App>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Lấy hàng/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(screen.getByLabelText('Ghi chú'), { target: { value: 'đã kiểm' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu lấy' }));
+
+    await waitFor(() => expect(pickAdminFulfillment).toHaveBeenCalledWith(
+      'f-1',
+      { expectedVersion: 1, note: 'đã kiểm' },
+      expect.objectContaining({ headers: expect.any(Object) }),
+    ));
+    await waitFor(() => expect(screen.getByRole('button', { name: /Bắt đầu lấy/ }).className).toContain('ant-btn-loading'));
+    resolvePick(baseFulfillment({ status: 'PICKING', version: 2, carrierShipmentStatus: null }));
+    // Trước bản sửa: closeModal bị chặn bởi isPending trong onSuccess nên modal vẫn mở.
+    // FormModal dùng destroyOnHidden: modal đóng thì hoặc đã bị gỡ khỏi DOM, hoặc còn đang ẩn.
+    await waitFor(() => {
+      const wrap = dialog.closest('.ant-modal-wrap');
+      expect(!dialog.isConnected || (wrap?.getAttribute('style') ?? '').includes('display: none')).toBe(true);
+    });
   });
 });

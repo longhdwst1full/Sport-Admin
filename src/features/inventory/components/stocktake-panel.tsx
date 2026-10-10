@@ -1,11 +1,11 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Card, Progress, Tag, Typography } from 'antd';
+import { Card, Progress, Typography } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
 import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { useListStocktakes } from '@/generated/api/inventory/inventory';
-import type { StocktakeStatus, StocktakeSummaryDto } from '@/generated/api/inventory/inventory.schemas';
+import { StocktakeStatus, type StocktakeSummaryDto } from '@/generated/api/inventory/inventory.schemas';
 import { useInventoryDocumentFilters } from '../hooks/use-inventory-document-filters';
 import {
   formatStocktakeTime,
@@ -19,8 +19,8 @@ import { StocktakeDetailDrawer } from './stocktake-detail-drawer';
 const COLUMNS: ColumnsType<StocktakeSummaryDto> = [
   { title: 'Số phiếu', dataIndex: 'stocktakeNo', width: 250, render: (value) => <Typography.Text code>{value}</Typography.Text> },
   col.text<StocktakeSummaryDto>('warehouseCode', 'Kho', { width: 130 }),
-  { title: 'Phạm vi', dataIndex: 'scopeType', width: 110, render: (value: keyof typeof stocktakeScopeLabel) => stocktakeScopeLabel[value] },
-  { title: 'Trạng thái', dataIndex: 'status', width: 130, render: (value: keyof typeof stocktakeStatusMeta) => <Tag color={stocktakeStatusMeta[value].color}>{stocktakeStatusMeta[value].label}</Tag> },
+  { title: 'Phạm vi', dataIndex: 'scopeType', width: 110, render: (value: StocktakeSummaryDto['scopeType']) => stocktakeScopeLabel[value] },
+  col.status<StocktakeSummaryDto, StocktakeStatus>('status', 'Trạng thái', stocktakeStatusMeta, { width: 130 }),
   {
     title: 'Tiến độ đếm',
     key: 'progress',
@@ -45,7 +45,7 @@ export function StocktakePanel({
   selectedId?: string;
   onSelectedIdChange: (id?: string) => void;
 }) {
-  const filters = useInventoryDocumentFilters<StocktakeStatus>();
+  const filters = useInventoryDocumentFilters('stocktake', StocktakeStatus);
   const query = useListStocktakes(filters.params);
 
   const columns = useMemo(

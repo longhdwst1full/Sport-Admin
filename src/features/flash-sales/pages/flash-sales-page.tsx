@@ -1,34 +1,34 @@
 import { useState } from 'react';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { PlusOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Alert, Button, Select } from 'antd';
+import { Button, Select } from 'antd';
 import { useListAdminFlashSales } from '@/generated/api/promotions/promotions';
-import type { FlashSaleCampaignStatus } from '@/generated/api/promotions/promotions.schemas';
+import { FlashSaleCampaignStatus } from '@/generated/api/promotions/promotions.schemas';
 import { useCan } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
-import { FilterBar, RefreshButton } from '@/foundation/table';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, FilterBar, RefreshButton } from '@/foundation/table';
 import { FlashSaleCreateDrawer } from '../components/flash-sale-create-drawer';
 import { FlashSaleDetailDrawer } from '../components/flash-sale-detail-drawer';
 import { FlashSaleTable } from '../components/flash-sale-table';
-import { FLASH_SALE_PAGE_SIZE, flashSaleStatusOptions } from '../constants/flash-sale.constants';
+import { flashSaleStatusOptions } from '../constants/flash-sale.constants';
 import { useCreateFlashSale } from '../hooks/use-create-flash-sale';
 
+/** Ô tìm, trạng thái và trang nằm trên URL (`search`, `status`, `page`) để F5/Back/gửi link giữ nguyên lọc. */
 export function FlashSalesPage() {
   const canManage = useCan('catalog.flash_sale.manage');
-  const search = useSearchState();
-  const debouncedSearch = search.debounced;
-  const [status, setStatus] = useState<FlashSaleCampaignStatus>();
+  const search = useUrlSearch(['search']);
+  const { url } = search;
+  const status = url.getEnum('status', FlashSaleCampaignStatus);
+  const page = url.getNumber('page', 1);
   const [selectedId, setSelectedId] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
-  const [page, setPage] = useListPageReset([debouncedSearch, status]);
 
   const campaigns = useListAdminFlashSales({
     page,
-    limit: FLASH_SALE_PAGE_SIZE,
-    search: debouncedSearch,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+    search: url.get('search'),
     status,
   });
   const rows = campaigns.data?.items ?? [];
@@ -43,7 +43,7 @@ export function FlashSalesPage() {
       <ManagementPage
         eyebrow="Marketing operations"
         title="Flash Sale"
-        description="Chiến dịch giảm giá theo khung giờ với quota giới hạn cho từng SKU."
+        description="Chiến dịch giảm giá theo khung giờ với số suất giới hạn cho từng SKU."
         metrics={[
           {
             key: 'total',
@@ -74,15 +74,15 @@ export function FlashSalesPage() {
             }
           >
             <SearchInput
-              value={search.value}
-              onChange={search.setValue}
+              value={search.values.search}
+              onChange={search.setter('search')}
               placeholder="Mã hoặc tên chiến dịch"
             />
             <Select
               allowClear
               className="min-w-44"
               value={status}
-              onChange={setStatus}
+              onChange={(value?: FlashSaleCampaignStatus) => url.patch({ status: value, page: undefined })}
               placeholder="Trạng thái"
               options={flashSaleStatusOptions}
             />
@@ -90,12 +90,10 @@ export function FlashSalesPage() {
         }
       >
         {campaigns.isError && (
-          <Alert
-            className="mb-5"
-            type="error"
-            showIcon
+          <QueryErrorAlert
             message="Không tải được danh sách chiến dịch"
-            description={getApiErrorMessage(campaigns.error)}
+            error={campaigns.error}
+            retry={() => void campaigns.refetch()}
           />
         )}
         <FlashSaleTable
@@ -103,7 +101,7 @@ export function FlashSalesPage() {
           loading={campaigns.isLoading || campaigns.isFetching}
           page={page}
           total={campaigns.data?.total ?? 0}
-          onPageChange={setPage}
+          onPageChange={(next) => url.set('page', next > 1 ? next : undefined)}
           onOpen={setSelectedId}
         />
       </ManagementPage>

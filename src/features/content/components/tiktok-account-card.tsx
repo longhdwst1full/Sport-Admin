@@ -1,9 +1,10 @@
 import { DisconnectOutlined, LinkOutlined, TikTokOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Popconfirm, Skeleton, Tag, Typography } from 'antd';
+import { App, Button, Card, Popconfirm, Skeleton, Typography } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { StatusTag } from '@/foundation/management';
 import {
   disconnectAdminTikTokAccount,
   getGetAdminTikTokAccountQueryKey,
@@ -17,25 +18,19 @@ import {
   FACEBOOK_SETTINGS_PATH,
   SOCIAL_PERMISSION,
   TIKTOK_CALLBACK_PATH,
-  TIKTOK_CONNECT_RETURN_KEY,
+  TIKTOK_CONNECTION,
   TIKTOK_PARAMETER_CODES,
+  tiktokConnectionPresentation,
+  type TikTokConnectionState,
 } from '../constants/social.constants';
 import { socialCommandErrorMessage } from '../model/social-command-error';
+import { rememberTikTokReturnPath } from '../model/tiktok-connect-return';
 
-function connectionTag(account: TikTokAccountDto) {
-  if (!account.appConfigured) return <Tag color="orange">Chưa cấu hình app</Tag>;
-  if (account.connected && !account.reconnectRequired) return <Tag color="green">Đã kết nối</Tag>;
-  if (account.reconnectRequired) return <Tag color="red">Cần kết nối lại</Tag>;
-  return <Tag>Chưa kết nối</Tag>;
-}
-
-/** Lưu nơi quay về sau OAuth; storage có thể bị chặn (private mode) — khi đó trang callback dùng đường mặc định. */
-function rememberReturnPath(path: string) {
-  try {
-    sessionStorage.setItem(TIKTOK_CONNECT_RETURN_KEY, path);
-  } catch {
-    // Bỏ qua: không lưu được thì quay về tab Mạng xã hội.
-  }
+function toTikTokConnectionState(account: TikTokAccountDto): TikTokConnectionState {
+  if (!account.appConfigured) return TIKTOK_CONNECTION.APP_NOT_CONFIGURED;
+  if (account.connected && !account.reconnectRequired) return TIKTOK_CONNECTION.CONNECTED;
+  if (account.reconnectRequired) return TIKTOK_CONNECTION.RECONNECT_REQUIRED;
+  return TIKTOK_CONNECTION.NOT_CONNECTED;
 }
 
 /**
@@ -54,7 +49,7 @@ export function TikTokAccountCard() {
   const connect = useMutation({
     mutationFn: () => startAdminTikTokConnect(),
     onSuccess: ({ authorizeUrl }) => {
-      rememberReturnPath(`${location.pathname}${location.search}`);
+      rememberTikTokReturnPath(`${location.pathname}${location.search}`);
       window.location.assign(authorizeUrl);
     },
     onError: (error) => void message.error(socialCommandErrorMessage(error)),
@@ -100,7 +95,7 @@ export function TikTokAccountCard() {
                 description="Xoá token đã lưu (không thu hồi phía TikTok). Video đang đăng dừng lại tới khi kết nối lại; chỉ số TikTok ngừng đồng bộ."
                 okText="Ngắt kết nối"
                 okButtonProps={{ danger: true }}
-                cancelText="Đóng"
+                cancelText="Huỷ"
                 onConfirm={() => disconnect.mutate()}
               >
                 <Button size="small" danger icon={<DisconnectOutlined />} loading={disconnect.isPending}>
@@ -124,7 +119,7 @@ export function TikTokAccountCard() {
       ) : data ? (
         <div className="space-y-2 text-sm">
           <div className="flex flex-wrap items-center gap-2">
-            {connectionTag(data)}
+            <StatusTag status={toTikTokConnectionState(data)} presentations={tiktokConnectionPresentation} />
             {data.accountName && <span className="font-medium text-slate-800">{data.accountName}</span>}
           </div>
           {!data.appConfigured && (

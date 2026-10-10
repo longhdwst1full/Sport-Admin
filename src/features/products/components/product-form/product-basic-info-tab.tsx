@@ -1,10 +1,13 @@
 import { AppstoreOutlined, FileTextOutlined, TagsOutlined } from '@ant-design/icons';
 import { Form, Input, Select, Typography } from 'antd';
+import { useMemo } from 'react';
 import { FormSection } from '@/foundation/layout/form-section';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { ProductType, type ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
+import { PRODUCT_TYPE_OPTIONS } from '../../constants/product-list.constants';
 import type { ProductFormValues } from '../../model/product-form.mapper';
+import { toLookupOptions } from '../../model/product-lookup-options';
 import type { SearchOptionsQuery } from './types';
 
 /**
@@ -28,8 +31,37 @@ export function ProductBasicInfoTab({
   onBrandSearch: (value: string) => void;
   onCategorySearch: (value: string) => void;
 }) {
-  const setBrandSearch = onBrandSearch;
-  const setCategorySearch = onCategorySearch;
+  const brandOptions = useMemo(
+    () =>
+      toLookupOptions(
+        brands.data?.items,
+        (item) => item.id,
+        product?.brandId && product.brand ? [{ value: product.brandId, label: product.brand }] : [],
+      ),
+    [brands.data?.items, product?.brand, product?.brandId],
+  );
+  const categoryOptions = useMemo(
+    () =>
+      toLookupOptions(
+        categories.data?.items,
+        (item) => item.id,
+        (product?.categories ?? []).map((category) => ({ value: category.id, label: category.name })),
+      ),
+    [categories.data?.items, product?.categories],
+  );
+  const categoryIds = form.watch('categoryIds');
+  // Danh mục chính chọn trong các danh mục đã gán; nhãn lấy từ sản phẩm/kết quả tìm, thiếu thì hiện id.
+  const primaryCategoryOptions = useMemo(
+    () =>
+      categoryIds.map((categoryId) => ({
+        value: categoryId,
+        label:
+          product?.categories.find(({ id }) => id === categoryId)?.name
+          ?? categories.data?.items.find(({ id }) => id === categoryId)?.label
+          ?? categoryId,
+      })),
+    [categories.data?.items, categoryIds, product?.categories],
+  );
   return (
     <div className="space-y-4">
       <FormSection
@@ -43,7 +75,7 @@ export function ProductBasicInfoTab({
     required
     validateStatus={form.formState.errors.productType ? 'error' : undefined}
     help={form.formState.errors.productType?.message}
-    extra="STANDARD là sản phẩm thường; BUNDLE là combo cố định và mỗi SKU combo phải khai báo thành phần trước khi publish."
+    extra="Sản phẩm thường bán theo từng SKU; combo cố định gồm nhiều SKU thành phần, mỗi SKU combo phải khai báo thành phần trước khi xuất bản."
   >
     <Controller
       name="productType"
@@ -52,10 +84,7 @@ export function ProductBasicInfoTab({
         <Select
           {...field}
           disabled={Boolean(product?.variants.length)}
-          options={[
-            { value: ProductType.STANDARD, label: 'Sản phẩm thường' },
-            { value: ProductType.BUNDLE, label: 'Combo cố định' },
-          ]}
+          options={PRODUCT_TYPE_OPTIONS}
           onChange={(value) => {
             field.onChange(value);
             if (value === ProductType.BUNDLE) {
@@ -101,14 +130,9 @@ export function ProductBasicInfoTab({
             allowClear
             showSearch
             filterOption={false}
-            onSearch={setBrandSearch}
+            onSearch={onBrandSearch}
             loading={brands.isFetching}
-            options={[
-              ...(product?.brandId && product.brand
-                ? [{ value: product.brandId, label: product.brand }]
-                : []),
-              ...(brands.data?.items ?? []).map((item) => ({ value: item.id, label: `${item.code} — ${item.label}` })),
-            ].filter((item, index, items) => items.findIndex(({ value }) => value === item.value) === index)}
+            options={brandOptions}
           />
         )}
       />
@@ -123,12 +147,9 @@ export function ProductBasicInfoTab({
             mode="multiple"
             showSearch
             filterOption={false}
-            onSearch={setCategorySearch}
+            onSearch={onCategorySearch}
             loading={categories.isFetching}
-            options={[
-              ...(product?.categories ?? []).map((category) => ({ value: category.id, label: category.name })),
-              ...(categories.data?.items ?? []).map((item) => ({ value: item.id, label: `${item.code} — ${item.label}` })),
-            ].filter((item, index, items) => items.findIndex(({ value }) => value === item.value) === index)}
+            options={categoryOptions}
           />
         )}
       />
@@ -146,12 +167,7 @@ export function ProductBasicInfoTab({
       render={({ field }) => (
         <Select
           {...field}
-          options={form.watch('categoryIds').map((categoryId) => ({
-            value: categoryId,
-            label: product?.categories.find(({ id }) => id === categoryId)?.name
-              ?? categories.data?.items.find(({ id }) => id === categoryId)?.label
-              ?? categoryId,
-          }))}
+          options={primaryCategoryOptions}
           placeholder="Chọn trong danh mục đã gán"
         />
       )}

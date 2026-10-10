@@ -1,4 +1,5 @@
-import { Input, Modal, Typography } from 'antd';
+import { Input, Typography } from 'antd';
+import { FormModal } from '@/foundation/overlay';
 
 export type OrderAction = 'confirm' | 'cancel' | 'complete';
 
@@ -20,22 +21,22 @@ export function OrderActionConfirmation({
   onConfirm,
 }: OrderActionConfirmationProps) {
   const title = action === 'cancel'
-    ? 'Xác nhận hủy đơn hàng'
+    ? 'Xác nhận huỷ đơn hàng'
     : action === 'confirm'
       ? 'Xác nhận tiếp nhận đơn hàng'
       : 'Xác nhận hoàn tất đơn';
-  const okText = action === 'cancel' ? 'Hủy đơn' : action === 'confirm' ? 'Xác nhận đơn' : 'Hoàn tất';
+  const okText = action === 'cancel' ? 'Huỷ đơn' : action === 'confirm' ? 'Xác nhận đơn' : 'Hoàn tất';
   const minimumReasonLength = action === 'cancel' ? 3 : 5;
   return (
-    <Modal
+    <FormModal
       open={Boolean(action)}
       title={title}
       okText={okText}
       okButtonProps={{ danger: action === 'cancel', disabled: reason.trim().length < minimumReasonLength }}
-      cancelText="Đóng"
-      confirmLoading={pending}
-      onCancel={onCancel}
-      onOk={onConfirm}
+      submitting={pending}
+      onClose={onCancel}
+      onSubmit={onConfirm}
+      isDirty={() => reason.trim().length > 0}
     >
       <Typography.Paragraph type="secondary">
         {action === 'cancel'
@@ -53,6 +54,6 @@ export function OrderActionConfirmation({
         showCount
         onChange={(event) => onReasonChange(event.target.value)}
       />
-    </Modal>
+    </FormModal>
   );
 }

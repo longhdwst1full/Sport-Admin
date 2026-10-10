@@ -1,10 +1,10 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Tag, Typography } from 'antd';
+import { Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import { AdminTable, TableActionButton, col } from '@/foundation/table';
-import type { AdminPaymentSummaryDto, PaymentStatus } from '@/generated/api/payments/payments.schemas';
-import { PAYMENT_PAGE_SIZE, paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton, col } from '@/foundation/table';
+import type { AdminPaymentSummaryDto } from '@/generated/api/payments/payments.schemas';
+import { paymentMethodLabels, paymentStatusPresentation } from '../constants/payment.constants';
 
 const COLUMNS: ColumnsType<AdminPaymentSummaryDto> = [
   { title: 'Mã thanh toán', dataIndex: 'paymentRef', fixed: 'left', width: 190, render: (value) => <Typography.Text strong>{value}</Typography.Text> },
@@ -13,7 +13,7 @@ const COLUMNS: ColumnsType<AdminPaymentSummaryDto> = [
   { title: 'Phương thức', dataIndex: 'method', width: 130, render: (value) => paymentMethodLabels[value] ?? value },
   col.money<AdminPaymentSummaryDto>('expectedAmount', 'Phải thu', { width: 150, className: 'font-bold' }),
   col.money<AdminPaymentSummaryDto>('receivedAmount', 'Đã nhận', { width: 150 }),
-  { title: 'Trạng thái', dataIndex: 'status', width: 150, render: (value: PaymentStatus) => { const item = paymentStatusPresentation[value] ?? { label: value, color: 'default' }; return <Tag color={item.color}>{item.label}</Tag>; } },
+  col.status<AdminPaymentSummaryDto, AdminPaymentSummaryDto['status']>('status', 'Trạng thái', paymentStatusPresentation),
 ];
 
 export function PaymentTable({
@@ -52,7 +52,7 @@ export function PaymentTable({
       locale={{ emptyText: 'Không có thanh toán phù hợp bộ lọc.' }}
       pagination={{
         current: page,
-        pageSize: PAYMENT_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
         showSizeChanger: false,
         showTotal: (value) => `${value} thanh toán`,

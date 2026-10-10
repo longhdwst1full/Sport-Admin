@@ -15,19 +15,19 @@ import {
   App,
   Button,
   DatePicker,
-  Drawer,
   Form,
   Input,
   InputNumber,
-  Modal,
   Popconfirm,
   Radio,
   Select,
   Tag,
 } from 'antd';
-import { AdminTable } from '@/foundation/table';
+import type { ColumnsType } from 'antd/es/table';
+import { StatusTag } from '@/foundation/management';
+import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useDebounce } from 'use-debounce';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import {
@@ -39,7 +39,11 @@ import {
   upsertAdminFlashSaleItem,
   useGetAdminFlashSale,
 } from '@/generated/api/promotions/promotions';
-import type { FlashSaleCampaignDetailDto } from '@/generated/api/promotions/promotions.schemas';
+import type {
+  FlashSaleCampaignDetailDto,
+  FlashSaleCampaignStatus,
+  FlashSaleItemDto,
+} from '@/generated/api/promotions/promotions.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
 import {
@@ -51,7 +55,7 @@ import {
   variantOptionLabel,
   type PricingMode,
 } from '../constants/flash-sale.constants';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { DetailDrawer, FormModal } from '@/foundation/overlay';
 
 interface CampaignFormValues {
   name: string;
@@ -60,11 +64,38 @@ interface CampaignFormValues {
 }
 
 interface ItemFormValues {
-  productVariantId?: string;
-  salePrice?: number;
-  quota?: number;
+  productVariantId: string;
+  salePrice: number;
+  quota: number;
   perCustomerLimit?: number;
 }
+
+const ITEM_COLUMNS: ColumnsType<FlashSaleItemDto> = [
+  col.text<FlashSaleItemDto>('sku', 'SKU', {
+    width: 160,
+    render: (sku: string) => (
+      <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-700">{sku}</span>
+    ),
+  }),
+  col.text<FlashSaleItemDto>('productName', 'Sản phẩm', {
+    width: undefined,
+    render: (name: string) => (
+      <span className="line-clamp-1 text-xs font-bold text-slate-800 sm:text-sm">{name}</span>
+    ),
+  }),
+  col.money<FlashSaleItemDto>('salePrice', 'Giá flash', { className: 'font-black text-amber-600' }),
+  col.money<FlashSaleItemDto>('regularPrice', 'Giá thường', { width: 130, className: 'text-xs text-slate-400 line-through' }),
+  col.number<FlashSaleItemDto>('quota', 'Số suất', { width: 90 }),
+  col.number<FlashSaleItemDto>('soldQuantity', 'Đã bán', { width: 90 }),
+  col.number<FlashSaleItemDto>('availableQuantity', 'Còn lại', {
+    width: 90,
+    render: (available: number) => (
+      <Tag color={available > 0 ? 'green' : 'default'} className="!m-0 !rounded-md !font-bold">
+        {available}
+      </Tag>
+    ),
+  }),
+];
 
 export function FlashSaleDetailDrawer({
   campaignId,
@@ -79,11 +110,10 @@ export function FlashSaleDetailDrawer({
   const [form] = Form.useForm<ItemFormValues>();
   const [campaignForm] = Form.useForm<CampaignFormValues>();
   const [editOpen, setEditOpen] = useState(false);
-  const [variantSearch, setVariantSearch] = useState('');
+  const variantSearch = useSearchState();
   const [pricingMode, setPricingMode] = useState<PricingMode>('PER_ITEM');
   const [discountPercent, setDiscountPercent] = useState(10);
   const [basePrice, setBasePrice] = useState<number>();
-  const [debouncedVariantSearch] = useDebounce(variantSearch.trim(), 350);
 
   const detail = useGetAdminFlashSale(campaignId ?? '', {
     query: { enabled: Boolean(campaignId) },
@@ -91,7 +121,7 @@ export function FlashSaleDetailDrawer({
   const campaign = detail.data;
 
   const variantsQuery = useSearchActiveAdminProductVariants(
-    { search: debouncedVariantSearch || undefined, page: 1, limit: 50 },
+    { search: variantSearch.debounced, page: 1, limit: 50 },
     { query: { enabled: Boolean(campaignId) && canManage } },
   );
 
@@ -130,11 +160,11 @@ export function FlashSaleDetailDrawer({
   });
 
   const statusMutation = useMutation({
-    mutationFn: (status: string) => {
+    mutationFn: (status: FlashSaleCampaignStatus) => {
       if (!campaign) throw new Error('Chưa tải được chiến dịch');
       return changeAdminFlashSaleStatus(campaign.id, {
         expectedVersion: campaign.version,
-        status: status as never,
+        status,
       });
     },
     onSuccess: async (updated) => {
@@ -148,10 +178,10 @@ export function FlashSaleDetailDrawer({
     mutationFn: (values: ItemFormValues) => {
       if (!campaign) throw new Error('Chưa tải được chiến dịch');
       return upsertAdminFlashSaleItem(campaign.id, {
-        productVariantId: values.productVariantId!,
+        productVariantId: values.productVariantId,
         // Decimal gửi dạng chuỗi: gửi number sẽ mất chính xác ở tiền tệ.
-        salePrice: Number(values.salePrice ?? 0).toFixed(2),
-        quota: values.quota!,
+        salePrice: Number(values.salePrice).toFixed(2),
+        quota: values.quota,
         perCustomerLimit: values.perCustomerLimit,
       });
     },
@@ -175,16 +205,43 @@ export function FlashSaleDetailDrawer({
     onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
   });
 
+  const mutateRemove = removeMutation.mutate;
+  const itemColumns = useMemo<ColumnsType<FlashSaleItemDto>>(
+    () =>
+      canManage
+        ? [
+            ...ITEM_COLUMNS,
+            col.actions<FlashSaleItemDto>(
+              (row) => (
+                <Popconfirm
+                  title="Gỡ suất bán này?"
+                  description="Đã phát sinh giao dịch thì suất chỉ được ngừng bán, không xoá."
+                  okText="Gỡ"
+                  cancelText="Huỷ"
+                  onConfirm={() => mutateRemove({ itemId: row.id, version: row.version })}
+                >
+                  <span className="inline-flex">
+                    <TableActionButton danger label={`Gỡ suất ${row.sku}`} icon={<DeleteOutlined />} />
+                  </span>
+                </Popconfirm>
+              ),
+              { title: '', width: 56 },
+            ),
+          ]
+        : ITEM_COLUMNS,
+    [canManage, mutateRemove],
+  );
+
   return (
-    <Drawer
+    <DetailDrawer
       open={Boolean(campaignId)}
       onClose={onClose}
-      width={DRAWER_WIDTH.lg}
-      destroyOnClose
-      styles={{
-        header: { padding: '16px 24px', borderBottom: '1px solid #f1f5f9' },
-        body: { padding: '20px 24px', backgroundColor: '#f8fafc' },
-      }}
+      size="lg"
+      classNames={{ body: 'bg-slate-50' }}
+      loading={detail.isLoading}
+      error={detail.isError ? detail.error : undefined}
+      onRetry={() => void detail.refetch()}
+      status={campaign ? <StatusTag status={campaign.status} presentations={flashSaleStatusPresentation} /> : undefined}
       title={
         campaign ? (
           <div className="flex items-center gap-2.5">
@@ -197,7 +254,7 @@ export function FlashSaleDetailDrawer({
           'Chi tiết chiến dịch Flash Sale'
         )
       }
-      extra={
+      actions={
         campaign && canManage ? (
           <Button
             type="primary"
@@ -218,28 +275,12 @@ export function FlashSaleDetailDrawer({
         ) : undefined
       }
     >
-      {detail.isError && (
-        <Alert
-          className="mb-4"
-          type="error"
-          showIcon
-          message="Không tải được chiến dịch"
-          description={getApiErrorMessage(detail.error)}
-        />
-      )}
-
       {campaign && (
         <div className="space-y-6">
           {/* Campaign Overview Card */}
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <Tag
-                  color={flashSaleStatusPresentation[campaign.status]?.color ?? 'default'}
-                  className="!px-3 !py-1 !text-xs !font-bold !rounded-full !m-0 !border"
-                >
-                  ● {flashSaleStatusPresentation[campaign.status]?.label ?? campaign.status}
-                </Tag>
                 <span className="text-xs font-semibold text-slate-500">
                   Tổng <strong className="text-slate-800 font-bold">{campaign.itemCount}</strong> suất bán
                 </span>
@@ -252,9 +293,9 @@ export function FlashSaleDetailDrawer({
                   {allowedTransitions.map((status) => (
                     <Popconfirm
                       key={status}
-                      title={`Chuyển chiến dịch sang ${flashSaleStatusPresentation[status]?.label ?? status}?`}
+                      title={`Chuyển chiến dịch sang ${flashSaleStatusPresentation[status].label}?`}
                       okText="Xác nhận"
-                      cancelText="Hủy"
+                      cancelText="Huỷ"
                       onConfirm={() => statusMutation.mutate(status)}
                     >
                       <Button
@@ -262,7 +303,7 @@ export function FlashSaleDetailDrawer({
                         className="!rounded-lg !text-xs !font-semibold"
                         loading={statusMutation.isPending}
                       >
-                        {flashSaleStatusPresentation[status]?.label ?? status}
+                        {flashSaleStatusPresentation[status].label}
                       </Button>
                     </Popconfirm>
                   ))}
@@ -325,110 +366,7 @@ export function FlashSaleDetailDrawer({
                 pagination={false}
                 loading={detail.isFetching}
                 locale={{ emptyText: 'Chưa có suất bán nào trong chiến dịch.' }}
-                columns={[
-                  {
-                    title: 'SKU',
-                    dataIndex: 'sku',
-                    width: 160,
-                    render: (sku: string) => (
-                      <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">
-                        {sku}
-                      </span>
-                    ),
-                  },
-                  {
-                    title: 'Sản phẩm',
-                    dataIndex: 'productName',
-                    render: (name: string) => (
-                      <span className="font-bold text-slate-800 line-clamp-1 text-xs sm:text-sm">
-                        {name}
-                      </span>
-                    ),
-                  },
-                  {
-                    title: 'Giá flash',
-                    dataIndex: 'salePrice',
-                    width: 140,
-                    align: 'right',
-                    render: (value: string) => (
-                      <span className="font-black text-amber-600 text-sm">
-                        {moneyFormatter.format(Number(value))}
-                      </span>
-                    ),
-                  },
-                  {
-                    title: 'Giá thường',
-                    dataIndex: 'regularPrice',
-                    width: 130,
-                    align: 'right',
-                    render: (value: string | null) =>
-                      value ? (
-                        <span className="text-xs text-slate-400 line-through">
-                          {moneyFormatter.format(Number(value))}
-                        </span>
-                      ) : (
-                        '—'
-                      ),
-                  },
-                  {
-                    title: 'Quota',
-                    dataIndex: 'quota',
-                    width: 85,
-                    align: 'right',
-                    render: (q: number) => (
-                      <span className="font-semibold text-slate-700">{q}</span>
-                    ),
-                  },
-                  {
-                    title: 'Đã bán',
-                    dataIndex: 'soldQuantity',
-                    width: 85,
-                    align: 'right',
-                    render: (sold: number) => (
-                      <span className="font-bold text-slate-800">{sold}</span>
-                    ),
-                  },
-                  {
-                    title: 'Còn lại',
-                    dataIndex: 'availableQuantity',
-                    width: 85,
-                    align: 'right',
-                    render: (avail: number) => (
-                      <Tag
-                        color={avail > 0 ? 'green' : 'default'}
-                        className="!m-0 !font-bold !rounded-md"
-                      >
-                        {avail}
-                      </Tag>
-                    ),
-                  },
-                  {
-                    title: '',
-                    key: 'action',
-                    width: 50,
-                    align: 'center',
-                    render: (_, row) =>
-                      canManage ? (
-                        <Popconfirm
-                          title="Gỡ suất bán này?"
-                          description="Đã phát sinh giao dịch thì suất chỉ được ngừng bán, không xóa."
-                          okText="Gỡ"
-                          cancelText="Hủy"
-                          onConfirm={() =>
-                            removeMutation.mutate({ itemId: row.id, version: row.version })
-                          }
-                        >
-                          <Button
-                            size="small"
-                            danger
-                            type="text"
-                            icon={<DeleteOutlined />}
-                            className="hover:!bg-red-50"
-                          />
-                        </Popconfirm>
-                      ) : null,
-                  },
-                ]}
+                columns={itemColumns}
               />
             </div>
           </div>
@@ -502,7 +440,7 @@ export function FlashSaleDetailDrawer({
                         showSearch
                         filterOption={false}
                         placeholder="Tìm theo SKU hoặc tên..."
-                        onSearch={setVariantSearch}
+                        onSearch={variantSearch.setValue}
                         loading={variantsQuery.isFetching}
                         className="!w-full"
                         onChange={(variantId: string) => {
@@ -547,9 +485,9 @@ export function FlashSaleDetailDrawer({
 
                   <div className="lg:col-span-2">
                     <Form.Item
-                      label={<span className="text-xs font-bold text-slate-700">Quota</span>}
+                      label={<span className="text-xs font-bold text-slate-700">Số suất</span>}
                       name="quota"
-                      rules={[{ required: true, message: 'Nhập quota' }]}
+                      rules={[{ required: true, message: 'Nhập số suất' }]}
                       className="!mb-0"
                     >
                       <InputNumber min={1} placeholder="Số suất" className="!w-full" />
@@ -583,15 +521,14 @@ export function FlashSaleDetailDrawer({
           )}
         </div>
       )}
-      <Modal
+      <FormModal
         open={editOpen}
         title="Sửa chiến dịch"
         okText="Lưu"
-        cancelText="Hủy"
-        confirmLoading={campaignMutation.isPending}
-        onCancel={() => setEditOpen(false)}
-        onOk={() => void campaignForm.submit()}
-        destroyOnClose
+        submitting={campaignMutation.isPending}
+        onClose={() => setEditOpen(false)}
+        onSubmit={() => campaignForm.submit()}
+        isDirty={() => campaignForm.isFieldsTouched()}
       >
         <Alert
           className="mb-4"
@@ -619,7 +556,7 @@ export function FlashSaleDetailDrawer({
             <DatePicker.RangePicker showTime className="w-full" />
           </Form.Item>
         </Form>
-      </Modal>
-    </Drawer>
+      </FormModal>
+    </DetailDrawer>
   );
 }

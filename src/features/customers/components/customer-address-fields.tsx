@@ -2,6 +2,7 @@ import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import { DeleteOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Select, Tag } from 'antd';
 import type { FormInstance } from 'antd';
+import { useMemo } from 'react';
 import {
   useListShippingDistricts,
   useListShippingProvinces,
@@ -9,8 +10,17 @@ import {
 } from '@/generated/api/shipping/shipping';
 import type { CustomerFormValues } from '../model/customer-form.mapper';
 
-const toOptions = (items: { code: string; name: string }[] | undefined) =>
+interface PlaceOption {
+  value: string;
+  label: string;
+}
+
+const toPlaceOptions = (items: { code: string; name: string }[] | undefined): PlaceOption[] =>
   (items ?? []).map((item) => ({ value: item.code, label: item.name }));
+
+/** Tên hiển thị của mã vừa chọn; contract gửi tên quận/phường chứ không gửi mã. */
+const placeName = (options: PlaceOption[], code?: string) =>
+  options.find((option) => option.value === code)?.label ?? '';
 
 /**
  * Một dòng địa chỉ trong sổ địa chỉ khách.
@@ -47,6 +57,10 @@ export function CustomerAddressFields({
     { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(districtCode) } },
   );
 
+  const provinceOptions = useMemo(() => toPlaceOptions(provinces.data?.items), [provinces.data]);
+  const districtOptions = useMemo(() => toPlaceOptions(districts.data?.items), [districts.data]);
+  const wardOptions = useMemo(() => toPlaceOptions(wards.data?.items), [wards.data]);
+
   const patch = (values: Partial<CustomerFormValues['addresses'][number]>) => {
     const current = form.getFieldValue('addresses') as CustomerFormValues['addresses'];
     const next = [...current];
@@ -61,7 +75,7 @@ export function CustomerAddressFields({
       title={
         <span className="flex items-center gap-2">
           Địa chỉ {index + 1}
-          {isDefault ? <Tag color="gold">Mặc định</Tag> : null}
+          {isDefault ? <Tag>Mặc định</Tag> : null}
         </span>
       }
       extra={
@@ -107,11 +121,11 @@ export function CustomerAddressFields({
             optionFilterProp="label"
             loading={provinces.isPending}
             placeholder="Chọn tỉnh/thành"
-            options={toOptions(provinces.data?.items)}
+            options={provinceOptions}
             // Đổi tỉnh thì quận/phường cũ không còn thuộc về nó nữa, phải xoá theo.
-            onChange={(_code, option) =>
+            onChange={(code: string) =>
               patch({
-                province: (option as { label?: string } | undefined)?.label ?? '',
+                province: placeName(provinceOptions, code),
                 districtCode: '',
                 district: '',
                 wardCode: '',
@@ -128,11 +142,11 @@ export function CustomerAddressFields({
             disabled={!provinceCode}
             loading={districts.isFetching}
             placeholder={provinceCode ? 'Chọn quận/huyện' : 'Chọn tỉnh/thành trước'}
-            options={toOptions(districts.data?.items)}
-            onChange={(code, option) =>
+            options={districtOptions}
+            onChange={(code?: string) =>
               patch({
                 districtCode: code,
-                district: (option as { label?: string } | undefined)?.label ?? '',
+                district: placeName(districtOptions, code),
                 wardCode: '',
                 ward: '',
               })
@@ -147,10 +161,8 @@ export function CustomerAddressFields({
             disabled={!districtCode}
             loading={wards.isFetching}
             placeholder={districtCode ? 'Chọn phường/xã' : 'Chọn quận/huyện trước'}
-            options={toOptions(wards.data?.items)}
-            onChange={(code, option) =>
-              patch({ wardCode: code, ward: (option as { label?: string } | undefined)?.label ?? '' })
-            }
+            options={wardOptions}
+            onChange={(code?: string) => patch({ wardCode: code, ward: placeName(wardOptions, code) })}
           />
         </Form.Item>
         <Form.Item

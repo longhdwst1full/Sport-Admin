@@ -1,7 +1,8 @@
-import { App, Button, Descriptions, Drawer, Space, Tag } from 'antd';
-import { useQueryClient } from '@tanstack/react-query';
-import { PermissionGate } from '@/core/auth/permissions';
+import { App, Button, Descriptions, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { PermissionGate } from '@/core/auth/permissions';
+import { StatusTag } from '@/foundation/management/status-tag';
+import { DetailDrawer, useConfirmWithReason } from '@/foundation/overlay';
 import { AdminTable, col } from '@/foundation/table';
 import {
   cancelGoodsReceipt,
@@ -10,71 +11,88 @@ import {
   postGoodsReceipt,
   useGetGoodsReceipt,
 } from '@/generated/api/procurement/procurement';
-import type { GoodsReceiptDetailDto } from '@/generated/api/procurement/procurement.schemas';
-import { getApiErrorMessage, isStaleWriteError, STALE_WRITE_RELOADED_MESSAGE } from '@/lib/api/error';
+import type { GoodsReceiptCostType, GoodsReceiptDetailDto } from '@/generated/api/procurement/procurement.schemas';
 import { formatMoney } from '@/lib/format/money';
-import { actorAt, costAllocationOptions, directReceiptReasonOptions, goodsReceiptTypeOptions, optionLabel, partyLabel, receiptCostTypeOptions, statusLabel } from '../constants/procurement.constants';
+import {
+  actorAt,
+  CANCEL_REASON_MIN_LENGTH,
+  costAllocationLabels,
+  directReceiptReasonLabels,
+  enumLabel,
+  goodsReceiptStatusPresentation,
+  goodsReceiptTypeLabels,
+  partyLabel,
+  receiptCostTypeLabels,
+} from '../constants/procurement.constants';
+import { useDocumentCommand } from '../hooks/use-procurement-mutations';
 import { goodsReceiptActions } from '../model/procurement-actions.policy';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 type ReceiptItem = GoodsReceiptDetailDto['items'][number];
 type ReceiptCost = GoodsReceiptDetailDto['costs'][number];
 
 const RECEIPT_ITEM_COLUMNS: ColumnsType<ReceiptItem> = [
-  { title: 'SKU', dataIndex: 'sku', width: 150 },
-  { title: 'Biến thể', dataIndex: 'variantName', width: 220 },
+  col.text<ReceiptItem>('sku', 'SKU', { width: 150 }),
+  col.text<ReceiptItem>('variantName', 'Biến thể', { width: 220 }),
   col.number<ReceiptItem>('quantity', 'Số nhận', { width: 100 }),
   col.money<ReceiptItem>('unitCost', 'Đơn giá', { width: 150 }),
-  { title: 'Giá vốn sau phân bổ', dataIndex: 'landedUnitCost', width: 180, align: 'right', render: (value) => value ? formatMoney(value) : 'Chưa ghi sổ' },
+  { title: 'Giá vốn sau phân bổ', dataIndex: 'landedUnitCost', width: 180, align: 'right', render: (value?: string | null) => value ? formatMoney(value) : 'Chưa ghi sổ' },
 ];
 
 const RECEIPT_COST_COLUMNS: ColumnsType<ReceiptCost> = [
-  { title: 'Loại chi phí', dataIndex: 'costType', width: 180, render: (value) => optionLabel(receiptCostTypeOptions, value) },
+  { title: 'Loại chi phí', dataIndex: 'costType', width: 180, render: (value: GoodsReceiptCostType) => enumLabel(receiptCostTypeLabels, value) },
   col.money<ReceiptCost>('amount', 'Số tiền', { width: 160 }),
   col.text<ReceiptCost>('note', 'Ghi chú'),
 ];
+
+const RECEIPT_KEYS = { list: getListGoodsReceiptsQueryKey(), detail: getGetGoodsReceiptQueryKey };
 
 export function GoodsReceiptDetailDrawer({ id, onClose, onEdit }: { id?: string; onClose: () => void; onEdit: (detail: GoodsReceiptDetailDto) => void }) {
   const query = useGetGoodsReceipt(id ?? '', { query: { enabled: Boolean(id) } });
   const detail = query.data;
   const actions = detail ? goodsReceiptActions(detail.status) : [];
-  const queryClient = useQueryClient();
-  const { message, modal } = App.useApp();
-  const refresh = async () => {
-    if (!detail) return;
-    await Promise.all([queryClient.invalidateQueries({ queryKey: getListGoodsReceiptsQueryKey() }), queryClient.invalidateQueries({ queryKey: getGetGoodsReceiptQueryKey(detail.id) })]);
-  };
-  // CONTRACT: 409 VERSION_STALE/CONCURRENT_UPDATE → tải lại chi tiết để thao tác tiếp trên version mới.
-  const fail = (error: unknown) => {
-    if (isStaleWriteError(error)) {
-      void refresh();
-      void message.warning(STALE_WRITE_RELOADED_MESSAGE);
-    } else void message.error(getApiErrorMessage(error));
-    throw error;
-  };
-  const post = () => detail && modal.confirm({ title: `Ghi sổ ${detail.receiptNo}?`, content: 'Thao tác sẽ cộng tồn và cập nhật giá vốn bình quân, không thể hoàn tác.', okText: 'Ghi sổ', onOk: async () => postGoodsReceipt(detail.id, { expectedVersion: detail.version }).then(refresh).catch(fail) });
-  const cancel = () => {
-    if (!detail) return;
-    let reason = '';
-    modal.confirm({ title: `Huỷ ${detail.receiptNo}?`, content: <textarea className="mt-3 min-h-24 w-full rounded-lg border border-slate-300 p-3" placeholder="Lý do huỷ" onChange={(event) => { reason = event.target.value; }} />, okText: 'Huỷ phiếu', okButtonProps: { danger: true }, onOk: async () => {
-      if (reason.trim().length < 3) throw new Error('Nhập lý do tối thiểu 3 ký tự');
-      await cancelGoodsReceipt(detail.id, { expectedVersion: detail.version, reason: reason.trim() }).then(refresh).catch(fail);
-    } });
-  };
-  return <Drawer title={detail?.receiptNo ?? 'Chi tiết phiếu nhập'} width={DRAWER_WIDTH.xl} open={Boolean(id)} loading={query.isLoading} onClose={onClose} extra={detail && <Space>
-    {actions.includes('edit') && <PermissionGate permission="purchase.receipt.create"><Button onClick={() => onEdit(detail)}>Sửa</Button></PermissionGate>}
-    {actions.includes('post') && <PermissionGate permission="purchase.receipt.post"><Button type="primary" onClick={post}>Ghi sổ</Button></PermissionGate>}
-    {actions.includes('cancel') && <PermissionGate permission="purchase.receipt.create"><Button danger onClick={cancel}>Huỷ</Button></PermissionGate>}
-  </Space>}>
-    {query.isError && <div className="text-red-600">{getApiErrorMessage(query.error)}</div>}
+  const { modal } = App.useApp();
+  const confirmWithReason = useConfirmWithReason();
+  const command = useDocumentCommand(RECEIPT_KEYS);
+
+  const post = (current: GoodsReceiptDetailDto) => modal.confirm({
+    title: `Ghi sổ ${current.receiptNo}?`,
+    content: 'Thao tác sẽ cộng tồn và cập nhật giá vốn bình quân, không thể hoàn tác.',
+    okText: 'Ghi sổ',
+    onOk: () => command(current.id, () => postGoodsReceipt(current.id, { expectedVersion: current.version }), 'Đã ghi sổ phiếu nhập.'),
+  });
+  const cancel = (current: GoodsReceiptDetailDto) => confirmWithReason({
+    title: `Huỷ ${current.receiptNo}?`,
+    consequence: 'Phiếu nháp sẽ bị huỷ và không thể ghi sổ.',
+    okText: 'Huỷ phiếu',
+    placeholder: 'Lý do huỷ',
+    minLength: CANCEL_REASON_MIN_LENGTH,
+    onOk: (reason) => command(current.id, () => cancelGoodsReceipt(current.id, { expectedVersion: current.version, reason }), 'Đã huỷ phiếu nhập.'),
+  });
+
+  return <DetailDrawer
+    title={detail?.receiptNo ?? 'Chi tiết phiếu nhập'}
+    status={detail && <StatusTag status={detail.status} presentations={goodsReceiptStatusPresentation} />}
+    size="xl"
+    open={Boolean(id)}
+    onClose={onClose}
+    loading={query.isLoading}
+    error={query.isError ? query.error : undefined}
+    onRetry={() => void query.refetch()}
+    actions={detail && <Space>
+      {actions.includes('edit') && <PermissionGate permission="purchase.receipt.create"><Button onClick={() => onEdit(detail)}>Sửa</Button></PermissionGate>}
+      {actions.includes('post') && <PermissionGate permission="purchase.receipt.post"><Button type="primary" onClick={() => post(detail)}>Ghi sổ</Button></PermissionGate>}
+      {actions.includes('cancel') && <PermissionGate permission="purchase.receipt.create"><Button danger onClick={() => cancel(detail)}>Huỷ</Button></PermissionGate>}
+    </Space>}
+  >
     {detail && <div className="space-y-5">
       <Descriptions bordered column={{ xs: 1, md: 2 }}>
-        <Descriptions.Item label="Trạng thái"><Tag>{statusLabel(detail.status)}</Tag></Descriptions.Item><Descriptions.Item label="Loại phiếu">{optionLabel(goodsReceiptTypeOptions, detail.receiptType)}</Descriptions.Item>
+        <Descriptions.Item label="Loại phiếu">{enumLabel(goodsReceiptTypeLabels, detail.receiptType)}</Descriptions.Item>
+        <Descriptions.Item label="PO">{detail.purchaseOrder?.poNo ?? 'Nhập trực tiếp'}</Descriptions.Item>
         <Descriptions.Item label="Nhà cung cấp">{partyLabel(detail.supplier)}</Descriptions.Item><Descriptions.Item label="Kho nhận">{partyLabel(detail.warehouse)}</Descriptions.Item>
-        <Descriptions.Item label="PO">{detail.purchaseOrder?.poNo ?? 'Nhập trực tiếp'}</Descriptions.Item><Descriptions.Item label="Hoá đơn NCC">{detail.supplierInvoiceNo ?? '—'}</Descriptions.Item>
+        <Descriptions.Item label="Hoá đơn NCC">{detail.supplierInvoiceNo ?? '—'}</Descriptions.Item>
+        <Descriptions.Item label="Phân bổ chi phí">{enumLabel(costAllocationLabels, detail.costAllocation)}</Descriptions.Item>
         <Descriptions.Item label="Giá trị hàng">{formatMoney(detail.totals.goodsValue)}</Descriptions.Item><Descriptions.Item label="Tổng sau chi phí">{formatMoney(detail.totals.landedTotal)}</Descriptions.Item>
-        <Descriptions.Item label="Phân bổ chi phí">{optionLabel(costAllocationOptions, detail.costAllocation)}</Descriptions.Item>
-        <Descriptions.Item label="Lý do nhập trực tiếp">{optionLabel(directReceiptReasonOptions, detail.reasonCode)}</Descriptions.Item>
+        <Descriptions.Item label="Lý do nhập trực tiếp">{enumLabel(directReceiptReasonLabels, detail.reasonCode)}</Descriptions.Item>
         <Descriptions.Item label="Người tạo">{detail.createdByDisplayName}</Descriptions.Item>
         <Descriptions.Item label="Ghi sổ bởi">{actorAt(detail.postedByDisplayName, detail.postedAt, 'Chưa ghi sổ')}</Descriptions.Item>
         {detail.note ? <Descriptions.Item label="Ghi chú" span={2}>{detail.note}</Descriptions.Item> : null}
@@ -85,6 +103,5 @@ export function GoodsReceiptDetailDrawer({ id, onClose, onEdit }: { id?: string;
         <AdminTable surface="embedded" rowKey="id" pagination={false} dataSource={detail.costs} columns={RECEIPT_COST_COLUMNS} />
       </div>}
     </div>}
-  </Drawer>;
+  </DetailDrawer>;
 }
-

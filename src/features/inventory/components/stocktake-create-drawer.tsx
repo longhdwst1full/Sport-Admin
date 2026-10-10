@@ -1,15 +1,15 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Form, Select } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useDebounce } from 'use-debounce';
 import * as yup from 'yup';
-import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import { getListStocktakesQueryKey, useCreateStocktake } from '@/generated/api/inventory/inventory';
 import type { StocktakeScopeType } from '@/generated/api/inventory/inventory.schemas';
+import { toOptions } from '@/shared/utils/options';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { FormDrawer } from '@/foundation/overlay';
+import { useVariantOptions } from '../hooks/use-variant-options';
 import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
 interface StocktakeValues {
@@ -28,10 +28,10 @@ const schema: yup.ObjectSchema<StocktakeValues> = yup.object({
   }).required(),
 });
 
-const scopeTypeOptions: { value: StocktakeScopeType; label: string }[] = [
-  { value: 'FULL', label: 'Toàn kho — đếm mọi SKU đang có dòng tồn' },
-  { value: 'SKU_LIST', label: 'Theo danh sách SKU — kiểm kê từng phần' },
-];
+const scopeTypeOptions = toOptions<StocktakeScopeType>({
+  FULL: 'Toàn kho — đếm mọi SKU đang có dòng tồn',
+  SKU_LIST: 'Theo danh sách SKU — kiểm kê từng phần',
+});
 
 const emptyValues: StocktakeValues = { warehouseCode: undefined, scopeType: 'FULL', skus: [] };
 
@@ -53,8 +53,6 @@ export function StocktakeCreateDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const idempotencyKey = useRef(crypto.randomUUID());
-  const [skuSearch, setSkuSearch] = useState('');
-  const [debouncedSkuSearch] = useDebounce(skuSearch.trim(), 300);
   const form = useForm<StocktakeValues>({ resolver: yupResolver(schema), defaultValues: emptyValues });
   const scopeType = form.watch('scopeType');
 
@@ -62,10 +60,9 @@ export function StocktakeCreateDrawer({
     if (open) form.reset(emptyValues);
   }, [form, open]);
 
-  const warehouses = useWarehouseOptions();
-  const variants = useSearchActiveAdminProductVariants({
-    search: debouncedSkuSearch || undefined, page: 1, limit: 50,
-  });
+  const warehouses = useWarehouseOptions({ enabled: open });
+  // PERF: chỉ tra SKU khi drawer mở và đang chọn phạm vi theo danh sách SKU.
+  const variants = useVariantOptions({ enabled: open && scopeType === 'SKU_LIST' });
 
   const mutation = useCreateStocktake({
     request: { headers: { 'Idempotency-Key': idempotencyKey.current } },
@@ -150,10 +147,10 @@ export function StocktakeCreateDrawer({
                 mode="multiple"
                 showSearch
                 filterOption={false}
-                onSearch={setSkuSearch}
-                loading={variants.isFetching}
+                onSearch={variants.onSearch}
+                loading={variants.query.isFetching}
                 placeholder="Tìm và chọn SKU"
-                options={(variants.data?.items ?? []).map((item) => ({ value: item.code, label: `${item.code} — ${item.label}` }))}
+                options={variants.options}
               />
             )} />
           </Form.Item>

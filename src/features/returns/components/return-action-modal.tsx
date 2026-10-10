@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Alert, Checkbox, Form, Input, Modal, Radio, Select, Typography } from 'antd';
+import { useMemo, useState } from 'react';
+import { Alert, Checkbox, Form, Input, Radio, Select, Typography } from 'antd';
+import { FormModal } from '@/foundation/overlay';
 import { createAdminReturnRefundProofUpload } from '@/generated/api/returns/returns';
 import type {
-  ReturnCondition,
   RefundMethod,
   ReturnDetailDto,
   ReturnItemDto,
@@ -58,8 +58,22 @@ interface ReturnActionModalProps {
 /**
  * Một modal cho mọi lệnh trên phiếu trả. Modal chỉ đóng khi lệnh thành công (component cha gọi
  * `onClose`); lỗi giữ nguyên dữ liệu đã nhập để người dùng sửa rồi gửi lại cùng Idempotency-Key.
+ *
+ * `key` theo lệnh + version phiếu: mở lệnh khác hoặc phiếu vừa được tải lại (xung đột version) thì form
+ * dựng mới với giá trị mặc định, không cần effect reset (RULE-HOOK-01).
  */
-export function ReturnActionModal({ detail, action, submitting, onSubmit, onClose }: ReturnActionModalProps) {
+export function ReturnActionModal(props: ReturnActionModalProps) {
+  if (!props.action) return null;
+  return <ReturnActionForm key={`${props.action}:${props.detail.version}`} {...props} action={props.action} />;
+}
+
+function ReturnActionForm({
+  detail,
+  action,
+  submitting,
+  onSubmit,
+  onClose,
+}: ReturnActionModalProps & { action: ReturnAction }) {
   const [form] = Form.useForm<FormValues>();
   const [proofImages, setProofImages] = useState<UploadedSignedImage[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -72,19 +86,15 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
     () => detail.allowedRefundMethods.map((value) => ({ value, label: refundMethodLabels[value] })),
     [detail.allowedRefundMethods],
   );
-
-  useEffect(() => {
-    if (!action) return;
-    form.resetFields();
-    setProofImages([]);
-    form.setFieldsValue({
-      items: detail.items.map(() => ({ condition: 'SELLABLE' as ReturnCondition })),
+  const initialValues = useMemo<FormValues>(
+    () => ({
+      items: detail.items.map(() => ({ condition: 'SELLABLE' })),
       method: detail.allowedRefundMethods[0],
       amount: refundable,
-    });
-  }, [action, detail, form, refundable]);
+    }),
+    [detail.items, detail.allowedRefundMethods, refundable],
+  );
 
-  if (!action) return null;
   const meta = titles[action];
 
   const submit = (values: FormValues) => {
@@ -168,21 +178,19 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
   });
 
   return (
-    <Modal
+    <FormModal
       open
       title={meta.title}
       okText={meta.okText}
-      cancelText="Đóng"
-      width={action === 'receive' ? 860 : 560}
-      okButtonProps={{ danger: meta.danger, loading: submitting, disabled: uploading }}
-      cancelButtonProps={{ disabled: submitting }}
-      maskClosable={!submitting}
+      size={action === 'receive' ? 'lg' : 'md'}
+      okButtonProps={{ danger: meta.danger, disabled: uploading }}
       closable={!submitting}
-      onOk={() => form.submit()}
-      onCancel={onClose}
-      destroyOnHidden
+      submitting={submitting}
+      isDirty={() => form.isFieldsTouched() || proofImages.length > 0}
+      onSubmit={() => form.submit()}
+      onClose={onClose}
     >
-      <Form form={form} layout="vertical" onFinish={submit} disabled={submitting}>
+      <Form form={form} layout="vertical" initialValues={initialValues} onFinish={submit} disabled={submitting}>
         {action === 'approve' && (
           <>
             <Form.Item
@@ -335,6 +343,6 @@ export function ReturnActionModal({ detail, action, submitting, onSubmit, onClos
           </>
         )}
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

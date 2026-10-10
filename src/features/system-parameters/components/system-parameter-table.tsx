@@ -2,10 +2,12 @@ import { DeleteOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
 import { Space, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import { AdminTable, TableActionButton, col } from '@/foundation/table';
-import type { SystemParameterDto } from '@/generated/api/system/system.schemas';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton, col } from '@/foundation/table';
 import {
-  SYSTEM_PARAMETER_PAGE_SIZE,
+  SystemParameterStatus,
+  type SystemParameterDto,
+} from '@/generated/api/system/system.schemas';
+import {
   parameterGroupLabels,
   parameterStatusPresentation,
   parameterValueTypeLabels,
@@ -28,7 +30,7 @@ const PARAMETER_DATA_COLUMNS: ColumnsType<SystemParameterDto> = [
       </Space>
     ),
   },
-  { title: 'Tên hiển thị', dataIndex: 'label', width: 240 },
+  col.text<SystemParameterDto>('label', 'Tên hiển thị', { width: 240 }),
   {
     title: 'Nhóm',
     dataIndex: 'groupCode',
@@ -73,7 +75,7 @@ const PARAMETER_DATA_COLUMNS: ColumnsType<SystemParameterDto> = [
     render: (value: boolean) =>
       value ? <Tag color="blue">Storefront đọc được</Tag> : <span className="text-slate-400">—</span>,
   },
-  col.status<SystemParameterDto, string>('status', 'Trạng thái', parameterStatusPresentation, { width: 120 }),
+  col.status<SystemParameterDto, SystemParameterStatus>('status', 'Trạng thái', parameterStatusPresentation, { width: 120 }),
   col.dateTime<SystemParameterDto>('updatedAt', 'Cập nhật'),
 ];
 
@@ -108,7 +110,7 @@ export function SystemParameterTable({
                 label={row.isSystem ? 'Tham số hệ thống không ngừng dùng được' : 'Ngừng dùng tham số này'}
                 danger
                 icon={<DeleteOutlined />}
-                disabled={row.isSystem || row.status !== 'ACTIVE'}
+                disabled={row.isSystem || row.status !== SystemParameterStatus.ACTIVE}
                 onClick={() => onDeactivate(row)}
               />
             </>
@@ -129,7 +131,7 @@ export function SystemParameterTable({
       locale={{ emptyText: 'Không có tham số phù hợp bộ lọc.' }}
       pagination={{
         current: page,
-        pageSize: SYSTEM_PARAMETER_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
         showSizeChanger: false,
         showTotal: (value) => `${value} tham số`,

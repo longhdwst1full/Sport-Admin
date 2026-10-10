@@ -1,6 +1,6 @@
 import { TikTokOutlined } from '@ant-design/icons';
 import { Alert, Avatar, Checkbox, Select, Skeleton, Switch, Tooltip } from 'antd';
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useMemo } from 'react';
 import { TikTokPrivacyLevel, type TikTokCreatorInfoDto } from '@/generated/api/content/content.schemas';
 import { tiktokPrivacyLabels } from '../constants/social.constants';
 import { socialCommandErrorMessage } from '../model/social-command-error';
@@ -21,6 +21,29 @@ const TOGGLES: Array<{ key: TikTokToggle; creatorKey: 'commentDisabled' | 'duetD
   { key: 'disableDuet', creatorKey: 'duetDisabled', label: 'Tắt Duet' },
   { key: 'disableStitch', creatorKey: 'stitchDisabled', label: 'Tắt Stitch' },
 ];
+
+/** Quyền riêng tư tài khoản cho phép; "Chỉ mình tôi" bị khoá khi đã chọn Branded content (guideline TikTok). */
+function usePrivacyOptions(levels: readonly TikTokPrivacyLevel[] | undefined, value: TikTokPostSettingsForm) {
+  const brandedSelected = value.commercialContent.enabled && value.commercialContent.brandedContent;
+  return useMemo(
+    () =>
+      (levels ?? []).map((level) => {
+        const blocked = brandedSelected && level === TikTokPrivacyLevel.SELF_ONLY;
+        return {
+          value: level,
+          label: blocked ? (
+            <Tooltip title={TIKTOK_COMMERCIAL_TEXT.BRANDED_PRIVATE}>
+              <span>{tiktokPrivacyLabels[level]}</span>
+            </Tooltip>
+          ) : (
+            tiktokPrivacyLabels[level]
+          ),
+          disabled: blocked,
+        };
+      }),
+    [levels, brandedSelected],
+  );
+}
 
 /**
  * Thiết lập riêng của bản đăng TikTok (controlled), theo `creator_info` của tài khoản (`getAdminTikTokCreatorInfo`):
@@ -62,6 +85,7 @@ export function TikTokSettingsPanel({
   }, [creator, value, onChange]);
 
   const privacyMissing = showPrivacyError && !value.privacyLevel;
+  const privacyOptions = usePrivacyOptions(creator?.privacyLevelOptions, value);
   const locked = disabled || !creator;
   const commercial = value.commercialContent;
   const brandedSelected = commercial.enabled && commercial.brandedContent;
@@ -113,20 +137,7 @@ export function TikTokSettingsPanel({
         placeholder="Chọn quyền riêng tư"
         value={value.privacyLevel}
         status={privacyMissing ? 'error' : undefined}
-        options={(creator?.privacyLevelOptions ?? []).map((level) => {
-          const blocked = brandedSelected && level === TikTokPrivacyLevel.SELF_ONLY;
-          return {
-            value: level,
-            label: blocked ? (
-              <Tooltip title={TIKTOK_COMMERCIAL_TEXT.BRANDED_PRIVATE}>
-                <span>{tiktokPrivacyLabels[level]}</span>
-              </Tooltip>
-            ) : (
-              tiktokPrivacyLabels[level]
-            ),
-            disabled: blocked,
-          };
-        })}
+        options={privacyOptions}
         disabled={locked}
         onChange={(privacyLevel) => onChange({ ...value, privacyLevel })}
       />

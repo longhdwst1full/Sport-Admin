@@ -1,14 +1,14 @@
 import { useEffect, useMemo } from 'react';
 import {
-  Alert,
   App,
   DatePicker,
   Form,
   Input,
   InputNumber,
   Select,
-  Skeleton,
 } from 'antd';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { useGetAdminBanner } from '@/generated/api/content/content';
 import { BannerPlacement } from '@/generated/api/content/content.schemas';
 import { ImageUploadField } from '@/features/media';
@@ -67,7 +67,7 @@ const API_FIELD_TO_FORM: Record<string, keyof BannerFormValues> = {
   mobileAssetId: 'mobileImage',
 };
 
-const requireUploadedImage =(required: boolean) => ({
+const requireUploadedImage = (required: boolean) => ({
   validator: (_: unknown, value?: BannerImageValue) => {
     if (!value?.url) {
       return required ? Promise.reject(new Error('Tải ảnh desktop lên')) : Promise.resolve();
@@ -114,16 +114,14 @@ export function BannerEditorDrawer({
     return [{ value: editing.categoryId, label, searchLabel: label }, ...categories.options];
   }, [categories.options, editing?.categoryId, editing?.categoryName]);
 
-  // Đổ form khi mở hoặc khi chi tiết đổi version (sau lỗi stale). Key theo version để không ghi đè dữ
-  // liệu đang gõ mỗi lần query refetch mà dữ liệu không đổi.
-  const editingKey = editing ? `${editing.id}:${editing.version}` : undefined;
+  // Đổ form khi mở hoặc khi chi tiết đổi (sau lỗi stale). TanStack Query giữ nguyên tham chiếu `editing` khi
+  // refetch trả dữ liệu không đổi (structural sharing), nên không ghi đè dữ liệu đang gõ.
   useEffect(() => {
     if (!open) return;
     if (isEdit && !editing) return;
     form.resetFields();
     form.setFieldsValue(editing ? toBannerFormValues(editing) : EMPTY_BANNER_FORM);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- editingKey đại diện cho editing
-  }, [open, isEdit, editingKey, form]);
+  }, [open, isEdit, editing, form]);
 
   const submit = (values: BannerFormValues) => {
     save.mutate(values, {
@@ -156,10 +154,15 @@ export function BannerEditorDrawer({
       isDirty={() => form.isFieldsTouched()}
     >
       {isEdit && detail.isError && (
-        <Alert className="mb-3" type="error" showIcon message="Không tải được banner" description={bannerCommandErrorMessage(detail.error)} />
+        <QueryErrorAlert
+          error={detail.error}
+          message="Không tải được banner"
+          description={bannerCommandErrorMessage(detail.error)}
+          retry={() => void detail.refetch()}
+        />
       )}
       {isEdit && !editing ? (
-        <Skeleton active paragraph={{ rows: 8 }} />
+        detail.isError ? null : <DetailSkeleton />
       ) : (
         <>
           <Form form={form} layout="vertical" onFinish={submit} disabled={save.isPending} initialValues={EMPTY_BANNER_FORM}>

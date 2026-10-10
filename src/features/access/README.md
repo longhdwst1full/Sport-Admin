@@ -1,10 +1,10 @@
 # Access — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-10-02
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Thêm/sửa/thu hồi vai trò + chi nhánh ở màn tạo nhân viên và drawer phân quyền; bỏ dữ liệu giả (vai trò fallback, số quyền cứng, cảnh báo bypass luôn hiện).
+> **Change summary:** Tách drawer tạo nhân viên/phân quyền thành hook + component; modal khoá/xoá/thu hồi dùng `FormModal`; tab nằm trên URL.
 
 ## Phạm vi
 
@@ -15,10 +15,11 @@
 
 ## Ranh giới
 
-- `pages/access-page.tsx` sở hữu tab/search/paging.
-- `components/staff-creation-drawer.tsx`, `role-assignment-drawer.tsx` sở hữu form; `*-modal.tsx` sở hữu xác nhận hành động huỷ/khoá.
+- `pages/access-page.tsx` sở hữu tab (`?tab=roles`, trên URL). `listAdminUsers` không phân trang nên bảng hiện toàn bộ.
+- `hooks/use-staff-creation-form.ts`, `hooks/use-role-assignment-editor.ts` sở hữu form + luồng gửi; `components/staff-creation-drawer.tsx`, `role-assignment-drawer.tsx` chỉ còn bố cục, ghép `AssignableRoleCards` (dùng chung), `ExtraAssignmentRows`, `StaffPermissionMatrix`, `CurrentAssignmentList`.
+- `*-modal.tsx` (khoá/mở khoá/xoá, thu hồi) dùng `FormModal`: hỏi lại khi đóng lúc đã nhập lý do; lý do được xoá trên đường đóng (không dùng effect).
 - `model/staff-creation.mapper.ts`, `role-assignment.mapper.ts` là nơi duy nhất đọc tên field của DTO, có unit test đi kèm.
-- `constants/access.constants.ts` chỉ giữ nhãn trình bày vai trò (tag, màu, mô tả dự phòng). Tên vai trò và số quyền luôn đọc từ `listAdminRoles`, không có danh sách vai trò fallback.
+- `constants/access.constants.ts` chỉ giữ nhãn trình bày (vai trò, phạm vi, trạng thái, nhóm quyền). Tên vai trò và số quyền luôn đọc từ `listAdminRoles`, không có danh sách vai trò fallback.
 - Ô chọn chi nhánh ACTIVE dùng `BranchSelect` của `@/features/organization` (`labelFormat="code-name"`); call site tự chuyển xoá chọn thành `''` cho form.
 
 ## Luồng phân quyền (không có API nguyên tử mới)
@@ -38,7 +39,7 @@
 
 ## Quyền
 
-`useCan` chỉ cải thiện UX. Cảnh báo "Development đang mở bypass" chỉ hiện khi `useAuth().developmentBypass` bật thật. Backend vẫn là nơi quyết định cuối cùng qua `@RequirePermissions` và branch scope (`04-permissions-transitions.md`).
+`useCan` chỉ cải thiện UX. Cảnh báo "Môi trường phát triển đang bỏ qua kiểm tra quyền" chỉ hiện khi `useAuth().developmentBypass` bật thật. Backend vẫn là nơi quyết định cuối cùng qua `@RequirePermissions` và branch scope (`04-permissions-transitions.md`).
 
 ## Checklist khi sửa
 
@@ -51,4 +52,5 @@
 | Version | Date | Change summary |
 | --- | --- | --- |
 | 1.0.0 | 2026-09-13 | Tạo note cùng đợt chuẩn hoá anatomy. |
+| 1.2.0 | 2026-10-10 | Tách hook/component cho hai drawer; `FormModal` cho modal có lý do; trạng thái theo `StatusTone`; nhãn vai trò/phạm vi tiếng Việt thay mã enum; tab trên URL. |
 | 1.1.0 | 2026-10-02 | Thêm/sửa/thu hồi vai trò + chi nhánh (tạo nhân viên nhiều phạm vi, drawer phân quyền); bỏ vai trò fallback giả và số quyền cứng 32/18; cảnh báo bypass chỉ hiện khi bypass bật. |

@@ -10,6 +10,10 @@
 
 `components/product-workspace-drawer.tsx` là **nơi duy nhất** tạo và sửa sản phẩm (rộng 1040px). Mở không
 có `slug` là Tạo, có `slug` là Sửa; tạo xong workspace chuyển tại chỗ sang Sửa của sản phẩm vừa tạo.
+State/query/lệnh nằm ở `hooks/use-product-workspace.ts` (tra cứu ở `use-product-form-lookups.ts`, schema +
+map lỗi API → ô ở `model/product-form.schema.ts`); header/footer là `product-workspace-{header-actions,footer}.tsx`.
+Mỗi lần mở là một phiên mới: `ProductsPage` đổi `key` (`session`) nên state và khoá idempotency khởi tạo
+lại khi mount, không reset trong effect.
 Hợp nhất ở **bố cục**, không ở API: mỗi nghiệp vụ vẫn gọi operation riêng.
 
 Workspace có **3 tab**, giống nhau ở Tạo và Sửa; mỗi tab gộp nhiều khối xếp chồng và giữ nguyên component
@@ -74,7 +78,7 @@ Các operation từ `src/generated/api/catalog/catalog.ts` (kiểu ở `catalog.
 
 - Publish có điều kiện: nút Xuất bản mở theo `getAdminProductSetupStatus.canPublish` (cùng policy với publish ở API). Backend vẫn kiểm tra lại.
 - Media reorder tính ở `product-media.policy.ts` để việc kéo thả không phụ thuộc thứ tự trả về của API.
-- Nút **Xóa ảnh** gọi `deleteAdminProductMedia`: Backend chỉ xóa Cloudinary khi asset không còn
+- Nút **Xoá ảnh** gọi `deleteAdminProductMedia`: Backend chỉ xoá Cloudinary khi asset không còn
   được nơi khác sử dụng. `archiveAdminProductMedia` vẫn là operation gỡ liên kết nhưng hiện không
   được dùng bởi UI. Khi provider lỗi, FE refetch detail vì Backend compensation tăng Product version.
 - Giá dùng Decimal dạng chuỗi; không parse sang `number` để tính toán (`09-data-transformation.md`).
@@ -91,7 +95,7 @@ Các operation từ `src/generated/api/catalog/catalog.ts` (kiểu ở `catalog.
   Inventory `OPENING_BALANCE` có idempotency key. Nếu bước này lỗi, Product vẫn ở DRAFT và FE báo
   partial success để người dùng không submit lại tạo trùng Product.
 - Combo không có tồn vật lý riêng; khả năng bán được suy ra từ các SKU thành phần.
-- Nút Lưu/Hủy nằm ở footer cố định của Drawer; không đặt ở header vì nested drawer/viewport hẹp có
+- Nút Lưu/Huỷ nằm ở footer cố định của Drawer; không đặt ở header vì nested drawer/viewport hẹp có
   thể làm action tràn khỏi vùng nhìn thấy.
 
 ## Checklist khi sửa
@@ -107,7 +111,7 @@ Các operation từ `src/generated/api/catalog/catalog.ts` (kiểu ở `catalog.
 | --- | --- |
 | `replaceAdminProductSpecifications` | Thông số đi cùng `createAdminProduct`/`updateAdminProduct` để lưu một nút như các ô khác của form. |
 | `deleteAdminProductVariant` | Alias của `archiveAdminProductVariant`. |
-| `archiveAdminProductMedia` | Chỉ gỡ liên kết và giữ asset; UI hiện dùng DELETE để đáp ứng yêu cầu xóa cả Cloudinary. |
+| `archiveAdminProductMedia` | Chỉ gỡ liên kết và giữ asset; UI hiện dùng DELETE để đáp ứng yêu cầu xoá cả Cloudinary. |
 
 Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn tham chiếu tới biến thể. Lưu trữ là hành vi đúng.
 
@@ -120,7 +124,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 | 2.1.0 | 2026-09-26 | Gộp 7 tab thành 3 tab (Thông tin · SKU, giá & tồn kho · Kiểm tra xuất bản); Combo là khối trong tab SKU chỉ với BUNDLE; validate map lỗi về tab gộp. |
 | 2.0.0 | 2026-09-26 | `ProductWorkspaceDrawer` hợp nhất Tạo/Sửa (7 tab), thông số trong create/update, retry tồn đầu, Playwright PRD-10..12. |
 | 1.8.0 | 2026-09-21 | Màn tạo chia bốn tab, validate theo tab. |
-| 1.6.0 | 2026-09-21 | Product Media DELETE xóa Cloudinary, refetch khi compensation và cảnh báo asset dùng chung. |
+| 1.6.0 | 2026-09-21 | Product Media DELETE xoá Cloudinary, refetch khi compensation và cảnh báo asset dùng chung. |
 | 1.5.0 | 2026-09-20 | Cố định action footer và thêm khai báo tồn đầu theo branch/warehouse cho từng SKU. |
 | 1.4.0 | 2026-09-20 | Ghép Product + initial variants vào một create drawer và mapper contract có test. |
 | 1.3.0 | 2026-09-19 | Mặc định 30 sản phẩm/trang, thêm page-size selector và giữ table trong viewport. |

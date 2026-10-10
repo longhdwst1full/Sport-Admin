@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Form, Input, Select, Skeleton } from 'antd';
-import { useEffect, useState } from 'react';
+import { App, Form, Input, Select } from 'antd';
+import { useState } from 'react';
 import {
   createAdminPost,
   getListAdminPostsQueryKey,
@@ -8,21 +8,23 @@ import {
   updateAdminPost,
   useGetAdminPost,
 } from '@/generated/api/content/content';
-import type { ContentPostSummaryDto } from '@/generated/api/content/content.schemas';
 import {
   ContentPostType,
-  type ContentPostType as PostType,
+  type ContentPostDto,
+  type ContentPostSummaryDto,
 } from '@/generated/api/content/content.schemas';
+import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { ImageUploadField } from '@/features/media';
 import { RichTextEditor } from '@/foundation/inputs/rich-text-editor';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { postTypeLabels } from '../constants/social.constants';
 import { toCoverPayload } from '../model/content-post-cover';
 import { FormDrawer } from '@/foundation/overlay';
 
-/** Bài website chỉ nhận các loại trong `ContentPostType`; nhãn giữ nguyên mã enum cho biên tập viên. */
+/** Bài website chỉ nhận các loại trong `ContentPostType` (không có SOCIAL). */
 const CONTENT_POST_TYPE_OPTIONS = Object.values(ContentPostType).map((value) => ({
   value,
-  label: value.replaceAll('_', ' '),
+  label: postTypeLabels[value],
 }));
 
 export function ContentEditorDrawer({
@@ -38,7 +40,7 @@ export function ContentEditorDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
-  const [postType, setPostType] = useState<PostType>(ContentPostType.NEWS);
+  const [postType, setPostType] = useState<ContentPostType>(ContentPostType.NEWS);
   const [excerpt, setExcerpt] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [coverAssetId, setCoverAssetId] = useState<string | undefined>();
@@ -52,24 +54,28 @@ export function ContentEditorDrawer({
   });
   const editingFull = editing ? postDetail.data : undefined;
 
-  // Đổ lại form mỗi lần mở/khi bản đầy đủ tải xong: mở sửa bài khác mà giữ state cũ sẽ ghi đè
-  // nhầm nội dung; với bài mới thì reset ngay khi drawer mở.
-  useEffect(() => {
-    if (!open) return;
-    if (editing && !editingFull) return;
-    setTitle(editingFull?.title ?? '');
-    setPostType((editingFull?.postType as PostType) ?? ContentPostType.NEWS);
-    setExcerpt(editingFull?.excerpt ?? '');
-    setCoverUrl(editingFull?.coverUrl ?? '');
-    setCoverAssetId(editingFull?.coverAssetId ?? undefined);
-    setRelatedProducts((editingFull?.relatedProductSlugs ?? []).join(', '));
-    setBody(editingFull?.body ?? '');
-  }, [open, editing, editingFull]);
+  // Đổ lại form mỗi lần mở/khi bản đầy đủ tải xong: mở sửa bài khác mà giữ state cũ sẽ ghi đè nhầm nội dung;
+  // với bài mới thì reset ngay khi drawer mở. Đổ trong lúc render khi nguồn đổi (RULE-HOOK-01) thay cho
+  // setState trong effect; query giữ nguyên tham chiếu khi refetch không đổi dữ liệu.
+  const source: ContentPostDto | 'new' | undefined = !open ? undefined : editing ? editingFull : 'new';
+  const [loadedSource, setLoadedSource] = useState<ContentPostDto | 'new'>();
+  if (!open && loadedSource) setLoadedSource(undefined);
+  if (source && source !== loadedSource) {
+    setLoadedSource(source);
+    const full = source === 'new' ? undefined : source;
+    setTitle(full?.title ?? '');
+    setPostType(full?.postType ?? ContentPostType.NEWS);
+    setExcerpt(full?.excerpt ?? '');
+    setCoverUrl(full?.coverUrl ?? '');
+    setCoverAssetId(full?.coverAssetId ?? undefined);
+    setRelatedProducts((full?.relatedProductSlugs ?? []).join(', '));
+    setBody(full?.body ?? '');
+  }
 
   const savePost = useMutation({
     mutationFn: (payload: {
       title: string;
-      postType: PostType;
+      postType: ContentPostType;
       excerpt: string;
       coverUrl?: string;
       coverAssetId?: string;
@@ -129,7 +135,7 @@ export function ContentEditorDrawer({
       submitText="Tạo và xuất bản"
     >
       {editing && !editingFull ? (
-        <Skeleton active paragraph={{ rows: 8 }} />
+        <DetailSkeleton />
       ) : (
       <Form layout="vertical">
         <Form.Item label="Tiêu đề" required>

@@ -43,7 +43,7 @@ export function buildMfaRequestOptions(code: string): MfaRequestOptions {
  * - Mã sai/thiếu/vừa dùng (MFA_CODE_INVALID/REQUIRED/ALREADY_USED): giữ hộp thoại, cho nhập lại.
  * - 403 MFA_NOT_ENROLLED (người thao tác chưa bật 2FA): giữ hộp thoại, mời tự thiết lập.
  * - Lỗi khác: đóng hộp thoại, reject để caller báo lỗi như bình thường.
- * - Hủy: reject `MfaCodeCancelledError` (caller bỏ qua bằng `isMfaCodeCancelled`).
+ * - Huỷ: reject `MfaCodeCancelledError` (caller bỏ qua bằng `isMfaCodeCancelled`).
  * - Tài khoản được API miễn 2FA (`getAdminMfaStatus().exempt`, break-glass): chạy luôn không hỏi mã.
  *
  * Render `mfaModal` một lần trong component dùng hook.
@@ -131,7 +131,7 @@ export function useMfaCode() {
   }, [close, pending, submitting]);
 
   const openSelfEnrollment = useCallback(() => {
-    // Thao tác gốc không chạy được khi chưa có 2FA: hủy nó (im lặng) rồi mở luồng tự thiết lập.
+    // Thao tác gốc không chạy được khi chưa có 2FA: huỷ nó (im lặng) rồi mở luồng tự thiết lập.
     pending?.reject(new MfaCodeCancelledError());
     close();
     void startSelfEnrollment();

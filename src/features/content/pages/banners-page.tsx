@@ -8,14 +8,14 @@ import {
   PlusOutlined,
   VerticalAlignBottomOutlined,
 } from '@ant-design/icons';
-import { Button, Image, Select, Tag } from 'antd';
+import { Button, Image, Select } from 'antd';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { PageTransition } from '@/foundation/layout/page-transition';
 import { ManagementPage, StatusTag } from '@/foundation/management';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, col, FilterBar, RefreshButton, TableActionButton } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, col, FilterBar, RefreshButton, TableActionButton } from '@/foundation/table';
 import { useListAdminBanners } from '@/generated/api/content/content';
 import {
   BannerPlacement,
@@ -30,8 +30,9 @@ import { BannerEditorDrawer } from '../components/banner-editor-drawer';
 import { BannerStatusModal } from '../components/banner-status-modal';
 import {
   BANNER_LIMITS,
-  BANNER_PAGE_SIZE,
+  BANNER_LIVENESS,
   BANNER_PERMISSION,
+  bannerLivenessPresentation,
   bannerPlacementLabels,
   bannerPlacementOptions,
   bannerStatusOptions,
@@ -64,6 +65,7 @@ const BANNER_COLUMNS: ColumnsType<BannerDto> = [
           fallback={IMAGE_FALLBACK_SRC}
           width={96}
           height={40}
+          loading="lazy"
           src={row.desktopImageUrl}
           alt={row.title ?? row.code}
           className="rounded-md border border-slate-200 object-cover"
@@ -104,9 +106,10 @@ const BANNER_COLUMNS: ColumnsType<BannerDto> = [
         <StatusTag status={row.status} presentations={bannerStatusPresentation} />
         {/* UX: PUBLISHED mà ngoài khung giờ thì không hiển thị — cờ isLive do API tính. */}
         {row.status === BannerStatus.PUBLISHED && (
-          <Tag color={row.isLive ? 'green' : 'default'} bordered={false}>
-            {row.isLive ? 'Đang chạy' : 'Ngoài khung giờ'}
-          </Tag>
+          <StatusTag
+            status={row.isLive ? BANNER_LIVENESS.LIVE : BANNER_LIVENESS.OUT_OF_WINDOW}
+            presentations={bannerLivenessPresentation}
+          />
         )}
       </div>
     ),
@@ -128,7 +131,7 @@ export function BannersPage() {
   const canManage = useCan(BANNER_PERMISSION.MANAGE);
 
   const list = useListAdminBanners(
-    { page, limit: BANNER_PAGE_SIZE, placement, status, search: search.debounced },
+    { page, limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE, placement, status, search: search.debounced },
     { query: { retry: false } },
   );
   const rows = useMemo(() => list.data?.items ?? [], [list.data]);
@@ -229,7 +232,7 @@ export function BannersPage() {
           locale={{ emptyText: 'Chưa có banner phù hợp bộ lọc.' }}
           pagination={{
             current: page,
-            pageSize: BANNER_PAGE_SIZE,
+            pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
             total,
             showSizeChanger: false,
             showTotal: (value) => `${value} banner`,

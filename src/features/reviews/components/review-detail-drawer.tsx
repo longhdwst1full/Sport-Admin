@@ -1,17 +1,14 @@
 import { useState } from 'react';
-import { App, Button, Descriptions, Drawer, Empty, Image, Input, Rate, Tag, Typography } from 'antd';
+import { App, Button, Descriptions, Empty, Image, Input, Rate, Tag, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import { useReplyAdminReview } from '@/generated/api/reviews/reviews';
 import type { ProductReviewDto } from '@/generated/api/reviews/reviews.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
-import { canReplyToReview, REVIEW_STATUS_PRESENTATION } from '../model/review-moderation.policy';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
-
-const AUTHOR_TYPE_LABELS: Record<string, string> = {
-  CUSTOMER: 'Khách hàng',
-  STAFF: 'Nhân viên',
-};
+import { StatusTag } from '@/foundation/management';
+import { DetailDrawer } from '@/foundation/overlay';
+import { REVIEW_AUTHOR_TYPE_LABELS, REVIEW_STATUS_PRESENTATION } from '../constants/review.constants';
+import { canReplyToReview } from '../model/review-moderation.policy';
 
 export function ReviewDetailDrawer({
   review,
@@ -25,7 +22,6 @@ export function ReviewDetailDrawer({
   const { message } = App.useApp();
   const canReply = useCan('catalog.review.reply');
   const [replyContent, setReplyContent] = useState('');
-  const status = review ? REVIEW_STATUS_PRESENTATION[review.status] : undefined;
   const reply = useReplyAdminReview({
     mutation: {
       onSuccess: (updated) => {
@@ -52,20 +48,17 @@ export function ReviewDetailDrawer({
   }
 
   return (
-    <Drawer
+    <DetailDrawer
       open={Boolean(review)}
       onClose={closeDrawer}
-      width={DRAWER_WIDTH.md}
-      destroyOnHidden
+      size="md"
       title={review ? `Đánh giá #${review.id}` : 'Chi tiết đánh giá'}
+      status={review && <StatusTag status={review.status} presentations={REVIEW_STATUS_PRESENTATION} />}
     >
       {review && (
         <>
           <Descriptions bordered size="small" column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 2 }}>
             <Descriptions.Item label="Khách hàng">{review.customerDisplayName}</Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag color={status?.color ?? 'default'}>{status?.label ?? review.status}</Tag>
-            </Descriptions.Item>
             <Descriptions.Item label="Điểm">
               <Rate disabled value={review.rating} className="!text-sm" />
             </Descriptions.Item>
@@ -111,6 +104,7 @@ export function ReviewDetailDrawer({
                       key={media.id}
                       width={104}
                       height={104}
+                      loading="lazy"
                       src={media.thumbnailUrl}
                       preview={{ src: media.url }}
                       className="rounded-xl object-cover"
@@ -138,7 +132,7 @@ export function ReviewDetailDrawer({
                       <Typography.Text strong className="text-sm">
                         {comment.authorName}
                         <Tag className="ml-2" color={comment.authorType === 'STAFF' ? 'blue' : 'default'}>
-                          {AUTHOR_TYPE_LABELS[comment.authorType] ?? comment.authorType}
+                          {REVIEW_AUTHOR_TYPE_LABELS[comment.authorType]}
                         </Tag>
                       </Typography.Text>
                       <Typography.Text type="secondary" className="text-xs">
@@ -183,6 +177,6 @@ export function ReviewDetailDrawer({
           </section>
         </>
       )}
-    </Drawer>
+    </DetailDrawer>
   );
 }

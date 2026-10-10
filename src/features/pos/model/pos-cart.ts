@@ -38,7 +38,7 @@ export function effectivePrice(line: PosCartLine): number | null {
   return line.flashPrice ?? line.unitPrice;
 }
 
-export function toCartLine(item: PosCatalogItemDto): PosCartLine {
+function toCartLine(item: PosCatalogItemDto): PosCartLine {
   const price = item.unitPrice == null ? null : Number(item.unitPrice);
   return {
     variantId: item.id,

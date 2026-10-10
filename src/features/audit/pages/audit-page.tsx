@@ -4,51 +4,34 @@ import {
   EyeOutlined,
   HistoryOutlined,
   LockOutlined,
-  ReloadOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
-import {
-  Alert,
-  App,
-  Button,
-  DatePicker,
-  Descriptions,
-  Drawer,
-  Empty,
-  Input,
-  Select,
-  Space,
-  Tag,
-  Tooltip,
-  Typography,
-} from 'antd';
-import { SearchInput } from '@/foundation/inputs/search-input';
+import { App, Button, DatePicker, Descriptions, Empty, Select, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, FilterBar, RefreshButton } from '@/foundation/table';
-import { formatDateTime } from '@/lib/format/datetime';
+import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
-import { ManagementPage } from '@/foundation/management';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { PageTransition } from '@/foundation/layout/page-transition';
+import { ManagementPage } from '@/foundation/management';
+import { DetailDrawer } from '@/foundation/overlay';
+import {
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+  AdminTable,
+  CursorPagination,
+  FilterBar,
+  RefreshButton,
+  TableActionButton,
+  col,
+} from '@/foundation/table';
 import { useListAdminAuditLogs } from '@/generated/api/audit/audit';
 import type { AuditLogDto } from '@/generated/api/audit/audit.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { formatDateTime } from '@/lib/format/datetime';
+import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
+import { ENTITY_TYPE_OPTIONS, entityTypeLabel } from '../constants/audit.constants';
 
 const { RangePicker } = DatePicker;
-const PAGE_SIZE = 25;
-
-/** Loại dữ liệu đang được ghi audit; API nhận chuỗi tự do nên nhãn giữ nguyên mã. */
-const ENTITY_TYPE_OPTIONS = [
-  'USER',
-  'USER_ROLE_ASSIGNMENT',
-  'PRODUCT',
-  'PRODUCT_VARIANT',
-  'PRODUCT_PRICE',
-  'INVENTORY_BALANCE',
-  'MEDIA_ASSET',
-].map((value) => ({ value, label: value }));
 
 /** Cột dữ liệu của bảng nhật ký; cột "Xem" ghép trong component vì cần handler mở drawer. */
 const AUDIT_COLUMNS: ColumnsType<AuditLogDto> = [
@@ -57,9 +40,7 @@ const AUDIT_COLUMNS: ColumnsType<AuditLogDto> = [
     dataIndex: 'createdAt',
     width: 170,
     render: (value: string) => (
-      <span className="text-xs font-mono text-slate-600">
-        {formatDateTime(value)}
-      </span>
+      <span className="text-xs font-mono text-slate-600">{formatDateTime(value)}</span>
     ),
   },
   {
@@ -71,46 +52,34 @@ const AUDIT_COLUMNS: ColumnsType<AuditLogDto> = [
           {value}
         </Typography.Text>
         <div>
-          <Tag className="mt-1 font-mono text-[10px] bg-slate-100 border-slate-200">
-            {row.entityType}
-          </Tag>
+          <Tag className="mt-1 text-[10px]">{entityTypeLabel(row.entityType)}</Tag>
         </div>
       </div>
     ),
   },
   {
     title: 'Người thực hiện',
+    key: 'actor',
     render: (_, row) => (
       <div className="text-xs">
-        <span className="font-semibold text-slate-800">
-          {row.actorDisplayName ?? row.actorType}
-        </span>
-        <div className="text-[11px] font-mono text-slate-400">
-          {row.actorUserId ?? 'Hệ thống tự động'}
-        </div>
+        <span className="font-semibold text-slate-800">{row.actorDisplayName ?? row.actorType}</span>
+        <div className="text-[11px] font-mono text-slate-400">{row.actorUserId ?? 'Hệ thống tự động'}</div>
       </div>
     ),
   },
-  {
-    title: 'Lý do thay đổi',
-    dataIndex: 'reason',
-    render: (value?: string | null) => (
-      <span className="text-xs text-slate-600">{value || '—'}</span>
-    ),
-  },
+  col.text<AuditLogDto>('reason', 'Lý do thay đổi'),
 ];
 
 function JsonSnapshot({ value }: { value: unknown }) {
   const { message } = App.useApp();
-  if (!value)
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có snapshot" />;
+  if (!value) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có snapshot" />;
 
   const jsonString = JSON.stringify(value, null, 2);
-
-  const copyJson = () => {
-    navigator.clipboard.writeText(jsonString);
-    message.success('Đã sao chép JSON payload');
-  };
+  const copyJson = () =>
+    void navigator.clipboard.writeText(jsonString).then(
+      () => message.success('Đã sao chép JSON'),
+      () => message.error('Không sao chép được'),
+    );
 
   return (
     <div className="relative">
@@ -119,6 +88,7 @@ function JsonSnapshot({ value }: { value: unknown }) {
           <Button
             size="small"
             icon={<CopyOutlined />}
+            aria-label="Sao chép JSON"
             onClick={copyJson}
             className="bg-white/10 text-white border-white/20 hover:bg-white/20"
           />
@@ -131,47 +101,42 @@ function JsonSnapshot({ value }: { value: unknown }) {
   );
 }
 
+/**
+ * Nhật ký audit (chỉ đọc). Bộ lọc nằm trên URL (`action`, `requestId`, `entity`, `from`, `to`) để
+ * F5/gửi link giữ nguyên; phân trang theo con trỏ nên lịch sử con trỏ sống trong màn và về trang đầu
+ * khi lọc đổi.
+ */
 export function AuditPage() {
-  const action = useSearchState();
-  const requestId = useSearchState();
-  const [entityType, setEntityType] = useState<string>();
-  const [range, setRange] = useState<[string, string]>();
+  const search = useUrlSearch(['action', 'requestId']);
+  const { url } = search;
+  const entityType = url.get('entity');
+  const from = url.get('from');
+  const to = url.get('to');
   const [selected, setSelected] = useState<AuditLogDto>();
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
-  const [page, setPage] = useListPageReset([action.debounced, requestId.debounced, entityType, range], {
-    initialPage: 0,
-    onReset: () => setCursorHistory([undefined]),
-  });
+  const [page, setPage] = useListPageReset(
+    [url.get('action'), url.get('requestId'), entityType, from, to],
+    { initialPage: 0, onReset: () => setCursorHistory([undefined]) },
+  );
 
   const query = useListAdminAuditLogs({
-    limit: PAGE_SIZE,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
     cursor: cursorHistory[page],
-    action: action.debounced,
-    requestId: requestId.debounced,
+    action: url.get('action'),
+    requestId: url.get('requestId'),
     entityType,
-    from: range?.[0],
-    to: range?.[1],
+    from,
+    to,
   });
 
   const items = query.data?.items ?? [];
   const columns = useMemo<ColumnsType<AuditLogDto>>(
     () => [
       ...AUDIT_COLUMNS,
-      {
-        title: '',
-        align: 'right' as const,
-        width: 80,
-        render: (_, row) => (
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => setSelected(row)}
-            className="text-xs"
-          >
-            Xem
-          </Button>
-        ),
-      },
+      col.actions<AuditLogDto>(
+        (row) => <TableActionButton label="Xem chi tiết" icon={<EyeOutlined />} onClick={() => setSelected(row)} />,
+        { title: '', width: 80, fixed: undefined },
+      ),
     ],
     [],
   );
@@ -181,84 +146,48 @@ export function AuditPage() {
       <ManagementPage
         eyebrow="Bảo mật & Truy vết hệ thống"
         title="Nhật ký Audit Log"
-        description="Toàn bộ hành vi ghi và thay đổi trạng thái dữ liệu trên hệ thống PostgreSQL đều được ghi nhận bất biến."
+        description="Toàn bộ hành vi ghi và thay đổi trạng thái dữ liệu trên hệ thống đều được ghi nhận bất biến."
         metrics={[
-          {
-            key: 'page-events',
-            label: 'Sự kiện trên trang',
-            value: items.length,
-            icon: <HistoryOutlined />,
-            tone: 'blue',
-          },
-          {
-            key: 'privacy',
-            label: 'Bảo vệ dữ liệu',
-            value: 'Đã che thông tin',
-            icon: <LockOutlined />,
-            tone: 'green',
-          },
-          {
-            key: 'scope',
-            label: 'Phạm vi truy vết',
-            value: 'Toàn hệ thống',
-            icon: <SafetyCertificateOutlined />,
-            tone: 'green',
-          },
-          {
-            key: 'page-idx',
-            label: 'Trang truy vấn',
-            value: `Trang ${page + 1}`,
-            icon: <AuditOutlined />,
-            tone: 'orange',
-          },
+          { key: 'page-events', label: 'Sự kiện trên trang', value: items.length, icon: <HistoryOutlined />, tone: 'blue' },
+          { key: 'privacy', label: 'Bảo vệ dữ liệu', value: 'Đã che thông tin', icon: <LockOutlined />, tone: 'green' },
+          { key: 'scope', label: 'Phạm vi truy vết', value: 'Toàn hệ thống', icon: <SafetyCertificateOutlined />, tone: 'green' },
+          { key: 'page-idx', label: 'Trang truy vấn', value: `Trang ${page + 1}`, icon: <AuditOutlined />, tone: 'orange' },
         ]}
         filters={
           <FilterBar actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}>
-          <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <SearchInput
-              className="w-full"
               placeholder="Hành động, ví dụ catalog.price"
-              value={action.value}
-              onChange={action.setValue}
+              value={search.values.action}
+              onChange={search.setter('action')}
             />
             <Select
               allowClear
+              className="min-w-48"
               placeholder="Loại dữ liệu"
               value={entityType}
-              onChange={setEntityType}
+              onChange={(value?: string) => url.set('entity', value)}
               options={ENTITY_TYPE_OPTIONS}
             />
-            <Input
-              allowClear
-              placeholder="Request ID"
-              value={requestId.value}
-              onChange={(event) => requestId.setValue(event.target.value)}
+            <SearchInput
+              placeholder="Mã request"
+              value={search.values.requestId}
+              onChange={search.setter('requestId')}
             />
             <RangePicker
               showTime
-              className="w-full"
+              value={from && to ? [dayjs(from), dayjs(to)] : null}
               onChange={(dates) =>
-                setRange(
+                url.patch(
                   dates?.[0] && dates[1]
-                    ? [dates[0].toISOString(), dates[1].toISOString()]
-                    : undefined,
+                    ? { from: dates[0].toISOString(), to: dates[1].toISOString() }
+                    : { from: undefined, to: undefined },
                 )
               }
             />
-          </div>
           </FilterBar>
         }
       >
-        {query.isError && (
-          <Alert
-            className="mb-4"
-            showIcon
-            type="error"
-            message="Không tải được nhật ký"
-            description={getApiErrorMessage(query.error, 'Vui lòng thử lại.')}
-            action={<Button onClick={() => void query.refetch()}>Thử lại</Button>}
-          />
-        )}
+        {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
 
         <AdminTable
           rowKey="id"
@@ -266,90 +195,63 @@ export function AuditPage() {
           dataSource={items}
           pagination={false}
           scroll={{ x: 980 }}
-          locale={{ emptyText: 'Chưa có sự kiện phù hợp bộ lọc' }}
+          emptyEntity="sự kiện"
           columns={columns}
         />
 
-        <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-          <Typography.Text type="secondary" className="text-xs">
-            Trang {page + 1}
-          </Typography.Text>
-          <Space>
-            <Button
-              disabled={page === 0}
-              onClick={() => setPage((value) => value - 1)}
-              size="small"
-            >
-              Trang trước
-            </Button>
-            <Button
-              type="primary"
-              disabled={!query.data?.nextCursor}
-              onClick={() => {
-                const next = query.data?.nextCursor ?? undefined;
-                setCursorHistory((history) => [...history.slice(0, page + 1), next]);
-                setPage((value) => value + 1);
-              }}
-              size="small"
-            >
-              Trang sau
-            </Button>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => void query.refetch()}
-              size="small"
-            />
-          </Space>
-        </div>
+        <CursorPagination
+          pageIndex={page}
+          rowCount={items.length}
+          totalLabel="sự kiện"
+          hasPrevious={page > 0}
+          hasNext={Boolean(query.data?.nextCursor)}
+          loading={query.isFetching}
+          onFirst={() => setPage(0)}
+          onPrevious={() => setPage((value) => value - 1)}
+          onNext={() => {
+            const next = query.data?.nextCursor ?? undefined;
+            setCursorHistory((history) => [...history.slice(0, page + 1), next]);
+            setPage((value) => value + 1);
+          }}
+        />
 
-        <Drawer
-          width={DRAWER_WIDTH.md}
+        <DetailDrawer
+          size="md"
           open={Boolean(selected)}
-          title={
-            <div className="flex items-center gap-2">
-              <AuditOutlined className="text-emerald-600" />
-              <span>Chi tiết nhật ký: {selected?.action}</span>
-            </div>
-          }
+          title={`Chi tiết nhật ký: ${selected?.action ?? ''}`}
           onClose={() => setSelected(undefined)}
         >
           {selected && (
             <div className="space-y-5 text-xs">
               <Descriptions size="small" bordered column={1} className="rounded-xl overflow-hidden">
-                <Descriptions.Item label="Thời gian">
-                  {formatDateTime(selected.createdAt)}
-                </Descriptions.Item>
+                <Descriptions.Item label="Thời gian">{formatDateTime(selected.createdAt)}</Descriptions.Item>
                 <Descriptions.Item label="Hành động">
                   <span className="font-mono font-bold text-slate-800">{selected.action}</span>
                 </Descriptions.Item>
                 <Descriptions.Item label="Đối tượng">
-                  {selected.entityType} ({selected.entityId ?? 'N/A'})
+                  {entityTypeLabel(selected.entityType)} ({selected.entityId ?? '—'})
                 </Descriptions.Item>
                 <Descriptions.Item label="Người thực hiện">
-                  {selected.actorDisplayName} ({selected.actorType})
+                  {selected.actorDisplayName ?? '—'} ({selected.actorType})
                 </Descriptions.Item>
                 <Descriptions.Item label="Lý do">{selected.reason || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Request ID">
+                <Descriptions.Item label="Mã request">
                   <span className="font-mono">{selected.requestId || '—'}</span>
                 </Descriptions.Item>
               </Descriptions>
 
               <div>
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Dữ liệu trước thay đổi (Before)
-                </h4>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Dữ liệu trước thay đổi</h4>
                 <JsonSnapshot value={selected.before} />
               </div>
 
               <div>
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Dữ liệu sau thay đổi (After)
-                </h4>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Dữ liệu sau thay đổi</h4>
                 <JsonSnapshot value={selected.after} />
               </div>
             </div>
           )}
-        </Drawer>
+        </DetailDrawer>
       </ManagementPage>
     </PageTransition>
   );

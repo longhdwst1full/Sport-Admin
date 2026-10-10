@@ -1,4 +1,4 @@
-import type { ProductSummaryDto } from '@/generated/api/catalog/catalog.schemas';
+import type { ProductStatus, ProductSummaryDto } from '@/generated/api/catalog/catalog.schemas';
 
 import { moneyFormatter } from '@/lib/format/money';
 
@@ -11,7 +11,7 @@ export interface ProductListRow {
   imageUrl?: string;
   priceLabel: string;
   productType: string;
-  status: string;
+  status: ProductStatus;
   isPublished: boolean;
   version: number;
 }

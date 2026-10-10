@@ -40,7 +40,7 @@ export function ProductImagePicker({
             key={image.assetId}
             className="relative overflow-hidden rounded-xl border border-slate-200"
           >
-            <Image width={92} height={92} src={image.url} className="object-cover" />
+            <Image width={92} height={92} loading="lazy" alt={`Ảnh sản phẩm ${index + 1}`} src={image.url} className="object-cover" />
             {index === 0 && (
               <span className="absolute left-1 top-1 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
                 <StarFilled /> Ảnh chính

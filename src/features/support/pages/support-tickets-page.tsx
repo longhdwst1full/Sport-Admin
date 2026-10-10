@@ -3,7 +3,7 @@ import { Select } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
-import { FilterBar, RefreshButton } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, FilterBar, RefreshButton } from '@/foundation/table';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { useSearchState } from '@/shared/hooks/use-search-state';
 import { useUrlFilters } from '@/shared/hooks/use-url-filters';
@@ -12,7 +12,6 @@ import { SupportTicketDetailDrawer } from '../components/support-ticket-detail-d
 import { SupportTicketTable } from '../components/support-ticket-table';
 import { SupportTicketPriority, SupportTicketStatus } from '@/generated/api/support/support.schemas';
 import {
-  SUPPORT_TICKET_PAGE_SIZE,
   supportTicketPriorityOptions,
   supportTicketStatusOptions,
 } from '../constants/support.constants';
@@ -36,7 +35,7 @@ export function SupportTicketsPage() {
 
   const list = useSupportTickets({
     page,
-    limit: SUPPORT_TICKET_PAGE_SIZE,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
     status,
     priority,
     assigneeUserId: assigneeId,
@@ -48,7 +47,7 @@ export function SupportTicketsPage() {
   return (
     <>
       <ManagementPage
-        eyebrow="Customer care"
+        eyebrow="Chăm sóc khách hàng"
         title="Hàng đợi hỗ trợ"
         description="Tiếp nhận, giao việc, trả lời và đóng yêu cầu hỗ trợ của khách hàng."
         filters={(
@@ -57,7 +56,7 @@ export function SupportTicketsPage() {
               className="min-w-64 flex-1"
               value={search.value}
               onChange={search.setValue}
-              placeholder="Mã ticket, tiêu đề, tên hoặc SĐT khách"
+              placeholder="Mã phiếu, tiêu đề, tên hoặc SĐT khách"
             />
             <Select
               allowClear
@@ -103,7 +102,7 @@ export function SupportTicketsPage() {
           loading={list.isLoading}
           page={page}
           total={list.data?.total ?? 0}
-          emptyText="Không có ticket phù hợp bộ lọc."
+          emptyText="Không có phiếu hỗ trợ phù hợp bộ lọc."
           onPageChange={setPage}
           onOpen={(id) => url.set('id', id)}
         />

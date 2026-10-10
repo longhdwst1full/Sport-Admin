@@ -1,10 +1,10 @@
 # Dashboard — maintenance note
 
-> **Document version:** 2.2.0
+> **Document version:** 2.3.0
 >
-> **Last updated:** 2026-09-21
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Thêm bộ chọn kỳ (ngày/tháng/quý/năm), biểu đồ số đơn theo kỳ, bảng khách mua nhiều nhất và bảng màu biểu đồ đã qua kiểm tra tương phản/CVD.
+> **Change summary:** Gộp hai bảng top khách/sản phẩm thành `TopRankingCard`; đường dẫn tải báo cáo lấy từ query key sinh ra (`REPORT_EXPORT_PATH`).
 
 ## Biểu đồ và bảng màu
 
@@ -58,6 +58,8 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 
 ## Checklist khi sửa
 
+- [ ] Đường dẫn tải báo cáo chỉ lấy từ `REPORT_EXPORT_PATH` (đọc phần tử đầu của `getExportAdminReport*QueryKey()`), không viết tay `/api/v1/...`.
+
 - [ ] Không đưa số liệu ước lượng hay chỉ số tăng trưởng viết cứng vào thẻ thống kê.
 - [ ] Thêm trạng thái đơn mới phải cập nhật `ORDER_STATUS_LABELS`, nếu không biểu đồ hiện mã thô.
 - [ ] Đổi định nghĩa doanh thu phải sửa đồng thời ở `api/src/modules/reporting/reporting.service.ts`.
@@ -66,6 +68,7 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 
 | Version | Date       | Change summary                                                         |
 | ------- | ---------- | ---------------------------------------------------------------------- |
+| 2.3.0   | 2026-10-10 | `TopRankingCard` dùng chung; `REPORT_EXPORT_PATH` thay đường dẫn viết tay. |
 | 2.1.0   | 2026-09-18 | Làm mới hierarchy, KPI, biểu đồ và thẻ đơn chờ; loading theo từng API. |
 | 2.0.0   | 2026-09-15 | Chuyển sang số liệu kinh doanh thật; gỡ `system-module-list`.          |
 | 1.0.0   | 2026-09-04 | Bản đầu, hiển thị tiến độ rà soát model.                               |

@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
-import { useDebounce } from 'use-debounce';
+import { useMemo } from 'react';
 import { useSearchActiveAdminWarehouses } from '@/generated/api/organization/organization';
 import type { ActiveLookupOptionDto } from '@/generated/api/organization/organization.schemas';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 
 const WAREHOUSE_LOOKUP_LIMIT = 50;
 
@@ -18,10 +18,9 @@ export function useWarehouseOptions({
   enabled?: boolean;
   formatLabel?: (item: ActiveLookupOptionDto) => string;
 } = {}) {
-  const [search, setSearch] = useState('');
-  const [debouncedSearch] = useDebounce(search.trim(), 300);
+  const search = useSearchState();
   const query = useSearchActiveAdminWarehouses(
-    { page: 1, limit: WAREHOUSE_LOOKUP_LIMIT, search: debouncedSearch || undefined },
+    { page: 1, limit: WAREHOUSE_LOOKUP_LIMIT, search: search.debounced },
     enabled === undefined ? undefined : { query: { enabled } },
   );
   const items = query.data?.items;
@@ -29,5 +28,5 @@ export function useWarehouseOptions({
     () => (items ?? []).map((item) => ({ value: item.code, label: formatLabel(item) })),
     [items, formatLabel],
   );
-  return { options, onSearch: setSearch, query };
+  return { options, onSearch: search.setValue, query };
 }

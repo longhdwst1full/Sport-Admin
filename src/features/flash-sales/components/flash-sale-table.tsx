@@ -1,10 +1,10 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Tag, Typography } from 'antd';
+import { Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import { AdminTable, TableActionButton, col } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton, col } from '@/foundation/table';
 import type { FlashSaleCampaignSummaryDto } from '@/generated/api/promotions/promotions.schemas';
-import { FLASH_SALE_PAGE_SIZE, flashSaleStatusPresentation } from '../constants/flash-sale.constants';
+import { flashSaleStatusPresentation } from '../constants/flash-sale.constants';
 
 const COLUMNS: ColumnsType<FlashSaleCampaignSummaryDto> = [
   {
@@ -18,15 +18,12 @@ const COLUMNS: ColumnsType<FlashSaleCampaignSummaryDto> = [
   col.dateTime<FlashSaleCampaignSummaryDto>('startsAt', 'Bắt đầu', { width: 170 }),
   col.dateTime<FlashSaleCampaignSummaryDto>('endsAt', 'Kết thúc', { width: 170 }),
   col.number<FlashSaleCampaignSummaryDto>('itemCount', 'Số suất bán', { width: 120 }),
-  {
-    title: 'Trạng thái',
-    dataIndex: 'status',
-    width: 140,
-    render: (value: string) => {
-      const presentation = flashSaleStatusPresentation[value];
-      return <Tag color={presentation?.color ?? 'default'}>{presentation?.label ?? value}</Tag>;
-    },
-  },
+  col.status<FlashSaleCampaignSummaryDto, FlashSaleCampaignSummaryDto['status']>(
+    'status',
+    'Trạng thái',
+    flashSaleStatusPresentation,
+    { width: 140 },
+  ),
 ];
 
 export function FlashSaleTable({
@@ -65,7 +62,7 @@ export function FlashSaleTable({
       locale={{ emptyText: 'Không có chiến dịch phù hợp bộ lọc.' }}
       pagination={{
         current: page,
-        pageSize: FLASH_SALE_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
         showSizeChanger: false,
         showTotal: (value) => `${value} chiến dịch`,

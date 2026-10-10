@@ -1,9 +1,11 @@
 import type { StatusPresentation } from '@/foundation/management';
 import { toOptions } from '@/shared/utils/options';
-import type { KnowledgeAudience, KnowledgeSourceType, KnowledgeStatus } from '@/generated/api/assistant/assistant.schemas';
+import {
+  KnowledgeAudience,
+  type KnowledgeSourceType,
+  type KnowledgeStatus,
+} from '@/generated/api/assistant/assistant.schemas';
 import type { ContentPostType } from '@/generated/api/content/content.schemas';
-
-export const KNOWLEDGE_PAGE_SIZE = 20;
 
 /** PERMISSION: một mã cho cả màn và mọi thao tác; API vẫn chặn lại mọi lệnh. */
 export const KNOWLEDGE_PERMISSION = {
@@ -45,12 +47,19 @@ export const knowledgeAudiencePresentation: Record<KnowledgeAudience, StatusPres
 };
 
 export const knowledgeStatusPresentation: Record<KnowledgeStatus, StatusPresentation> = {
-  DRAFT: { label: 'Nháp', color: 'gold' },
-  PUBLISHED: { label: 'Đang dùng', color: 'green' },
-  ARCHIVED: { label: 'Đã lưu trữ', color: 'default' },
+  DRAFT: { label: 'Nháp', color: 'neutral' },
+  PUBLISHED: { label: 'Đang dùng', color: 'success' },
+  ARCHIVED: { label: 'Đã lưu trữ', color: 'neutral' },
 };
 
 export const knowledgeAudienceOptions = toOptions(knowledgeAudiencePresentation);
+
+/** Lựa chọn đối tượng kèm gợi ý cho Radio của modal gắn bài (hằng số module, RULE-DT-05). */
+export const knowledgeAudienceChoices = Object.values(KnowledgeAudience).map((value) => ({
+  value,
+  label: knowledgeAudiencePresentation[value].label,
+  hint: knowledgeAudiencePresentation[value].hint,
+}));
 
 export const knowledgeStatusOptions = toOptions(knowledgeStatusPresentation);
 

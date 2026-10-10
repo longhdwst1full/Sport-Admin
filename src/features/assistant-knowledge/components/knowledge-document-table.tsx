@@ -1,10 +1,9 @@
 import { CloudUploadOutlined, InboxOutlined } from '@ant-design/icons';
 import { useMemo, type ReactNode } from 'react';
 import { Typography, type TableColumnType } from 'antd';
-import { AdminTable, col, TableActionButton } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, col, TableActionButton } from '@/foundation/table';
 import {
   ALL_BRANCHES_LABEL,
-  KNOWLEDGE_PAGE_SIZE,
   knowledgeAudiencePresentation,
   knowledgeSourceTypeLabels,
   knowledgeStatusPresentation,
@@ -98,7 +97,7 @@ export function KnowledgeDocumentTable({
       locale={{ emptyText }}
       pagination={{
         current: page,
-        pageSize: KNOWLEDGE_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
         showSizeChanger: false,
         showTotal: (value) => `${value} tài liệu`,

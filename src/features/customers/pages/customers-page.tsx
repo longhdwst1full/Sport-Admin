@@ -1,25 +1,28 @@
-import { useState } from 'react';
-import { useDebouncedCallback } from 'use-debounce';
+import { useMemo, useState } from 'react';
 import { MailOutlined, PhoneOutlined, PlusOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
-import { Alert, Button, Select } from 'antd';
+import { Button, Select } from 'antd';
 import { useListAdminCustomers } from '@/generated/api/customers/customers';
 import { CustomerKind, CustomerStatus } from '@/generated/api/customers/customers.schemas';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useAuth } from '@/core/auth/auth-context';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
 import { SearchInput } from '@/foundation/inputs/search-input';
-import { ColumnSettingsModal, FilterBar, RefreshButton, useColumnVisibility } from '@/foundation/table';
-import { SEARCH_DEBOUNCE_MS, useSearchState } from '@/shared/hooks/use-search-state';
-import { useUrlFilters } from '@/shared/hooks/use-url-filters';
+import {
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+  ColumnSettingsModal,
+  FilterBar,
+  RefreshButton,
+  useColumnVisibility,
+} from '@/foundation/table';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { PageTransition } from '@/foundation/layout/page-transition';
-import { getApiErrorMessage } from '@/lib/api/error';
 import { CustomerDetailDrawer } from '../components/customer-detail-drawer';
 import { CustomerFormDrawer } from '../components/customer-form-drawer';
 import { CustomerTable } from '../components/customer-table';
 import { useCustomerLifecycle } from '../hooks/use-customer-lifecycle';
 import {
   CUSTOMER_COLUMN_ITEMS,
-  CUSTOMER_PAGE_SIZE,
   customerKindOptions,
   customerStatusOptions,
   moneyFormatter,
@@ -37,7 +40,9 @@ export function CustomersPage() {
   const canCreateStandaloneCustomer = auth.currentUser?.scopes.some(
     ({ type }) => type === 'GLOBAL',
   );
-  const url = useUrlFilters();
+  // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend — giống màn đơn hàng.
+  const search = useUrlSearch(['name', 'phone', 'email']);
+  const { url } = search;
   const kind = url.getEnum('kind', CustomerKind);
   const status = url.getEnum('status', CustomerStatus);
   const page = url.getNumber('page', 1);
@@ -46,36 +51,17 @@ export function CustomersPage() {
   const [editing, setEditing] = useState<CustomerRowView>();
   const columnsState = useColumnVisibility(CUSTOMER_COLUMN_ITEMS);
 
-  // Mỗi ô là một điều kiện riêng, cộng dồn bằng AND ở backend — giống màn đơn hàng.
-  const name = useSearchState(url.get('name') ?? '');
-  const phone = useSearchState(url.get('phone') ?? '');
-  const email = useSearchState(url.get('email') ?? '');
-  // Gọi lúc hết debounce với closure mới nhất nên đọc đúng giá trị cả ba ô.
-  const commitSearch = useDebouncedCallback(
-    () =>
-      url.patch({
-        name: name.value.trim(),
-        phone: phone.value.trim(),
-        email: email.value.trim(),
-        page: undefined,
-      }),
-    SEARCH_DEBOUNCE_MS,
-  );
-  const typed = (setValue: (value: string) => void) => (value: string) => {
-    setValue(value);
-    commitSearch();
-  };
 
   const customers = useListAdminCustomers({
     page,
-    limit: CUSTOMER_PAGE_SIZE,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
     name: url.get('name'),
     phone: url.get('phone'),
     email: url.get('email'),
     kind,
     status,
   });
-  const rows = (customers.data?.items ?? []).map(toCustomerRowView);
+  const rows = useMemo(() => (customers.data?.items ?? []).map(toCustomerRowView), [customers.data]);
 
   const lifecycle = useCustomerLifecycle();
   const pageSpend = (customers.data?.items ?? []).reduce(
@@ -122,31 +108,45 @@ export function CustomersPage() {
                   onClick={columnsState.open}
                   className="text-slate-600"
                 >
-                  Tùy chỉnh cột
+                  Tuỳ chỉnh cột
                 </Button>
+                {canCreateStandaloneCustomer && (
+                  <PermissionGate permission="customer.manage">
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setEditing(undefined);
+                        setFormOpen(true);
+                      }}
+                    >
+                      Thêm khách hàng
+                    </Button>
+                  </PermissionGate>
+                )}
               </>
             }
           >
             <SearchInput
               icon={<UserOutlined className="text-slate-400" />}
               className="!w-56"
-              value={name.value}
+              value={search.values.name}
               placeholder="Nhập tên khách hàng..."
-              onChange={typed(name.setValue)}
+              onChange={search.setter('name')}
             />
             <SearchInput
               icon={<PhoneOutlined className="text-slate-400" />}
               className="!w-48"
-              value={phone.value}
+              value={search.values.phone}
               placeholder="Nhập số điện thoại..."
-              onChange={typed(phone.setValue)}
+              onChange={search.setter('phone')}
             />
             <SearchInput
               icon={<MailOutlined className="text-slate-400" />}
               className="!w-56"
-              value={email.value}
+              value={search.values.email}
               placeholder="Nhập địa chỉ email..."
-              onChange={typed(email.setValue)}
+              onChange={search.setter('email')}
             />
             <Select
               allowClear
@@ -164,34 +164,14 @@ export function CustomersPage() {
               onChange={(value?: string) => url.patch({ status: value, page: undefined })}
               options={customerStatusOptions}
             />
-            {canCreateStandaloneCustomer && (
-              <PermissionGate permission="customer.manage">
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setEditing(undefined);
-                    setFormOpen(true);
-                  }}
-                >
-                  Thêm khách hàng
-                </Button>
-              </PermissionGate>
-            )}
           </FilterBar>
         }
       >
         {customers.isError && (
-          <Alert
-            className="mb-5"
-            type="error"
-            showIcon
+          <QueryErrorAlert
             message="Không tải được danh sách khách hàng"
-            description={getApiErrorMessage(
-              customers.error,
-              'Vui lòng kiểm tra phiên đăng nhập và quyền xem khách hàng.',
-            )}
-            action={<Button onClick={() => void customers.refetch()}>Thử lại</Button>}
+            error={customers.error}
+            retry={() => void customers.refetch()}
           />
         )}
 

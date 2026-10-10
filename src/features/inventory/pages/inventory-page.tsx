@@ -15,6 +15,7 @@ import {
   getListStockTransfersQueryKey,
 } from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { InventoryBalancePanel } from '../components/inventory-balance-panel';
 import { InventoryMovementPanel } from '../components/inventory-movement-panel';
 import { OpeningStockImportDrawer } from '../components/opening-stock-import-drawer';
@@ -25,8 +26,17 @@ import { StockTransferPanel } from '../components/stock-transfer-panel';
 import { StocktakeCreateDrawer } from '../components/stocktake-create-drawer';
 import { StocktakePanel } from '../components/stocktake-panel';
 
+const INVENTORY_TABS = ['balances', 'movements', 'adjustments', 'transfers', 'stocktakes'] as const;
+type InventoryTab = (typeof INVENTORY_TABS)[number];
+const DEFAULT_TAB: InventoryTab = 'balances';
+
+/**
+ * Tab đang mở nằm trên URL (`tab`); bộ lọc/trang của từng tab cũng trên URL với tiền tố riêng
+ * (`balance.*`, `movement.*`, `transfer.*`, `stocktake.*`) vì mọi tab cùng mount.
+ */
 export function InventoryPage() {
   const queryClient = useQueryClient();
+  const url = useUrlFilters();
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
   const [openingImportOpen, setOpeningImportOpen] = useState(false);
   const [selectedBalance, setSelectedBalance] = useState<InventoryBalanceDto>();
@@ -45,6 +55,12 @@ export function InventoryPage() {
   // để panel gọi API rồi hiển thị lỗi 403.
   const canViewTransfers = useCan('inventory.transfer.view');
   const canManageStocktakes = useCan('inventory.stocktake.manage');
+  const requestedTab = url.getEnum('tab', INVENTORY_TABS) ?? DEFAULT_TAB;
+  // PERMISSION: tab không còn quyền (link cũ) rơi về tab tồn thay vì hiện khung trống.
+  const activeTab =
+    (requestedTab === 'transfers' && !canViewTransfers) || (requestedTab === 'stocktakes' && !canManageStocktakes)
+      ? DEFAULT_TAB
+      : requestedTab;
 
   const openAdjustment = (balance?: InventoryBalanceDto) => {
     setSelectedBalance(balance);
@@ -136,6 +152,8 @@ export function InventoryPage() {
       >
         <Tabs
           destroyInactiveTabPane={false}
+          activeKey={activeTab}
+          onChange={(key) => url.set('tab', key === DEFAULT_TAB ? undefined : key)}
           items={[
             {
               key: 'balances',

@@ -1,18 +1,22 @@
-import { Alert, Descriptions, Drawer, Empty, Skeleton, Tag } from 'antd';
+import { Descriptions, Empty, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable } from '@/foundation/table';
+import { orderStatusPresentation } from '@/features/order-status';
+import { paymentStatusPresentation } from '@/features/payments';
+import { StatusTag } from '@/foundation/management/status-tag';
+import { DetailDrawer } from '@/foundation/overlay';
+import { AdminTable, col } from '@/foundation/table';
 import { useGetAdminCustomer } from '@/generated/api/customers/customers';
-import { getApiErrorMessage } from '@/lib/api/error';
+import type { OrderStatus } from '@/generated/api/orders/orders.schemas';
+import type { PaymentStatus } from '@/generated/api/payments/payments.schemas';
 import { customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
 import { toCustomerDetailView, type CustomerOrderView } from '../model/customer.mapper';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 const RECENT_ORDER_COLUMNS: ColumnsType<CustomerOrderView> = [
-  { title: 'Mã đơn', dataIndex: 'orderNo' },
-  { title: 'Trạng thái', dataIndex: 'status', width: 150 },
-  { title: 'Thanh toán', dataIndex: 'paymentStatus', width: 130 },
-  { title: 'Tổng tiền', dataIndex: 'grandTotalLabel', width: 140, align: 'right' },
-  { title: 'Ngày đặt', dataIndex: 'placedLabel', width: 120 },
+  col.text<CustomerOrderView>('orderNo', 'Mã đơn'),
+  col.status<CustomerOrderView, OrderStatus>('status', 'Trạng thái', orderStatusPresentation),
+  col.status<CustomerOrderView, PaymentStatus>('paymentStatus', 'Thanh toán', paymentStatusPresentation),
+  col.text<CustomerOrderView>('grandTotalLabel', 'Tổng tiền', { width: 140, align: 'right' }),
+  col.text<CustomerOrderView>('placedLabel', 'Ngày đặt', { width: 120 }),
 ];
 
 export function CustomerDetailDrawer({
@@ -28,41 +32,27 @@ export function CustomerDetailDrawer({
   const customer = query.data ? toCustomerDetailView(query.data) : undefined;
 
   return (
-    <Drawer
+    <DetailDrawer
       open={Boolean(customerId)}
-      width={DRAWER_WIDTH.md}
+      size="md"
       onClose={onClose}
       title={customer ? customer.name : 'Chi tiết khách hàng'}
+      status={customer && <StatusTag status={customer.status} presentations={customerStatusPresentation} />}
+      loading={query.isLoading}
+      error={query.isError ? query.error : undefined}
+      onRetry={() => void query.refetch()}
     >
-      {query.isError && (
-        <Alert
-          type="error"
-          showIcon
-          message="Không tải được chi tiết khách hàng"
-          description={getApiErrorMessage(query.error, 'Vui lòng thử lại.')}
-        />
-      )}
-
-      {query.isLoading && <Skeleton active paragraph={{ rows: 8 }} />}
-
       {customer && (
         <>
-          <Descriptions column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 2 }} size="small" bordered>
+          <Descriptions column={{ xs: 1, md: 2 }} size="small" bordered>
             <Descriptions.Item label="Mã khách">
               <span className="font-mono">{customer.customerNo}</span>
             </Descriptions.Item>
             <Descriptions.Item label="Loại">
-              <Tag color={customerKindPresentation[customer.kind]?.color}>
-                {customerKindPresentation[customer.kind]?.label ?? customer.kind}
-              </Tag>
+              <StatusTag status={customer.kind} presentations={customerKindPresentation} />
             </Descriptions.Item>
             <Descriptions.Item label="Điện thoại">{customer.phone}</Descriptions.Item>
             <Descriptions.Item label="Email">{customer.email}</Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag color={customerStatusPresentation[customer.status]?.color}>
-                {customerStatusPresentation[customer.status]?.label ?? customer.status}
-              </Tag>
-            </Descriptions.Item>
             <Descriptions.Item label="Nhận tin khuyến mãi">
               {customer.marketingConsent ? 'Có' : 'Không'}
             </Descriptions.Item>
@@ -83,7 +73,7 @@ export function CustomerDetailDrawer({
                 <li key={address.id} className="rounded-lg border border-slate-200 px-3 py-2">
                   <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                     {address.recipient}
-                    {address.isDefault && <Tag color="blue">Mặc định</Tag>}
+                    {address.isDefault && <Tag>Mặc định</Tag>}
                   </div>
                   <div className="text-xs text-slate-500">{address.phone}</div>
                   <div className="text-xs text-slate-600">{address.fullAddress}</div>
@@ -106,6 +96,6 @@ export function CustomerDetailDrawer({
           )}
         </>
       )}
-    </Drawer>
+    </DetailDrawer>
   );
 }

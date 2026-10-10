@@ -1,18 +1,18 @@
-import { WarningOutlined } from '@ant-design/icons';
-import { Alert, Card, Skeleton, Tag, Tooltip, Typography } from 'antd';
+import { Alert, Card, Skeleton, Tooltip, Typography } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable } from '@/foundation/table';
+import { StatusTag, type StatusPresentation } from '@/foundation/management';
+import { AdminTable, col } from '@/foundation/table';
 import { useListJobHealth } from '@/generated/api/system/system';
 import { formatDateTime } from '@/lib/format/datetime';
 import type { JobHealthDto } from '@/generated/api/system/system.schemas';
 
-const healthMeta = {
-  HEALTHY: { label: 'Bình thường', color: 'green' },
-  DOWN: { label: 'Đang chết', color: 'red' },
-  DISABLED: { label: 'Đã tắt', color: 'default' },
-  UNKNOWN: { label: 'Chưa rõ', color: 'orange' },
-} as const;
+const healthPresentation: Record<JobHealthDto['health'], StatusPresentation> = {
+  HEALTHY: { label: 'Bình thường', color: 'success' },
+  DOWN: { label: 'Đang chết', color: 'danger' },
+  DISABLED: { label: 'Đã tắt', color: 'neutral' },
+  UNKNOWN: { label: 'Chưa rõ', color: 'warning' },
+};
 
 const jobLabel: Record<string, string> = {
   'reservation-expiry': 'Nhả giữ chỗ hết hạn',
@@ -32,14 +32,7 @@ const JOB_HEALTH_COLUMNS: ColumnsType<JobHealthDto> = [
       </Tooltip>
     ),
   },
-  {
-    title: 'Trạng thái',
-    dataIndex: 'health',
-    width: 130,
-    render: (value: JobHealthDto['health']) => (
-      <Tag color={healthMeta[value].color}>{healthMeta[value].label}</Tag>
-    ),
-  },
+  col.status<JobHealthDto, JobHealthDto['health']>('health', 'Trạng thái', healthPresentation, { width: 130 }),
   {
     title: 'Thành công gần nhất',
     width: 160,
@@ -81,9 +74,16 @@ export function JobHealthCard() {
     <Card
       variant="borderless"
       title="Tác vụ nền"
-      extra={down.length > 0
-        ? <Tag color="red" icon={<WarningOutlined />}>{down.length} đang chết</Tag>
-        : <Tag color="green">Tất cả bình thường</Tag>}
+      extra={
+        <StatusTag
+          status={down.length > 0 ? 'DOWN' : 'HEALTHY'}
+          presentations={{
+            ...healthPresentation,
+            DOWN: { label: `${down.length} đang chết`, color: 'danger' },
+            HEALTHY: { label: 'Tất cả bình thường', color: 'success' },
+          }}
+        />
+      }
     >
       {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
       {query.isPending && <Skeleton active paragraph={{ rows: 4 }} />}

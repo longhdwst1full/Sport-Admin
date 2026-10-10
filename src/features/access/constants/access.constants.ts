@@ -1,5 +1,9 @@
 import type { StatusPresentation } from '@/foundation/management';
-import { AssignableStaffRoleCode, type UserDtoStatus } from '@/generated/api/iam/iam.schemas';
+import {
+  AssignableStaffRoleCode,
+  ScopeType,
+  type UserDtoStatus,
+} from '@/generated/api/iam/iam.schemas';
 
 /**
  * Nhãn hiển thị cho vai trò cấp dưới gán được (BRANCH_MANAGER/STAFF).
@@ -13,7 +17,7 @@ export const ASSIGNABLE_ROLE_PRESENTATION: Record<
 > = {
   [AssignableStaffRoleCode.BRANCH_MANAGER]: {
     tag: 'Quản lý',
-    color: 'emerald',
+    color: 'green',
     accentClass: 'text-emerald-800',
     fallbackDescription:
       'Toàn quyền điều hành hàng hóa, kiểm kê tồn kho, duyệt chuyển kho và đơn hàng tại chi nhánh.',
@@ -39,7 +43,49 @@ export const STAFF_CREATION_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export const USER_STATUS_PRESENTATION: Record<UserDtoStatus, StatusPresentation> = {
-  ACTIVE: { color: 'green', label: 'Hoạt động' },
-  LOCKED: { color: 'red', label: 'Đã khóa' },
-  INACTIVE: { color: 'default', label: 'Ngừng hoạt động' },
+  ACTIVE: { color: 'success', label: 'Hoạt động' },
+  LOCKED: { color: 'danger', label: 'Đã khóa' },
+  INACTIVE: { color: 'neutral', label: 'Ngừng hoạt động' },
+};
+
+/** Nhãn mã vai trò khi chưa có tên vai trò từ `listAdminRoles`; mã lạ thì hiện nguyên mã. */
+const ROLE_CODE_LABELS: Record<string, string> = {
+  OWNER: 'Quản trị gốc',
+  [AssignableStaffRoleCode.BRANCH_MANAGER]: 'Quản lý chi nhánh',
+  [AssignableStaffRoleCode.STAFF]: 'Nhân viên',
+};
+
+export function roleCodeLabel(code: string): string {
+  return Object.hasOwn(ROLE_CODE_LABELS, code) ? ROLE_CODE_LABELS[code] : code;
+}
+
+export const SCOPE_TYPE_LABELS: Record<ScopeType, string> = {
+  [ScopeType.GLOBAL]: 'Toàn hệ thống',
+  [ScopeType.BRANCH]: 'Chi nhánh',
+};
+
+/** Trạng thái đổi mật khẩu lần đầu của tài khoản (cờ `mustChangePassword`). */
+export type PasswordState = 'MUST_CHANGE' | 'CHANGED';
+
+export const PASSWORD_STATE_PRESENTATION: Record<PasswordState, StatusPresentation> = {
+  MUST_CHANGE: { color: 'warning', label: 'Phải đổi mật khẩu' },
+  CHANGED: { color: 'success', label: 'Mật khẩu đã đổi' },
+};
+
+/** Nhãn + biểu tượng nhóm quyền theo `PermissionDto.module`; module lạ hiện nguyên tên. */
+export const PERMISSION_MODULE_PRESENTATION: Record<string, { label: string; icon: string }> = {
+  Catalog: { label: 'Sản phẩm & Danh mục (Catalog)', icon: '📦' },
+  Pricing: { label: 'Bảng giá & Khuyến mãi (Pricing)', icon: '🏷️' },
+  Order: { label: 'Bán hàng & Đơn hàng (Order)', icon: '🛒' },
+  Payment: { label: 'Thanh toán & Đối soát (Payment)', icon: '💳' },
+  Fulfillment: { label: 'Xử lý đóng gói & Giao nhận (Fulfillment)', icon: '🚚' },
+  Inventory: { label: 'Kho vận & Tồn kho (Inventory)', icon: '🏭' },
+  Customer: { label: 'Khách hàng (Customer)', icon: '👥' },
+  Review: { label: 'Đánh giá & Bình luận (Review)', icon: '⭐' },
+  Organization: { label: 'Chi nhánh & Kho trực thuộc (Organization)', icon: '🏢' },
+  IAM: { label: 'Phân quyền & Tài khoản (IAM)', icon: '🛡️' },
+  CMS: { label: 'Nội dung & Bài viết (CMS)', icon: '📰' },
+  Media: { label: 'Quản lý File & Ảnh (Media)', icon: '🖼️' },
+  Reporting: { label: 'Báo cáo & Thống kê (Reporting)', icon: '📊' },
+  System: { label: 'Hệ thống (System)', icon: '⚙️' },
 };

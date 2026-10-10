@@ -1,7 +1,5 @@
 import { PosPaymentMethod } from '@/generated/api/orders/orders.schemas';
 
-export const POS_PERMISSION = 'order.manage';
-
 /** Số kết quả mỗi lần tìm sản phẩm; nhân viên quầy gõ SKU nên không cần danh sách dài. */
 export const POS_SEARCH_LIMIT = 20;
 

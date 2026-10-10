@@ -1,15 +1,15 @@
+import type { StatusPresentation } from '@/foundation/management';
+import type { FlashSaleCampaignStatus } from '@/generated/api/promotions/promotions.schemas';
 import { moneyFormatter } from '@/lib/format/money';
 import { toOptions } from '@/shared/utils/options';
 
-export const FLASH_SALE_PAGE_SIZE = 20;
-
 /** Nhãn tách khỏi mã trạng thái (`08-enums-constants.md`). */
-export const flashSaleStatusPresentation: Record<string, { label: string; color: string }> = {
-  DRAFT: { label: 'Nháp', color: 'default' },
-  SCHEDULED: { label: 'Đã lên lịch', color: 'processing' },
+export const flashSaleStatusPresentation: Record<FlashSaleCampaignStatus, StatusPresentation> = {
+  DRAFT: { label: 'Nháp', color: 'neutral' },
+  SCHEDULED: { label: 'Đã lên lịch', color: 'info' },
   ACTIVE: { label: 'Đang chạy', color: 'success' },
-  ENDED: { label: 'Đã kết thúc', color: 'default' },
-  CANCELLED: { label: 'Đã hủy', color: 'error' },
+  ENDED: { label: 'Đã kết thúc', color: 'neutral' },
+  CANCELLED: { label: 'Đã huỷ', color: 'neutral' },
 };
 
 export const flashSaleStatusOptions = toOptions(flashSaleStatusPresentation);
@@ -18,7 +18,7 @@ export const flashSaleStatusOptions = toOptions(flashSaleStatusPresentation);
  * State machine bản sao phía FE để chỉ hiện đúng nút hợp lệ.
  * Backend vẫn là nơi quyết định cuối cùng — đây chỉ là UX.
  */
-export const FLASH_SALE_TRANSITIONS: Record<string, readonly string[]> = {
+export const FLASH_SALE_TRANSITIONS: Record<FlashSaleCampaignStatus, readonly FlashSaleCampaignStatus[]> = {
   DRAFT: ['SCHEDULED', 'CANCELLED'],
   SCHEDULED: ['ACTIVE', 'DRAFT', 'CANCELLED'],
   ACTIVE: ['ENDED', 'CANCELLED'],

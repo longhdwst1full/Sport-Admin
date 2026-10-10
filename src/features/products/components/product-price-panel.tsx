@@ -1,8 +1,8 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Form, Input, Select, Space, Spin, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Form, Input, Select, Space, Spin, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
 import { MoneyInput } from '@/foundation/inputs/money-input';
@@ -20,6 +20,8 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { useCan } from '@/core/auth/permissions';
 import { formatDateTime } from '@/lib/format/datetime';
 import { formatMoney } from '@/lib/format/money';
+import { PRODUCT_PRICE_STATUS_PRESENTATION } from '../constants/product-status.constants';
+import { toVariantOptions } from '../model/product-lookup-options';
 
 interface PriceFormValues {
   variantId: string;
@@ -44,7 +46,7 @@ const PRICE_COLUMNS: ColumnsType<ProductPriceWindowDto> = [
   { title: 'Giá đã VAT', dataIndex: 'amount', render: (value: string) => <strong>{formatMoney(value)}</strong> },
   col.dateTime<ProductPriceWindowDto>('startsAt', 'Bắt đầu', { width: undefined }),
   { title: 'Kết thúc', dataIndex: 'endsAt', render: (value?: string | null) => value ? formatDateTime(value) : 'Không giới hạn' },
-  { title: 'Trạng thái', dataIndex: 'status', render: (value: string) => <Tag>{value}</Tag> },
+  col.status<ProductPriceWindowDto, string>('status', 'Trạng thái', PRODUCT_PRICE_STATUS_PRESENTATION, { width: undefined }),
 ];
 
 export function ProductPricePanel({
@@ -57,6 +59,7 @@ export function ProductPricePanel({
   const { message, modal } = App.useApp();
   const canManage = useCan('catalog.price.manage');
   const queryClient = useQueryClient();
+  const variantOptions = useMemo(() => toVariantOptions(product.variants), [product.variants]);
   const form = useForm<PriceFormValues>({
     resolver: yupResolver(schema),
     defaultValues: { variantId: product.variants[0]?.id ?? '', amount: '', startsAt: inputNow(), reason: '' },
@@ -140,7 +143,7 @@ export function ProductPricePanel({
               <Select
                 {...field}
                 placeholder="Chọn SKU cần đặt giá"
-                options={product.variants.map((variant) => ({ value: variant.id, label: `${variant.sku} — ${variant.name}` }))}
+                options={variantOptions}
               />
             )} />
           </Form.Item>

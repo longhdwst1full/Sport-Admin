@@ -1,7 +1,7 @@
 import { Card } from 'antd';
 import { AdminTable } from '@/foundation/table';
 import type { BranchRevenueDto } from '@/generated/api/reporting/reporting.schemas';
-import { DASHBOARD_CARD_CLASS, type Granularity } from '../constants/dashboard.constants';
+import { DASHBOARD_CARD_CLASS, REPORT_EXPORT_PATH, type Granularity } from '../constants/dashboard.constants';
 import type { ReportRange } from '../model/dashboard.mapper';
 import { ReportExportButton } from './report-export-button';
 import { BRANCH_REVENUE_COLUMNS } from './report-table-columns';
@@ -23,7 +23,7 @@ export function BranchRevenueCard({ canSeeRevenue, canSeeInventory, granularity,
       extra={
         <div className="flex items-center gap-2">
           <ReportExportButton
-            path="/api/v1/admin/reports/revenue/by-branch/export"
+            path={REPORT_EXPORT_PATH.revenueByBranch}
             params={{ ...range, granularity }}
             fallbackFilename="bao-cao-doanh-thu-chi-nhanh"
             disabled={!canSeeRevenue}
@@ -32,7 +32,7 @@ export function BranchRevenueCard({ canSeeRevenue, canSeeInventory, granularity,
           {/* Báo cáo tồn kho là danh sách CẦN NHẬP (chạm ngưỡng đặt lại), không phải toàn bộ
               tồn — nhãn phải nói đúng thứ sẽ tải về. */}
           <ReportExportButton
-            path="/api/v1/admin/reports/inventory/export"
+            path={REPORT_EXPORT_PATH.inventory}
             params={{}}
             fallbackFilename="bao-cao-ton-kho"
             disabled={!canSeeInventory}

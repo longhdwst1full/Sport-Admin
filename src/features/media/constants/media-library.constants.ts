@@ -2,8 +2,6 @@ import type { StatusPresentation } from '@/foundation/management';
 import { toOptions } from '@/shared/utils/options';
 import type { MediaAssetStatus, MediaUsageType } from '@/generated/api/media/media.schemas';
 
-export const MEDIA_LIBRARY_PAGE_SIZE = 30;
-
 /** PERMISSION: khớp `x-required-permissions` của listAdminMediaAssets / deleteAdminMediaAsset. */
 export const MEDIA_PERMISSION = {
   VIEW: 'media.asset.view',
@@ -19,9 +17,9 @@ export const MEDIA_ERROR_CODE = {
 } as const;
 
 export const mediaStatusPresentation: Record<MediaAssetStatus, StatusPresentation> = {
-  ACTIVE: { label: 'Đang lưu', color: 'green' },
-  DELETE_PENDING: { label: 'Đang xoá', color: 'gold' },
-  INACTIVE: { label: 'Đã xoá khỏi Cloudinary', color: 'default' },
+  ACTIVE: { label: 'Đang lưu', color: 'success' },
+  DELETE_PENDING: { label: 'Đang xoá', color: 'progress' },
+  INACTIVE: { label: 'Đã xoá khỏi Cloudinary', color: 'neutral' },
 };
 
 export const mediaStatusOptions = toOptions(mediaStatusPresentation);

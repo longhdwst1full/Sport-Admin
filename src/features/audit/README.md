@@ -1,10 +1,10 @@
 # Audit — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Tạo note.
+> **Change summary:** Bộ lọc nằm trên URL; phân trang con trỏ dùng `CursorPagination`; drawer dùng `DetailDrawer`; nhãn loại dữ liệu tiếng Việt.
 
 ## Phạm vi
 
@@ -28,4 +28,5 @@ Audit log là **append-only**: không sửa, không xoá, không có API cho vi�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.1.0 | 2026-10-10 | Bộ lọc nằm trên URL; phân trang con trỏ dùng `CursorPagination`; drawer dùng `DetailDrawer`; nhãn loại dữ liệu tiếng Việt. |
 | 1.0.0 | 2026-09-13 | Tạo note. |

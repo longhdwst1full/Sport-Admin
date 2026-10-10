@@ -1,6 +1,6 @@
 # Notifications Admin
 
-Version: 1.0.0 — 2026-09-28
+Version: 1.1.0 — 2026-10-10
 
 ## Phạm vi
 
@@ -11,7 +11,7 @@ Version: 1.0.0 — 2026-09-28
 ## Boundary và state owner
 
 - Backend sở hữu retry, backoff, dead-letter, masking và audit.
-- React Query sở hữu server state; bộ lọc, trang và kích thước trang là local UI state.
+- React Query sở hữu server state; ô tìm (`q`), trạng thái và trang nằm trên URL; kích thước trang là local UI state.
 - Contract chỉ được thay đổi từ NestJS OpenAPI rồi regenerate. Không sửa `src/generated/api`.
 - Cron secret và endpoint maintenance nội bộ không được đưa vào trình duyệt.
 

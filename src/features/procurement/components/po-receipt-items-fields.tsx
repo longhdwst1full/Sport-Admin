@@ -1,5 +1,6 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, InputNumber, Select } from 'antd';
+import { useMemo } from 'react';
 import type { PurchaseOrderDetailDto, PurchaseOrderItemDto } from '@/generated/api/procurement/procurement.schemas';
 
 function PoReceiptRow({
@@ -14,6 +15,15 @@ function PoReceiptRow({
   const form = Form.useFormInstance();
   const selectedId = Form.useWatch(['items', index, 'purchaseOrderItemId'], form) as string | undefined;
   const selected = items.find((item) => item.id === selectedId);
+  const options = useMemo(
+    () =>
+      items.map((item) => ({
+        value: item.id,
+        label: `${item.sku} · ${item.productName} / ${item.variantName} · còn ${item.remainingQty}/${item.orderedQty}`,
+        disabled: item.remainingQty <= 0 && item.id !== selectedId,
+      })),
+    [items, selectedId],
+  );
 
   return <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(300px,2fr)_150px_170px_40px]">
     <Form.Item name={[index, 'purchaseOrderItemId']} label="Dòng đơn mua hàng" rules={[{ required: true, message: 'Chọn dòng PO' }]} className="!mb-0">
@@ -21,11 +31,7 @@ function PoReceiptRow({
         showSearch
         optionFilterProp="label"
         placeholder="Chọn SKU từ đơn mua hàng"
-        options={items.map((item) => ({
-          value: item.id,
-          label: `${item.sku} · ${item.productName} / ${item.variantName} · còn ${item.remainingQty}/${item.orderedQty}`,
-          disabled: item.remainingQty <= 0 && item.id !== selectedId,
-        }))}
+        options={options}
         onChange={(id: string) => {
           const item = items.find((candidate) => candidate.id === id);
           if (!item) return;

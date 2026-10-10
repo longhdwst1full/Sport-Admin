@@ -1,10 +1,10 @@
 # Catalog masters — maintenance note
 
-> **Document version:** 2.1.0
+> **Document version:** 2.2.0
 >
-> **Last updated:** 2026-09-25
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Thêm màn Thuộc tính sản phẩm (`/attributes`) cho thông số kỹ thuật theo decision D61.
+> **Change summary:** Ô tìm và trang (lọc client-side) nằm trên URL qua `useMasterListUrl`; cột Brand/Category khai ở mức module; trạng thái dùng tone chuẩn.
 
 ## Phạm vi
 
@@ -73,6 +73,7 @@ Storefront cache ISR 5 phút, nên thay đổi không xuất hiện tức thì.
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.2.0 | 2026-10-10 | Ô tìm và trang (lọc client-side) nằm trên URL qua `useMasterListUrl`; cột Brand/Category khai ở mức module; trạng thái dùng tone chuẩn. |
 | 2.1.0 | 2026-09-25 | Thêm màn Thuộc tính sản phẩm (D61). |
 | 2.0.0 | 2026-09-21 | Tách hai màn Thương hiệu / Danh mục, thêm redirect đường dẫn cũ. |
 | 1.0.0 | 2026-09-13 | Tạo note; ghi rõ ảnh hưởng Category ra Storefront. |

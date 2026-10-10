@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.4.0
+> **Document version:** 1.5.0
 >
-> **Last updated:** 2026-09-19
+> **Last updated:** 2026-10-10
 >
-> **Change summary:** Chuẩn hóa responsive, phân trang server-side 20/50/100 dòng và chuyển làm mới xuống dưới bảng.
+> **Change summary:** Ô tìm ghi URL qua `useUrlSearch`, page size mặc định chung của `AdminTable`, trạng thái vận đơn inject từ `fulfillments`.
 
 ## Phạm vi
 
@@ -15,7 +15,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 - `pages/orders-page.tsx` sở hữu tab/search/page/pageSize và gọi `useListAdminOrders`.
 - `components/order-table.tsx` chỉ trình bày danh sách và phát action chọn order.
 - `components/order-detail-drawer.tsx` tự tải detail qua `useGetAdminOrder`; không dùng summary để đoán dữ liệu chi tiết.
-- `components/fulfillment-workflow-panel.tsx` tải Fulfillment theo Order và chỉ mở action hợp lệ với status/permission hiện tại.
+- Panel giao vận (`FulfillmentWorkflowPanel`) và nhãn trạng thái vận đơn (`FulfillmentStatusTag`) thuộc `fulfillments`; `OrderDetailDrawer` nhận qua prop `renderFulfillmentPanel` / `renderShipmentStatus` để không import ngược.
 - Mọi request dùng `src/generated/api/orders`; không hard-code URL và không sửa file generated.
 - Backend bắt buộc kiểm tra `order.view` và branch scope. Permission route phía FE chỉ cải thiện UX.
 - Tab `Vận chuyển` map server-side sang `PICKING|PACKED|SHIPPED`; `Đã giao` map sang `DELIVERED|COMPLETED`.
@@ -37,6 +37,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.5.0 | 2026-10-10 | `useUrlSearch`, page size 30 (`ADMIN_TABLE_DEFAULT_PAGE_SIZE`), `StatusTag`/tone, skeleton + `QueryErrorAlert`, `FormModal` cho xác nhận thao tác, nhãn người thao tác tiếng Việt. |
 | 1.4.0 | 2026-09-19 | Pagination mặc định 20, chọn 20/50/100; refresh chuyển xuống dưới bảng và metric responsive đều cột. | Admin list UI review |
 | 1.3.0 | 2026-09-13 | Thêm confirm Order và Fulfillment workflow/cache invalidation qua generated SDK. | DBAPI-20260913-FULFILLMENT-S43 |
 | 1.2.0 | 2026-09-12 | Đổi copy và rule UI sang manual complete không giới hạn ngày sau DELIVERED/SUCCESS. | API-20260912-ORDER-GUEST-HARDENING |

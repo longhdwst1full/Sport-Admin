@@ -1,6 +1,6 @@
 import { DeleteOutlined, DownOutlined, EditOutlined, StarOutlined, UpOutlined, UploadOutlined } from '@ant-design/icons';
-import { App, Button, Form, Image, Input, Modal, Select, Space, Tag, Upload } from 'antd';
-import { useEffect, useState, useRef } from 'react';
+import { App, Button, Form, Image, Input, Select, Space, Tag, Upload } from 'antd';
+import { useMemo, useRef, useState } from 'react';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
 import {
   useAttachAdminProductMedia,
@@ -11,9 +11,11 @@ import {
 import type { ProductDetailDto, ProductMediaDto } from '@/generated/api/catalog/catalog.schemas';
 import { useCan } from '@/core/auth/permissions';
 import type { ColumnsType } from 'antd/es/table';
+import { FormModal } from '@/foundation/overlay';
 import { AdminTable, col, TableActionButton } from '@/foundation/table';
 import { uploadImage } from '@/lib/media/upload-image';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { toVariantOptions } from '../model/product-lookup-options';
 import { reorderProductMedia } from '../model/product-media.policy';
 
 export function ProductMediaPanel({
@@ -29,8 +31,12 @@ export function ProductMediaPanel({
   const canUpload = useCan('media.asset.upload');
   const [editing, setEditing] = useState<ProductMediaDto>();
   const [altText, setAltText] = useState('');
-
-  useEffect(() => setAltText(editing?.altText ?? ''), [editing]);
+  const variantOptions = useMemo(() => toVariantOptions(product.variants), [product.variants]);
+  // Nạp mô tả hiện tại ngay lúc mở hộp sửa thay vì đồng bộ trong effect.
+  const startEditing = (media: ProductMediaDto) => {
+    setEditing(media);
+    setAltText(media.altText ?? '');
+  };
   const mutationError = (error: unknown, fallback: string) =>
     void message.error(getApiErrorMessage(error, fallback));
   const mutationSuccess = async (text: string) => {
@@ -85,11 +91,11 @@ export function ProductMediaPanel({
   });
   const remove = useDeleteAdminProductMedia({
     mutation: {
-      onSuccess: () => mutationSuccess('Đã xóa ảnh khỏi sản phẩm và Cloudinary.'),
+      onSuccess: () => mutationSuccess('Đã xoá ảnh khỏi sản phẩm và Cloudinary.'),
       onError: async (error) => {
         // CONCURRENCY: BE có thể đã chạy compensation và tăng Product version khi provider lỗi.
         await onChanged();
-        mutationError(error, 'Không thể xóa ảnh.');
+        mutationError(error, 'Không thể xoá ảnh.');
       },
     },
   });
@@ -109,8 +115,8 @@ export function ProductMediaPanel({
 
   // Cột phụ thuộc phiên bản sản phẩm và các mutation của khối này nên dựng lại mỗi render, không memo.
   const mediaColumns: ColumnsType<ProductMediaDto> = [
-    { title: 'Ảnh', width: 74, render: (_, row) => <Image width={52} height={52} className="object-cover" src={row.thumbnailUrl ?? row.secureUrl} /> },
-    col.text<ProductMediaDto>('altText', 'Alt text', { width: undefined }),
+    { title: 'Ảnh', width: 74, render: (_, row) => <Image width={52} height={52} loading="lazy" alt={row.altText ?? product.name} className="object-cover" src={row.thumbnailUrl ?? row.secureUrl} /> },
+    col.text<ProductMediaDto>('altText', 'Mô tả ảnh', { width: undefined }),
     {
       title: 'Phạm vi',
       dataIndex: 'variantId',
@@ -132,7 +138,7 @@ export function ProductMediaPanel({
     col.actions<ProductMediaDto>(
       (row) => (
         <>
-          <TableActionButton label="Sửa thông tin ảnh" icon={<EditOutlined />} disabled={pending} onClick={() => setEditing(row)} />
+          <TableActionButton label="Sửa thông tin ảnh" icon={<EditOutlined />} disabled={pending} onClick={() => startEditing(row)} />
           {!row.isPrimary && (
             <TableActionButton
               label="Đặt làm ảnh chính"
@@ -146,16 +152,16 @@ export function ProductMediaPanel({
             />
           )}
           <TableActionButton
-            label="Xóa ảnh"
+            label="Xoá ảnh"
             danger
             icon={<DeleteOutlined />}
             disabled={pending}
             onClick={() => modal.confirm({
-              title: 'Xóa vĩnh viễn ảnh?',
-              content: 'Ảnh sẽ bị xóa khỏi sản phẩm và Cloudinary. Hệ thống sẽ chặn nếu ảnh còn được nghiệp vụ khác sử dụng.',
-              okText: 'Xóa ảnh',
+              title: 'Xoá vĩnh viễn ảnh?',
+              content: 'Ảnh sẽ bị xoá khỏi sản phẩm và Cloudinary. Hệ thống sẽ chặn nếu ảnh còn được nghiệp vụ khác sử dụng.',
+              okText: 'Xoá ảnh',
               okButtonProps: { danger: true },
-              cancelText: 'Hủy',
+              cancelText: 'Huỷ',
               onOk: () => remove.mutateAsync({
                 id: product.id,
                 mediaId: row.id,
@@ -178,7 +184,7 @@ export function ProductMediaPanel({
             value={targetVariantId}
             onChange={setTargetVariantId}
             placeholder="Toàn sản phẩm"
-            options={product.variants.map((variant) => ({ value: variant.id, label: `${variant.sku} — ${variant.name}` }))}
+            options={variantOptions}
           />
         </Form.Item>
         <Upload
@@ -188,7 +194,7 @@ export function ProductMediaPanel({
           customRequest={customRequest}
         >
           <Button type="primary" icon={<UploadOutlined />} loading={uploading || attach.isPending}>
-            Upload và gắn ảnh
+            Tải lên và gắn ảnh
           </Button>
         </Upload>
       </div>
@@ -202,21 +208,22 @@ export function ProductMediaPanel({
         columns={mediaColumns}
       />
 
-      <Modal
+      <FormModal
         open={Boolean(editing)}
-        title="Sửa alt text ảnh"
+        size="sm"
+        title="Sửa mô tả ảnh"
         okText="Lưu"
-        cancelText="Hủy"
-        confirmLoading={update.isPending}
-        onCancel={() => setEditing(undefined)}
-        onOk={() => editing && update.mutate({
+        submitting={update.isPending}
+        isDirty={() => altText !== (editing?.altText ?? '')}
+        onClose={() => setEditing(undefined)}
+        onSubmit={() => editing && update.mutate({
           id: product.id,
           mediaId: editing.id,
           data: { altText: altText.trim() || null, expectedProductVersion: product.version },
         })}
       >
         <Input value={altText} maxLength={500} onChange={(event) => setAltText(event.target.value)} placeholder="Mô tả nội dung ảnh cho SEO và accessibility" />
-      </Modal>
+      </FormModal>
     </div>
   );
 }

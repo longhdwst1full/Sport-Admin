@@ -4,13 +4,13 @@ import { toOptions } from '@/shared/utils/options';
 
 /** Brand và Category dùng chung một họ trạng thái ACTIVE/INACTIVE ở backend. */
 export const MASTER_STATUSES: Record<'ACTIVE' | 'INACTIVE', StatusPresentation> = {
-  ACTIVE: { color: 'green', label: 'Hoạt động' },
-  INACTIVE: { color: 'default', label: 'Đã ngừng' },
+  ACTIVE: { color: 'success', label: 'Hoạt động' },
+  INACTIVE: { color: 'neutral', label: 'Đã ngừng' },
 };
 
 export const ATTRIBUTE_STATUSES: Record<AttributeStatus, StatusPresentation> = {
-  [AttributeStatus.ACTIVE]: { color: 'green', label: 'Đang dùng' },
-  [AttributeStatus.INACTIVE]: { color: 'default', label: 'Ngừng' },
+  [AttributeStatus.ACTIVE]: { color: 'success', label: 'Đang dùng' },
+  [AttributeStatus.INACTIVE]: { color: 'neutral', label: 'Ngừng dùng' },
 };
 
 export const ATTRIBUTE_TYPE_LABEL: Record<AttributeDataType, string> = {

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Alert, App, Checkbox, Form, Input, Radio, Skeleton, Tooltip, Typography } from 'antd';
+import { Alert, App, Checkbox, Form, Input, Radio, Tooltip, Typography } from 'antd';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
+import { htmlToPlainText } from '@/shared/utils';
 import { useGetAdminSocialPost, useGetAdminTikTokCreatorInfo } from '@/generated/api/content/content';
 import {
   AnyContentPostType,
@@ -24,6 +27,7 @@ import {
 import { useSaveSocialPost, type SocialSaveTarget } from '../hooks/use-social-commands';
 import { isFacebookNotConfigured, socialCommandErrorMessage } from '../model/social-command-error';
 import {
+  captionRules,
   EMPTY_SOCIAL_FORM,
   socialMediaRuleViolation,
   toSocialFormValues,
@@ -41,6 +45,7 @@ import {
   type TikTokPostSettingsForm,
 } from '../model/tiktok-post-settings';
 import { FacebookSettingsHint } from './facebook-settings-hint';
+import { SocialCaptionInput } from './social-caption-input';
 import { SocialMediaField } from './social-media-field';
 import { TikTokSettingsPanel } from './tiktok-settings-panel';
 import { FormDrawer } from '@/foundation/overlay';
@@ -147,15 +152,22 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
   const mediaPublishType = facebookSelected ? publishType : FacebookPublishType.VIDEO;
   const creator = useGetAdminTikTokCreatorInfo({ query: { enabled: tiktokSelected, retry: false, staleTime: 60_000 } });
 
-  // Đổ form theo id:version để không ghi đè dữ liệu đang gõ khi query refetch mà bài không đổi.
-  const editingKey = editing ? `${editing.id}:${editing.version}` : undefined;
+  // Đổ form khi bản chi tiết đổi (mở lần đầu, hoặc tải lại sau lỗi stale). TanStack Query giữ nguyên tham chiếu
+  // `editing` khi refetch trả dữ liệu không đổi (structural sharing), nên không ghi đè dữ liệu đang gõ.
   useEffect(() => {
     if (isUpdate && !editing) return;
     form.resetFields();
     form.setFieldsValue(editing ? toSocialFormValues(editing, targetChannel) : EMPTY_SOCIAL_FORM);
-    if (editing && targetChannel === SOCIAL_CHANNEL.TIKTOK) setTiktokSettings(toTikTokSettingsForm(editing.tiktok));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- editingKey đại diện cho editing
-  }, [isUpdate, editingKey, form]);
+  }, [isUpdate, editing, targetChannel, form]);
+
+  // Thiết lập TikTok là state cục bộ (không thuộc form): đổ lại trong lúc render khi bản chi tiết đổi version,
+  // theo mẫu "điều chỉnh state khi prop đổi" (RULE-HOOK-01) thay cho setState trong effect.
+  const editingKey = editing ? `${editing.id}:${editing.version}` : undefined;
+  const [seededKey, setSeededKey] = useState<string>();
+  if (editing && editingKey !== seededKey) {
+    setSeededKey(editingKey);
+    if (targetChannel === SOCIAL_CHANNEL.TIKTOK) setTiktokSettings(toTikTokSettingsForm(editing.tiktok));
+  }
 
   const changeChannels = (next: SocialChannel[]) => {
     const resolved = nextSelectedChannels(selectedChannels, next);
@@ -228,21 +240,26 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
       isDirty={() => form.isFieldsTouched()}
     >
       {isUpdate && detail.isError && (
-        <Alert className="mb-3" type="error" showIcon message="Không tải được bài viết" description={socialCommandErrorMessage(detail.error)} />
+        <QueryErrorAlert
+          error={detail.error}
+          message="Không tải được bài viết"
+          description={socialCommandErrorMessage(detail.error)}
+          retry={() => void detail.refetch()}
+        />
       )}
       {isUpdate && !editing ? (
-        <Skeleton active paragraph={{ rows: 8 }} />
+        detail.isError ? null : <DetailSkeleton />
       ) : (
         <>
           {isFacebookNotConfigured(save.error) && <FacebookSettingsHint />}
           {target.mode === 'createSocial' && (
             <fieldset className="mb-4">
               <legend className="mb-2 text-sm font-medium text-slate-800">Kênh đăng</legend>
-              <Checkbox.Group
+              <Checkbox.Group<SocialChannel>
                 value={selectedChannels}
                 disabled={save.isPending}
                 options={channelOptions(selectedChannels)}
-                onChange={(next) => changeChannels(next as SocialChannel[])}
+                onChange={changeChannels}
               />
             </fieldset>
           )}
@@ -301,17 +318,17 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
                     captionLocked
                       ? []
                       : [
-                          {
+                          ...captionRules({
                             max: captionMax,
-                            message: tiktokSelected
+                            maxMessage: tiktokSelected
                               ? `Caption TikTok tối đa ${captionMax.toLocaleString('vi-VN')} ký tự.`
                               : undefined,
-                          },
+                          }),
                           ({ getFieldValue }) => ({
                             validator: (_: unknown, value?: string) =>
                               facebookSelected &&
                               getFieldValue('publishType') === FacebookPublishType.FEED &&
-                              !value?.trim() &&
+                              !htmlToPlainText(value) &&
                               !String(getFieldValue('link') ?? '').trim()
                                 ? Promise.reject(new Error('Bài viết dạng chữ cần nội dung hoặc link.'))
                                 : Promise.resolve(),
@@ -319,7 +336,7 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
                         ]
                   }
                 >
-                  <Input.TextArea rows={6} maxLength={captionMax} showCount disabled={captionLocked} />
+                  <SocialCaptionInput max={captionMax} disabled={captionLocked || save.isPending} />
                 </Form.Item>
                 {!captionLocked && (
                   <Form.Item

@@ -1,36 +1,37 @@
 import { useState } from 'react';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
 import { BankOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import { Alert, Select } from 'antd';
+import { Select } from 'antd';
 import { useListAdminPayments } from '@/generated/api/payments/payments';
-import type { PaymentMethod, PaymentStatus } from '@/generated/api/payments/payments.schemas';
+import { PaymentMethod, PaymentStatus } from '@/generated/api/payments/payments.schemas';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
-import { FilterBar, RefreshButton } from '@/foundation/table';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, FilterBar, RefreshButton } from '@/foundation/table';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { PaymentDetailDrawer } from '../components/payment-detail-drawer';
 import { PaymentTable } from '../components/payment-table';
-import {
-  moneyFormatter,
-  PAYMENT_PAGE_SIZE,
-  paymentMethodOptions,
-  paymentStatusOptions,
-} from '../constants/payment.constants';
+import { moneyFormatter, paymentMethodOptions, paymentStatusOptions } from '../constants/payment.constants';
 
+/** Ô tìm, trạng thái, phương thức và trang nằm trên URL (`search`, `status`, `method`, `page`). */
 export function PaymentsPage() {
-  const search = useSearchState();
-  const debouncedSearch = search.debounced;
-  const [status, setStatus] = useState<PaymentStatus>();
-  const [method, setMethod] = useState<PaymentMethod>();
+  const search = useUrlSearch(['search']);
+  const { url } = search;
+  const status = url.getEnum('status', PaymentStatus);
+  const method = url.getEnum('method', PaymentMethod);
+  const page = url.getNumber('page', 1);
   const [selectedId, setSelectedId] = useState<string>();
-  const [page, setPage] = useListPageReset([debouncedSearch, status, method]);
-  const payments = useListAdminPayments({ page, limit: PAYMENT_PAGE_SIZE, search: debouncedSearch, status, method });
+  const payments = useListAdminPayments({
+    page,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+    search: url.get('search'),
+    status,
+    method,
+  });
   const rows = payments.data?.items ?? [];
 
   return (
     <>
-      <ManagementPage eyebrow="Finance operations" title="Thanh toán" description="Đối soát chuyển khoản và ghi nhận COD theo đúng phạm vi chi nhánh."
+      <ManagementPage eyebrow="Vận hành tài chính" title="Thanh toán" description="Đối soát chuyển khoản và ghi nhận COD theo đúng phạm vi chi nhánh."
         metrics={[
           { key: 'total', label: 'Thanh toán phù hợp', value: payments.data?.total ?? 0, icon: <BankOutlined />, tone: 'blue' },
           { key: 'awaiting', label: 'Chờ đối soát trên trang', value: rows.filter((item) => item.status === 'AWAITING_CONFIRMATION').length, icon: <SafetyCertificateOutlined />, tone: 'orange' },
@@ -38,13 +39,13 @@ export function PaymentsPage() {
         ]}
         filters={
           <FilterBar actions={<RefreshButton onRefresh={payments.refetch} loading={payments.isFetching} />}>
-            <SearchInput value={search.value} onChange={search.setValue} placeholder="Mã thanh toán, mã đơn, tên hoặc SĐT" />
-            <Select allowClear className="min-w-44" value={status} onChange={setStatus} placeholder="Trạng thái" options={paymentStatusOptions} />
-            <Select allowClear className="min-w-40" value={method} onChange={setMethod} placeholder="Phương thức" options={paymentMethodOptions} />
+            <SearchInput value={search.values.search} onChange={search.setter('search')} placeholder="Mã thanh toán, mã đơn, tên hoặc SĐT" />
+            <Select allowClear className="min-w-44" value={status} onChange={(value?: PaymentStatus) => url.patch({ status: value, page: undefined })} placeholder="Trạng thái" options={paymentStatusOptions} />
+            <Select allowClear className="min-w-40" value={method} onChange={(value?: PaymentMethod) => url.patch({ method: value, page: undefined })} placeholder="Phương thức" options={paymentMethodOptions} />
           </FilterBar>
         }>
-        {payments.isError && <Alert className="mb-5" type="error" showIcon message="Không tải được danh sách thanh toán" description={getApiErrorMessage(payments.error)} />}
-        <PaymentTable rows={rows} loading={payments.isLoading || payments.isFetching} page={page} total={payments.data?.total ?? 0} onPageChange={setPage} onOpen={setSelectedId} />
+        {payments.isError && <QueryErrorAlert message="Không tải được danh sách thanh toán" error={payments.error} retry={() => void payments.refetch()} />}
+        <PaymentTable rows={rows} loading={payments.isLoading || payments.isFetching} page={page} total={payments.data?.total ?? 0} onPageChange={(next) => url.set('page', next > 1 ? next : undefined)} onOpen={setSelectedId} />
       </ManagementPage>
       <PaymentDetailDrawer paymentId={selectedId} onClose={() => setSelectedId(undefined)} />
     </>

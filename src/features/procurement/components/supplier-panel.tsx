@@ -1,13 +1,10 @@
-import { EditOutlined, PlusOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Popconfirm, Select, Tag, Tooltip } from 'antd';
-import { useCallback, useMemo, useState } from 'react';
+import { EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
+import { App, Popconfirm, Select, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useSearchState } from '@/shared/hooks/use-search-state';
-import { SearchInput } from '@/foundation/inputs/search-input';
+import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PermissionGate, useCan } from '@/core/auth/permissions';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { AdminTable, TableActionButton, col } from '@/foundation/table';
+import { useCan } from '@/core/auth/permissions';
+import { TableActionButton, col } from '@/foundation/table';
 import {
   getListSuppliersQueryKey,
   useListSuppliers,
@@ -15,30 +12,29 @@ import {
 } from '@/generated/api/procurement/procurement';
 import { SupplierStatus, type SupplierDto } from '@/generated/api/procurement/procurement.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { PROCUREMENT_PAGE_SIZE, supplierStatusOptions } from '../constants/procurement.constants';
+import { supplierStatusOptions, supplierStatusPresentation } from '../constants/procurement.constants';
+import { useProcurementListState } from '../hooks/use-procurement-list-state';
+import { ProcurementListPanel } from './procurement-list-panel';
 import { SupplierFormDrawer } from './supplier-form-drawer';
 
 const SUPPLIER_DATA_COLUMNS: ColumnsType<SupplierDto> = [
-  { title: 'Mã NCC', dataIndex: 'code', width: 150 },
-  { title: 'Tên nhà cung cấp', dataIndex: 'name', width: 260 },
+  col.text<SupplierDto>('code', 'Mã NCC', { width: 150 }),
+  col.text<SupplierDto>('name', 'Tên nhà cung cấp', { width: 260 }),
   col.text<SupplierDto>('contactName', 'Người liên hệ', { width: 180 }),
   col.text<SupplierDto>('phone', 'Điện thoại', { width: 150 }),
   col.text<SupplierDto>('email', 'Email', { width: 220 }),
-  { title: 'Trạng thái', dataIndex: 'status', width: 150, render: (value) => <Tag color={value === SupplierStatus.ACTIVE ? 'green' : 'default'}>{value === SupplierStatus.ACTIVE ? 'Đang giao dịch' : 'Ngừng giao dịch'}</Tag> },
+  col.status<SupplierDto, SupplierStatus>('status', 'Trạng thái', supplierStatusPresentation),
 ];
 
 export function SupplierPanel() {
-  const [pageSize, setPageSize] = useState(PROCUREMENT_PAGE_SIZE);
-  const [status, setStatus] = useState<string>();
-  const [editing, setEditing] = useState<SupplierDto>();
-  const [formOpen, setFormOpen] = useState(false);
-  const search = useSearchState();
-  const [page, setPage] = useListPageReset([search.debounced, status, pageSize]);
-  const query = useListSuppliers({ page, limit: pageSize, search: search.debounced, status: status as never });
+  const list = useProcurementListState<SupplierDto>();
+  const { openEdit } = list;
+  const status = list.url.getEnum('status', SupplierStatus);
+  const query = useListSuppliers({ page: list.page, limit: list.pageSize, search: list.q, status });
   const queryClient = useQueryClient();
   const { message } = App.useApp();
   const canManage = useCan('supplier.manage');
-  const statusMutation = useSetSupplierStatus({
+  const { mutate: setSupplierStatus } = useSetSupplierStatus({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: getListSuppliersQueryKey() });
@@ -48,7 +44,6 @@ export function SupplierPanel() {
     },
   });
 
-  const { mutate: setSupplierStatus } = statusMutation;
   const toggleStatus = useCallback(
     (row: SupplierDto) =>
       setSupplierStatus({ id: row.id, data: { expectedVersion: row.version, status: row.status === SupplierStatus.ACTIVE ? SupplierStatus.INACTIVE : SupplierStatus.ACTIVE } }),
@@ -61,7 +56,7 @@ export function SupplierPanel() {
         (row) =>
           canManage ? (
             <>
-              <TableActionButton label={`Sửa ${row.name}`} icon={<EditOutlined />} onClick={() => { setEditing(row); setFormOpen(true); }} />
+              <TableActionButton label={`Sửa ${row.name}`} icon={<EditOutlined />} onClick={() => openEdit(row)} />
               <Tooltip title={row.status === SupplierStatus.ACTIVE ? 'Ngừng giao dịch' : 'Mở lại giao dịch'}>
                 <Popconfirm title="Xác nhận đổi trạng thái nhà cung cấp?" onConfirm={() => toggleStatus(row)}>
                   <TableActionButton label="Đổi trạng thái" icon={row.status === SupplierStatus.ACTIVE ? <StopOutlined /> : <UndoOutlined />} />
@@ -72,28 +67,23 @@ export function SupplierPanel() {
         { title: '', width: 100 },
       ),
     ],
-    [canManage, toggleStatus],
+    [canManage, openEdit, toggleStatus],
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchInput value={search.value} onChange={search.setValue} placeholder="Tìm mã hoặc tên nhà cung cấp" />
-        <Select allowClear className="!w-48" value={status} onChange={setStatus} placeholder="Trạng thái" options={supplierStatusOptions} />
-        <PermissionGate permission="supplier.manage">
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(undefined); setFormOpen(true); }}>Thêm nhà cung cấp</Button>
-        </PermissionGate>
-      </div>
-      {query.isError && <Alert type="error" showIcon message="Không tải được nhà cung cấp" description={getApiErrorMessage(query.error)} />}
-      <AdminTable<SupplierDto>
-        rowKey="id"
-        emptyEntity="nhà cung cấp"
-        loading={query.isLoading || query.isFetching}
-        dataSource={query.data?.items ?? []}
-        columns={columns}
-        pagination={{ current: page, pageSize, total: query.data?.meta.total ?? 0, onChange: (next, size) => { setPage(next); setPageSize(size); }, showTotal: (total) => `${total} nhà cung cấp` }}
-      />
-      <SupplierFormDrawer open={formOpen} editing={editing} onClose={() => { setFormOpen(false); setEditing(undefined); }} />
-    </div>
+    <ProcurementListPanel<SupplierDto>
+      query={query}
+      rows={query.data?.items ?? []}
+      columns={columns}
+      emptyEntity="nhà cung cấp"
+      pagination={list.pagination(query.data?.meta.total ?? 0, 'nhà cung cấp')}
+      searchValue={list.searchValue}
+      onSearch={list.onSearch}
+      searchPlaceholder="Tìm mã hoặc tên nhà cung cấp"
+      filters={<Select allowClear className="!w-48" value={status} onChange={(value?: string) => list.setFilter('status', value)} placeholder="Trạng thái" options={supplierStatusOptions} />}
+      create={{ permission: 'supplier.manage', label: 'Thêm nhà cung cấp', onClick: list.openCreate }}
+    >
+      <SupplierFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} />
+    </ProcurementListPanel>
   );
 }

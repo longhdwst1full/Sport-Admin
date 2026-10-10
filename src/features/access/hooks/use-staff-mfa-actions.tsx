@@ -41,7 +41,7 @@ export function useStaffMfaActions() {
       content:
         'Khoá cũ hết hiệu lực ngay, mọi phiên đăng nhập của nhân viên bị thu hồi. Nhân viên phải quét QR mới trước lần đăng nhập tiếp theo.',
       okText: 'Tiếp tục',
-      cancelText: 'Hủy',
+      cancelText: 'Huỷ',
       okButtonProps: { danger: true },
       // Đóng hộp xác nhận trước rồi mới hỏi mã, tránh hai modal chồng nhau.
       onOk: () => {
@@ -70,7 +70,7 @@ export function useStaffMfaActions() {
       content:
         'Xoá khoá xác thực 2 lớp hiện tại và thu hồi mọi phiên đăng nhập. Ở lần đăng nhập tiếp theo nhân viên sẽ tự thiết lập lại Google Authenticator.',
       okText: 'Tiếp tục',
-      cancelText: 'Hủy',
+      cancelText: 'Huỷ',
       okButtonProps: { danger: true },
       onOk: () => {
         void withMfaCode({

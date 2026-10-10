@@ -53,10 +53,10 @@ export function useSystemParameterCommands({
       }
       return createAdminSystemParameter({
         code: values.code!,
-        groupCode: values.groupCode! as never,
+        groupCode: values.groupCode!,
         label: values.label!,
         description: values.description,
-        valueType: values.valueType! as never,
+        valueType: values.valueType!,
         value: values.value!,
         minValue: values.minValue,
         maxValue: values.maxValue,

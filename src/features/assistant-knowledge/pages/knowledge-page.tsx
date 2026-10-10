@@ -4,8 +4,7 @@ import { App, Button, Select } from 'antd';
 import { usePermissions } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
-import { FilterBar, RefreshButton } from '@/foundation/table';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, FilterBar, RefreshButton } from '@/foundation/table';
 import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { AttachKnowledgePostModal } from '../components/attach-knowledge-post-modal';
 import { KnowledgeDocumentTable } from '../components/knowledge-document-table';
@@ -13,7 +12,6 @@ import { KnowledgeAudience, KnowledgeStatus } from '@/generated/api/assistant/as
 import { BranchSelect } from '@/features/organization';
 import {
   ALL_BRANCHES_LABEL,
-  KNOWLEDGE_PAGE_SIZE,
   KNOWLEDGE_PERMISSION,
   knowledgeAudienceOptions,
   knowledgeStatusOptions,
@@ -49,12 +47,14 @@ export function KnowledgePage() {
   const status = url.getEnum('status', KnowledgeStatus);
   const audience = url.getEnum('audience', KnowledgeAudience);
   const branchId = url.get('branch');
-  const [page, setPage] = useListPageReset([status, audience, branchId]);
+  // Trang nằm trên URL cùng bộ lọc; đổi lọc thì xoá `page` để về trang 1.
+  const page = url.getNumber('page', 1);
+  const setFilter = (key: string, value?: string) => url.patch({ [key]: value, page: undefined });
   const [attachOpen, setAttachOpen] = useState(false);
   const command = useKnowledgeCommand();
   const canManage = permissions.has(KNOWLEDGE_PERMISSION.MANAGE);
 
-  const list = useKnowledgeDocuments({ page, limit: KNOWLEDGE_PAGE_SIZE, status, audience, branchId });
+  const list = useKnowledgeDocuments({ page, limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE, status, audience, branchId });
   const rows = useMemo(() => list.data?.items ?? [], [list.data]);
 
   const openAttach = () => {
@@ -109,7 +109,7 @@ export function KnowledgePage() {
   return (
     <>
       <ManagementPage
-        eyebrow="AI assistant"
+        eyebrow="Trợ lý AI"
         title="Tri thức trợ lý"
         description="Chọn bài CMS mà trợ lý được dùng để trả lời, theo đối tượng và chi nhánh."
         actions={(
@@ -123,7 +123,7 @@ export function KnowledgePage() {
               allowClear
               className="min-w-44"
               value={status}
-              onChange={(value?: string) => url.set('status', value)}
+              onChange={(value?: string) => setFilter('status', value)}
               placeholder="Trạng thái"
               options={knowledgeStatusOptions}
             />
@@ -131,7 +131,7 @@ export function KnowledgePage() {
               allowClear
               className="min-w-44"
               value={audience}
-              onChange={(value?: string) => url.set('audience', value)}
+              onChange={(value?: string) => setFilter('audience', value)}
               placeholder="Đối tượng"
               options={knowledgeAudienceOptions}
             />
@@ -140,7 +140,7 @@ export function KnowledgePage() {
               className="min-w-48"
               placeholder={ALL_BRANCHES_LABEL}
               value={branchId}
-              onChange={(value) => url.set('branch', value)}
+              onChange={(value) => setFilter('branch', value)}
             />
           </FilterBar>
         )}
@@ -156,7 +156,7 @@ export function KnowledgePage() {
           emptyText="Chưa có tài liệu phù hợp bộ lọc."
           permissions={permissions}
           actionsDisabled={command.isPending}
-          onPageChange={setPage}
+          onPageChange={(next) => url.set('page', next === 1 ? undefined : next)}
           onAction={confirmAction}
         />
       </ManagementPage>

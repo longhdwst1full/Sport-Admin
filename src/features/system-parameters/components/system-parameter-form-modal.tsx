@@ -1,18 +1,25 @@
 import { useEffect } from 'react';
-import { Alert, Form, Input, InputNumber, Modal, Select, Switch, Typography } from 'antd';
-import type { SystemParameterDto } from '@/generated/api/system/system.schemas';
+import { Alert, Form, Input, InputNumber, Select, Switch, Typography } from 'antd';
+import { FormModal } from '@/foundation/overlay';
+import type {
+  SystemParameterDto,
+  SystemParameterGroup,
+  SystemParameterValueType,
+} from '@/generated/api/system/system.schemas';
 import {
   EMPTY_ALLOWED_PARAMETER_GROUPS,
   PARAMETER_GROUP_OPTIONS,
+  PARAMETER_REASON_MAX_LENGTH,
+  PARAMETER_REASON_MIN_LENGTH,
   PARAMETER_VALUE_TYPE_OPTIONS,
 } from '../constants/system-parameter.constants';
 
 export interface ParameterFormValues {
   code?: string;
-  groupCode?: string;
+  groupCode?: SystemParameterGroup;
   label?: string;
   description?: string;
-  valueType?: string;
+  valueType?: SystemParameterValueType;
   value?: string;
   minValue?: number;
   maxValue?: number;
@@ -66,16 +73,14 @@ export function SystemParameterFormModal({
   }, [open, editing, form]);
 
   return (
-    <Modal
+    <FormModal
       open={open}
       title={isEdit ? `Sửa tham số — ${editing?.code}` : 'Tạo tham số tuỳ biến'}
       okText={isEdit ? 'Lưu' : 'Tạo'}
-      cancelText="Hủy"
-      confirmLoading={submitting}
-      onCancel={onCancel}
-      onOk={() => void form.submit()}
-      destroyOnClose
-      width={620}
+      submitting={submitting}
+      onClose={onCancel}
+      onSubmit={() => form.submit()}
+      isDirty={() => form.isFieldsTouched()}
     >
       {isSystem && (
         <Alert
@@ -167,12 +172,12 @@ export function SystemParameterFormModal({
           <Form.Item
             name="reason"
             label="Lý do thay đổi"
-            rules={[{ min: 5, message: 'Nếu nhập lý do' }]}
+            rules={[{ min: PARAMETER_REASON_MIN_LENGTH, message: `Lý do (nếu nhập) tối thiểu ${PARAMETER_REASON_MIN_LENGTH} ký tự` }]}
           >
-            <Input.TextArea rows={2} placeholder="Ví dụ: điều chỉnh biểu phí theo giá xăng quý 4" />
+            <Input.TextArea rows={2} maxLength={PARAMETER_REASON_MAX_LENGTH} placeholder="Ví dụ: điều chỉnh biểu phí theo giá xăng quý 4" />
           </Form.Item>
         )}
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

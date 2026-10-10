@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Input, Modal, Typography } from 'antd';
-import { useEffect, useState } from 'react';
+import { Alert, App, Input, Typography } from 'antd';
+import { useState } from 'react';
+import { FormModal } from '@/foundation/overlay';
 import {
   getListAdminUsersQueryKey,
   useDeleteAdminStaffUser,
@@ -22,10 +23,15 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [reason, setReason] = useState('');
+  // Xoá lý do ngay trên đường đóng thay vì effect theo `action` (RULE-HOOK-01).
+  const close = () => {
+    setReason('');
+    onClose();
+  };
   const finish = async (successMessage: string) => {
     await queryClient.invalidateQueries({ queryKey: getListAdminUsersQueryKey() });
     void message.success(successMessage);
-    onClose();
+    close();
   };
   const lockUser = useLockAdminStaffUser({
     mutation: {
@@ -37,7 +43,7 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
     mutation: {
       onSuccess: () => finish('Đã ngừng hoạt động tài khoản và thu hồi toàn bộ phiên đăng nhập.'),
       onError: (error) =>
-        void message.error(getApiErrorMessage(error, 'Không thể xóa tài khoản nhân viên.')),
+        void message.error(getApiErrorMessage(error, 'Không thể xoá tài khoản nhân viên.')),
     },
   });
   const unlockUser = useUnlockAdminStaffUser({
@@ -46,10 +52,6 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể mở khóa tài khoản.')),
     },
   });
-
-  useEffect(() => {
-    if (!action) setReason('');
-  }, [action]);
 
   const isLock = action === 'LOCK';
   const isDelete = action === 'DELETE';
@@ -69,18 +71,19 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
   };
 
   return (
-    <Modal
+    <FormModal
+      size="sm"
       open={Boolean(action && user)}
       title={
         isDelete
-          ? 'Xóa tài khoản nhân viên'
+          ? 'Xoá tài khoản nhân viên'
           : isLock
             ? 'Khóa tài khoản nhân viên'
             : 'Mở khóa tài khoản nhân viên'
       }
       okText={
         isDelete
-          ? 'Xóa & thu hồi phiên'
+          ? 'Xoá & thu hồi phiên'
           : isLock
             ? 'Khóa tài khoản'
             : 'Mở khóa & reset mật khẩu'
@@ -89,11 +92,10 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
         danger: requiresReason,
         disabled: requiresReason && reason.trim().length < 3,
       }}
-      confirmLoading={pending}
-      cancelText="Hủy"
-      onCancel={onClose}
-      onOk={submit}
-      destroyOnHidden
+      submitting={pending}
+      onClose={close}
+      onSubmit={submit}
+      isDirty={() => reason.trim().length > 0}
     >
       <Typography.Paragraph>
         Nhân viên: <Typography.Text strong>{user?.displayName}</Typography.Text>
@@ -109,9 +111,9 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
                 ? 'Tài khoản sẽ chuyển sang trạng thái đã khóa'
                 : 'Tất cả phiên đăng nhập sẽ bị thu hồi ngay'
             }
-            description="Không xóa vật lý dữ liệu nhân viên. Access token và refresh token hiện tại sẽ không còn sử dụng được."
+            description="Không xoá vật lý dữ liệu nhân viên. Access token và refresh token hiện tại sẽ không còn sử dụng được."
           />
-          <Typography.Text>{isDelete ? 'Lý do xóa/ngừng hoạt động' : 'Lý do khóa'}</Typography.Text>
+          <Typography.Text>{isDelete ? 'Lý do xoá/ngừng hoạt động' : 'Lý do khóa'}</Typography.Text>
           <Input.TextArea
             className="mt-2"
             value={reason}
@@ -130,6 +132,6 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
           description="Các phiên cũ vẫn bị thu hồi; nhân viên phải đăng nhập lại bằng mật khẩu mặc định."
         />
       )}
-    </Modal>
+    </FormModal>
   );
 }

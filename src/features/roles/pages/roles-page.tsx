@@ -1,16 +1,21 @@
 import { useMemo, useState } from 'react';
 import { KeyOutlined, PlusOutlined, SafetyOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input } from 'antd';
+import { App, Button } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useListAdminAllRoles, useListAdminPermissions } from '@/generated/api/iam/iam';
 import type { RoleDto } from '@/generated/api/iam/iam.schemas';
 import { useCan, usePermissions } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
+import { useConfirmWithReason } from '@/foundation/overlay';
 import { FilterBar, RefreshButton } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { RoleFormDrawer } from '../components/role-form-drawer';
 import { RoleTable } from '../components/role-table';
+import { ROLE_DELETE_REASON_MIN_LENGTH } from '../constants/role.constants';
 import {
   describeRoleDeleteImpact,
   describeRoleDeleteResult,
@@ -20,7 +25,11 @@ import {
 import { useRoleMutations } from '../hooks/use-role-mutations';
 
 export function RolesPage() {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
+  const confirmWithReason = useConfirmWithReason();
+  // Danh sách vai trò trả trọn một lần; ô tìm lọc tại chỗ theo tên/mã và nằm trên URL (`q`).
+  const search = useUrlSearch(['q']);
+  const keyword = (search.url.get('q') ?? '').toLocaleLowerCase('vi');
   const queryClient = useQueryClient();
   const canManage = useCan('iam.role.manage');
   const actorPermissions = usePermissions();
@@ -29,7 +38,13 @@ export function RolesPage() {
 
   const roles = useListAdminAllRoles();
   const permissions = useListAdminPermissions();
-  const rows = roles.data?.items ?? [];
+  const rows = useMemo(
+    () =>
+      (roles.data?.items ?? []).filter(
+        (role) => !keyword || `${role.name} ${role.code}`.toLocaleLowerCase('vi').includes(keyword),
+      ),
+    [roles.data, keyword],
+  );
   const permissionItems = useMemo(() => permissions.data?.items ?? [], [permissions.data]);
 
   /**
@@ -70,31 +85,13 @@ export function RolesPage() {
   });
 
   function confirmDelete(row: RoleDto) {
-    let reason = '';
-    modal.confirm({
+    confirmWithReason({
       title: `Xoá vai trò ${row.code}?`,
-      content: (
-        <div className="space-y-2">
-          <p className="text-sm text-slate-500">{describeRoleDeleteImpact(row)}</p>
-          <Input.TextArea
-            rows={2}
-            placeholder="Lý do (tối thiểu 3 ký tự)"
-            onChange={(event) => {
-              reason = event.target.value;
-            }}
-          />
-        </div>
-      ),
+      consequence: describeRoleDeleteImpact(row),
       okText: 'Xoá',
-      okButtonProps: { danger: true },
-      cancelText: 'Hủy',
-      onOk: () => {
-        if (reason.trim().length < 3) {
-          void message.error('Vui lòng nhập lý do tối thiểu 3 ký tự');
-          return Promise.reject(new Error('reason-required'));
-        }
-        return roleMutations.deleteRole(row, reason.trim());
-      },
+      placeholder: `Lý do (tối thiểu ${ROLE_DELETE_REASON_MIN_LENGTH} ký tự)`,
+      minLength: ROLE_DELETE_REASON_MIN_LENGTH,
+      onOk: (reason) => roleMutations.deleteRole(row, reason),
     });
   }
 
@@ -139,18 +136,12 @@ export function RolesPage() {
                 )}
               </>
             }
-          />
+          >
+            <SearchInput value={search.values.q} onChange={search.setter('q')} placeholder="Tìm theo tên hoặc mã vai trò" />
+          </FilterBar>
         }
       >
-        {roles.isError && (
-          <Alert
-            className="mb-5"
-            type="error"
-            showIcon
-            message="Không tải được danh sách vai trò"
-            description={getApiErrorMessage(roles.error)}
-          />
-        )}
+        {roles.isError && <QueryErrorAlert error={roles.error} retry={() => void roles.refetch()} />}
         <RoleTable
           rows={rows}
           permissions={permissionItems}

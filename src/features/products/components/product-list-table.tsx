@@ -1,5 +1,4 @@
 import {
-  CheckCircleOutlined,
   CloudUploadOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -9,22 +8,11 @@ import { Avatar, Button, Dropdown, Switch, Tag, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { PRODUCT_LIST_PAGE_SIZE_OPTIONS } from '../constants/product-list.constants';
+import { PRODUCT_STATUS_PRESENTATION } from '../constants/product-status.constants';
 import type { ProductListRow } from '../model/product-list.mapper';
-
-const statusPresentation: Record<
-  string,
-  { color: string; label: string; icon?: ReactNode }
-> = {
-  PUBLISHED: {
-    color: 'green',
-    label: 'Đang bán',
-    icon: <CheckCircleOutlined className="text-emerald-600" />,
-  },
-  DRAFT: { color: 'blue', label: 'Nháp' },
-  ARCHIVED: { color: 'default', label: 'Lưu trữ' },
-};
+import type { ProductStatus } from '@/generated/api/catalog/catalog.schemas';
 
 /** Cột dữ liệu đứng trước công tắc hiển thị; không phụ thuộc quyền/handler. */
 const PRODUCT_LEADING_COLUMNS: ColumnsType<ProductListRow> = [
@@ -38,7 +26,11 @@ const PRODUCT_LEADING_COLUMNS: ColumnsType<ProductListRow> = [
         <Avatar
           shape="square"
           size={48}
-          src={row.imageUrl}
+          src={
+            row.imageUrl && (
+              <img src={row.imageUrl} alt={row.name} width={48} height={48} loading="lazy" decoding="async" />
+            )
+          }
           className="!rounded-xl !border !border-slate-100 !shadow-soft"
         >
           {row.name.slice(0, 1)}
@@ -75,7 +67,7 @@ const PRODUCT_LEADING_COLUMNS: ColumnsType<ProductListRow> = [
       </Tag>
     ),
   },
-  col.status<ProductListRow, string>('status', 'Trạng thái', statusPresentation, { align: 'center', width: 150 }),
+  col.status<ProductListRow, ProductStatus>('status', 'Trạng thái', PRODUCT_STATUS_PRESENTATION, { align: 'center', width: 150 }),
 ];
 
 const PRODUCT_VERSION_COLUMN: ColumnsType<ProductListRow>[number] = {

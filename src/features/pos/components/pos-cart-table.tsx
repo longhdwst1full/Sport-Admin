@@ -1,8 +1,8 @@
 import { DeleteOutlined } from '@ant-design/icons';
-import { Button, Empty, InputNumber, Popconfirm, Tag, Tooltip } from 'antd';
+import { Empty, InputNumber, Popconfirm, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import { AdminTable } from '@/foundation/table';
+import { AdminTable, TableActionButton } from '@/foundation/table';
 import { moneyFormatter } from '../constants/pos.constants';
 import { effectivePrice, lineTotal, type PosCartLine } from '../model/pos-cart';
 
@@ -123,7 +123,14 @@ export function PosCartTable({
             disabled={disabled}
             onConfirm={() => onRemove(line.variantId)}
           >
-            <Button danger type="text" icon={<DeleteOutlined />} disabled={disabled} />
+            <span className="inline-flex">
+              <TableActionButton
+                danger
+                label={`Bỏ ${line.name} khỏi đơn`}
+                icon={<DeleteOutlined />}
+                disabled={disabled}
+              />
+            </span>
           </Popconfirm>
         ),
       },

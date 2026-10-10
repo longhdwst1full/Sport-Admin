@@ -1,6 +1,6 @@
 import { EditOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button, Card, Progress, Select } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
@@ -18,10 +18,16 @@ import {
   useSummarizeInventoryBalances,
 } from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
 import { BALANCE_COLUMN_ITEMS, inventoryBalanceStatusPresentation } from '../constants/inventory.constants';
+import { useTabUrlFilters } from '../hooks/use-tab-url-filters';
 import { useWarehouseOptions } from '../hooks/use-warehouse-options';
+
+/** Màu thanh tỷ lệ có thể bán; class Tailwind thay mã hex để theo bảng màu chung. */
+function availabilityBarClass(ratio: number) {
+  if (ratio > 50) return '[&_.ant-progress-bg]:!bg-emerald-500';
+  if (ratio > 20) return '[&_.ant-progress-bg]:!bg-amber-500';
+  return '[&_.ant-progress-bg]:!bg-rose-500';
+}
 
 const DATA_COLUMNS: ColumnsType<InventoryBalanceDto> = [
   {
@@ -59,17 +65,16 @@ const DATA_COLUMNS: ColumnsType<InventoryBalanceDto> = [
     width: 170,
     render: (value: number, row) => {
       const ratio = row.onHand ? Math.round((value / row.onHand) * 100) : 0;
-      const strokeColor = ratio > 50 ? '#10b981' : ratio > 20 ? '#f59e0b' : '#ef4444';
       return (
         <div className="min-w-28 text-right">
           <div className="font-bold text-slate-800 text-xs">{value}</div>
-          <Progress percent={ratio} strokeColor={strokeColor} showInfo={false} size="small" />
+          <Progress percent={ratio} className={availabilityBarClass(ratio)} showInfo={false} size="small" />
         </div>
       );
     },
   },
   col.number<InventoryBalanceDto>('reorderPoint', 'Mức đặt lại', { width: 110, className: 'text-slate-400 text-xs' }),
-  col.status<InventoryBalanceDto, keyof typeof inventoryBalanceStatusPresentation>(
+  col.status<InventoryBalanceDto, InventoryBalanceDto['status']>(
     'status',
     'Trạng thái',
     inventoryBalanceStatusPresentation,
@@ -84,10 +89,10 @@ export function InventoryBalancePanel({
   onAdjust: (balance: InventoryBalanceDto) => void;
   onMetricsChange: (metrics: { total: number; low: number; out: number; available: number }) => void;
 }) {
-  const search = useSearchState();
+  const filters = useTabUrlFilters('balance');
+  const { search, page } = filters;
   const debouncedSearch = search.debounced;
-  const [warehouseCode, setWarehouseCode] = useState<string>();
-  const [page, setPage] = useListPageReset([debouncedSearch, warehouseCode]);
+  const warehouseCode = filters.get('warehouse');
   const columnsState = useColumnVisibility(BALANCE_COLUMN_ITEMS);
 
   const warehouses = useWarehouseOptions();
@@ -161,7 +166,8 @@ export function InventoryBalancePanel({
             className="w-56"
             loading={warehouses.query.isPending}
             options={warehouses.options}
-            onChange={setWarehouseCode}
+            value={warehouseCode}
+            onChange={(value?: string) => filters.setFilter('warehouse', value)}
           />
         </div>
 
@@ -170,7 +176,7 @@ export function InventoryBalancePanel({
           onClick={columnsState.open}
           className="text-slate-600"
         >
-          Tùy chỉnh cột
+          Tuỳ chỉnh cột
         </Button>
       </div>
 
@@ -189,7 +195,7 @@ export function InventoryBalancePanel({
           total: query.data?.total ?? 0,
           showSizeChanger: false,
           showTotal: (total) => `Tổng ${total} dòng tồn`,
-          onChange: setPage,
+          onChange: filters.setPage,
         }}
         columns={columns}
       />

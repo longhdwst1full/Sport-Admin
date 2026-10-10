@@ -1,6 +1,7 @@
 import { TagsOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
+import type { ColumnType } from 'antd/es/table';
 import {
   deleteAdminBrand,
   useActivateAdminBrand,
@@ -12,6 +13,25 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 import { BrandFormDrawer } from '../components/master-data-form-drawers';
 import { MasterDataListPage } from '../components/master-data-list-page';
+
+const BRAND_COLUMNS: ColumnType<BrandDto>[] = [
+  {
+    title: 'Tên thương hiệu',
+    dataIndex: 'name',
+    render: (value: string) => <strong className="text-slate-800">{value}</strong>,
+  },
+  {
+    title: 'Slug',
+    dataIndex: 'slug',
+    render: (value: string) => <span className="font-mono text-xs text-slate-500">{value}</span>,
+  },
+];
+
+const BRAND_DELETE_CONFIRM = {
+  title: 'Xoá hẳn thương hiệu?',
+  description: 'Chỉ xoá được khi chưa có sản phẩm nào gắn thương hiệu này. Thao tác không hoàn tác được.',
+  okText: 'Xoá',
+};
 
 export function BrandsPage() {
   const { message } = App.useApp();
@@ -59,18 +79,7 @@ export function BrandsPage() {
       activeMetric={{ key: 'active-brands', label: 'Thương hiệu đang bán' }}
       query={brandsQuery}
       scrollX={800}
-      columns={[
-        {
-          title: 'Tên thương hiệu',
-          dataIndex: 'name',
-          render: (value) => <strong className="text-slate-800">{value}</strong>,
-        },
-        {
-          title: 'Slug',
-          dataIndex: 'slug',
-          render: (val) => <span className="font-mono text-xs text-slate-500">{val}</span>,
-        },
-      ]}
+      columns={BRAND_COLUMNS}
       toggleDescription="Thao tác dùng version hiện tại để tránh xung đột dữ liệu."
       onToggleStatus={(row) =>
         (row.status === 'ACTIVE' ? deactivateBrand : activateBrand).mutate({
@@ -78,12 +87,7 @@ export function BrandsPage() {
           data: { expectedVersion: row.version },
         })
       }
-      deleteConfirm={{
-        title: 'Xoá hẳn thương hiệu?',
-        description:
-          'Chỉ xoá được khi chưa có sản phẩm nào gắn thương hiệu này. Thao tác không hoàn tác được.',
-        okText: 'Xoá',
-      }}
+      deleteConfirm={BRAND_DELETE_CONFIRM}
       onDelete={(row) => deleteBrand.mutate({ id: row.id, expectedVersion: row.version })}
       deletingId={deleteBrand.isPending ? deleteBrand.variables?.id : undefined}
       renderDrawer={({ open, selected, onClose }) => (

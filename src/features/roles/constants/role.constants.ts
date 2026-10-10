@@ -1,13 +1,19 @@
+import type { StatusPresentation } from '@/foundation/management/status-tag';
 import { RoleStatus } from '@/generated/api/iam/iam.schemas';
 import { toOptions } from '@/shared/utils/options';
 
 /** OWNER là tài khoản gốc duy nhất và không được ngừng hoạt động qua UI/API. */
 export const ROOT_ROLE_CODE = 'OWNER';
 
-export const ROLE_STATUS_OPTIONS = toOptions<RoleStatus>({
-  [RoleStatus.ACTIVE]: 'Đang dùng',
-  [RoleStatus.INACTIVE]: 'Ngừng dùng',
-});
+export const ROLE_STATUS_PRESENTATION: Record<RoleStatus, StatusPresentation> = {
+  [RoleStatus.ACTIVE]: { label: 'Đang dùng', color: 'success' },
+  [RoleStatus.INACTIVE]: { label: 'Ngừng dùng', color: 'neutral' },
+};
+
+export const ROLE_STATUS_OPTIONS = toOptions(ROLE_STATUS_PRESENTATION);
+
+/** Số ký tự tối thiểu của lý do xoá vai trò (khớp validate của API). */
+export const ROLE_DELETE_REASON_MIN_LENGTH = 3;
 
 /** Mã lỗi ổn định của `deleteAdminRole` (API D98). */
 export const ROLE_DELETE_ERROR_CODE = {
@@ -26,25 +32,7 @@ export const ROLE_DELETE_ERROR_MESSAGES: Record<
     'Vai trò Nhân viên đang ngừng hoạt động nên không thể chuyển nhân viên về. Hãy kích hoạt lại trước khi xoá.',
 };
 
-/** Nhãn tiếng Việt cho module quyền. Mã quyền do API quyết định, nhãn chỉ để hiển thị. */
-export const permissionModuleLabels: Record<string, string> = {
-  System: 'Hệ thống',
-  Organization: 'Chi nhánh & kho',
-  IAM: 'Người dùng & vai trò',
-  Customer: 'Khách hàng',
-  Catalog: 'Sản phẩm',
-  Pricing: 'Giá & khuyến mãi',
-  Review: 'Đánh giá',
-  Inventory: 'Tồn kho',
-  Order: 'Đơn hàng',
-  Payment: 'Thanh toán',
-  Fulfillment: 'Giao hàng',
-  Return: 'Đổi trả',
-  CMS: 'Nội dung',
-  Media: 'Thư viện ảnh',
-  Reporting: 'Báo cáo',
-};
-
+/** Nhãn tiếng Việt cho hành động của quyền. Mã quyền do API quyết định, nhãn chỉ để hiển thị. */
 export const permissionActionLabels: Record<string, string> = {
   view: 'Xem',
   manage: 'Quản lý',
@@ -61,7 +49,3 @@ export const permissionActionLabels: Record<string, string> = {
   moderate: 'Kiểm duyệt',
   upload: 'Tải lên',
 };
-
-export function permissionLabel(module: string, action: string): string {
-  return `${permissionActionLabels[action] ?? action} · ${permissionModuleLabels[module] ?? module}`;
-}

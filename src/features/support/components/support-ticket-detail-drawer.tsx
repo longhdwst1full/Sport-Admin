@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { App, Button, Card, Descriptions, Drawer, Space, Typography } from 'antd';
+import { App, Button, Card, Descriptions, Space, Typography } from 'antd';
 import { usePermissions } from '@/core/auth/permissions';
-import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { StatusTag } from '@/foundation/management';
 import { formatDateTime } from '@/lib/format/datetime';
 import {
@@ -21,12 +20,12 @@ import type { SupportTicketDetail } from '../model/support-ticket.types';
 import { SupportReplyBox } from './support-reply-box';
 import { SupportTicketActionModal } from './support-ticket-action-modal';
 import { SupportTicketThread } from './support-ticket-thread';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { DetailDrawer } from '@/foundation/overlay';
 
 const actionButtons: Record<SupportTicketAction, { label: string; type?: 'primary' }> = {
   assign: { label: 'Giao việc' },
   resolve: { label: 'Đã giải quyết', type: 'primary' },
-  close: { label: 'Đóng ticket' },
+  close: { label: 'Đóng phiếu' },
 };
 
 /** Chi tiết ticket: thông tin, luồng trao đổi, ô trả lời và các lệnh chuyển trạng thái. */
@@ -51,7 +50,7 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
   const submitAction = (next: SupportTicketCommand) => {
     command.mutate(next, {
       onSuccess: () => {
-        void message.success('Đã cập nhật ticket');
+        void message.success('Đã cập nhật phiếu hỗ trợ');
         command.reset();
         setAction(undefined);
       },
@@ -73,24 +72,21 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
   };
 
   return (
-    <Drawer
+    <DetailDrawer
       open={Boolean(ticketId)}
       onClose={closeDrawer}
-      width={DRAWER_WIDTH.lg}
-      title={ticket ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <span>{ticket.ticketNo}</span>
+      title={ticket?.ticketNo ?? 'Phiếu hỗ trợ'}
+      status={ticket && (
+        <>
           <StatusTag status={ticket.status} presentations={supportTicketStatusPresentation} />
           <StatusTag status={ticket.priority} presentations={supportTicketPriorityPresentation} />
-        </div>
-      ) : 'Ticket hỗ trợ'}
-      extra={ticket && <ActionBar ticket={ticket} permissions={permissions} onAction={setAction} />}
-      destroyOnHidden
-    >
-      {query.isLoading && <Card loading className="rounded-2xl" />}
-      {query.isError && (
-        <QueryErrorAlert error={query.error} message="Không tải được ticket" retry={() => void query.refetch()} />
+        </>
       )}
+      actions={ticket && <ActionBar ticket={ticket} permissions={permissions} onAction={setAction} />}
+      loading={query.isLoading}
+      error={query.isError ? query.error : undefined}
+      onRetry={() => void query.refetch()}
+    >
       {ticket && (
         <div className="space-y-5">
           <TicketSummary ticket={ticket} />
@@ -112,13 +108,13 @@ export function SupportTicketDetailDrawer({ ticketId, onClose }: { ticketId?: st
           />
         </div>
       )}
-    </Drawer>
+    </DetailDrawer>
   );
 }
 
 function replyDisabledReason(ticket: SupportTicketDetail, permissions: ReadonlySet<string>): string | undefined {
-  if (ticket.status === 'CLOSED') return 'Ticket đã đóng, không trả lời thêm được.';
-  if (!canReplySupportTicket(ticket, permissions)) return 'Bạn không có quyền trả lời ticket (support.ticket.manage).';
+  if (ticket.status === 'CLOSED') return 'Phiếu hỗ trợ đã đóng, không trả lời thêm được.';
+  if (!canReplySupportTicket(ticket, permissions)) return 'Bạn không có quyền trả lời phiếu hỗ trợ (support.ticket.manage).';
   return undefined;
 }
 

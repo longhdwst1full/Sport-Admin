@@ -146,7 +146,7 @@ describe('useMfaCode', () => {
     const run = vi.fn();
     const result = start({ run });
 
-    fireEvent.click(await screen.findByRole('button', { name: /Hủy/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Huỷ/ }));
 
     const error = await result.catch((reason: unknown) => reason);
     expect(isMfaCodeCancelled(error)).toBe(true);

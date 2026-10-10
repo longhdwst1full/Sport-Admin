@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { Alert, Form, Modal, Radio } from 'antd';
+import { Alert, Form, Radio } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { FormModal } from '@/foundation/overlay';
 import { KnowledgeAudience } from '@/generated/api/assistant/assistant.schemas';
 import {
   ALL_BRANCHES_LABEL,
   CMS_POST_VIEW_PERMISSION,
-  knowledgeAudiencePresentation,
+  knowledgeAudienceChoices,
 } from '../constants/knowledge.constants';
 import type { AttachKnowledgePostInput } from '../model/knowledge-document.types';
 import { CmsPostSelect } from './cms-post-select';
@@ -49,17 +50,16 @@ export function AttachKnowledgePostModal({
   };
 
   return (
-    <Modal
+    <FormModal
+      size="md"
       open={open}
       title="Gắn bài CMS vào tri thức trợ lý"
       okText="Gắn bài"
-      cancelText="Huỷ"
       okButtonProps={{ disabled: !canReadPosts }}
-      confirmLoading={submitting}
-      onOk={() => form.submit()}
-      onCancel={onClose}
-      destroyOnHidden
-      width={640}
+      submitting={submitting}
+      onSubmit={() => form.submit()}
+      onClose={onClose}
+      isDirty={() => form.isFieldsTouched()}
     >
       {!canReadPosts && (
         <Alert
@@ -81,10 +81,10 @@ export function AttachKnowledgePostModal({
         </Form.Item>
         <Form.Item name="audience" label="Đối tượng được trợ lý trả lời" rules={[{ required: true, message: 'Chọn đối tượng' }]}>
           <Radio.Group className="flex flex-col gap-1">
-            {Object.entries(knowledgeAudiencePresentation).map(([value, presentation]) => (
-              <Radio key={value} value={value}>
-                <strong>{presentation.label}</strong>
-                <span className="ml-2 text-xs text-slate-500">{presentation.hint}</span>
+            {knowledgeAudienceChoices.map((choice) => (
+              <Radio key={choice.value} value={choice.value}>
+                <strong>{choice.label}</strong>
+                <span className="ml-2 text-xs text-slate-500">{choice.hint}</span>
               </Radio>
             ))}
           </Radio.Group>
@@ -93,6 +93,6 @@ export function AttachKnowledgePostModal({
           <BranchSelect allowClear placeholder={ALL_BRANCHES_LABEL} />
         </Form.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

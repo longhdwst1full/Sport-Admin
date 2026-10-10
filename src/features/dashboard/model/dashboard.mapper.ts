@@ -1,4 +1,4 @@
-import { orderStatusPresentation } from '@/features/orders';
+import { orderStatusPresentation } from '@/features/order-status';
 import type { OrderStatus } from '@/generated/api/orders/orders.schemas';
 import type {
   InventoryReportDto,

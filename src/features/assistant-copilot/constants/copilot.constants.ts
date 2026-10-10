@@ -86,12 +86,12 @@ export const ACTION_DRAFT_ASK_AGAIN_CODES: ReadonlySet<string> = new Set([ACTION
 
 /** `Record<Enum, …>` bắt lỗi compile khi contract thêm trạng thái mà quên nhãn. */
 export const actionDraftStatusPresentation: Record<ActionDraftStatus, StatusPresentation> = {
-  PENDING: { label: 'Chờ xác nhận', color: 'gold' },
-  CONFIRMED: { label: 'Đang thực hiện', color: 'blue' },
-  EXECUTED: { label: 'Đã thực hiện', color: 'green' },
-  FAILED: { label: 'Thất bại', color: 'red' },
-  REJECTED: { label: 'Đã từ chối', color: 'default' },
-  EXPIRED: { label: 'Hết hạn', color: 'default' },
+  PENDING: { label: 'Chờ xác nhận', color: 'warning' },
+  CONFIRMED: { label: 'Đang thực hiện', color: 'info' },
+  EXECUTED: { label: 'Đã thực hiện', color: 'success' },
+  FAILED: { label: 'Thất bại', color: 'danger' },
+  REJECTED: { label: 'Đã từ chối', color: 'danger' },
+  EXPIRED: { label: 'Hết hạn', color: 'danger' },
 };
 
 /** Thông điệp cho `errorCode` của bản nháp FAILED; mã khác hiện nguyên mã để tra cứu. */

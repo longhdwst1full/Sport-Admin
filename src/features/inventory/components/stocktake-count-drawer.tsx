@@ -1,13 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Input, InputNumber, Progress, Tag, Typography } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import type { ColumnsType } from 'antd/es/table';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminTable } from '@/foundation/table';
 import {
   getGetStocktakeQueryKey,
   getListStocktakesQueryKey,
   useRecordStocktakeCounts,
 } from '@/generated/api/inventory/inventory';
-import type { StocktakeDetailDto } from '@/generated/api/inventory/inventory.schemas';
+import type { StocktakeDetailDto, StocktakeItemDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { FormDrawer } from '@/foundation/overlay';
 
@@ -71,13 +72,11 @@ export function StocktakeCountDrawer({
 
   const save = () => {
     if (!stocktake) return;
-    const items = Object.entries(entries)
-      .filter(([sku, entry]) => touched.has(sku) && entry.countedQuantity !== null)
-      .map(([sku, entry]) => ({
-        sku,
-        countedQuantity: entry.countedQuantity as number,
-        note: entry.note.trim() || undefined,
-      }));
+    const items = Object.entries(entries).flatMap(([sku, entry]) =>
+      touched.has(sku) && entry.countedQuantity !== null
+        ? [{ sku, countedQuantity: entry.countedQuantity, note: entry.note.trim() || undefined }]
+        : [],
+    );
     if (items.length === 0) {
       void message.warning('Chưa có thay đổi nào để lưu.');
       return;
@@ -85,10 +84,53 @@ export function StocktakeCountDrawer({
     mutation.mutate({ id: stocktake.id, data: { version: stocktake.version, items } });
   };
 
-  const update = (sku: string, patch: Partial<CountEntry>) => {
+  const update = useCallback((sku: string, patch: Partial<CountEntry>) => {
     setEntries((current) => ({ ...current, [sku]: { ...current[sku], ...patch } }));
     setTouched((current) => new Set(current).add(sku));
-  };
+  }, []);
+
+  const columns = useMemo<ColumnsType<StocktakeItemDto>>(() => [
+    { title: 'SKU', dataIndex: 'sku', width: 160, render: (value) => <Typography.Text code>{value}</Typography.Text> },
+    { title: 'Sản phẩm', dataIndex: 'productName', ellipsis: true },
+    {
+      title: 'Số đếm thực tế',
+      key: 'countedQuantity',
+      width: 170,
+      render: (_, row) => (
+        <InputNumber
+          className="w-full"
+          min={0}
+          precision={0}
+          placeholder="Chưa đếm"
+          value={entries[row.sku]?.countedQuantity ?? null}
+          onChange={(value) => update(row.sku, { countedQuantity: value === null ? null : Number(value) })}
+          aria-label={`Số đếm cho ${row.sku}`}
+        />
+      ),
+    },
+    {
+      title: 'Ghi chú',
+      key: 'note',
+      width: 220,
+      render: (_, row) => (
+        <Input
+          maxLength={500}
+          placeholder="Tuỳ chọn"
+          value={entries[row.sku]?.note ?? ''}
+          onChange={(event) => update(row.sku, { note: event.target.value })}
+          aria-label={`Ghi chú cho ${row.sku}`}
+        />
+      ),
+    },
+    {
+      title: '',
+      key: 'countState',
+      width: 110,
+      render: (_, row) => entries[row.sku]?.countedQuantity === null
+        ? <Tag>Chưa đếm</Tag>
+        : <Tag color="blue">Đã đếm</Tag>,
+    },
+  ], [entries, update]);
 
   return (
     <FormDrawer
@@ -122,45 +164,7 @@ export function StocktakeCountDrawer({
         pagination={false}
         scroll={{ x: 760, y: 520 }}
         locale={{ emptyText: 'Phiếu không có dòng nào.' }}
-        columns={[
-          { title: 'SKU', dataIndex: 'sku', width: 160, render: (value) => <Typography.Text code>{value}</Typography.Text> },
-          { title: 'Sản phẩm', dataIndex: 'productName', ellipsis: true },
-          {
-            title: 'Số đếm thực tế',
-            width: 170,
-            render: (_, row) => (
-              <InputNumber
-                className="w-full"
-                min={0}
-                precision={0}
-                placeholder="Chưa đếm"
-                value={entries[row.sku]?.countedQuantity ?? null}
-                onChange={(value) => update(row.sku, { countedQuantity: value === null ? null : Number(value) })}
-                aria-label={`Số đếm cho ${row.sku}`}
-              />
-            ),
-          },
-          {
-            title: 'Ghi chú',
-            width: 220,
-            render: (_, row) => (
-              <Input
-                maxLength={500}
-                placeholder="Tuỳ chọn"
-                value={entries[row.sku]?.note ?? ''}
-                onChange={(event) => update(row.sku, { note: event.target.value })}
-                aria-label={`Ghi chú cho ${row.sku}`}
-              />
-            ),
-          },
-          {
-            title: '',
-            width: 110,
-            render: (_, row) => entries[row.sku]?.countedQuantity === null
-              ? <Tag>Chưa đếm</Tag>
-              : <Tag color="blue">Đã đếm</Tag>,
-          },
-        ]}
+        columns={columns}
       />
     </FormDrawer>
   );

@@ -1,43 +1,48 @@
 import { useState } from 'react';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { ControlOutlined, GlobalOutlined, PlusOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Input, Select } from 'antd';
+import { App, Button, Select } from 'antd';
 import { useListAdminSystemParameters } from '@/generated/api/system/system';
-import type {
+import {
+  SystemParameterGroup,
   SystemParameterStatus,
-  SystemParameterDto,
+  type SystemParameterDto,
 } from '@/generated/api/system/system.schemas';
 import { useCan } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
 import { SearchInput } from '@/foundation/inputs/search-input';
-import { FilterBar, RefreshButton } from '@/foundation/table';
-import { useSearchState } from '@/shared/hooks/use-search-state';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { useConfirmWithReason } from '@/foundation/overlay';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, FilterBar, RefreshButton } from '@/foundation/table';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { SystemParameterFormModal } from '../components/system-parameter-form-modal';
 import { SystemParameterTable } from '../components/system-parameter-table';
 import {
   PARAMETER_GROUP_OPTIONS,
+  PARAMETER_REASON_MAX_LENGTH,
+  PARAMETER_REASON_MIN_LENGTH,
   PARAMETER_STATUS_OPTIONS,
-  SYSTEM_PARAMETER_PAGE_SIZE,
 } from '../constants/system-parameter.constants';
 import { useSystemParameterCommands } from '../hooks/use-system-parameter-commands';
 import { requiresMfaCode } from '../model/system-parameter-mfa.policy';
 
 export function SystemParametersPage() {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
+  const confirmWithReason = useConfirmWithReason();
   const canManage = useCan('system.parameter.manage');
-  const search = useSearchState();
-  const [groupCode, setGroupCode] = useState<string>();
-  const [status, setStatus] = useState<SystemParameterStatus>();
+  // Ô tìm (`q`), nhóm (`group`), trạng thái (`status`) và trang nằm trên URL; đổi lọc thì về trang 1.
+  const search = useUrlSearch(['q']);
+  const { url } = search;
+  const groupCode = url.getEnum('group', SystemParameterGroup);
+  const status = url.getEnum('status', SystemParameterStatus);
+  const page = url.getNumber('page', 1);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SystemParameterDto>();
-  const [page, setPage] = useListPageReset([search.debounced, groupCode, status]);
 
   const parameters = useListAdminSystemParameters({
     page,
-    limit: SYSTEM_PARAMETER_PAGE_SIZE,
-    search: search.debounced,
-    groupCode: groupCode as never,
+    limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+    search: url.get('q'),
+    groupCode,
     status,
   });
   const rows = parameters.data?.items ?? [];
@@ -51,37 +56,25 @@ export function SystemParametersPage() {
   });
 
   function confirmDeactivate(row: SystemParameterDto) {
-    let reason = '';
-    modal.confirm({
+    confirmWithReason({
       title: `Ngừng dùng ${row.code}?`,
-      content: (
-        <div className="space-y-2">
-          <p className="text-sm text-slate-500">
-            Bản ghi chuyển sang trạng thái ngừng dùng, không bị xóa khỏi database.
-          </p>
-          <Input.TextArea
-            rows={2}
-            placeholder="Nhập lý do ngừng dùng..."
-            onChange={(event) => {
-              reason = event.target.value;
-            }}
-          />
-        </div>
-      ),
+      consequence: 'Bản ghi chuyển sang trạng thái ngừng dùng, không bị xoá khỏi database.',
       okText: 'Ngừng dùng',
-      okButtonProps: { danger: true },
-      cancelText: 'Hủy',
-      onOk: () => {
-        if (reason.trim().length > 0) {
-          void message.error('Nếu nhập lý do');
+      placeholder: 'Lý do ngừng dùng (tuỳ chọn)',
+      minLength: 0,
+      maxLength: PARAMETER_REASON_MAX_LENGTH,
+      onOk: (reason) => {
+        // CONTRACT: lý do tuỳ chọn nhưng nếu nhập thì API yêu cầu tối thiểu 5 ký tự.
+        if (reason && reason.length < PARAMETER_REASON_MIN_LENGTH) {
+          void message.error(`Lý do (nếu nhập) tối thiểu ${PARAMETER_REASON_MIN_LENGTH} ký tự`);
           return Promise.reject(new Error('reason-too-short'));
         }
         if (requiresMfaCode(row)) {
           // Đóng hộp xác nhận rồi mới hỏi mã 2FA: hai modal chồng nhau dễ che mất ô nhập mã.
-          deactivateMutation.mutate({ row, reason: reason.trim() });
+          deactivateMutation.mutate({ row, reason });
           return undefined;
         }
-        return deactivateMutation.mutateAsync({ row, reason: reason.trim() });
+        return deactivateMutation.mutateAsync({ row, reason });
       },
     });
   }
@@ -129,15 +122,15 @@ export function SystemParametersPage() {
             }
           >
             <SearchInput
-              value={search.value}
-              onChange={search.setValue}
+              value={search.values.q}
+              onChange={search.setter('q')}
               placeholder="Mã hoặc tên tham số"
             />
             <Select
               allowClear
               className="min-w-40"
               value={groupCode}
-              onChange={setGroupCode}
+              onChange={(value?: string) => url.patch({ group: value, page: undefined })}
               placeholder="Nhóm"
               options={PARAMETER_GROUP_OPTIONS}
             />
@@ -145,29 +138,21 @@ export function SystemParametersPage() {
               allowClear
               className="min-w-36"
               value={status}
-              onChange={setStatus}
+              onChange={(value?: string) => url.patch({ status: value, page: undefined })}
               placeholder="Trạng thái"
               options={PARAMETER_STATUS_OPTIONS}
             />
           </FilterBar>
         }
       >
-        {parameters.isError && (
-          <Alert
-            className="mb-5"
-            type="error"
-            showIcon
-            message="Không tải được danh sách tham số"
-            description={getApiErrorMessage(parameters.error)}
-          />
-        )}
+        {parameters.isError && <QueryErrorAlert error={parameters.error} retry={() => void parameters.refetch()} />}
         <SystemParameterTable
           rows={rows}
           loading={parameters.isLoading || parameters.isFetching}
           page={page}
           total={parameters.data?.total ?? 0}
           canManage={canManage}
-          onPageChange={setPage}
+          onPageChange={(next) => url.set('page', next > 1 ? next : undefined)}
           onEdit={(row) => {
             setEditing(row);
             setFormOpen(true);

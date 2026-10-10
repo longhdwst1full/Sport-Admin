@@ -1,15 +1,31 @@
-import type { CarrierShipmentStatus, ReturnCondition } from '@/generated/api/fulfillments/fulfillments.schemas';
-import { fulfillmentStatusPresentation } from '@/shared/constants/fulfillment-status-presentation';
+import type { StatusPresentation } from '@/foundation/management';
+import type {
+  CarrierShipmentStatus,
+  FulfillmentStatus,
+  ReturnCondition,
+} from '@/generated/api/fulfillments/fulfillments.schemas';
 import { toOptions } from '@/shared/utils/options';
-// Nhãn trạng thái vận đơn sống ở shared vì `orders` cũng cần nó (xem comment tại nguồn).
-export { fulfillmentStatusPresentation };
+
+/**
+ * Nhãn + tone trạng thái phiếu giao vận. `orders` hiển thị trạng thái vận đơn của đơn qua
+ * `FulfillmentStatusTag` được inject (prop `renderShipmentStatus`), không import thẳng hằng này.
+ */
+export const fulfillmentStatusPresentation: Record<FulfillmentStatus, StatusPresentation> = {
+  PENDING: { label: 'Chờ xử lý', color: 'warning' },
+  PICKING: { label: 'Đang lấy hàng', color: 'progress' },
+  PACKED: { label: 'Đã đóng gói', color: 'progress' },
+  SHIPPED: { label: 'Đã bàn giao', color: 'progress' },
+  DELIVERED: { label: 'Đã giao', color: 'success' },
+  DELIVERY_FAILED: { label: 'Giao thất bại', color: 'danger' },
+  RETURNING_TO_WAREHOUSE: { label: 'Đang hoàn về kho', color: 'progress' },
+  RETURNED_TO_WAREHOUSE: { label: 'Đã nhận hoàn kho', color: 'accent' },
+  CANCELLED: { label: 'Đã huỷ', color: 'neutral' },
+};
 
 export const fulfillmentStatusOptions = toOptions(fulfillmentStatusPresentation);
 
-export const FULFILLMENT_PAGE_SIZE = 20;
-
 /** Nhóm trạng thái mà nhân viên kho cần hành động ngay. */
-export const ACTIONABLE_FULFILLMENT_STATUSES = ['PENDING', 'PICKING', 'PACKED'] as const;
+export const ACTIONABLE_FULFILLMENT_STATUSES: ReadonlySet<FulfillmentStatus> = new Set(['PENDING', 'PICKING', 'PACKED']);
 
 /** Lý do giao thất bại chuẩn hoá gửi kèm lệnh `fail`. */
 export const deliveryFailureReasonOptions = toOptions({
@@ -30,9 +46,9 @@ export const returnConditionOptions = toOptions<ReturnCondition>({
  * Trạng thái vận đơn GHN tự tạo (D14) sau khi đơn trả trước đã thanh toán hoặc COD được xác nhận.
  * `null` nghĩa là đơn không đi luồng tự tạo — vận đơn nhập tay lúc bàn giao như trước.
  */
-export const carrierShipmentStatusPresentation: Record<CarrierShipmentStatus, { label: string; color: string }> = {
-  PENDING: { label: 'Chờ tạo vận đơn', color: 'default' },
-  CREATING: { label: 'Đang tạo vận đơn', color: 'processing' },
+export const carrierShipmentStatusPresentation: Record<CarrierShipmentStatus, StatusPresentation> = {
+  PENDING: { label: 'Chờ tạo vận đơn', color: 'warning' },
+  CREATING: { label: 'Đang tạo vận đơn', color: 'progress' },
   CREATED: { label: 'Đã tạo vận đơn', color: 'success' },
-  CREATE_FAILED: { label: 'Tạo vận đơn lỗi', color: 'error' },
+  CREATE_FAILED: { label: 'Tạo vận đơn lỗi', color: 'danger' },
 };

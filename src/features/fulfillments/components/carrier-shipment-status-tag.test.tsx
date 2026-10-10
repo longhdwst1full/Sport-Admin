@@ -16,9 +16,10 @@ describe('CarrierShipmentStatusTag', () => {
     expect(screen.getByText('Đã tạo vận đơn')).toBeTruthy();
   });
 
-  it('falls back to the raw status code when unrecognized', () => {
+  it('shows a neutral Vietnamese label instead of the raw code when unrecognized', () => {
     render(<CarrierShipmentStatusTag status="SOME_UNKNOWN_STATUS" />);
-    expect(screen.getByText('SOME_UNKNOWN_STATUS')).toBeTruthy();
+    expect(screen.getByText('Không xác định')).toBeTruthy();
+    expect(screen.queryByText('SOME_UNKNOWN_STATUS')).toBeNull();
   });
 
   it('shows a tooltip trigger with the latest error only for CREATE_FAILED', () => {

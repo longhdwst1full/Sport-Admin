@@ -267,7 +267,7 @@ function FreeDeliveryDistrictsField({
     { provinceCode: provinceCode ?? '' },
     { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(provinceCode) } },
   );
-  const selected = field.value ?? [];
+  const selected = field.value;
   const provinceOptions = useMemo(
     () => (provinces.data?.items ?? []).map((item) => ({ value: item.code, label: item.name })),
     [provinces.data],
@@ -278,9 +278,15 @@ function FreeDeliveryDistrictsField({
   );
   // Danh sách đã lưu có thể chứa quận thuộc tỉnh khác tỉnh đang lọc; giữ chúng làm option thô để
   // đổi bộ lọc tỉnh không âm thầm xoá lựa chọn cũ.
-  const extras = selected
-    .filter((code) => !options.some((option) => option.value === code))
-    .map((code) => ({ value: code, label: code }));
+  const allOptions = useMemo(
+    () => [
+      ...options,
+      ...(selected ?? [])
+        .filter((code) => !options.some((option) => option.value === code))
+        .map((code) => ({ value: code, label: code })),
+    ],
+    [options, selected],
+  );
 
   return (
     <Form.Item
@@ -307,11 +313,11 @@ function FreeDeliveryDistrictsField({
           allowClear
           showSearch
           optionFilterProp="label"
-          disabled={!provinceCode && selected.length === 0}
+          disabled={!provinceCode && !selected?.length}
           loading={districts.isFetching}
           placeholder={provinceCode ? 'Chọn quận/huyện giao miễn phí' : 'Chọn tỉnh/thành trước'}
-          value={selected}
-          options={[...options, ...extras]}
+          value={selected ?? []}
+          options={allOptions}
           onChange={(codes: string[]) => field.onChange(codes)}
           onBlur={field.onBlur}
         />

@@ -1,9 +1,9 @@
 import { EyeOutlined } from '@ant-design/icons';
 import { Typography } from 'antd';
 import { StatusTag } from '@/foundation/management';
-import { AdminTable, TableActionButton } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton } from '@/foundation/table';
 import type { ReturnSummaryDto } from '@/generated/api/returns/returns.schemas';
-import { RETURN_PAGE_SIZE, returnReasonLabels, returnStatusPresentation } from '../constants/return.constants';
+import { returnReasonLabels, returnStatusPresentation } from '../constants/return.constants';
 import { RETURN_LIST_TABLE_COLUMNS, type ReturnListColumnId } from '../constants/return-table-columns';
 import { formatDateTime } from '@/lib/format/datetime';
 import { buildTableColumns } from '../model/build-table-columns';
@@ -44,7 +44,7 @@ export function ReturnTable({
       onRow={(row) => ({ onDoubleClick: () => onOpen(row.id) })}
       pagination={{
         current: page,
-        pageSize: RETURN_PAGE_SIZE,
+        pageSize: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
         total,
         showSizeChanger: false,
         showTotal: (value) => `${value} phiếu trả`,

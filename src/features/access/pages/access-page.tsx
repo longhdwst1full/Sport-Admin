@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import { Alert, Button, Tabs } from 'antd';
 import { useAuth } from '@/core/auth/auth-context';
+import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { AdminTable } from '@/foundation/table';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -25,8 +26,10 @@ import { StaffLifecycleModal, type StaffLifecycleAction } from '../components/st
 import { useRoleColumns, useUserColumns } from '../hooks/use-access-columns';
 import { useStaffMfaActions } from '../hooks/use-staff-mfa-actions';
 
+const ACCESS_TABS = ['users', 'roles'] as const;
+
 export function AccessPage() {
-  const [activeTab, setActiveTab] = useState('users');
+  const url = useUrlFilters();
   const [assignmentUserId, setAssignmentUserId] = useState<string>();
   const [revokeTarget, setRevokeTarget] = useState<{
     user: UserDto;
@@ -42,6 +45,9 @@ export function AccessPage() {
   const usersQuery = useListAdminUsers();
   const rolesQuery = useListAdminRoles({ query: { enabled: canViewRoles } });
   const permissionsQuery = useListAdminPermissions({ query: { enabled: canViewRoles } });
+  // Tab nằm trên URL để F5/gửi link giữ đúng tab; không có quyền xem vai trò thì luôn về tab người dùng.
+  const requestedTab = url.getEnum('tab', ACCESS_TABS) ?? 'users';
+  const activeTab = requestedTab === 'roles' && !canViewRoles ? 'users' : requestedTab;
   const users = useMemo(() => usersQuery.data?.items ?? [], [usersQuery.data]);
   // Suy ra từ query để drawer phân quyền thấy ngay assignment vừa thêm/sửa/thu hồi.
   const assignmentUser = users.find((user) => user.id === assignmentUserId);
@@ -65,7 +71,7 @@ export function AccessPage() {
 
   return (
     <ManagementPage
-      eyebrow="Identity & access"
+      eyebrow="Danh tính & truy cập"
       title="Người dùng & phân quyền"
       description="Hệ thống có một tài khoản Admin duy nhất; Admin tạo và phân quyền BRANCH_MANAGER hoặc STAFF theo chi nhánh."
       metrics={[
@@ -79,7 +85,7 @@ export function AccessPage() {
         },
         {
           key: 'permissions',
-          label: 'Permission codes',
+          label: 'Mã quyền',
           value: permissions.length,
           icon: <SafetyCertificateOutlined />,
           tone: 'green',
@@ -105,8 +111,8 @@ export function AccessPage() {
           className="mb-5"
           showIcon
           type="warning"
-          message="Development đang mở bypass ở cả giao diện và API"
-          description="Chỉ dùng cho local development. Staging/production bắt buộc AUTH_BYPASS=false và kiểm tra permission/scope phía server."
+          message="Môi trường phát triển đang bỏ qua kiểm tra quyền ở cả giao diện và API"
+          description="Chỉ dùng cho môi trường phát triển cục bộ. Staging/production bắt buộc AUTH_BYPASS=false và kiểm tra quyền/phạm vi phía server."
         />
       )}
       {hasError && (
@@ -125,7 +131,7 @@ export function AccessPage() {
       )}
       <Tabs
         activeKey={activeTab}
-        onChange={setActiveTab}
+        onChange={(key) => url.set('tab', key === 'users' ? undefined : key)}
         items={[
           {
             key: 'users',

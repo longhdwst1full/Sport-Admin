@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Alert, App, Button, Card, Descriptions, Input, Modal, Skeleton, Space, Tooltip, Typography } from 'antd';
-import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Alert, App, Button, Card, Descriptions, Input, Skeleton, Space, Tooltip, Typography } from 'antd';
+import { ClockCircleOutlined } from '@ant-design/icons';
 import { usePermissions } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { StatusTag } from '@/foundation/management';
+import { FormModal } from '@/foundation/overlay';
+import { RefreshButton } from '@/foundation/table';
 import { formatDateTime } from '@/lib/format/datetime';
 import { actionDraftStatusPresentation, COPILOT_LIMITS } from '../constants/copilot.constants';
 import { useActionDraft, useActionDraftCommand, useNow } from '../hooks/use-action-draft';
@@ -24,14 +27,14 @@ export function ActionDraftCard({ draftId, onAskAgain }: { draftId: string; onAs
   }
   if (query.isError || !query.data) {
     return (
-      <Alert
-        className="!mt-2"
-        type="error"
-        showIcon
-        message="Không tải được bản nháp"
-        description={actionDraftErrorMessage(query.error)}
-        action={<Button size="small" onClick={() => void query.refetch()}>Thử lại</Button>}
-      />
+      <div className="mt-2">
+        <QueryErrorAlert
+          error={query.error}
+          message="Không tải được bản nháp"
+          description={actionDraftErrorMessage(query.error)}
+          retry={() => void query.refetch()}
+        />
+      </div>
     );
   }
   return <ActionDraftCardBody draft={query.data} refetch={query.refetch} onAskAgain={onAskAgain} />;
@@ -114,7 +117,7 @@ function ActionDraftCardBody({
           type="info"
           showIcon
           message="Đang thực hiện điều chỉnh"
-          action={<Button size="small" icon={<ReloadOutlined />} onClick={() => void refetch()}>Tải lại</Button>}
+          action={<RefreshButton onRefresh={refetch} />}
         />
       )}
       {affordances.status === 'FAILED' && (
@@ -155,21 +158,21 @@ function ActionDraftCardBody({
         onConfirm={() => command.mutate({ action: 'confirm' }, { onSuccess: () => setConfirmOpen(false), onError: toastError })}
         onClose={() => setConfirmOpen(false)}
       />
-      <Modal
+      <FormModal
+        size="sm"
         open={rejectOpen}
         title="Từ chối bản nháp?"
         okText="Từ chối"
-        cancelText="Quay lại"
-        confirmLoading={command.isPending}
+        submitting={command.isPending}
         okButtonProps={{ disabled: reasonInvalid }}
-        onOk={() =>
+        isDirty={() => trimmedReason.length > 0}
+        onSubmit={() =>
           command.mutate(
             { action: 'reject', reason: trimmedReason || undefined },
             { onSuccess: () => { setRejectOpen(false); setRejectReason(''); }, onError: toastError },
           )
         }
-        onCancel={() => setRejectOpen(false)}
-        destroyOnHidden
+        onClose={() => setRejectOpen(false)}
       >
         <Typography.Paragraph>Bản nháp sẽ đóng lại và tồn kho không thay đổi. Muốn điều chỉnh sau này phải hỏi lại trợ lý.</Typography.Paragraph>
         <Input.TextArea
@@ -181,7 +184,7 @@ function ActionDraftCardBody({
           placeholder="Lý do (không bắt buộc, tối thiểu 3 ký tự)"
           status={reasonInvalid ? 'error' : undefined}
         />
-      </Modal>
+      </FormModal>
     </Card>
   );
 }

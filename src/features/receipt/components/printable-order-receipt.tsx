@@ -67,7 +67,7 @@ export function PrintableOrderReceipt({ order }: { order?: OrderDetailDto }) {
             <dd>
               {RECEIPT_PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}
               {' · '}
-              {RECEIPT_PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}
+              {RECEIPT_PAYMENT_STATUS_LABELS[order.paymentStatus]}
             </dd>
           </div>
         </dl>

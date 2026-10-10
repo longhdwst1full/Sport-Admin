@@ -2,27 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { VideoCameraAddOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Button, Progress, Upload } from 'antd';
-import { isAxiosError, isCancel } from 'axios';
 import type { MediaAssetDto } from '@/generated/api/media/media.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
 import { VIDEO_ACCEPT } from '@/lib/media/cloudinary';
-import { uploadVideo } from '@/lib/media/upload-video';
+import { getVideoUploadErrorMessage, isUploadAbortError, uploadVideo } from '@/lib/media/upload-video';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 
-const isAbortError = (error: unknown, signal: AbortSignal) =>
-  signal.aborted || isCancel(error) || (error instanceof DOMException && error.name === 'AbortError');
-
 const UPLOAD_VIDEO_FALLBACK = 'Upload video thất bại.';
-
-/** Lỗi phần tải lên Cloudinary là AxiosError thô với body `{ error: { message } }`; lỗi API đi qua `getApiErrorMessage`. */
-function getVideoUploadErrorMessage(error: unknown): string {
-  if (isAxiosError<{ error?: { message?: unknown } }>(error)) {
-    const cloudinaryMessage = error.response?.data?.error?.message;
-    if (typeof cloudinaryMessage === 'string' && cloudinaryMessage) return cloudinaryMessage;
-    return UPLOAD_VIDEO_FALLBACK;
-  }
-  return getApiErrorMessage(error, UPLOAD_VIDEO_FALLBACK);
-}
 
 /**
  * Nút tải một video vào Thư viện media, kèm thanh tiến độ và nút huỷ. Video tải theo phần nên có thể
@@ -59,11 +44,11 @@ export function VideoUploadButton({
         void message.success('Đã tải video lên.');
       })
       .catch((error: unknown) => {
-        if (isAbortError(error, controller.signal)) {
+        if (isUploadAbortError(error, controller.signal)) {
           void message.info('Đã huỷ tải video.');
           return;
         }
-        void message.error(getVideoUploadErrorMessage(error));
+        void message.error(getVideoUploadErrorMessage(error, UPLOAD_VIDEO_FALLBACK));
       })
       .finally(() => {
         if (controllerRef.current === controller) controllerRef.current = null;

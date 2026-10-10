@@ -1,13 +1,14 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Descriptions, Drawer, Empty, Form, Input, InputNumber, Modal, Skeleton, Tag, Typography } from 'antd';
+import { Alert, App, Button, Descriptions, Empty, Form, Input, InputNumber, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
 import { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { usePermissions } from '@/core/auth/permissions';
-import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { StatusTag } from '@/foundation/management';
+import { DetailDrawer, useConfirmWithReason } from '@/foundation/overlay';
 import {
   getGetStockTransferQueryKey,
   getListInventoryBalancesQueryKey,
@@ -25,7 +26,6 @@ import { formatDateTime } from '@/lib/format/datetime';
 import { StockTransferCreateDrawer } from './stock-transfer-create-drawer';
 import { availableStockTransferActions } from '../model/stock-transfer-actions.policy';
 import { stockTransferStatusMeta } from '../constants/stock-transfer.constants';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
 
 interface ReceiveLineValues {
   sku: string;
@@ -46,8 +46,6 @@ const receiveSchema: yup.ObjectSchema<ReceiveValues> = yup.object({
     damageReason: yup.string().trim().max(500, 'Tối đa 500 ký tự').optional(),
   })).required(),
 });
-
-
 
 const TRANSFER_ITEM_COLUMNS: ColumnsType<StockTransferItemDto> = [
   { title: 'SKU / Sản phẩm', dataIndex: 'sku', render: (value, row) => <div><strong>{value}</strong><div className="text-xs text-slate-500">{row.productName}</div></div> },
@@ -79,8 +77,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
   const permissions = usePermissions();
   const actions = transfer ? availableStockTransferActions(transfer.status, permissions) : [];
   const [editing, setEditing] = useState(false);
-  const [cancelOpen, setCancelOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const confirmWithReason = useConfirmWithReason();
 
   useEffect(() => {
     form.reset(receiveDefaults(transfer));
@@ -121,16 +118,20 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
   } });
 
   const cancelMutation = useCancelStockTransfer({ mutation: {
-    onSuccess: (result) => {
-      setCancelOpen(false);
-      setCancelReason('');
-      success(result, `Đã huỷ phiếu ${result.transferNo}.`);
-    },
+    onSuccess: (result) => success(result, `Đã huỷ phiếu ${result.transferNo}.`),
     onError: (error) => failure(error, 'Không thể huỷ phiếu chuyển kho.'),
   } });
-  const submitCancel = () => {
-    if (!transfer || cancelReason.trim().length < 3) return;
-    cancelMutation.mutate({ id: transfer.id, data: { version: transfer.version, reason: cancelReason.trim() } });
+  const confirmCancel = () => {
+    if (!transfer) return;
+    confirmWithReason({
+      title: `Huỷ phiếu ${transfer.transferNo}?`,
+      consequence: 'Phiếu chưa xuất kho nên huỷ không làm thay đổi tồn. Thao tác không hoàn tác được.',
+      okText: 'Huỷ phiếu',
+      placeholder: 'Lý do huỷ (ít nhất 3 ký tự)',
+      minLength: 3,
+      maxLength: 1000,
+      onOk: (reason) => cancelMutation.mutateAsync({ id: transfer.id, data: { version: transfer.version, reason } }),
+    });
   };
 
   const confirmSubmit = () => {
@@ -139,7 +140,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
       title: `Gửi phiếu ${transfer.transferNo}?`,
       content: 'Sau khi gửi, phiếu chuyển sang Chờ xuất và không thể sửa danh sách SKU trong V1.',
       okText: 'Gửi phiếu',
-      cancelText: 'Hủy',
+      cancelText: 'Huỷ',
       onOk: () => submitMutation.mutateAsync({ id: transfer.id, data: { version: transfer.version } }),
     });
   };
@@ -150,7 +151,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
       content: 'Hệ thống sẽ trừ tồn khả dụng tại kho xuất và ghi TRANSFER_OUT. Thao tác này không thể hoàn tác trực tiếp.',
       okText: 'Xuất kho',
       okButtonProps: { danger: true },
-      cancelText: 'Hủy',
+      cancelText: 'Huỷ',
       onOk: () => shipMutation.mutateAsync({ id: transfer.id, data: { version: transfer.version } }),
     });
   };
@@ -189,17 +190,23 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
   });
 
   return (
-    <Drawer title={transfer ? `Phiếu ${transfer.transferNo}` : 'Chi tiết chuyển kho'} width={DRAWER_WIDTH.lg} open={Boolean(id)} onClose={onClose} destroyOnHidden>
-      {detail.isPending ? <Skeleton active /> : detail.isError ? (
-        <QueryErrorAlert error={detail.error} retry={() => void detail.refetch()} />
-      ) : !transfer ? <Empty description="Không tìm thấy phiếu chuyển kho" /> : (
+    <>
+    <DetailDrawer
+      title={transfer ? `Phiếu ${transfer.transferNo}` : 'Chi tiết chuyển kho'}
+      status={transfer && <StatusTag status={transfer.status} presentations={stockTransferStatusMeta} />}
+      open={Boolean(id)}
+      onClose={onClose}
+      loading={detail.isPending}
+      error={detail.isError ? detail.error : undefined}
+      onRetry={() => void detail.refetch()}
+    >
+      {!transfer ? <Empty description="Không tìm thấy phiếu chuyển kho" /> : (
         <div className="space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-slate-50 p-4">
             <div>
-              <Typography.Title level={4} style={{ margin: 0 }}>{transfer.fromWarehouseCode} → {transfer.toWarehouseCode}</Typography.Title>
-              <Typography.Text type="secondary">Tạo bởi {transfer.createdByDisplayName} · version {transfer.version}</Typography.Text>
+              <Typography.Title level={4} className="!m-0">{transfer.fromWarehouseCode} → {transfer.toWarehouseCode}</Typography.Title>
+              <Typography.Text type="secondary">Tạo bởi {transfer.createdByDisplayName} · phiên bản {transfer.version}</Typography.Text>
             </div>
-            <Tag color={stockTransferStatusMeta[transfer.status].color}>{stockTransferStatusMeta[transfer.status].label}</Tag>
           </div>
           <Descriptions bordered size="small" column={{ xs: 1, sm: 2 }}>
             <Descriptions.Item label="Lý do" span={2}>{transfer.reason}</Descriptions.Item>
@@ -238,7 +245,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
           )}
 
           <div className="flex justify-end gap-2">
-            {actions.includes('cancel') && <Button danger onClick={() => setCancelOpen(true)}>Huỷ phiếu</Button>}
+            {actions.includes('cancel') && <Button danger loading={cancelMutation.isPending} onClick={confirmCancel}>Huỷ phiếu</Button>}
             {actions.includes('edit') && <Button onClick={() => setEditing(true)}>Sửa phiếu</Button>}
             {actions.includes('submit') && <Button type="primary" loading={submitMutation.isPending} onClick={confirmSubmit}>Gửi phiếu</Button>}
             {actions.includes('ship') && <Button type="primary" danger loading={shipMutation.isPending} onClick={confirmShip}>Xác nhận xuất kho</Button>}
@@ -246,20 +253,9 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
           </div>
         </div>
       )}
-      <StockTransferCreateDrawer open={editing && Boolean(transfer)} transfer={transfer} onClose={() => setEditing(false)} />
-      <Modal
-        title={transfer ? `Huỷ phiếu ${transfer.transferNo}?` : 'Huỷ phiếu'}
-        open={cancelOpen}
-        okText="Huỷ phiếu"
-        okButtonProps={{ danger: true, disabled: cancelReason.trim().length < 3, loading: cancelMutation.isPending }}
-        cancelText="Đóng"
-        onOk={submitCancel}
-        onCancel={() => setCancelOpen(false)}
-        destroyOnHidden
-      >
-        <p className="mb-3 text-slate-600">Phiếu chưa xuất kho nên huỷ không làm thay đổi tồn. Thao tác không hoàn tác được.</p>
-        <Input.TextArea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} rows={3} maxLength={1000} showCount placeholder="Lý do huỷ (ít nhất 3 ký tự)" />
-      </Modal>
-    </Drawer>
+    </DetailDrawer>
+    {/* PERF: drawer sửa (kèm lookup kho/SKU) chỉ mount khi đang sửa. */}
+    {editing && transfer && <StockTransferCreateDrawer open transfer={transfer} onClose={() => setEditing(false)} />}
+    </>
   );
 }

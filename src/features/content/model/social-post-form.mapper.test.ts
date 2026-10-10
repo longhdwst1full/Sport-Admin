@@ -1,14 +1,18 @@
+// @vitest-environment jsdom
 import dayjs from 'dayjs';
 import { describe, expect, it } from 'vitest';
 import { FacebookPublishType as T } from '@/generated/api/content/content.schemas';
 import {
+  captionLength,
   composeCaption,
   maxMediaFor,
   scheduleWindowError,
   socialMediaRuleViolation,
   toCreateSocialPostDto,
+  toSocialFormValues,
   toUpdateFacebookDraftDto,
 } from './social-post-form.mapper';
+import type { SocialPostDetailDto } from '@/generated/api/content/content.schemas';
 
 describe('socialMediaRuleViolation', () => {
   it('mirrors the API media rules', () => {
@@ -60,6 +64,26 @@ describe('DTO mapping', () => {
   it('never sends title/body when updating a website post draft', () => {
     expect(toUpdateFacebookDraftDto(values, 4, false)).toEqual({ expectedVersion: 4, mediaAssetIds: ['2', '1'] });
     expect(toUpdateFacebookDraftDto(values, 4, true).body).toBe('Caption\n\nhttps://shop.vn');
+  });
+});
+
+describe('caption HTML boundary', () => {
+  const base = { title: 'T', link: undefined, publishType: T.FEED, media: [] };
+
+  it('sends editor HTML as plain text (<br>, entities)', () => {
+    expect(toCreateSocialPostDto({ ...base, body: '<p>Giày &amp; dép<br>Giảm 10% &lt;3</p>' }).body).toBe(
+      'Giày & dép\nGiảm 10% <3',
+    );
+  });
+
+  it('loads a plain caption into editor HTML', () => {
+    const detail = { title: 'T', body: 'A & B\n<ok>', facebook: undefined, tiktok: undefined } as unknown as SocialPostDetailDto;
+    expect(toSocialFormValues(detail).body).toBe('A &amp; B<br>&lt;ok&gt;');
+  });
+
+  it('counts caption length on plain text', () => {
+    expect(captionLength('<p>a&amp;b</p>')).toBe(3);
+    expect(captionLength('')).toBe(0);
   });
 });
 

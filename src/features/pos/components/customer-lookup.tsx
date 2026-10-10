@@ -1,9 +1,8 @@
-import { useState } from 'react';
 import { AutoComplete, Input, Tag } from 'antd';
-import { useDebounce } from 'use-debounce';
 import { useListAdminCustomers } from '@/generated/api/customers/customers';
+import { useSearchState } from '@/shared/hooks/use-search-state';
 
-export interface CustomerLookupValue {
+interface CustomerLookupValue {
   name: string;
   phone: string;
   email: string;
@@ -24,8 +23,8 @@ export function CustomerLookup({
   onChange: (patch: Partial<CustomerLookupValue>) => void;
   disabled?: boolean;
 }) {
-  const [keyword, setKeyword] = useState('');
-  const [debounced] = useDebounce(keyword.trim(), 350);
+  const keyword = useSearchState();
+  const debounced = keyword.debounced ?? '';
   const query = useListAdminCustomers(
     { phone: debounced, limit: 8 },
     // Chỉ gọi khi người dùng đã gõ đủ để thu hẹp; tra theo một chữ số là quét cả bảng khách.
@@ -53,7 +52,7 @@ export function CustomerLookup({
       options={options}
       value={value.phone}
       onSearch={(text) => {
-        setKeyword(text);
+        keyword.setValue(text);
         onChange({ phone: text });
       }}
       onChange={(text) => onChange({ phone: text })}

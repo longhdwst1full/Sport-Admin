@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
-import { useDebouncedCallback } from 'use-debounce';
 import {
   useListAdminCategories,
   useListAdminProducts,
 } from '@/generated/api/catalog/catalog';
-import { SEARCH_DEBOUNCE_MS, useSearchState } from '@/shared/hooks/use-search-state';
-import { useUrlFilters } from '@/shared/hooks/use-url-filters';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { PRODUCT_LIST_DEFAULT_PAGE_SIZE } from '../constants/product-list.constants';
 import { toProductListRow } from '../model/product-list.mapper';
+
+const SEARCH_KEYS = ['name', 'sku', 'code'] as const;
 
 /**
  * Sở hữu toàn bộ query/filter/pagination của danh sách sản phẩm.
@@ -18,28 +18,11 @@ import { toProductListRow } from '../model/product-list.mapper';
  * Đổi bộ lọc thì xoá `page` (về trang 1). Kích thước trang chỉ sống trong màn.
  */
 export function useProductList() {
-  const url = useUrlFilters();
-  const name = useSearchState(url.get('name') ?? '');
-  const sku = useSearchState(url.get('sku') ?? '');
-  const productNo = useSearchState(url.get('code') ?? '');
+  const search = useUrlSearch(SEARCH_KEYS);
+  const { url } = search;
   const category = url.get('category');
   const page = url.getNumber('page', 1);
   const [pageSize, setPageSize] = useState(PRODUCT_LIST_DEFAULT_PAGE_SIZE);
-  // Gọi lúc hết debounce với closure mới nhất nên đọc đúng giá trị cả ba ô.
-  const commitSearch = useDebouncedCallback(
-    () =>
-      url.patch({
-        name: name.value.trim(),
-        sku: sku.value.trim(),
-        code: productNo.value.trim(),
-        page: undefined,
-      }),
-    SEARCH_DEBOUNCE_MS,
-  );
-  const typed = (setValue: (value: string) => void) => (value: string) => {
-    setValue(value);
-    commitSearch();
-  };
 
   const query = useListAdminProducts({
     page,
@@ -67,12 +50,12 @@ export function useProductList() {
   );
 
   return {
-    name: name.value,
-    setName: typed(name.setValue),
-    sku: sku.value,
-    setSku: typed(sku.setValue),
-    productNo: productNo.value,
-    setProductNo: typed(productNo.setValue),
+    name: search.values.name,
+    setName: search.setter('name'),
+    sku: search.values.sku,
+    setSku: search.setter('sku'),
+    productNo: search.values.code,
+    setProductNo: search.setter('code'),
     category,
     setCategory: (value?: string) => url.patch({ category: value, page: undefined }),
     page,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, App, Button, Card, Descriptions, Drawer, Empty, Image, Space, Table, Tag, Timeline, Typography } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Empty, Image, Space, Table, Tag, Timeline, Typography } from 'antd';
 import { usePermissions } from '@/core/auth/permissions';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable } from '@/foundation/table';
@@ -28,7 +28,7 @@ import { useReturnCommand, type ReturnCommand } from '../hooks/use-return-comman
 import { buildTableColumns } from '../model/build-table-columns';
 import { availableReturnActions, type ReturnAction } from '../model/return-actions.policy';
 import { ReturnActionModal } from './return-action-modal';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { DetailDrawer } from '@/foundation/overlay';
 
 const actionButtons: Record<ReturnAction, { label: string; type?: 'primary'; danger?: boolean }> = {
   approve: { label: 'Duyệt', type: 'primary' },
@@ -73,29 +73,16 @@ export function ReturnDetailDrawer({ returnId, onClose }: { returnId?: string; o
   };
 
   return (
-    <Drawer
+    <DetailDrawer
       open={Boolean(returnId)}
       onClose={closeDrawer}
-      width={DRAWER_WIDTH.lg}
-      title={detail ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <span>{detail.returnNo}</span>
-          <StatusTag status={detail.status} presentations={returnStatusPresentation} />
-        </div>
-      ) : 'Phiếu trả hàng'}
-      extra={detail && <ActionBar detail={detail} permissions={permissions} onAction={setAction} />}
-      destroyOnHidden
+      title={detail?.returnNo ?? 'Phiếu trả hàng'}
+      status={detail && <StatusTag status={detail.status} presentations={returnStatusPresentation} />}
+      actions={detail && <ActionBar detail={detail} permissions={permissions} onAction={setAction} />}
+      loading={detailQuery.isLoading}
+      error={detailQuery.isError ? detailQuery.error : undefined}
+      onRetry={() => void detailQuery.refetch()}
     >
-      {detailQuery.isLoading && <Card loading className="rounded-2xl" />}
-      {detailQuery.isError && (
-        <Alert
-          type="error"
-          showIcon
-          message="Không tải được phiếu trả"
-          description={getApiErrorMessage(detailQuery.error)}
-          action={<Button onClick={() => void detailQuery.refetch()}>Thử lại</Button>}
-        />
-      )}
       {detail && (
         <div className="space-y-5">
           <ReturnSummary detail={detail} />
@@ -123,7 +110,7 @@ export function ReturnDetailDrawer({ returnId, onClose }: { returnId?: string; o
           />
         </div>
       )}
-    </Drawer>
+    </DetailDrawer>
   );
 }
 
@@ -176,7 +163,7 @@ function ReturnSummary({ detail }: { detail: ReturnDetailDto }) {
         <Image.PreviewGroup>
           <Space wrap className="mt-2">
             {detail.evidenceImages.map((image) => (
-              <Image key={image.url} width={96} height={96} src={image.thumbnailUrl} preview={{ src: image.url }} className="rounded-lg object-cover" />
+              <Image key={image.url} width={96} height={96} loading="lazy" src={image.thumbnailUrl} preview={{ src: image.url }} className="rounded-lg object-cover" />
             ))}
           </Space>
         </Image.PreviewGroup>
@@ -217,7 +204,7 @@ const refundColumns = buildTableColumns<RefundDto, RefundColumnId>(REFUND_TABLE_
         <Image.PreviewGroup>
           <Space className="mt-1">
             {refund.proofImages.map((image) => (
-              <Image key={image.url} width={40} height={40} src={image.thumbnailUrl} preview={{ src: image.url }} className="rounded object-cover" />
+              <Image key={image.url} width={40} height={40} loading="lazy" src={image.thumbnailUrl} preview={{ src: image.url }} className="rounded object-cover" />
             ))}
           </Space>
         </Image.PreviewGroup>

@@ -13,10 +13,11 @@ import {
   useCreateAdminProductVariant,
   useReactivateAdminProductVariant,
 } from '@/generated/api/catalog/catalog';
-import { ProductType, type ProductDetailDto, type ProductVariantDto } from '@/generated/api/catalog/catalog.schemas';
+import { ProductType, type ProductDetailDto, type ProductVariantDto, type ProductVariantStatus } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatMoney } from '@/lib/format/money';
 import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../../constants/product-list.constants';
+import { PRODUCT_VARIANT_STATUS_PRESENTATION } from '../../constants/product-status.constants';
 import { ProductPricePanel } from '../product-price-panel';
 import { VariantEditDrawer } from '../variant-edit-drawer';
 
@@ -123,7 +124,7 @@ export function ProductVariantsManager({
         : 'SKU chỉ được kích hoạt lại khi sản phẩm chưa bị lưu trữ.',
       okText: isActive ? 'Lưu trữ SKU' : 'Kích hoạt lại',
       okButtonProps: { danger: isActive },
-      cancelText: 'Hủy',
+      cancelText: 'Huỷ',
       onOk: () => isActive
         ? archiveVariant.mutateAsync({ variantId: variant.id, data: { expectedVersion: variant.version } })
         : reactivateVariant.mutateAsync({ variantId: variant.id, data: { expectedVersion: variant.version } }),
@@ -135,11 +136,7 @@ export function ProductVariantsManager({
     col.text<ProductVariantDto>('sku', 'SKU'),
     col.text<ProductVariantDto>('name', 'Tên biến thể'),
     col.text<ProductVariantDto>('barcode', 'Barcode'),
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      render: (value: string) => <Tag color={value === 'ACTIVE' ? 'green' : 'default'}>{value}</Tag>,
-    },
+    col.status<ProductVariantDto, ProductVariantStatus>('status', 'Trạng thái', PRODUCT_VARIANT_STATUS_PRESENTATION, { width: undefined }),
     {
       title: 'Giá đã VAT',
       dataIndex: 'effectivePrice',

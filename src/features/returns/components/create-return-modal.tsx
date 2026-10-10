@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Checkbox, Form, Input, InputNumber, Modal, Radio, Select, Typography } from 'antd';
+import { Alert, App, Checkbox, Form, Input, InputNumber, Radio, Select, Typography } from 'antd';
+import { FormModal } from '@/foundation/overlay';
 import { useCan } from '@/core/auth/permissions';
 import { AdminTable } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
@@ -112,18 +113,16 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
   });
 
   return (
-    <Modal
+    <FormModal
       open={open}
       title={`Tạo phiếu trả · Đơn ${eligibility.orderNo}`}
       okText={canDecide ? 'Tạo và duyệt' : 'Gửi yêu cầu'}
-      cancelText="Đóng"
-      width={860}
-      okButtonProps={{ loading: mutation.isPending, disabled: uploading || !hasSelection }}
-      cancelButtonProps={{ disabled: mutation.isPending }}
-      maskClosable={!mutation.isPending}
-      onOk={() => form.submit()}
-      onCancel={close}
-      destroyOnHidden
+      size="lg"
+      okButtonProps={{ disabled: uploading || !hasSelection }}
+      submitting={mutation.isPending}
+      isDirty={() => form.isFieldsTouched() || images.length > 0}
+      onSubmit={() => form.submit()}
+      onClose={close}
     >
       <Form
         form={form}
@@ -193,6 +192,6 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
           </Typography.Text>
         </Typography.Paragraph>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

@@ -68,7 +68,7 @@ export function ProductVariantsTab({
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-                aria-label={`Xóa biến thể ${index + 1}`}
+                aria-label={`Xoá biến thể ${index + 1}`}
                 disabled={variantFields.fields.length === 1}
                 onClick={() => variantFields.remove(index)}
               />

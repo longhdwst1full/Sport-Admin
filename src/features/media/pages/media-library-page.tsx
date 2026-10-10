@@ -1,25 +1,25 @@
 import { useMemo, useState } from 'react';
 import { DeleteOutlined, FileImageOutlined, PictureOutlined } from '@ant-design/icons';
-import { Alert, Button, Checkbox, Image, Select, Tag, Tooltip, Typography } from 'antd';
+import { Button, Checkbox, Image, Select, Tag, Tooltip, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, col, FilterBar, RefreshButton } from '@/foundation/table';
+import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, col, FilterBar, RefreshButton } from '@/foundation/table';
 import { useListAdminMediaAssets } from '@/generated/api/media/media';
-import type { MediaAssetStatus, MediaAssetSummaryDto } from '@/generated/api/media/media.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
-import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
-import { useSearchState } from '@/shared/hooks/use-search-state';
+import { MediaAssetStatus, type MediaAssetSummaryDto } from '@/generated/api/media/media.schemas';
+import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { MediaAssetDrawer } from '../components/media-asset-drawer';
 import {
-  MEDIA_LIBRARY_PAGE_SIZE,
   MEDIA_PERMISSION,
   mediaStatusOptions,
   mediaStatusPresentation,
   IMAGE_FALLBACK_SRC,
 } from '../constants/media-library.constants';
 import { formatAssetSize } from '../model/media-format';
+
+const SEARCH_KEYS = ['search'] as const;
 
 /** Cột dữ liệu của thư viện ảnh; cột xoá ghép trong component vì phụ thuộc quyền. */
 const MEDIA_COLUMNS: ColumnsType<MediaAssetSummaryDto> = [
@@ -35,13 +35,14 @@ const MEDIA_COLUMNS: ColumnsType<MediaAssetSummaryDto> = [
         alt={row.altText ?? row.publicId}
         width={56}
         height={56}
+        loading="lazy"
         preview={false}
         className="rounded object-cover"
       />
     ),
   },
   {
-    title: 'Public id',
+    title: 'Mã công khai',
     dataIndex: 'publicId',
     width: 320,
     render: (value: string, row) => (
@@ -66,17 +67,19 @@ const MEDIA_COLUMNS: ColumnsType<MediaAssetSummaryDto> = [
 /** Thư viện ảnh (MED-02) và điểm vào xoá ảnh khỏi Cloudinary (MED-03). */
 export function MediaLibraryPage() {
   const canManage = useCan(MEDIA_PERMISSION.MANAGE);
-  const [pageSize, setPageSize] = useState(MEDIA_LIBRARY_PAGE_SIZE);
-  const search = useSearchState();
-  const [status, setStatus] = useState<MediaAssetStatus>();
-  const [unusedOnly, setUnusedOnly] = useState(false);
+  // Lọc/trang nằm trên URL (`search`, `status`, `unused`, `page`) để F5/Back/gửi link giữ nguyên.
+  const search = useUrlSearch(SEARCH_KEYS);
+  const { url } = search;
+  const status = url.getEnum('status', MediaAssetStatus);
+  const unusedOnly = url.get('unused') === '1';
+  const page = url.getNumber('page', 1);
+  const [pageSize, setPageSize] = useState(ADMIN_TABLE_DEFAULT_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
-  const [page, setPage] = useListPageReset([search.debounced, status, unusedOnly, pageSize]);
 
   const assets = useListAdminMediaAssets({
     page,
     limit: pageSize,
-    search: search.debounced,
+    search: url.get('search'),
     status,
     unusedOnly: unusedOnly || undefined,
   });
@@ -129,32 +132,29 @@ export function MediaLibraryPage() {
         <FilterBar actions={<RefreshButton onRefresh={assets.refetch} loading={assets.isFetching} />}>
           <SearchInput
             className="min-w-64 flex-1"
-            value={search.value}
-            onChange={search.setValue}
-            placeholder="Public id, thư mục hoặc alt text"
+            value={search.values.search}
+            onChange={search.setter('search')}
+            placeholder="Mã công khai, thư mục hoặc mô tả ảnh"
           />
           <Select
             allowClear
             className="min-w-48"
             value={status}
-            onChange={setStatus}
+            onChange={(value?: MediaAssetStatus) => url.patch({ status: value, page: undefined })}
             placeholder="Đang lưu"
             options={mediaStatusOptions}
           />
-          <Checkbox checked={unusedOnly} onChange={(event) => setUnusedOnly(event.target.checked)}>
+          <Checkbox checked={unusedOnly} onChange={(event) => url.patch({ unused: event.target.checked ? '1' : undefined, page: undefined })}>
             Chỉ ảnh không còn dùng
           </Checkbox>
         </FilterBar>
       }
     >
       {assets.isError && (
-        <Alert
-          className="mb-5"
-          type="error"
-          showIcon
+        <QueryErrorAlert
+          error={assets.error}
           message="Không tải được thư viện ảnh"
-          description={getApiErrorMessage(assets.error)}
-          action={<Button onClick={() => void assets.refetch()}>Thử lại</Button>}
+          retry={() => void assets.refetch()}
         />
       )}
       <AdminTable<MediaAssetSummaryDto>
@@ -169,7 +169,7 @@ export function MediaLibraryPage() {
           total,
           showTotal: (value) => `${value} ảnh`,
           onChange: (nextPage, nextPageSize) => {
-            setPage(nextPageSize === pageSize ? nextPage : 1);
+            url.set('page', nextPageSize === pageSize && nextPage > 1 ? nextPage : undefined);
             setPageSize(nextPageSize);
           },
         }}

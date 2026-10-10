@@ -1,11 +1,12 @@
 import { Tag, Tree, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
+import { StatusTag } from '@/foundation/management/status-tag';
 import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
-import type { PermissionDto, RoleDto } from '@/generated/api/iam/iam.schemas';
-import { permissionActionLabels } from '../constants/role.constants';
+import { RoleStatus, type PermissionDto, type RoleDto } from '@/generated/api/iam/iam.schemas';
+import { permissionActionLabels, ROLE_STATUS_PRESENTATION } from '../constants/role.constants';
 import { buildPermissionTree } from '../model/permission-tree';
 import { getRoleDeleteState } from '../model/role-lifecycle.policy';
 import { buildMenuVisibility } from '../model/menu-visibility';
@@ -74,17 +75,11 @@ export function RoleTable({
         width: 280,
         render: (_value, row) => (
           <div>
-            <div className="font-medium">
+            <div className="flex flex-wrap items-center gap-2 font-medium">
               {row.name}
-              {row.system && (
-                <Tag color="blue" className="ml-2">
-                  Hệ thống
-                </Tag>
-              )}
-              {row.status === 'INACTIVE' && (
-                <Tag color="default" className="ml-2">
-                  Ngừng dùng
-                </Tag>
+              {row.system && <Tag className="!m-0">Hệ thống</Tag>}
+              {row.status === RoleStatus.INACTIVE && (
+                <StatusTag status={row.status} presentations={ROLE_STATUS_PRESENTATION} />
               )}
             </div>
             <Typography.Text type="secondary" className="text-xs">
@@ -96,10 +91,10 @@ export function RoleTable({
       col.text<RoleDto>('description', 'Mô tả', { width: 360, ellipsis: true }),
       {
         title: 'Số quyền',
-        dataIndex: 'permissionCodes',
+        key: 'permissionCount',
         width: 110,
         align: 'center',
-        render: (codes: string[]) => codes.length,
+        render: (_value, row) => row.permissionCodes.length,
       },
       col.actions<RoleDto>(
         (row) => {

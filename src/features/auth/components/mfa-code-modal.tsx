@@ -38,7 +38,7 @@ export function MfaCodeModal({
       open={open}
       title={title ?? 'Nhập mã xác thực'}
       okText={okText ?? 'Xác nhận'}
-      cancelText="Hủy"
+      cancelText="Huỷ"
       okButtonProps={{ danger, disabled: !MFA_CODE_PATTERN.test(code) }}
       confirmLoading={submitting}
       onOk={() => onSubmit(code)}
