@@ -21,15 +21,17 @@ export function CopilotLauncher({ className }: { className?: string }) {
   return (
     <>
       <Tooltip title="Trợ lý Copilot">
+        {/* Có chữ + màu nhấn: icon xám 28px trước đây trông như icon tài liệu, người dùng không nhận ra. */}
         <Button
-          type="text"
-          shape="circle"
           size="small"
+          shape="round"
           aria-label="Trợ lý Copilot"
           icon={<RobotOutlined />}
           onClick={() => { setMounted(true); setOpen(true); }}
-          className={className}
-        />
+          className={`!border-emerald-200 !bg-emerald-50 !font-medium !text-emerald-700 hover:!border-emerald-300 hover:!bg-emerald-100 ${className ?? ''}`}
+        >
+          <span className="hidden sm:inline">Trợ lý AI</span>
+        </Button>
       </Tooltip>
       {mounted && (
         <Suspense fallback={null}>
