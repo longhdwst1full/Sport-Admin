@@ -33,9 +33,10 @@ export function FlashSalesPage() {
   });
   const rows = campaigns.data?.items ?? [];
 
-  const createMutation = useCreateFlashSale((id) => {
+  // UX: tạo xong đóng drawer, về trang 1 của danh sách (đã invalidate) để thấy chiến dịch mới.
+  const createMutation = useCreateFlashSale(() => {
     setCreateOpen(false);
-    setSelectedId(id);
+    url.set('page', undefined);
   });
 
   return (

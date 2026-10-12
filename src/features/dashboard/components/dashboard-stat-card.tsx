@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Skeleton } from 'antd';
+import { Link } from 'react-router-dom';
 
 type DashboardStatTone = 'brand' | 'blue' | 'violet' | 'amber' | 'rose';
 
@@ -38,6 +39,8 @@ interface DashboardStatCardProps {
   icon: ReactNode;
   tone: DashboardStatTone;
   loading?: boolean;
+  /** Có thì cả thẻ là link sang màn danh sách tương ứng. */
+  href?: string;
 }
 
 /**
@@ -51,10 +54,10 @@ export function DashboardStatCard({
   icon,
   tone,
   loading = false,
+  href,
 }: DashboardStatCardProps) {
   const classes = TONE_CLASSES[tone];
-
-  return (
+  const card = (
     <article className="group relative min-h-36 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-card-hover">
       <span className={`absolute inset-x-0 top-0 h-1 ${classes.accent}`} aria-hidden />
       <span
@@ -88,5 +91,17 @@ export function DashboardStatCard({
         </div>
       )}
     </article>
+  );
+
+  return href ? (
+    <Link
+      to={href}
+      aria-label={`Xem chi tiết ${label}`}
+      className="block rounded-2xl text-inherit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-500"
+    >
+      {card}
+    </Link>
+  ) : (
+    card
   );
 }

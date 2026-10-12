@@ -150,7 +150,7 @@ function ReturnActionForm({
       </div>
     ),
     condition: (_item, index) => (
-      <Form.Item name={['items', index, 'condition']} noStyle rules={[{ required: true }]}>
+      <Form.Item name={['items', index, 'condition']} className="!mb-0" rules={[{ required: true, message: 'Chọn tình trạng' }]}>
         <Select className="w-full" options={inspectionConditionOptions} />
       </Form.Item>
     ),
@@ -165,13 +165,13 @@ function ReturnActionForm({
         );
       }
       return (
-        <Form.Item name={['items', index, 'disposition']} noStyle rules={[{ required: true, message: 'Chọn cách xử lý hàng hỏng' }]}>
+        <Form.Item name={['items', index, 'disposition']} className="!mb-0" rules={[{ required: true, message: 'Chọn cách xử lý hàng hỏng' }]}>
           <Select className="w-full" placeholder="Chọn" options={damagedDispositionOptions} />
         </Form.Item>
       );
     },
     note: (_item, index) => (
-      <Form.Item name={['items', index, 'note']} noStyle>
+      <Form.Item name={['items', index, 'note']} className="!mb-0">
         <Input maxLength={500} placeholder="Tuỳ chọn" />
       </Form.Item>
     ),
@@ -259,7 +259,7 @@ function ReturnActionForm({
               <div>Đã hoàn: <CurrencyAmount amount={detail.refundedAmount} /></div>
               <div className="font-semibold">Tối đa còn hoàn: <CurrencyAmount amount={refundable} /></div>
             </div>
-            <Form.Item name="method" label="Phương thức" rules={[{ required: true }]}>
+            <Form.Item name="method" label="Phương thức" rules={[{ required: true, message: 'Chọn phương thức hoàn' }]}>
               <Radio.Group options={refundMethodOptions} />
             </Form.Item>
             <Form.Item

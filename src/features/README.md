@@ -61,7 +61,8 @@ Không comment lại JSX như “render button”, “set loading”. Tên compo
 - [ ] Route lazy-load từ public entry của feature.
 - [ ] Loading, empty, error, forbidden, success và disabled state đầy đủ.
 - [ ] API chỉ đi qua generated hook; không gọi Axios/URL trực tiếp trong page/component.
-- [ ] Form phức tạp dùng React Hook Form/Yup; field bắt buộc có dấu `*`.
+- [ ] Form phức tạp dùng React Hook Form/Yup; field bắt buộc có dấu `*` (khớp đúng rule validate) và lỗi hiện dưới ô.
+- [ ] Tạo mới thành công: đóng drawer/modal, invalidate list, về trang 1 (không mở chi tiết bản ghi vừa tạo).
 - [ ] Server error map đúng field; toast không hiển thị request/trace ID cho người dùng.
 - [ ] Query list/search do server pagination/filter; input search có debounce/cancel.
 - [ ] Mutation lifecycle có permission gate, confirm và invalidation/refetch phù hợp.

@@ -48,6 +48,15 @@ export interface KpiCard {
   loading: boolean;
 }
 
+/** Thẻ KPI → màn danh sách đã lọc sẵn đúng tập bản ghi tạo nên con số. */
+export const KPI_LINKS: Record<KpiKey, string> = {
+  netRevenue: '/payments',
+  expectedRevenue: '/orders?status=DELIVERED',
+  ordersToday: '/orders',
+  awaitingFulfillment: '/orders?status=CONFIRMED',
+  lowStock: '/inventory?tab=balances&balance.status=LOW_STOCK',
+};
+
 export function toReportRange(granularity: Granularity, now: Date): ReportRange {
   const from = new Date(now.getTime() - LOOKBACK_DAYS[granularity] * DAY_MS);
   return { from: from.toISOString(), to: now.toISOString() };

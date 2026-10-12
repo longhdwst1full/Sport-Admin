@@ -180,6 +180,8 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
 
   const requiresReason = action === 'fail' || action === 'receive';
   const isValid = !requiresReason || note.trim().length >= 5;
+  const noteError =
+    requiresReason && note.length > 0 && note.trim().length < 5 ? 'Lý do tối thiểu 5 ký tự' : undefined;
 
   return (
     <Card
@@ -301,9 +303,16 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
               rows={3}
               maxLength={500}
               showCount
+              status={noteError ? 'error' : undefined}
+              aria-invalid={Boolean(noteError)}
               placeholder={requiresReason ? 'Nhập tối thiểu 5 ký tự...' : 'Nhập ghi chú...'}
               onChange={(event) => setNote(event.target.value)}
             />
+            {noteError && (
+              <Typography.Text type="danger" className="mt-1 block text-sm">
+                {noteError}
+              </Typography.Text>
+            )}
           </div>
         </Space>
       </FormModal>

@@ -58,7 +58,7 @@ export function GoodsReceiptPanel() {
       onOpen={list.openDetail}
     >
       <GoodsReceiptDetailDrawer id={list.selectedId} onClose={list.closeDetail} onEdit={list.openEdit} />
-      <GoodsReceiptFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} />
+      <GoodsReceiptFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} onCreated={list.onCreated} />
     </ProcurementListPanel>
   );
 }

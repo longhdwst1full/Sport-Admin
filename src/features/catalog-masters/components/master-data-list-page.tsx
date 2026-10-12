@@ -70,7 +70,8 @@ interface MasterDataListPageProps<T extends MasterDataRow> {
   deleteConfirm: { title: string; description: string; okText?: string };
   onDelete: (row: T) => void;
   deletingId?: string;
-  renderDrawer: (props: { open: boolean; selected?: T; onClose: () => void }) => ReactNode;
+  /** `onCreated`: gọi sau khi tạo mới thành công (list đã invalidate) để về trang 1. */
+  renderDrawer: (props: { open: boolean; selected?: T; onClose: () => void; onCreated: () => void }) => ReactNode;
 }
 
 /**
@@ -201,7 +202,12 @@ export function MasterDataListPage<T extends MasterDataRow>({
           />
         )}
 
-        {renderDrawer({ open: drawerOpen, selected, onClose: () => setDrawerOpen(false) })}
+        {renderDrawer({
+          open: drawerOpen,
+          selected,
+          onClose: () => setDrawerOpen(false),
+          onCreated: list.resetPage,
+        })}
       </ManagementPage>
     </PageTransition>
   );

@@ -120,6 +120,7 @@ export function RoleFormDrawer({
         <Form.Item
           name="permissionCodes"
           label="Quyền & menu của vai trò"
+          required
           rules={[
             {
               validator: (_rule, value: string[] | undefined) =>

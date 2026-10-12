@@ -20,12 +20,12 @@ interface StocktakeValues {
 
 const schema: yup.ObjectSchema<StocktakeValues> = yup.object({
   warehouseCode: yup.string().trim().optional(),
-  scopeType: yup.string().oneOf(['FULL', 'SKU_LIST'] as const).required(),
-  skus: yup.array().of(yup.string().required()).when('scopeType', {
+  scopeType: yup.string().oneOf(['FULL', 'SKU_LIST'] as const, 'Chọn phạm vi đếm').required('Chọn phạm vi đếm'),
+  skus: yup.array().of(yup.string().required('Chọn SKU')).when('scopeType', {
     is: 'SKU_LIST',
     then: (field) => field.min(1, 'Chọn ít nhất một SKU cần đếm'),
     otherwise: (field) => field.max(0),
-  }).required(),
+  }).required('Chọn ít nhất một SKU cần đếm'),
 });
 
 const scopeTypeOptions = toOptions<StocktakeScopeType>({
@@ -70,8 +70,9 @@ export function StocktakeCreateDrawer({
       onSuccess: async (result) => {
         await queryClient.invalidateQueries({ queryKey: getListStocktakesQueryKey() });
         void message.success(`Đã tạo phiếu ${result.stocktakeNo} với ${result.itemCount} dòng cần đếm.`);
-        onClose();
-        onCreated?.(result.id);
+        // Tạo xong quay về danh sách (trang chủ quản đưa về tab kiểm kê, trang 1), không mở chi tiết.
+        if (onCreated) onCreated(result.id);
+        else onClose();
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo phiếu kiểm kê.')),
     },
@@ -124,7 +125,12 @@ export function StocktakeCreateDrawer({
           )} />
         </Form.Item>
 
-        <Form.Item label="Phạm vi đếm" required>
+        <Form.Item
+          label="Phạm vi đếm"
+          required
+          validateStatus={form.formState.errors.scopeType ? 'error' : undefined}
+          help={form.formState.errors.scopeType?.message}
+        >
           <Controller name="scopeType" control={form.control} render={({ field }) => (
             <Select
               {...field}

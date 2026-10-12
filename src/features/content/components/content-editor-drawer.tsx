@@ -31,11 +31,14 @@ export function ContentEditorDrawer({
   open,
   editing,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   /** Bỏ trống là soạn bài mới; có giá trị (từ list, chỉ có summary) là sửa bài đã đăng. */
   editing?: Pick<ContentPostSummaryDto, 'id' | 'slug' | 'version'>;
   onClose: () => void;
+  /** Gọi sau khi tạo bài mới thành công (list đã invalidate), sau `onClose`. */
+  onCreated?: () => void;
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -46,6 +49,8 @@ export function ContentEditorDrawer({
   const [coverAssetId, setCoverAssetId] = useState<string | undefined>();
   const [relatedProducts, setRelatedProducts] = useState('');
   const [body, setBody] = useState('');
+  // UX: chỉ hiện lỗi từng ô sau lần bấm lưu đầu tiên, tránh báo đỏ khi vừa mở form.
+  const [submitted, setSubmitted] = useState(false);
 
   // List item không còn có body/relatedProductSlugs (chỉ là summary), nên form sửa bài phải tải
   // lại bản đầy đủ theo id thay vì đọc từ row của bảng.
@@ -62,6 +67,7 @@ export function ContentEditorDrawer({
   if (!open && loadedSource) setLoadedSource(undefined);
   if (source && source !== loadedSource) {
     setLoadedSource(source);
+    setSubmitted(false);
     const full = source === 'new' ? undefined : source;
     setTitle(full?.title ?? '');
     setPostType(full?.postType ?? ContentPostType.NEWS);
@@ -98,6 +104,7 @@ export function ContentEditorDrawer({
       ]);
       void message.success(editing ? 'Đã cập nhật bài viết' : 'Đã tạo và xuất bản bài viết');
       onClose();
+      if (!editing) onCreated?.();
     },
     onError: (error) =>
       void message.error(
@@ -105,8 +112,19 @@ export function ContentEditorDrawer({
       ),
   });
 
+  // CONTRACT: CreateContentPostDto bắt buộc title/postType/excerpt/body; ảnh bìa bắt buộc khi không có coverAssetId.
+  const fieldErrors = {
+    title: title.trim() ? undefined : 'Nhập tiêu đề',
+    excerpt: excerpt.trim() ? undefined : 'Nhập mô tả ngắn',
+    cover: coverUrl.trim() ? undefined : 'Chọn ảnh bìa',
+    body: body.trim() ? undefined : 'Nhập nội dung',
+  };
+  const fieldStatus = (error?: string) =>
+    submitted && error ? { validateStatus: 'error' as const, help: error } : {};
+
   const submit = () => {
-    if (!title.trim() || !excerpt.trim() || !coverUrl.trim() || !body.trim()) {
+    setSubmitted(true);
+    if (Object.values(fieldErrors).some(Boolean)) {
       void message.warning('Điền đủ tiêu đề, mô tả, ảnh và nội dung.');
       return;
     }
@@ -138,7 +156,7 @@ export function ContentEditorDrawer({
         <DetailSkeleton />
       ) : (
       <Form layout="vertical">
-        <Form.Item label="Tiêu đề" required>
+        <Form.Item label="Tiêu đề" required {...fieldStatus(fieldErrors.title)}>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} />
         </Form.Item>
         {/* Đường dẫn bài viết do backend sinh từ tiêu đề, nên form không hỏi nữa. */}
@@ -149,14 +167,14 @@ export function ContentEditorDrawer({
             options={CONTENT_POST_TYPE_OPTIONS}
           />
         </Form.Item>
-        <Form.Item label="Mô tả ngắn" required>
+        <Form.Item label="Mô tả ngắn" required {...fieldStatus(fieldErrors.excerpt)}>
           <Input.TextArea
             rows={2}
             value={excerpt}
             onChange={(event) => setExcerpt(event.target.value)}
           />
         </Form.Item>
-        <Form.Item label="Ảnh bìa" required>
+        <Form.Item label="Ảnh bìa" required {...fieldStatus(fieldErrors.cover)}>
           <ImageUploadField
             value={coverUrl}
             onChange={(url, assetId) => {
@@ -174,6 +192,7 @@ export function ContentEditorDrawer({
         <Form.Item
           label="Nội dung"
           required
+          {...fieldStatus(fieldErrors.body)}
           extra="Ảnh trong nội dung dùng công cụ Image tích hợp của CKEditor 4; editor có vùng nhập HTML dự phòng nếu CDN không khả dụng."
         >
           <RichTextEditor

@@ -88,12 +88,13 @@ export function CategoriesPage() {
         deleteCategory.mutate({ id: row.id, data: { expectedVersion: row.version } })
       }
       deletingId={deleteCategory.isPending ? deleteCategory.variables?.id : undefined}
-      renderDrawer={({ open, selected, onClose }) => (
+      renderDrawer={({ open, selected, onClose, onCreated }) => (
         <CategoryFormDrawer
           open={open}
           category={selected}
           categories={categoriesQuery.data?.items ?? []}
           onClose={onClose}
+          onCreated={onCreated}
         />
       )}
     />

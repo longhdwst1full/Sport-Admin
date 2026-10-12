@@ -140,14 +140,21 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
           />
         )}
 
-        <AdminTable
-          rowKey="orderItemId"
-          size="small"
-          pagination={false}
-          dataSource={lines}
-          className="mb-4"
-          columns={createColumns}
-        />
+        {/* CONTRACT: items tối thiểu 1 dòng — nút gửi bị khoá cho tới khi chọn số lượng ở ít nhất một dòng. */}
+        <Form.Item
+          label="Sản phẩm muốn trả"
+          required
+          validateStatus={form.isFieldsTouched() && !hasSelection ? 'error' : undefined}
+          help={form.isFieldsTouched() && !hasSelection ? 'Chọn số lượng trả cho ít nhất một sản phẩm' : undefined}
+        >
+          <AdminTable
+            rowKey="orderItemId"
+            size="small"
+            pagination={false}
+            dataSource={lines}
+            columns={createColumns}
+          />
+        </Form.Item>
 
         <div className="grid gap-x-4 sm:grid-cols-2">
           <Form.Item name="reasonCode" label="Lý do" rules={[{ required: true, message: 'Chọn lý do' }]}>
@@ -168,7 +175,7 @@ export function CreateReturnModal({ eligibility, open, onClose, onCreated }: Cre
           <Form.Item
             name="windowOverrideNote"
             label="Lý do nhận trả quá hạn"
-            rules={[{ required: true, whitespace: true, min: 5, message: 'Nhập lý do ít nhất 5 ký tự' }]}
+            rules={[{ required: true, whitespace: true, min: 5, max: 500, message: 'Nhập lý do từ 5 đến 500 ký tự' }]}
           >
             <Input.TextArea rows={2} maxLength={500} showCount />
           </Form.Item>

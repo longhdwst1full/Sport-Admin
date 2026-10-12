@@ -9,6 +9,7 @@ import {
   useListShippingWards,
 } from '@/generated/api/shipping/shipping';
 import type { CustomerFormValues } from '../model/customer-form.mapper';
+import { PHONE_RULE } from '@/lib/validation/phone';
 
 interface PlaceOption {
   value: string;
@@ -107,7 +108,10 @@ export function CustomerAddressFields({
         <Form.Item
           name={[name, 'phone']}
           label="Điện thoại người nhận"
-          rules={[{ required: true, whitespace: true, message: 'Nhập số điện thoại người nhận' }]}
+          rules={[
+            { required: true, whitespace: true, message: 'Nhập số điện thoại người nhận' },
+            PHONE_RULE,
+          ]}
         >
           <Input maxLength={32} placeholder="0912345678" />
         </Form.Item>

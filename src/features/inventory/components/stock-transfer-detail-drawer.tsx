@@ -41,8 +41,8 @@ interface ReceiveValues {
 const receiveSchema: yup.ObjectSchema<ReceiveValues> = yup.object({
   items: yup.array().of(yup.object({
     sku: yup.string().required(),
-    receivedQuantity: yup.number().integer('Phải là số nguyên').min(0, 'Không được âm').required(),
-    damagedQuantity: yup.number().integer('Phải là số nguyên').min(0, 'Không được âm').required(),
+    receivedQuantity: yup.number().typeError('Nhập số nhận tốt').integer('Phải là số nguyên').min(0, 'Không được âm').required('Nhập số nhận tốt'),
+    damagedQuantity: yup.number().typeError('Nhập số hàng hỏng').integer('Phải là số nguyên').min(0, 'Không được âm').required('Nhập số hàng hỏng'),
     damageReason: yup.string().trim().max(500, 'Tối đa 500 ký tự').optional(),
   })).required(),
 });

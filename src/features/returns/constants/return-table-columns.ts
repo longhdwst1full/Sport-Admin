@@ -17,6 +17,8 @@ export interface ReturnTableColumnConfig<TId extends string> {
   label: string;
   width?: number;
   fixed?: 'left' | 'right';
+  /** Cột nhập liệu bắt buộc: tiêu đề hiện dấu `*` đỏ như nhãn Form.Item. */
+  required?: boolean;
 }
 
 export type ReturnListColumnId = keyof ReturnSummaryDto | 'action';
@@ -57,7 +59,7 @@ export type InspectionColumnId = keyof ReturnItemDto | 'product' | 'disposition'
 export const INSPECTION_TABLE_COLUMNS: ReturnTableColumnConfig<InspectionColumnId>[] = [
   { id: 'product', label: 'Sản phẩm' },
   { id: 'quantity', label: 'SL', width: 56 },
-  { id: 'condition', label: 'Tình trạng', width: 170 },
+  { id: 'condition', label: 'Tình trạng', width: 170, required: true },
   { id: 'disposition', label: 'Xử lý', width: 190 },
   { id: 'note', label: 'Ghi chú', width: 180 },
 ];

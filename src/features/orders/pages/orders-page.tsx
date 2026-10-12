@@ -199,7 +199,13 @@ export function OrdersPage() {
           </Suspense>
         )}
       />
-      <PosOrderDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
+      <PosOrderDrawer
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        // Đơn vừa bán có thể không thuộc tab trạng thái đang lọc: về tab "Tất cả", trang 1 để thấy ngay.
+        onCreated={() => url.patch({ status: undefined, page: undefined })}
+        onNewOrder={() => setCreateOpen(true)}
+      />
     </PageTransition>
   );
 }

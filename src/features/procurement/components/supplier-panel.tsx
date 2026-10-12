@@ -83,7 +83,7 @@ export function SupplierPanel() {
       filters={<Select allowClear className="!w-48" value={status} onChange={(value?: string) => list.setFilter('status', value)} placeholder="Trạng thái" options={supplierStatusOptions} />}
       create={{ permission: 'supplier.manage', label: 'Thêm nhà cung cấp', onClick: list.openCreate }}
     >
-      <SupplierFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} />
+      <SupplierFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} onCreated={list.onCreated} />
     </ProcurementListPanel>
   );
 }

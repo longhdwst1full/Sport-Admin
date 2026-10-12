@@ -54,7 +54,16 @@ import { useProductFormLookups } from './use-product-form-lookups';
  * Mỗi lần mở workspace là một phiên mới: trang gọi remount component qua `key`, nên slug đang sửa,
  * khoá idempotency, tồn đầu chờ ghi và tab đều khởi tạo lại từ đầu thay vì reset trong effect.
  */
-export function useProductWorkspace({ open, slug }: { open: boolean; slug?: string }) {
+export function useProductWorkspace({
+  open,
+  slug,
+  onCreated,
+}: {
+  open: boolean;
+  slug?: string;
+  /** Tạo xong (kể cả tồn đầu) thì gọi để nơi dùng đóng workspace và quay về danh sách. */
+  onCreated?: () => void;
+}) {
   const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const canAdjustStock = useCan('inventory.stock.adjust');
@@ -206,9 +215,14 @@ export function useProductWorkspace({ open, slug }: { open: boolean; slug?: stri
           const stockMessage = stockData ? ' và đã ghi tồn đầu' : '';
           void message.success(`Đã tạo sản phẩm cùng ${createdProduct.variants.length} biến thể${stockMessage}.`);
         }
-        // Chuyển tại chỗ sang chế độ Sửa: cùng workspace, người dùng làm tiếp combo/giá/xuất bản.
-        setTabAfterLoad(pending ? 'variants' : 'review');
-        setActiveSlug(createdProduct.slug);
+        if (pending) {
+          // Tồn đầu chưa ghi được: chuyển tại chỗ sang chế độ Sửa để giữ payload + khoá và cho "Thử ghi lại".
+          setTabAfterLoad('variants');
+          setActiveSlug(createdProduct.slug);
+          return;
+        }
+        // Tạo thành công: đóng workspace, danh sách (đã invalidate ở trên) hiện sản phẩm mới.
+        onCreated?.();
       },
       onError: (error) => {
         submittedCreateValues.current = undefined;

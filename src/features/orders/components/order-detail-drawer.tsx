@@ -32,7 +32,9 @@ import { StatusTag } from '@/foundation/management';
 import {
   orderActorTypeLabels,
   orderStatusPresentation,
+  orderPaymentMethodLabels,
   paymentStatusPresentation,
+  toPaidAtLabel,
 } from '../constants/order.constants';
 import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
 import { OrderReturnPanel } from '@/features/returns';
@@ -354,12 +356,12 @@ export function OrderDetailDrawer({
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Phương thức:</span>
                     <span className="font-medium text-slate-700">
-                      {order.paymentMethod === 'COD' ? 'Tiền mặt khi nhận (COD)' : 'Chuyển khoản trực tuyến'}
+                      {orderPaymentMethodLabels[order.paymentMethod] ?? order.paymentMethod}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Thanh toán lúc:</span>
-                    <span className="text-slate-700">{order.paidAt ? formatDateTime(order.paidAt) : 'Chưa thanh toán'}</span>
+                    <span className="text-slate-700">{order.paidAt ? formatDateTime(order.paidAt) : toPaidAtLabel(order)}</span>
                   </div>
                   {order.shipment && (
                     <>

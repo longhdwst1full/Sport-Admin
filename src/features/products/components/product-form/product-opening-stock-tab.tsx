@@ -135,6 +135,7 @@ export function ProductOpeningStockTab({
               </div>
               <Form.Item
                 label="Số lượng tồn đầu"
+                required
                 style={{ marginBottom: 0 }}
                 validateStatus={error ? 'error' : undefined}
                 help={error?.message}

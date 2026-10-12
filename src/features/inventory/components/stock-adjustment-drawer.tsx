@@ -43,29 +43,33 @@ const schema: yup.ObjectSchema<StockAdjustmentValues> = yup.object({
     .required('Chọn nguyên nhân'),
   externalReference: yup.string().trim().when('adjustmentType', {
     is: StockAdjustmentType.MANUAL_RECEIPT,
-    then: (value) => value.required('Nhập số chứng từ nguồn'),
+    then: (value) => value.required('Nhập số chứng từ nguồn').max(100, 'Tối đa 100 ký tự'),
     otherwise: (value) => value.optional().strip(),
   }),
-  sourceName: yup.string().trim().optional(),
+  sourceName: yup.string().trim().max(255, 'Tối đa 255 ký tự').optional(),
   quantityDelta: yup.number()
+    .typeError('Nhập số lượng thay đổi')
     .integer('Số lượng phải là số nguyên')
     .notOneOf([0], 'Số lượng thay đổi phải khác 0')
     .test('receipt-positive', 'Phiếu nhập chỉ nhận số lượng dương', function validate(value) {
       return this.parent.adjustmentType === StockAdjustmentType.CORRECTION
         || (typeof value === 'number' && value > 0);
     })
-    .required(),
-  reason: yup.string().trim().min(5, 'Lý do cần ít nhất 5 ký tự').required('Nhập lý do điều chỉnh'),
+    .required('Nhập số lượng thay đổi'),
+  reason: yup.string().trim().required('Nhập lý do điều chỉnh').min(5, 'Lý do cần ít nhất 5 ký tự'),
 });
 
 export function StockAdjustmentDrawer({
   open,
   balance,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   balance?: InventoryBalanceDto;
   onClose: () => void;
+  /** Ghi phiếu thành công; không truyền thì chỉ đóng drawer. */
+  onCreated?: () => void;
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -112,7 +116,8 @@ export function StockAdjustmentDrawer({
           queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
         ]);
         void message.success(`Đã ghi phiếu ${result.adjustmentNo}.`);
-        onClose();
+        if (onCreated) onCreated();
+        else onClose();
       },
       onError: (error) =>
         void message.error(getApiErrorMessage(error, 'Không thể điều chỉnh tồn kho.')),

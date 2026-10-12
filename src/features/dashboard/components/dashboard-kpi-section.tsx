@@ -5,7 +5,7 @@ import {
   TruckOutlined,
 } from '@ant-design/icons';
 import type { ReactNode } from 'react';
-import type { KpiCard, KpiKey } from '../model/dashboard.mapper';
+import { KPI_LINKS, type KpiCard, type KpiKey } from '../model/dashboard.mapper';
 import { DashboardStatCard } from './dashboard-stat-card';
 
 const KPI_ICONS: Record<KpiKey, ReactNode> = {
@@ -32,7 +32,12 @@ export function DashboardKpiSection({ cards }: { cards: KpiCard[] }) {
             // Thẻ hiện lần lượt thay vì bật cùng lúc; đủ nhanh để không thành thời gian chờ.
             style={{ animationDelay: `${index * 60}ms` }}
           >
-            <DashboardStatCard {...card} icon={KPI_ICONS[key]} />
+            <DashboardStatCard
+              {...card}
+              icon={KPI_ICONS[key]}
+              // Thiếu quyền xem số liệu (`—`) thì thẻ không dẫn sang màn danh sách.
+              href={card.value === '—' ? undefined : KPI_LINKS[key]}
+            />
           </div>
         ))}
       </div>

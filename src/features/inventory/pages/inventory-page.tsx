@@ -67,6 +67,11 @@ export function InventoryPage() {
     setAdjustmentOpen(true);
   };
 
+  // Tạo phiếu thành công: đóng drawer, chuyển về tab danh sách tương ứng ở trang 1 để thấy phiếu mới.
+  const [adjustmentListKey, setAdjustmentListKey] = useState(0);
+  const showCreatedIn = (tab: InventoryTab, pageKey?: string) =>
+    url.patch({ tab: tab === DEFAULT_TAB ? undefined : tab, ...(pageKey ? { [pageKey]: undefined } : {}) });
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const refresh = async () => {
     setIsRefreshing(true);
@@ -161,7 +166,8 @@ export function InventoryPage() {
               children: <InventoryBalancePanel onAdjust={openAdjustment} onMetricsChange={setMetrics} />,
             },
             { key: 'movements', label: 'Sổ kho (Ledger)', children: <InventoryMovementPanel /> },
-            { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel /> },
+            // Đổi key sau khi tạo phiếu để panel cursor quay về trang đầu.
+            { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel key={adjustmentListKey} /> },
             canViewTransfers && {
               key: 'transfers',
               label: 'Phiếu chuyển kho',
@@ -194,6 +200,16 @@ export function InventoryPage() {
               setSelectedBalance(undefined);
               void refresh();
             }}
+            onCreated={() => {
+              // Mở từ dòng tồn thì ở lại tab tồn (đã refresh); mở từ nút tạo thì về danh sách phiếu điều chỉnh.
+              if (!selectedBalance) {
+                setAdjustmentListKey((key) => key + 1);
+                showCreatedIn('adjustments');
+              }
+              setAdjustmentOpen(false);
+              setSelectedBalance(undefined);
+              void refresh();
+            }}
           />
         )}
 
@@ -211,7 +227,12 @@ export function InventoryPage() {
           <StockTransferCreateDrawer
             open
             onClose={() => setTransferOpen(false)}
-            onCreated={() => void refresh()}
+            onCreated={() => {
+              setTransferOpen(false);
+              setSelectedTransferId(undefined);
+              showCreatedIn('transfers', 'transfer.page');
+              void refresh();
+            }}
           />
         )}
 
@@ -219,7 +240,12 @@ export function InventoryPage() {
           <StocktakeCreateDrawer
             open
             onClose={() => setStocktakeOpen(false)}
-            onCreated={(createdId) => { setSelectedStocktakeId(createdId); void refresh(); }}
+            onCreated={() => {
+              setStocktakeOpen(false);
+              setSelectedStocktakeId(undefined);
+              showCreatedIn('stocktakes', 'stocktake.page');
+              void refresh();
+            }}
           />
         )}
       </ManagementPage>

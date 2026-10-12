@@ -215,10 +215,17 @@ export function ContentPage() {
               open={websiteEditor.open}
               editing={websiteEditor.post}
               onClose={() => setWebsiteEditor({ open: false })}
+              onCreated={() => posts.setPage(1)}
             />
           </Suspense>
         )}
-        {socialEditor && <SocialPostEditorDrawer target={socialEditor} onClose={() => setSocialEditor(undefined)} />}
+        {socialEditor && (
+          <SocialPostEditorDrawer
+            target={socialEditor}
+            onClose={() => setSocialEditor(undefined)}
+            onCreated={() => posts.setPage(1)}
+          />
+        )}
         {detailId && <SocialPostDetailDrawer postId={detailId} onClose={() => setDetailId(undefined)} />}
         <SocialActionModal
           post={socialDeleteRow}

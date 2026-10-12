@@ -52,7 +52,7 @@ const schema: yup.ObjectSchema<StaffCreationFormValues> = yup.object({
   email: yup.string().trim().email('Email không hợp lệ').required('Nhập email').max(255, 'Tối đa 255 ký tự'),
   roleCode: yup
     .mixed<CreateStaffUserDtoRoleCode>()
-    .oneOf(Object.values(CreateStaffUserDtoRoleCode))
+    .oneOf(Object.values(CreateStaffUserDtoRoleCode), 'Vui lòng chọn vai trò')
     .required('Vui lòng chọn vai trò'),
   branchId: yup.string().matches(ENTITY_ID_PATTERN, 'Chi nhánh không hợp lệ').required('Vui lòng chọn chi nhánh'),
   extraAssignments: yup.array().of(extraAssignmentSchema).defined(),

@@ -6,6 +6,20 @@ import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../constants/product-list.cons
 import { emptyVariant, type ProductFormValues } from './product-form.mapper';
 import { INITIAL_PRICE_PATTERN } from './product-initial-setup';
 
+const hasOpeningStock = (values: ProductFormValues) =>
+  values.variants.some(({ openingQuantity }) => openingQuantity > 0);
+
+/** Luật ô biến thể dùng chung cho form Tạo, thêm SKU sau tạo và sửa SKU — ba nơi không được lệch nhau. */
+export const VARIANT_FIELD_RULES = {
+  name: yup.string().trim().required('Nhập tên biến thể').max(255, 'Tối đa 255 ký tự'),
+  sku: yup.string().trim().uppercase().test('sku-pattern', SKU_PATTERN_MESSAGE, (value) => !value || SKU_PATTERN.test(value)).optional(),
+  barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
+  weightGrams: yup.number().integer('Khối lượng phải là số nguyên').min(0, 'Tối thiểu 0').optional(),
+  lengthMm: yup.number().integer('Chiều dài phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
+  widthMm: yup.number().integer('Chiều rộng phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
+  heightMm: yup.number().integer('Chiều cao phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
+};
+
 export const productFormSchema: yup.ObjectSchema<ProductFormValues> = yup.object({
   productType: yup
     .mixed<ProductType>()
@@ -23,17 +37,27 @@ export const productFormSchema: yup.ObjectSchema<ProductFormValues> = yup.object
     }),
   shortDescription: yup.string().trim().max(1000, 'Tối đa 1000 ký tự').optional(),
   description: yup.string().trim().optional(),
-  initialBranchId: yup.string().matches(ENTITY_ID_PATTERN, 'Chi nhánh không hợp lệ').optional(),
-  initialWarehouseCode: yup.string().trim().optional().test(
-    'opening-stock-location',
-    'Chọn chi nhánh và kho khi nhập số lượng tồn đầu',
-    function validateOpeningStockLocation(value) {
-      const values = this.parent as ProductFormValues;
-      const hasOpeningStock = values.variants.some(({ openingQuantity }) => openingQuantity > 0);
-      return !hasOpeningStock || Boolean(values.initialBranchId && value);
+  // Chi nhánh + kho chỉ bắt buộc khi có SKU nhập tồn đầu > 0; mỗi ô báo lỗi riêng để hiện đúng chỗ.
+  initialBranchId: yup.string().matches(ENTITY_ID_PATTERN, 'Chi nhánh không hợp lệ').optional().test(
+    'opening-stock-branch',
+    'Chọn chi nhánh khi nhập số lượng tồn đầu',
+    function validateOpeningStockBranch(value) {
+      return !hasOpeningStock(this.parent as ProductFormValues) || Boolean(value);
     },
   ),
-  images: yup.array().of(yup.object({ assetId: yup.string().required(), url: yup.string().required() })).default([]),
+  initialWarehouseCode: yup.string().trim().optional().test(
+    'opening-stock-location',
+    'Chọn kho khi nhập số lượng tồn đầu',
+    function validateOpeningStockLocation(value) {
+      return !hasOpeningStock(this.parent as ProductFormValues) || Boolean(value);
+    },
+  ),
+  // CONTRACT: `CreateProductDto.media` tối đa 20 ảnh.
+  images: yup
+    .array()
+    .of(yup.object({ assetId: yup.string().required(), url: yup.string().required() }))
+    .max(20, 'Tối đa 20 ảnh mỗi sản phẩm')
+    .default([]),
   // Kiểu giá trị theo từng thuộc tính cần từ điển nên kiểm ở `toSpecificationPayload` lúc submit.
   specifications: yup
     .array()
@@ -42,13 +66,7 @@ export const productFormSchema: yup.ObjectSchema<ProductFormValues> = yup.object
   variants: yup
     .array()
     .of(yup.object({
-      name: yup.string().trim().required('Nhập tên biến thể').max(255, 'Tối đa 255 ký tự'),
-      sku: yup.string().trim().uppercase().test('sku-pattern', SKU_PATTERN_MESSAGE, (value) => !value || SKU_PATTERN.test(value)).optional(),
-      barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
-      weightGrams: yup.number().integer('Khối lượng phải là số nguyên').min(0, 'Tối thiểu 0').optional(),
-      lengthMm: yup.number().integer('Chiều dài phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
-      widthMm: yup.number().integer('Chiều rộng phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
-      heightMm: yup.number().integer('Chiều cao phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
+      ...VARIANT_FIELD_RULES,
       openingQuantity: yup.number()
         .integer('Số lượng phải là số nguyên')
         .min(0, 'Số lượng không được âm')

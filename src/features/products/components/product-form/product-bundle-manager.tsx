@@ -23,7 +23,7 @@ const bundleSchema: yup.ObjectSchema<BundleFormValues> = yup.object({
     .of(
       yup.object({
         componentVariantId: yup.string().matches(ENTITY_ID_PATTERN, 'SKU thành phần không hợp lệ').required('Chọn SKU thành phần'),
-        quantity: yup.number().integer('Số lượng phải là số nguyên').min(1, 'Tối thiểu 1').required(),
+        quantity: yup.number().integer('Số lượng phải là số nguyên').min(1, 'Tối thiểu 1').required('Nhập số lượng'),
       }),
     )
     .min(1, 'Combo cần ít nhất một thành phần')

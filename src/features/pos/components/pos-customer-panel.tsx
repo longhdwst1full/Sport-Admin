@@ -1,15 +1,18 @@
 import { Form, Input, Radio } from 'antd';
 import { DeliveryAddressFields } from './delivery-address-fields';
 import { CustomerLookup } from './customer-lookup';
-import type { PosCheckoutValues } from '../model/pos-checkout';
+import type { PosCheckoutErrors, PosCheckoutValues } from '../model/pos-checkout';
 
 /** Khách hàng và hình thức nhận hàng của phiếu bán tại quầy. */
 export function PosCustomerPanel({
   values,
+  errors = {},
   disabled,
   onChange,
 }: {
   values: PosCheckoutValues;
+  /** Lỗi theo ô; trang chỉ truyền sau lần bấm tạo đơn đầu tiên. */
+  errors?: PosCheckoutErrors;
   disabled?: boolean;
   onChange: (patch: Partial<PosCheckoutValues>) => void;
 }) {
@@ -19,6 +22,8 @@ export function PosCustomerPanel({
         <Form.Item
           label="Số điện thoại"
           required
+          validateStatus={errors.customerPhone ? 'error' : undefined}
+          help={errors.customerPhone}
           extra="Gõ từ 3 số để tìm khách đã có; khách mới thì nhập tay."
         >
           <CustomerLookup
@@ -37,7 +42,12 @@ export function PosCustomerPanel({
             }
           />
         </Form.Item>
-        <Form.Item label="Họ tên" required>
+        <Form.Item
+          label="Họ tên"
+          required
+          validateStatus={errors.customerName ? 'error' : undefined}
+          help={errors.customerName}
+        >
           <Input
             value={values.customerName}
             disabled={disabled}
@@ -45,7 +55,11 @@ export function PosCustomerPanel({
             onChange={(event) => onChange({ customerName: event.target.value })}
           />
         </Form.Item>
-        <Form.Item label="Email">
+        <Form.Item
+          label="Email"
+          validateStatus={errors.customerEmail ? 'error' : undefined}
+          help={errors.customerEmail}
+        >
           <Input
             value={values.customerEmail}
             disabled={disabled}
@@ -80,6 +94,7 @@ export function PosCustomerPanel({
         <div className="grid gap-x-4 md:grid-cols-2">
           <DeliveryAddressFields
             value={values.delivery}
+            errors={errors}
             onChange={(patch) => onChange({ delivery: { ...values.delivery, ...patch } })}
           />
         </div>

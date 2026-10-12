@@ -11,12 +11,12 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { getPasswordStrength } from '@/shared/utils';
 
 const schema: yup.ObjectSchema<ChangePasswordDto & { confirmPassword: string }> = yup.object({
-  currentPassword: yup.string().required('Nhập mật khẩu hiện tại').min(8).max(128),
+  currentPassword: yup.string().required('Nhập mật khẩu hiện tại').min(8, 'Mật khẩu tối thiểu 8 ký tự').max(128, 'Tối đa 128 ký tự'),
   newPassword: yup
     .string()
     .required('Nhập mật khẩu mới')
     .min(8, 'Mật khẩu tối thiểu 8 ký tự')
-    .max(128)
+    .max(128, 'Tối đa 128 ký tự')
     .notOneOf([yup.ref('currentPassword')], 'Mật khẩu mới phải khác mật khẩu hiện tại'),
   confirmPassword: yup
     .string()

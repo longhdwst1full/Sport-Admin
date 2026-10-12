@@ -9,7 +9,7 @@
 ## Workspace Tạo/Sửa
 
 `components/product-workspace-drawer.tsx` là **nơi duy nhất** tạo và sửa sản phẩm (rộng 1040px). Mở không
-có `slug` là Tạo, có `slug` là Sửa; tạo xong workspace chuyển tại chỗ sang Sửa của sản phẩm vừa tạo.
+có `slug` là Tạo, có `slug` là Sửa; tạo xong drawer đóng, danh sách được invalidate và về trang 1; riêng khi tồn đầu lỗi, workspace chuyển tại chỗ sang Sửa để ghi lại tồn đầu.
 State/query/lệnh nằm ở `hooks/use-product-workspace.ts` (tra cứu ở `use-product-form-lookups.ts`, schema +
 map lỗi API → ô ở `model/product-form.schema.ts`); header/footer là `product-workspace-{header-actions,footer}.tsx`.
 Mỗi lần mở là một phiên mới: `ProductsPage` đổi `key` (`session`) nên state và khoá idempotency khởi tạo

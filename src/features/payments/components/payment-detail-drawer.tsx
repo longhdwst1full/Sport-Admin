@@ -207,7 +207,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
           <Form.Item name="receivedAmount" label="Số tiền thực nhận" rules={[{ required: true, message: 'Vui lòng nhập số tiền thực nhận' }, { type: 'number', min: 1, message: 'Số tiền phải lớn hơn 0' }]}>
             <MoneyInput className="!w-full" />
           </Form.Item>
-          <Form.Item name="reference" label="Mã giao dịch/đối soát" rules={[{ required: true, message: 'Vui lòng nhập mã đối soát' }]}>
+          <Form.Item name="reference" label="Mã giao dịch/đối soát" rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập mã đối soát' }]}>
             <Input maxLength={255} />
           </Form.Item>
           <Form.Item name="note" label="Ghi chú">

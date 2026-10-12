@@ -13,7 +13,7 @@ import {
 } from '@/generated/api/orders/orders.schemas';
 import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { PosCartTable } from './pos-cart-table';
-import type { PosCheckoutValues } from '../model/pos-checkout';
+import { type PosCheckoutValues, validatePosCheckout } from '../model/pos-checkout';
 import { PosCounterHeader } from './pos-counter-header';
 import { PosCustomerPanel } from './pos-customer-panel';
 import { PosPaymentPanel } from './pos-payment-panel';
@@ -91,12 +91,26 @@ function isRepriced(error: unknown): boolean {
  * Trước đây đây là một màn riêng trong menu. Gộp vào Đơn hàng vì nhân viên lập đơn và tra đơn là
  * cùng một người, cùng một lúc — tách hai mục menu bắt họ nhảy qua lại.
  */
-export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function PosOrderDrawer({
+  open,
+  onClose,
+  onCreated,
+  onNewOrder,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** Gọi sau khi tạo đơn thành công, lúc drawer đã đóng, để trang đưa danh sách về chỗ thấy đơn mới. */
+  onCreated?: (order: OrderDetailDto) => void;
+  /** "Bán đơn tiếp theo" trên biên lai: drawer đã đóng nên trang phải mở lại. */
+  onNewOrder?: () => void;
+}) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [lines, setLines] = useState<PosCartLine[]>([]);
   const [checkout, setCheckout] = useState<PosCheckoutValues>(EMPTY_CHECKOUT);
   const [receipt, setReceipt] = useState<OrderDetailDto>();
+  // Lỗi từng ô chỉ hiện sau lần bấm tạo đầu tiên, để phiếu trống không đỏ ngay khi vừa mở.
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
   // Khoá chống trùng đổi theo từng đơn: bấm hai lần cho cùng một đơn thì Backend trả
   // lại đúng đơn đó, còn đơn kế tiếp phải là một giao dịch mới. Giữ trong ref để header
   // của đúng lần bấm này được đọc lúc gửi, không phải giá trị của lần render trước.
@@ -124,6 +138,10 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         ]);
         setReceipt(order);
         void message.success(`Đã bán xong đơn ${order.orderNo}.`);
+        // Đóng phiếu và đưa danh sách đơn về chỗ thấy đơn mới; biên lai nằm ngoài drawer nên vẫn hiện.
+        resetCounter();
+        onClose();
+        onCreated?.(order);
       },
       /**
        * Suất flash hết đúng lúc đang lập đơn: Backend đã dọn phiên bán và KHÔNG tạo đơn.
@@ -148,7 +166,11 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
     },
   });
 
-  const blockedReason = (() => {
+  const fieldErrors = validatePosCheckout(checkout);
+  const visibleFieldErrors = showFieldErrors ? fieldErrors : {};
+
+  // Lỗi giỏ hàng không gắn với ô nào nên khoá hẳn nút tạo; lỗi theo ô thì để bấm được và hiện tại ô.
+  const cartBlockedReason = (() => {
     if (lines.length === 0) return 'Chưa chọn sản phẩm nào.';
     if (unpriced.length > 0) {
       return `Bỏ sản phẩm chưa có giá ra khỏi đơn: ${unpriced.map((line) => line.sku).join(', ')}.`;
@@ -158,30 +180,23 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         .map((line) => `${line.sku} còn ${line.availableQuantity}`)
         .join(', ')}.`;
     }
-    if (!checkout.branchId) return 'Chọn chi nhánh đang đứng quầy.';
-    if (!checkout.customerName.trim()) return 'Nhập tên khách hàng.';
-    if (!checkout.customerPhone.trim()) return 'Nhập số điện thoại khách hàng.';
-    if (checkout.deliveryMode === 'DELIVERY') {
-      const { recipient, phone, addressLine, provinceCode, districtCode, wardCode } =
-        checkout.delivery;
-      if (!recipient.trim() || !phone.trim()) return 'Nhập người nhận và số điện thoại giao hàng.';
-      // Mã địa giới là thứ hãng vận chuyển dùng để định tuyến; thiếu thì không tạo được vận đơn.
-      if (!provinceCode || !districtCode || !wardCode) {
-        return 'Chọn đủ tỉnh/thành, quận/huyện và phường/xã.';
-      }
-      if (!addressLine.trim()) return 'Nhập địa chỉ chi tiết.';
-    }
     return undefined;
   })();
+  const blockedReason = cartBlockedReason ?? Object.values(fieldErrors)[0];
 
   const resetCounter = () => {
     setLines([]);
     setCheckout(EMPTY_CHECKOUT);
+    setShowFieldErrors(false);
     attemptRef.current = null;
   };
 
   const submit = () => {
-    if (blockedReason) return;
+    if (cartBlockedReason) return;
+    if (Object.keys(fieldErrors).length > 0) {
+      setShowFieldErrors(true);
+      return;
+    }
     const data = buildOrderData();
     const fingerprint = JSON.stringify(data);
     if (attemptRef.current?.fingerprint !== fingerprint) {
@@ -264,7 +279,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
                 type="primary"
                 icon={<WalletOutlined />}
                 loading={mutation.isPending}
-                disabled={Boolean(blockedReason)}
+                disabled={Boolean(cartBlockedReason)}
                 onClick={submit}
               >
                 Tạo & hoàn tất đơn
@@ -275,6 +290,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
       >
         <PosCounterHeader
           branchId={checkout.branchId}
+          error={visibleFieldErrors.branchId}
           disabled={mutation.isPending}
           onChange={(branchId) => {
             // Đổi chi nhánh là đổi kho: tồn và giá vừa hiển thị không còn đúng nữa, giữ lại giỏ cũ
@@ -304,6 +320,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         <Card size="small" title="Khách hàng" className="mb-4">
           <PosCustomerPanel
             values={checkout}
+            errors={visibleFieldErrors}
             disabled={mutation.isPending}
             onChange={(patch) => setCheckout((current) => ({ ...current, ...patch }))}
           />
@@ -359,6 +376,7 @@ export function PosOrderDrawer({ open, onClose }: { open: boolean; onClose: () =
         onNewOrder={() => {
           setReceipt(undefined);
           resetCounter();
+          onNewOrder?.();
         }}
       />
     </>

@@ -23,7 +23,7 @@ import { getMfaErrorMessage } from '../model/mfa-error';
 import { LoginMfaStep, type LoginMfaChallenge } from '../components/login-mfa-step';
 
 const schema: yup.ObjectSchema<LoginDto> = yup.object({
-  identifier: yup.string().trim().required('Vui lòng nhập email hoặc số điện thoại').max(255),
+  identifier: yup.string().trim().required('Vui lòng nhập email hoặc số điện thoại').max(255, 'Tối đa 255 ký tự'),
   password: yup.string().min(8, 'Mật khẩu tối thiểu 8 ký tự').required('Vui lòng nhập mật khẩu'),
   rememberMe: yup.boolean().optional(),
 });
@@ -184,7 +184,6 @@ export function LoginPage() {
           ) : (
           <Form
             layout="vertical"
-            requiredMark={false}
             onFinish={() => void form.handleSubmit((data) => {
               if (remember) rememberIdentifier(data.identifier);
               else forgetIdentifier();
@@ -194,6 +193,7 @@ export function LoginPage() {
           >
             <Form.Item
               label={<span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Tài khoản</span>}
+              required
               validateStatus={form.formState.errors.identifier ? 'error' : undefined}
               help={form.formState.errors.identifier?.message}
               className="!mb-4"
@@ -220,6 +220,7 @@ export function LoginPage() {
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Mật khẩu</span>
                 </div>
               }
+              required
               validateStatus={form.formState.errors.password ? 'error' : undefined}
               help={form.formState.errors.password?.message}
               className="!mb-6"

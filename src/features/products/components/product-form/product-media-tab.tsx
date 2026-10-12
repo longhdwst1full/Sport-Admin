@@ -38,6 +38,8 @@ export function ProductMediaTab({
   ) : (
     <Form.Item
       label="Ảnh sản phẩm"
+      validateStatus={form.formState.errors.images ? 'error' : undefined}
+      help={form.formState.errors.images?.message}
       extra="Tải nhiều ảnh ngay tại đây; ảnh đầu danh sách là ảnh chính. Ảnh được gắn vào sản phẩm sau khi tạo."
     >
       <Controller

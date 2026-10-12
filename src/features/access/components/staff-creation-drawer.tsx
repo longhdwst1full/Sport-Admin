@@ -169,6 +169,11 @@ export function StaffCreationDrawer({
             loading={staff.rolesQuery.isPending}
             loadError={staff.rolesQuery.isError}
           />
+          {errors.roleCode && (
+            <div role="alert" className="mt-1 text-xs text-red-500">
+              {errors.roleCode.message}
+            </div>
+          )}
         </div>
 
         <ExtraAssignmentRows

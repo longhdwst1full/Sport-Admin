@@ -246,6 +246,7 @@ export function BannersPage() {
           open={editor.open}
           bannerId={editor.bannerId}
           onClose={() => setEditor({ open: false })}
+          onCreated={() => setPage(1)}
         />
       )}
       <BannerStatusModal

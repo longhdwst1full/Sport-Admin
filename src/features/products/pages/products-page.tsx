@@ -20,6 +20,7 @@ export function ProductsPage() {
   });
   const openWorkspace = (slug?: string) =>
     setWorkspace((current) => ({ open: true, slug, session: current.session + 1 }));
+  const closeWorkspace = () => setWorkspace((current) => ({ ...current, open: false }));
   const list = useProductList();
   const prefetchProductForm = useProductFormPrefetch();
   const actions = useProductListActions();
@@ -123,7 +124,12 @@ export function ProductsPage() {
         key={workspace.session}
         open={workspace.open}
         slug={workspace.slug}
-        onClose={() => setWorkspace((current) => ({ ...current, open: false }))}
+        onClose={closeWorkspace}
+        onCreated={() => {
+          closeWorkspace();
+          // Về trang 1 để thấy sản phẩm vừa tạo; danh sách đã được invalidate trong workspace.
+          list.onPageChange(1, list.pageSize);
+        }}
       />
     </>
   );

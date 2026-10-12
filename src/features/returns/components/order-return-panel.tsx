@@ -50,7 +50,8 @@ export function OrderReturnPanel({ orderId }: { orderId: string }) {
           onCreated={(created) => {
             setOpen(false);
             void message.success(`Đã tạo phiếu ${created.returnNo}`);
-            void navigate(`/returns?id=${created.id}`);
+            // Tạo xong về danh sách phiếu trả (trang 1, list đã invalidate) thay vì mở chi tiết.
+            void navigate('/returns');
           }}
         />
       )}

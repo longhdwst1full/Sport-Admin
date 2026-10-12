@@ -84,7 +84,7 @@ export function ProductVariantsTab({
                 <Controller
                   name={`variants.${index}.name`}
                   control={form.control}
-                  render={({ field }) => <Input {...field} placeholder="Ví dụ: Đen - Size 40" />}
+                  render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Đen - Size 40" />}
                 />
               </Form.Item>
               <Form.Item
@@ -97,7 +97,7 @@ export function ProductVariantsTab({
                   name={`variants.${index}.sku`}
                   control={form.control}
                   render={({ field }) => (
-                    <Input {...field} placeholder="Bỏ trống để tự sinh" onChange={(event) => field.onChange(event.target.value.toUpperCase())} />
+                    <Input {...field} maxLength={40} placeholder="Bỏ trống để tự sinh" onChange={(event) => field.onChange(event.target.value.toUpperCase())} />
                   )}
                 />
               </Form.Item>
@@ -109,7 +109,7 @@ export function ProductVariantsTab({
                 <Controller
                   name={`variants.${index}.barcode`}
                   control={form.control}
-                  render={({ field }) => <Input {...field} placeholder="Không bắt buộc" />}
+                  render={({ field }) => <Input {...field} maxLength={64} placeholder="Không bắt buộc" />}
                 />
               </Form.Item>
               {([

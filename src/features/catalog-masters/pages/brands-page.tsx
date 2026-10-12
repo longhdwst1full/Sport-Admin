@@ -90,8 +90,8 @@ export function BrandsPage() {
       deleteConfirm={BRAND_DELETE_CONFIRM}
       onDelete={(row) => deleteBrand.mutate({ id: row.id, expectedVersion: row.version })}
       deletingId={deleteBrand.isPending ? deleteBrand.variables?.id : undefined}
-      renderDrawer={({ open, selected, onClose }) => (
-        <BrandFormDrawer open={open} brand={selected} onClose={onClose} />
+      renderDrawer={({ open, selected, onClose, onCreated }) => (
+        <BrandFormDrawer open={open} brand={selected} onClose={onClose} onCreated={onCreated} />
       )}
     />
   );

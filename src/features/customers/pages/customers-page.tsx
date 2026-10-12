@@ -199,6 +199,8 @@ export function CustomersPage() {
             setFormOpen(false);
             setEditing(undefined);
           }}
+          // Tạo xong quay về trang 1 để thấy khách vừa thêm (thứ tự sắp xếp do API quyết định).
+          onCreated={() => url.set('page', undefined)}
         />
       </ManagementPage>
 

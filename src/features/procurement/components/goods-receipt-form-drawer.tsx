@@ -25,7 +25,7 @@ import { FormDrawer } from '@/foundation/overlay';
 
 const RECEIPT_KEYS = { list: getListGoodsReceiptsQueryKey(), detail: getGetGoodsReceiptQueryKey };
 
-export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boolean; editing?: GoodsReceiptDetailDto; onClose: () => void }) {
+export function GoodsReceiptFormDrawer({ open, editing, onClose, onCreated }: { open: boolean; editing?: GoodsReceiptDetailDto; onClose: () => void; onCreated?: () => void }) {
   const [form] = Form.useForm<CreateGoodsReceiptDto>();
   const receiptType = Form.useWatch('receiptType', form) ?? GoodsReceiptType.WITH_PO;
   const purchaseOrderId = Form.useWatch('purchaseOrderId', form);
@@ -76,7 +76,7 @@ export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boole
       supplierInvoiceNo: values.supplierInvoiceNo?.trim() || undefined,
       note: values.note?.trim() || undefined,
       items: values.items.map((item) => ({ ...item, unitCost: direct && item.unitCost !== undefined ? String(item.unitCost) : undefined, purchaseOrderItemId: direct ? undefined : item.purchaseOrderItemId })),
-      costs: values.costs?.filter((cost) => cost.amount).map((cost) => ({ ...cost, amount: String(cost.amount), note: cost.note?.trim() || undefined })),
+      costs: values.costs?.map((cost) => ({ ...cost, amount: String(cost.amount), note: cost.note?.trim() || undefined })),
     };
     await save({
       payload,
@@ -84,18 +84,18 @@ export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boole
       create: (data, options) => createGoodsReceipt(data, options),
       successText: editing ? 'Đã cập nhật phiếu nhập.' : 'Đã tạo phiếu nhập nháp.',
       errorText: 'Không lưu được phiếu nhập.',
-      onDone: onClose,
+      onDone: editing ? onClose : onCreated ?? onClose,
     });
   };
 
   return <FormDrawer title={editing ? `Sửa ${editing.receiptNo}` : 'Tạo phiếu nhập'} size="xl" open={open} onClose={onClose} onSubmit={() => form.submit()} submitting={submitting} submitText="Lưu nháp" isDirty={() => form.isFieldsTouched()}>
     <Form form={form} layout="vertical" disabled={submitting} onFinish={(values) => void submit(values)}>
       <div className="grid gap-x-4 md:grid-cols-2 lg:grid-cols-3">
-        <Form.Item name="receiptType" label="Loại phiếu" rules={[{ required: true }]}><Select disabled={Boolean(editing)} options={goodsReceiptTypeOptions} onChange={() => { hydratedPoRef.current = undefined; form.setFieldsValue({ purchaseOrderId: undefined, items: [] }); }} /></Form.Item>
-        {withPo ? <Form.Item name="purchaseOrderId" label="Đơn mua hàng" rules={[{ required: true }]}><Select disabled={Boolean(editing)} showSearch optionFilterProp="label" options={withSelectedOption(purchaseOrders.options, editing?.purchaseOrder && { value: editing.purchaseOrder.id, label: editing.purchaseOrder.poNo })} filterOption={false} onSearch={purchaseOrders.onSearch} onChange={() => { hydratedPoRef.current = undefined; form.setFieldValue('items', []); }} /></Form.Item> : <>
-          <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true }]}><Select showSearch filterOption={false} onSearch={suppliers.onSearch} options={withSelectedParty(suppliers.options, editing?.supplier)} /></Form.Item>
-          <Form.Item name="warehouseId" label="Kho nhận" rules={[{ required: true }]}><Select showSearch filterOption={false} onSearch={warehouses.onSearch} options={withSelectedParty(warehouses.options, editing?.warehouse)} /></Form.Item>
-          <Form.Item name="reasonCode" label="Lý do nhập trực tiếp" rules={[{ required: true }]}><Select options={directReceiptReasonOptions} /></Form.Item>
+        <Form.Item name="receiptType" label="Loại phiếu" rules={[{ required: true, message: 'Chọn loại phiếu' }]}><Select disabled={Boolean(editing)} options={goodsReceiptTypeOptions} onChange={() => { hydratedPoRef.current = undefined; form.setFieldsValue({ purchaseOrderId: undefined, items: [] }); }} /></Form.Item>
+        {withPo ? <Form.Item name="purchaseOrderId" label="Đơn mua hàng" rules={[{ required: true, message: 'Chọn đơn mua hàng' }]}><Select disabled={Boolean(editing)} showSearch optionFilterProp="label" options={withSelectedOption(purchaseOrders.options, editing?.purchaseOrder && { value: editing.purchaseOrder.id, label: editing.purchaseOrder.poNo })} filterOption={false} onSearch={purchaseOrders.onSearch} onChange={() => { hydratedPoRef.current = undefined; form.setFieldValue('items', []); }} /></Form.Item> : <>
+          <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true, message: 'Chọn nhà cung cấp' }]}><Select showSearch filterOption={false} onSearch={suppliers.onSearch} options={withSelectedParty(suppliers.options, editing?.supplier)} /></Form.Item>
+          <Form.Item name="warehouseId" label="Kho nhận" rules={[{ required: true, message: 'Chọn kho nhận' }]}><Select showSearch filterOption={false} onSearch={warehouses.onSearch} options={withSelectedParty(warehouses.options, editing?.warehouse)} /></Form.Item>
+          <Form.Item name="reasonCode" label="Lý do nhập trực tiếp" rules={[{ required: true, message: 'Chọn lý do nhập trực tiếp' }]}><Select options={directReceiptReasonOptions} /></Form.Item>
         </>}
         <Form.Item name="supplierInvoiceNo" label="Số hoá đơn NCC"><Input maxLength={64} /></Form.Item>
         <Form.Item name="costAllocation" label="Phân bổ chi phí"><Select options={costAllocationOptions} /></Form.Item>
@@ -105,10 +105,15 @@ export function GoodsReceiptFormDrawer({ open, editing, onClose }: { open: boole
       {withPo ? purchaseOrder.isPending && purchaseOrderId ? <TableSkeleton rows={3} /> : purchaseOrder.isError ? <QueryErrorAlert message="Không tải được dòng đơn mua hàng" error={purchaseOrder.error} retry={() => void purchaseOrder.refetch()} /> : <PoReceiptItemsFields purchaseOrder={purchaseOrder.data} /> : <LineItemsFields variantOptions={variants.options} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số nhận" unitCostRequired />}
       <div className="mb-2 mt-6 font-semibold text-slate-800">Chi phí nhập</div>
       <Form.List name="costs">{(fields, { add, remove }) => <div className="space-y-3">{fields.map((field) => <div key={field.key} className="grid gap-3 md:grid-cols-[180px_180px_1fr_90px]">
-        <Form.Item {...field} name={[field.name, 'costType']} rules={[{ required: true }]}><Select placeholder="Loại chi phí" options={receiptCostTypeOptions} /></Form.Item>
-        <Form.Item {...field} name={[field.name, 'amount']} rules={[{ required: true }]}><Input inputMode="decimal" placeholder="Số tiền" /></Form.Item>
-        <Form.Item {...field} name={[field.name, 'note']}><Input placeholder="Ghi chú" /></Form.Item>
-        <Button danger type="text" onClick={() => remove(field.name)}>Xoá</Button>
+        <Form.Item {...field} name={[field.name, 'costType']} label="Loại chi phí" rules={[{ required: true, message: 'Chọn loại chi phí' }]}><Select placeholder="Loại chi phí" options={receiptCostTypeOptions} /></Form.Item>
+        <Form.Item {...field} name={[field.name, 'amount']} label="Số tiền" rules={[
+          { required: true, message: 'Nhập số tiền' },
+          // CONTRACT: số tiền > 0, tối đa 2 chữ số thập phân.
+          { pattern: /^\d{1,17}(\.\d{1,2})?$/, message: 'Số tiền là số, tối đa 2 chữ số thập phân' },
+          { validator: async (_, value?: string) => { if (value && Number(value) <= 0) throw new Error('Số tiền phải lớn hơn 0'); } },
+        ]}><Input inputMode="decimal" placeholder="Số tiền" /></Form.Item>
+        <Form.Item {...field} name={[field.name, 'note']} label="Ghi chú"><Input placeholder="Ghi chú" maxLength={500} /></Form.Item>
+        <Button className="self-center" danger type="text" onClick={() => remove(field.name)}>Xoá</Button>
       </div>)}<Button type="dashed" onClick={() => add()}>Thêm chi phí</Button></div>}</Form.List>
     </Form>
   </FormDrawer>;

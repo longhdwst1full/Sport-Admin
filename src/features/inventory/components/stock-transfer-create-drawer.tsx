@@ -34,18 +34,25 @@ const schema: yup.ObjectSchema<StockTransferValues> = yup.object({
   toWarehouseCode: yup.string().trim()
     .required('Chọn kho nhận')
     .notOneOf([yup.ref('fromWarehouseCode')], 'Kho nhận phải khác kho xuất'),
-  reason: yup.string().trim().min(3, 'Lý do cần ít nhất 3 ký tự').required('Nhập lý do chuyển kho'),
+  reason: yup.string().trim()
+    .required('Nhập lý do chuyển kho')
+    .min(3, 'Lý do cần ít nhất 3 ký tự')
+    .max(1000, 'Lý do tối đa 1000 ký tự'),
   items: yup.array()
     .of(yup.object({
       sku: yup.string().trim().required('Chọn SKU'),
-      requestedQuantity: yup.number().integer('Số lượng phải là số nguyên').min(1, 'Tối thiểu 1').required(),
+      requestedQuantity: yup.number()
+        .typeError('Nhập số lượng')
+        .integer('Số lượng phải là số nguyên')
+        .min(1, 'Tối thiểu 1')
+        .required('Nhập số lượng'),
     }))
     .min(1, 'Phiếu phải có ít nhất một SKU')
     .test('unique-sku', 'Mỗi SKU chỉ được xuất hiện một lần', (items) => {
       const skus = (items ?? []).map(({ sku }) => sku.trim().toUpperCase()).filter(Boolean);
       return new Set(skus).size === skus.length;
     })
-    .required(),
+    .required('Phiếu phải có ít nhất một SKU'),
 });
 
 const emptyValues: StockTransferValues = {
@@ -93,8 +100,9 @@ export function StockTransferCreateDrawer({
       onSuccess: async (result) => {
         await queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() });
         void message.success(`Đã tạo phiếu ${result.transferNo}.`);
-        onClose();
-        onCreated?.(result.id);
+        // Tạo xong quay về danh sách (trang chủ quản đưa về tab chuyển kho, trang 1), không mở chi tiết.
+        if (onCreated) onCreated(result.id);
+        else onClose();
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo phiếu chuyển kho.')),
     },

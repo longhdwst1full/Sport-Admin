@@ -7,15 +7,21 @@ import { useUpdateAdminProductVariant } from '@/generated/api/catalog/catalog';
 import type { ProductVariantDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import { toUpdateVariantDto, toVariantEditValues, type VariantEditValues } from '../model/variant-edit.mapper';
+import { VARIANT_FIELD_RULES } from '../model/product-form.schema';
 import { FormDrawer } from '@/foundation/overlay';
 
 const schema: yup.ObjectSchema<VariantEditValues> = yup.object({
-  name: yup.string().trim().required('Nhập tên phiên bản').max(255),
-  barcode: yup.string().trim().max(64).defined(),
-  weightGrams: yup.number().integer().min(0).required(),
-  lengthMm: yup.number().integer().min(1).optional(),
-  widthMm: yup.number().integer().min(1).optional(),
-  heightMm: yup.number().integer().min(1).optional(),
+  name: yup.string().trim().required('Nhập tên phiên bản').max(255, 'Tối đa 255 ký tự'),
+  barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').defined(),
+  weightGrams: yup
+    .number()
+    .typeError('Nhập khối lượng')
+    .integer('Khối lượng phải là số nguyên')
+    .min(0, 'Tối thiểu 0')
+    .required('Nhập khối lượng'),
+  lengthMm: VARIANT_FIELD_RULES.lengthMm,
+  widthMm: VARIANT_FIELD_RULES.widthMm,
+  heightMm: VARIANT_FIELD_RULES.heightMm,
 });
 
 export function VariantEditDrawer({
@@ -77,10 +83,10 @@ export function VariantEditDrawer({
     >
       <Form layout="vertical">
         <Form.Item label="Tên phiên bản" required validateStatus={errors.name ? 'error' : undefined} help={errors.name?.message}>
-          <Controller name="name" control={control} render={({ field }) => <Input {...field} />} />
+          <Controller name="name" control={control} render={({ field }) => <Input {...field} maxLength={255} />} />
         </Form.Item>
         <Form.Item label="Barcode" validateStatus={errors.barcode ? 'error' : undefined} help={errors.barcode?.message}>
-          <Controller name="barcode" control={control} render={({ field }) => <Input {...field} />} />
+          <Controller name="barcode" control={control} render={({ field }) => <Input {...field} maxLength={64} />} />
         </Form.Item>
         <div className="grid grid-cols-2 gap-3">
           {([

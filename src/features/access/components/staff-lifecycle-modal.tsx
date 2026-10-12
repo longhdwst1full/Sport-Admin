@@ -56,6 +56,8 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
   const isLock = action === 'LOCK';
   const isDelete = action === 'DELETE';
   const requiresReason = isLock || isDelete;
+  const reasonError =
+    requiresReason && reason.length > 0 && reason.trim().length < 3 ? 'Lý do tối thiểu 3 ký tự' : undefined;
   const pending = lockUser.isPending || deleteUser.isPending || unlockUser.isPending;
   const submit = () => {
     if (!user || !action) return;
@@ -113,7 +115,9 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
             }
             description="Không xoá vật lý dữ liệu nhân viên. Access token và refresh token hiện tại sẽ không còn sử dụng được."
           />
-          <Typography.Text>{isDelete ? 'Lý do xoá/ngừng hoạt động' : 'Lý do khóa'}</Typography.Text>
+          <Typography.Text>
+            {isDelete ? 'Lý do xoá/ngừng hoạt động' : 'Lý do khóa'} <span className="text-red-500">*</span>
+          </Typography.Text>
           <Input.TextArea
             className="mt-2"
             value={reason}
@@ -121,8 +125,15 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
             showCount
             rows={3}
             placeholder="Nhập lý do (tối thiểu 3 ký tự)"
+            status={reasonError ? 'error' : undefined}
+            aria-invalid={Boolean(reasonError)}
             onChange={(event) => setReason(event.target.value)}
           />
+          {reasonError && (
+            <Typography.Text type="danger" className="mt-1 block text-sm">
+              {reasonError}
+            </Typography.Text>
+          )}
         </>
       ) : (
         <Alert

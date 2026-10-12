@@ -55,5 +55,11 @@ export function useProcurementListState<TEditing>() {
       setCreateOpen(false);
       setEditing(undefined);
     },
+    /** Tạo mới thành công: đóng form và về trang 1 để thấy chứng từ vừa tạo (list đã được invalidate). */
+    onCreated: () => {
+      setCreateOpen(false);
+      setEditing(undefined);
+      url.set('page', undefined);
+    },
   };
 }

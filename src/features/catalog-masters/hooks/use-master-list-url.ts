@@ -18,5 +18,7 @@ export function useMasterListUrl() {
       hideOnSinglePage: true,
       onChange: (page: number) => url.set('page', page > 1 ? page : undefined),
     },
+    /** Về trang 1, ví dụ sau khi tạo mới để thấy bản ghi vừa thêm. */
+    resetPage: () => url.set('page', undefined),
   };
 }

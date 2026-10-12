@@ -44,9 +44,9 @@ function PoReceiptRow({
     <Form.Item name={[index, 'productVariantId']} hidden><input /></Form.Item>
     <Form.Item name={[index, 'quantity']} label="Số nhận" rules={[
       { required: true, message: 'Nhập số lượng' },
-      { type: 'number', min: 1, message: 'Số nhận phải lớn hơn 0' },
+      { type: 'integer', min: 1, max: 1_000_000, message: 'Số nhận là số nguyên từ 1 đến 1.000.000' },
     ]} className="!mb-0">
-      <InputNumber min={1} precision={0} className="!w-full" />
+      <InputNumber min={1} max={1_000_000} precision={0} className="!w-full" />
     </Form.Item>
     <div className="self-center text-sm text-slate-600">{selected ? `Giá PO: ${selected.unitCost} ₫` : 'Chọn dòng PO'}</div>
     <Button className="self-end" danger type="text" aria-label="Xoá dòng" icon={<DeleteOutlined />} onClick={() => remove(index)} />

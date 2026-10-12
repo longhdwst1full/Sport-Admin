@@ -21,22 +21,26 @@ export function SupplierFormDrawer({
   open,
   editing,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   editing?: SupplierDto;
   onClose: () => void;
+  /** Tạo mới thành công: panel đóng form và về trang 1. */
+  onCreated?: () => void;
 }) {
   const [form] = Form.useForm<SupplierForm>();
   const queryClient = useQueryClient();
   const { message } = App.useApp();
-  const done = async (text: string) => {
+  const done = async (text: string, created = false) => {
     await queryClient.invalidateQueries({ queryKey: getListSuppliersQueryKey() });
     void message.success(text);
     form.resetFields();
-    onClose();
+    if (created && onCreated) onCreated();
+    else onClose();
   };
   const failed = (error: unknown) => void message.error(getApiErrorMessage(error, 'Không lưu được nhà cung cấp.'));
-  const create = useCreateSupplier({ mutation: { onSuccess: () => void done('Đã tạo nhà cung cấp.'), onError: failed } });
+  const create = useCreateSupplier({ mutation: { onSuccess: () => void done('Đã tạo nhà cung cấp.', true), onError: failed } });
   const update = useUpdateSupplier({ mutation: { onSuccess: () => void done('Đã cập nhật nhà cung cấp.'), onError: failed } });
 
   useEffect(() => {
@@ -102,16 +106,16 @@ export function SupplierFormDrawer({
     >
       <Form form={form} layout="vertical" onFinish={submit} disabled={pending}>
         <div className="grid gap-x-4 md:grid-cols-2">
-          <Form.Item name="code" label="Mã nhà cung cấp" rules={[{ required: true }, { pattern: /^[A-Za-z0-9][A-Za-z0-9_-]*$/, message: 'Chỉ dùng chữ, số, _ và -' }]}>
+          <Form.Item name="code" label="Mã nhà cung cấp" rules={[{ required: true, message: 'Nhập mã nhà cung cấp' }, { pattern: /^[A-Za-z0-9][A-Za-z0-9_-]*$/, message: 'Chỉ dùng chữ, số, _ và -' }]}>
             <Input disabled={Boolean(editing)} maxLength={40} />
           </Form.Item>
-          <Form.Item name="name" label="Tên nhà cung cấp" rules={[{ required: true, whitespace: true }]}>
+          <Form.Item name="name" label="Tên nhà cung cấp" rules={[{ required: true, whitespace: true, message: 'Nhập tên nhà cung cấp' }]}>
             <Input maxLength={255} />
           </Form.Item>
           <Form.Item name="taxCode" label="Mã số thuế"><Input maxLength={32} /></Form.Item>
           <Form.Item name="contactName" label="Người liên hệ"><Input maxLength={255} /></Form.Item>
           <Form.Item name="phone" label="Số điện thoại"><Input maxLength={32} /></Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ type: 'email' }]}><Input maxLength={255} /></Form.Item>
+          <Form.Item name="email" label="Email" rules={[{ type: 'email', message: 'Email không hợp lệ' }]}><Input maxLength={255} /></Form.Item>
           <Form.Item name="provinceName" label="Tỉnh/thành"><Input /></Form.Item>
           <Form.Item name="districtName" label="Quận/huyện"><Input /></Form.Item>
           <Form.Item name="wardName" label="Phường/xã"><Input /></Form.Item>

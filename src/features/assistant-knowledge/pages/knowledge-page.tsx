@@ -72,6 +72,8 @@ export function KnowledgePage() {
         void message.success('Đã gắn bài vào kho tri thức (ở trạng thái nháp)');
         command.reset();
         setAttachOpen(false);
+        // UX: list đã invalidate trong hook; về trang 1 để thấy tài liệu vừa gắn.
+        url.set('page', undefined);
       },
       onError: (error) => {
         void message.error(attachKnowledgeErrorMessage(error));

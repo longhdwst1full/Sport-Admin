@@ -17,8 +17,15 @@ import {
   useListInventoryBalances,
   useSummarizeInventoryBalances,
 } from '@/generated/api/inventory/inventory';
-import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
-import { BALANCE_COLUMN_ITEMS, inventoryBalanceStatusPresentation } from '../constants/inventory.constants';
+import {
+  ListInventoryBalancesStatus,
+  type InventoryBalanceDto,
+} from '@/generated/api/inventory/inventory.schemas';
+import {
+  BALANCE_COLUMN_ITEMS,
+  inventoryBalanceStatusOptions,
+  inventoryBalanceStatusPresentation,
+} from '../constants/inventory.constants';
 import { useTabUrlFilters } from '../hooks/use-tab-url-filters';
 import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 
@@ -93,6 +100,8 @@ export function InventoryBalancePanel({
   const { search, page } = filters;
   const debouncedSearch = search.debounced;
   const warehouseCode = filters.get('warehouse');
+  // `balance.status` trên URL: thẻ "Tồn dưới ngưỡng" ở bảng điều khiển mở thẳng danh sách SKU sắp hết.
+  const status = filters.getEnum('status', ListInventoryBalancesStatus);
   const columnsState = useColumnVisibility(BALANCE_COLUMN_ITEMS);
 
   const warehouses = useWarehouseOptions();
@@ -101,6 +110,7 @@ export function InventoryBalancePanel({
     limit: ADMIN_TABLE_DEFAULT_PAGE_SIZE,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(warehouseCode ? { warehouseCode } : {}),
+    ...(status ? { status } : {}),
   });
   const items = useMemo(() => query.data?.items ?? [], [query.data?.items]);
 
@@ -168,6 +178,14 @@ export function InventoryBalancePanel({
             options={warehouses.options}
             value={warehouseCode}
             onChange={(value?: string) => filters.setFilter('warehouse', value)}
+          />
+          <Select
+            allowClear
+            placeholder="Tất cả trạng thái"
+            className="w-48"
+            options={inventoryBalanceStatusOptions}
+            value={status}
+            onChange={(value?: string) => filters.setFilter('status', value)}
           />
         </div>
 

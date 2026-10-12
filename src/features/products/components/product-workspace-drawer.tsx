@@ -22,7 +22,8 @@ import { ProductWorkspaceHeaderActions } from './product-workspace-header-action
  *
  * Hợp nhất ở bố cục, không ở API:
  * - Tạo: một lệnh `createAdminProduct` (sản phẩm, SKU, giá, ảnh, thông số trong một transaction), rồi phiếu
- *   tồn đầu của Inventory. Tạo xong, workspace chuyển tại chỗ sang chế độ Sửa của sản phẩm vừa tạo.
+ *   tồn đầu của Inventory. Tạo xong thì gọi `onCreated` (nơi dùng đóng drawer, về danh sách); riêng khi
+ *   tồn đầu lỗi, workspace chuyển tại chỗ sang chế độ Sửa để ghi lại tồn đầu.
  * - Sửa: nút Lưu gửi `updateAdminProduct` (thông tin + thông số); SKU, giá, ảnh, combo ghi ngay qua
  *   operation riêng; xuất bản/lưu trữ là lệnh vòng đời ở header.
  *
@@ -32,13 +33,16 @@ export function ProductWorkspaceDrawer({
   open,
   slug,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   /** Có thì mở ở chế độ Sửa. */
   slug?: string;
   onClose: () => void;
+  /** Tạo sản phẩm thành công; mặc định chỉ đóng drawer. */
+  onCreated?: () => void;
 }) {
-  const workspace = useProductWorkspace({ open, slug });
+  const workspace = useProductWorkspace({ open, slug, onCreated: onCreated ?? onClose });
   const { product, isEdit, detail, mutationPending } = workspace;
 
   return (
@@ -159,7 +163,7 @@ function ProductWorkspaceTabContent({ tab, workspace }: { tab: ProductFormTab; w
                   type="info"
                   showIcon
                   message="Khai thành phần combo ngay sau khi tạo"
-                  description="Thành phần gắn với SKU combo thật, nên cần tạo sản phẩm trước. Tạo xong, workspace chuyển sang chế độ sửa và mục này cho khai thành phần."
+                  description="Thành phần gắn với SKU combo thật, nên cần tạo sản phẩm trước. Tạo xong, mở sản phẩm từ danh sách để khai thành phần ở mục này."
                 />
               </div>
             ))}

@@ -18,7 +18,7 @@ type FormValues = Omit<CreatePurchaseOrderDto, 'expectedAt'> & { expectedAt?: da
 
 const PO_KEYS = { list: getListPurchaseOrdersQueryKey(), detail: getGetPurchaseOrderQueryKey };
 
-export function PurchaseOrderFormDrawer({ open, editing, onClose }: { open: boolean; editing?: PurchaseOrderDetailDto; onClose: () => void }) {
+export function PurchaseOrderFormDrawer({ open, editing, onClose, onCreated }: { open: boolean; editing?: PurchaseOrderDetailDto; onClose: () => void; onCreated?: () => void }) {
   const [form] = Form.useForm<FormValues>();
   const suppliers = useSupplierLookup(open);
   const warehouses = useWarehouseLookup(open);
@@ -57,7 +57,7 @@ export function PurchaseOrderFormDrawer({ open, editing, onClose }: { open: bool
       create: (data, options) => createPurchaseOrder(data, options),
       successText: editing ? 'Đã cập nhật đơn mua hàng.' : 'Đã tạo đơn mua hàng nháp.',
       errorText: 'Không lưu được đơn mua hàng.',
-      onDone: onClose,
+      onDone: editing ? onClose : onCreated ?? onClose,
     });
   };
 
@@ -71,7 +71,7 @@ export function PurchaseOrderFormDrawer({ open, editing, onClose }: { open: bool
           <Form.Item name="note" label="Ghi chú"><Input.TextArea rows={2} maxLength={2000} /></Form.Item>
         </div>
         <div className="mb-2 font-semibold text-slate-800">Dòng hàng <span className="text-red-500">*</span></div>
-        <LineItemsFields variantOptions={variants.options} onVariantSearch={variants.onSearch} quantityName="orderedQty" quantityLabel="Số đặt" unitCostRequired taxRate />
+        <LineItemsFields variantOptions={variants.options} onVariantSearch={variants.onSearch} quantityName="orderedQty" quantityLabel="Số đặt" maxQuantity={100_000} unitCostRequired taxRate uniqueVariant />
       </Form>
     </FormDrawer>
   );

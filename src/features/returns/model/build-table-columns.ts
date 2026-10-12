@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import type { TableColumnType } from 'antd';
 import type { ReturnTableColumnConfig } from '../constants/return-table-columns';
 
@@ -14,7 +14,9 @@ export function buildTableColumns<TRow, TId extends string>(
     const render = renderers[config.id];
     return {
       key: config.id,
-      title: config.label,
+      title: config.required
+        ? createElement('span', null, config.label, ' ', createElement('span', { className: 'text-red-500', 'aria-hidden': true }, '*'))
+        : config.label,
       width: config.width,
       fixed: config.fixed,
       ...(render

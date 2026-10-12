@@ -109,7 +109,7 @@ export function ProductBasicInfoTab({
         <Controller
           name="name"
           control={form.control}
-          render={({ field }) => <Input {...field} placeholder="Ví dụ: Máy chạy bộ Kingsport X900" />}
+          render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Máy chạy bộ Kingsport X900" />}
         />
       </Form.Item>
       </FormSection>

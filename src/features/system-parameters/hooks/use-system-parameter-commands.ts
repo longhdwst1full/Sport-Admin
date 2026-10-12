@@ -20,7 +20,7 @@ export function useSystemParameterCommands({
   onSaved,
 }: {
   editing?: SystemParameterDto;
-  onSaved: () => void;
+  onSaved: (mode: 'create' | 'update') => void;
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -66,7 +66,7 @@ export function useSystemParameterCommands({
     },
     onSuccess: async () => {
       await refresh();
-      onSaved();
+      onSaved(editing ? 'update' : 'create');
       void message.success(editing ? 'Đã lưu giá trị mới' : 'Đã tạo tham số');
     },
     onError: (error: unknown) => {

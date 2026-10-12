@@ -15,7 +15,7 @@ import { FormDrawer } from '@/foundation/overlay';
 
 const RETURN_KEYS = { list: getListSupplierReturnsQueryKey(), detail: getGetSupplierReturnQueryKey };
 
-export function SupplierReturnFormDrawer({ open, editing, onClose }: { open: boolean; editing?: SupplierReturnDetailDto; onClose: () => void }) {
+export function SupplierReturnFormDrawer({ open, editing, onClose, onCreated }: { open: boolean; editing?: SupplierReturnDetailDto; onClose: () => void; onCreated?: () => void }) {
   const [form] = Form.useForm<CreateSupplierReturnDto>();
   const supplierId = Form.useWatch('supplierId', form);
   const warehouseId = Form.useWatch('warehouseId', form);
@@ -42,16 +42,16 @@ export function SupplierReturnFormDrawer({ open, editing, onClose }: { open: boo
       create: (data, options) => createSupplierReturn(data, options),
       successText: editing ? 'Đã cập nhật phiếu trả.' : 'Đã tạo phiếu trả nhà cung cấp.',
       errorText: 'Không lưu được phiếu trả.',
-      onDone: onClose,
+      onDone: editing ? onClose : onCreated ?? onClose,
     });
   };
   return <FormDrawer title={editing ? `Sửa ${editing.returnNo}` : 'Tạo phiếu trả nhà cung cấp'} size="xl" open={open} onClose={onClose} onSubmit={() => form.submit()} submitting={submitting} submitText="Lưu nháp" isDirty={() => form.isFieldsTouched()}>
     <Form form={form} layout="vertical" disabled={submitting} onFinish={(values) => void submit(values)}>
       <div className="grid gap-x-4 md:grid-cols-2">
-        <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true }]}><Select disabled={Boolean(editing)} showSearch filterOption={false} onSearch={suppliers.onSearch} options={withSelectedParty(suppliers.options, editing?.supplier)} onChange={() => form.setFieldValue('goodsReceiptId', undefined)} /></Form.Item>
-        <Form.Item name="warehouseId" label="Kho xuất trả" rules={[{ required: true }]}><Select disabled={Boolean(editing)} showSearch filterOption={false} onSearch={warehouses.onSearch} options={withSelectedParty(warehouses.options, editing?.warehouse)} onChange={() => form.setFieldValue('goodsReceiptId', undefined)} /></Form.Item>
+        <Form.Item name="supplierId" label="Nhà cung cấp" rules={[{ required: true, message: 'Chọn nhà cung cấp' }]}><Select disabled={Boolean(editing)} showSearch filterOption={false} onSearch={suppliers.onSearch} options={withSelectedParty(suppliers.options, editing?.supplier)} onChange={() => form.setFieldValue('goodsReceiptId', undefined)} /></Form.Item>
+        <Form.Item name="warehouseId" label="Kho xuất trả" rules={[{ required: true, message: 'Chọn kho xuất trả' }]}><Select disabled={Boolean(editing)} showSearch filterOption={false} onSearch={warehouses.onSearch} options={withSelectedParty(warehouses.options, editing?.warehouse)} onChange={() => form.setFieldValue('goodsReceiptId', undefined)} /></Form.Item>
         <Form.Item name="goodsReceiptId" label="Phiếu nhập gốc (nếu có)"><Select disabled={Boolean(editing) || !supplierId || !warehouseId} allowClear showSearch filterOption={false} onSearch={receipts.onSearch} options={withSelectedOption(receipts.options, editing?.goodsReceipt && { value: editing.goodsReceipt.id, label: editing.goodsReceipt.receiptNo })} /></Form.Item>
-        <Form.Item name="reason" label="Lý do trả" rules={[{ required: true, min: 3 }]}><Input.TextArea rows={2} maxLength={1000} /></Form.Item>
+        <Form.Item name="reason" label="Lý do trả" rules={[{ required: true, whitespace: true, message: 'Nhập lý do trả' }, { min: 3, message: 'Lý do tối thiểu 3 ký tự' }]}><Input.TextArea rows={2} maxLength={1000} /></Form.Item>
       </div>
       <div className="mb-2 font-semibold text-slate-800">Dòng hàng <span className="text-red-500">*</span></div>
       <LineItemsFields variantOptions={variants.options} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số trả" unitCostRequired={false} costName="invoiceUnitCost" costLabel="Giá hoá đơn" />

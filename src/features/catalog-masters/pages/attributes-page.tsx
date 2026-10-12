@@ -126,7 +126,12 @@ export function AttributesPage() {
             columns={columns}
           />
         )}
-        <AttributeFormDrawer open={drawerOpen} attribute={selected} onClose={() => setDrawerOpen(false)} />
+        <AttributeFormDrawer
+          open={drawerOpen}
+          attribute={selected}
+          onClose={() => setDrawerOpen(false)}
+          onCreated={list.resetPage}
+        />
       </ManagementPage>
     </PageTransition>
   );

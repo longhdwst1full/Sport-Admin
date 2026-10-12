@@ -113,7 +113,16 @@ const channelOptions = (selected: SocialChannel[]) =>
  * - `updateDraft`: sửa bản nháp một kênh; bài website vẫn chỉ đổi media (nội dung sửa ở màn bài viết).
  * Drawer chỉ đóng khi lưu thành công; lỗi "stale" tải lại chi tiết và đổ lại form.
  */
-export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEditorTarget; onClose: () => void }) {
+export function SocialPostEditorDrawer({
+  target,
+  onClose,
+  onCreated,
+}: {
+  target: SocialEditorTarget;
+  onClose: () => void;
+  /** Gọi sau khi tạo bài SOCIAL mới thành công (list đã invalidate), sau `onClose`. */
+  onCreated?: () => void;
+}) {
   const { message } = App.useApp();
   const [form] = Form.useForm<SocialPostFormValues>();
   const isUpdate = target.mode === 'updateDraft';
@@ -148,6 +157,7 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
   const facebookSelected = channels.includes(SOCIAL_CHANNEL.FACEBOOK);
   const tiktokSelected = channels.includes(SOCIAL_CHANNEL.TIKTOK);
   const publishType = Form.useWatch('publishType', form) ?? FacebookPublishType.FEED;
+  const linkValue = Form.useWatch('link', form);
   // TikTok chỉ đăng video: không có kênh Facebook thì ô media làm việc như bài Video.
   const mediaPublishType = facebookSelected ? publishType : FacebookPublishType.VIDEO;
   const creator = useGetAdminTikTokCreatorInfo({ query: { enabled: tiktokSelected, retry: false, staleTime: 60_000 } });
@@ -204,6 +214,7 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
           const label = channels.map((channel) => socialChannelLabels[channel]).join(' + ');
           void message.success(isUpdate ? `Đã lưu bản nháp ${label}` : `Đã tạo bản nháp ${label}`);
           onClose();
+          if (target.mode === 'createSocial') onCreated?.();
         },
         onError: (error) => {
           const fields = Object.entries(getApiFieldErrors(error)).flatMap(([name, err]) => {
@@ -304,7 +315,12 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
                   name="title"
                   label="Tiêu đề nội bộ"
                   extra="Bỏ trống = lấy dòng đầu của nội dung."
-                  rules={[{ max: SOCIAL_LIMITS.TITLE_MAX }]}
+                  rules={[
+                    {
+                      max: SOCIAL_LIMITS.TITLE_MAX,
+                      message: `Tiêu đề tối đa ${SOCIAL_LIMITS.TITLE_MAX} ký tự`,
+                    },
+                  ]}
                 >
                   <Input
                     maxLength={SOCIAL_LIMITS.TITLE_MAX}
@@ -314,6 +330,13 @@ export function SocialPostEditorDrawer({ target, onClose }: { target: SocialEdit
                 <Form.Item
                   name="body"
                   label={tiktokSelected ? 'Nội dung (caption chung các kênh)' : 'Nội dung'}
+                  // UX: bài Facebook dạng chữ bắt buộc có nội dung khi chưa nhập link (khớp validator bên dưới).
+                  required={
+                    !captionLocked &&
+                    facebookSelected &&
+                    publishType === FacebookPublishType.FEED &&
+                    !String(linkValue ?? '').trim()
+                  }
                   rules={
                     captionLocked
                       ? []

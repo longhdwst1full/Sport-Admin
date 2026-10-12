@@ -87,11 +87,14 @@ export function BannerEditorDrawer({
   open,
   bannerId,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   /** Bỏ trống = tạo banner mới (DRAFT). */
   bannerId?: string;
   onClose: () => void;
+  /** Gọi sau khi tạo banner mới thành công (list đã invalidate), sau `onClose`. */
+  onCreated?: () => void;
 }) {
   const { message } = App.useApp();
   const [form] = Form.useForm<BannerFormValues>();
@@ -128,6 +131,7 @@ export function BannerEditorDrawer({
       onSuccess: () => {
         void message.success(isEdit ? 'Đã cập nhật banner' : 'Đã tạo banner ở trạng thái nháp');
         onClose();
+        if (!isEdit) onCreated?.();
       },
       onError: (error) => {
         const fields = Object.entries(getApiFieldErrors(error)).flatMap(([name, err]) => {
@@ -189,28 +193,28 @@ export function BannerEditorDrawer({
                 />
               </Form.Item>
             )}
-            <Form.Item name="title" label="Tiêu đề" rules={[{ max: BANNER_LIMITS.TITLE_MAX }]}>
+            <Form.Item name="title" label="Tiêu đề" rules={[{ max: BANNER_LIMITS.TITLE_MAX, message: `Tiêu đề tối đa ${BANNER_LIMITS.TITLE_MAX} ký tự` }]}>
               <Input maxLength={BANNER_LIMITS.TITLE_MAX} />
             </Form.Item>
-            <Form.Item name="subtitle" label="Phụ đề" rules={[{ max: BANNER_LIMITS.SUBTITLE_MAX }]}>
+            <Form.Item name="subtitle" label="Phụ đề" rules={[{ max: BANNER_LIMITS.SUBTITLE_MAX, message: `Phụ đề tối đa ${BANNER_LIMITS.SUBTITLE_MAX} ký tự` }]}>
               <Input.TextArea rows={2} maxLength={BANNER_LIMITS.SUBTITLE_MAX} showCount />
             </Form.Item>
             <div className="grid gap-x-4 sm:grid-cols-2">
-              <Form.Item name="ctaText" label="Chữ trên nút (CTA)" rules={[{ max: BANNER_LIMITS.CTA_MAX }]}>
+              <Form.Item name="ctaText" label="Chữ trên nút (CTA)" rules={[{ max: BANNER_LIMITS.CTA_MAX, message: `Chữ trên nút tối đa ${BANNER_LIMITS.CTA_MAX} ký tự` }]}>
                 <Input maxLength={BANNER_LIMITS.CTA_MAX} placeholder="Mua ngay" />
               </Form.Item>
               <Form.Item
                 name="targetUrl"
                 label="Đường dẫn khi bấm"
                 rules={[
-                  { max: BANNER_LIMITS.TARGET_URL_MAX },
+                  { max: BANNER_LIMITS.TARGET_URL_MAX, message: `Đường dẫn tối đa ${BANNER_LIMITS.TARGET_URL_MAX} ký tự` },
                   {
                     pattern: BANNER_TARGET_URL_PATTERN,
                     message: 'Đường dẫn bắt đầu bằng "/" (không phải "//") hoặc URL https://',
                   },
                 ]}
               >
-                <Input placeholder="/category/giay-chay-bo" />
+                <Input maxLength={BANNER_LIMITS.TARGET_URL_MAX} placeholder="/category/giay-chay-bo" />
               </Form.Item>
             </div>
             <div className="grid gap-x-4 sm:grid-cols-[1fr_160px]">

@@ -27,6 +27,11 @@ export function OrderActionConfirmation({
       : 'Xác nhận hoàn tất đơn';
   const okText = action === 'cancel' ? 'Huỷ đơn' : action === 'confirm' ? 'Xác nhận đơn' : 'Hoàn tất';
   const minimumReasonLength = action === 'cancel' ? 3 : 5;
+  // Nút xác nhận đã khoá khi lý do quá ngắn; báo lỗi tại ô khi người dùng đã bắt đầu gõ để họ biết vì sao.
+  const reasonError =
+    reason.length > 0 && reason.trim().length < minimumReasonLength
+      ? `Lý do tối thiểu ${minimumReasonLength} ký tự`
+      : undefined;
   return (
     <FormModal
       open={Boolean(action)}
@@ -52,8 +57,16 @@ export function OrderActionConfirmation({
         rows={4}
         maxLength={500}
         showCount
+        status={reasonError ? 'error' : undefined}
+        aria-invalid={Boolean(reasonError)}
+        aria-describedby={reasonError ? 'order-action-reason-error' : undefined}
         onChange={(event) => onReasonChange(event.target.value)}
       />
+      {reasonError && (
+        <Typography.Text id="order-action-reason-error" type="danger" className="mt-1 block text-sm">
+          {reasonError}
+        </Typography.Text>
+      )}
     </FormModal>
   );
 }

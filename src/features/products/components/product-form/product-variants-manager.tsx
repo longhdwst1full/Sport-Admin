@@ -14,9 +14,9 @@ import {
   useReactivateAdminProductVariant,
 } from '@/generated/api/catalog/catalog';
 import { ProductType, type ProductDetailDto, type ProductVariantDto, type ProductVariantStatus } from '@/generated/api/catalog/catalog.schemas';
+import { VARIANT_FIELD_RULES } from '../../model/product-form.schema';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatMoney } from '@/lib/format/money';
-import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../../constants/product-list.constants';
 import { PRODUCT_VARIANT_STATUS_PRESENTATION } from '../../constants/product-status.constants';
 import { ProductPricePanel } from '../product-price-panel';
 import { VariantEditDrawer } from '../variant-edit-drawer';
@@ -31,19 +31,12 @@ interface NewVariantValues {
   heightMm?: number;
 }
 
-
 /** Cùng luật với ô biến thể của form Tạo, để thêm SKU sau này không dễ hơn/khó hơn lúc tạo. */
-const newVariantSchema: yup.ObjectSchema<NewVariantValues> = yup.object({
-  name: yup.string().trim().required('Nhập tên biến thể').max(255, 'Tối đa 255 ký tự'),
-  sku: yup.string().trim().uppercase().test('sku-pattern', SKU_PATTERN_MESSAGE, (value) => !value || SKU_PATTERN.test(value)).optional(),
-  barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
-  weightGrams: yup.number().integer('Khối lượng phải là số nguyên').min(0, 'Tối thiểu 0').optional(),
-  lengthMm: yup.number().integer('Chiều dài phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
-  widthMm: yup.number().integer('Chiều rộng phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
-  heightMm: yup.number().integer('Chiều cao phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
-});
+const newVariantSchema: yup.ObjectSchema<NewVariantValues> = yup.object(VARIANT_FIELD_RULES);
 
-const emptyNewVariant: NewVariantValues = { name: '', sku: '', barcode: '', weightGrams: 0 };const DIMENSIONS = [
+const emptyNewVariant: NewVariantValues = { name: '', sku: '', barcode: '', weightGrams: 0 };
+
+const DIMENSIONS = [
   ['weightGrams', 'Khối lượng (g)', 0],
   ['lengthMm', 'Dài (mm)', 1],
   ['widthMm', 'Rộng (mm)', 1],
@@ -202,7 +195,7 @@ export function ProductVariantsManager({
                   validateStatus={variantForm.formState.errors.name ? 'error' : undefined}
                   help={variantForm.formState.errors.name?.message}
                 >
-                  <Controller name="name" control={variantForm.control} render={({ field }) => <Input {...field} placeholder="Ví dụ: Đen - Size 40" />} />
+                  <Controller name="name" control={variantForm.control} render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Đen - Size 40" />} />
                 </Form.Item>
                 <Form.Item
                   label="SKU (mã hàng)"
@@ -214,7 +207,7 @@ export function ProductVariantsManager({
                     name="sku"
                     control={variantForm.control}
                     render={({ field }) => (
-                      <Input {...field} placeholder="Bỏ trống để tự sinh" onChange={(event) => field.onChange(event.target.value.toUpperCase())} />
+                      <Input {...field} maxLength={40} placeholder="Bỏ trống để tự sinh" onChange={(event) => field.onChange(event.target.value.toUpperCase())} />
                     )}
                   />
                 </Form.Item>
@@ -223,7 +216,7 @@ export function ProductVariantsManager({
                   validateStatus={variantForm.formState.errors.barcode ? 'error' : undefined}
                   help={variantForm.formState.errors.barcode?.message}
                 >
-                  <Controller name="barcode" control={variantForm.control} render={({ field }) => <Input {...field} placeholder="Không bắt buộc" />} />
+                  <Controller name="barcode" control={variantForm.control} render={({ field }) => <Input {...field} maxLength={64} placeholder="Không bắt buộc" />} />
                 </Form.Item>
                 {DIMENSIONS.map(([name, label, min]) => (
                   <Form.Item

@@ -34,7 +34,7 @@ interface CategoryFormValues extends BrandFormValues {
 const slugRule = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const brandSchema: yup.ObjectSchema<BrandFormValues> = yup.object({
-  name: yup.string().trim().max(255).required('Nhập tên thương hiệu'),
+  name: yup.string().trim().max(255, 'Tên tối đa 255 ký tự').required('Nhập tên'),
   slug: yup
     .string()
     .trim()
@@ -45,7 +45,12 @@ const brandSchema: yup.ObjectSchema<BrandFormValues> = yup.object({
 
 const categorySchema: yup.ObjectSchema<CategoryFormValues> = brandSchema.shape({
   parentId: yup.string().matches(ENTITY_ID_PATTERN, 'Danh mục cha không hợp lệ').optional(),
-  sortOrder: yup.number().integer().min(0).required('Nhập thứ tự hiển thị'),
+  sortOrder: yup
+    .number()
+    .typeError('Nhập thứ tự hiển thị')
+    .integer('Thứ tự là số nguyên')
+    .min(0, 'Thứ tự không được âm')
+    .required('Nhập thứ tự hiển thị'),
   returnable: yup.boolean().required(),
 });
 
@@ -123,7 +128,13 @@ function MasterFormDrawer<T extends BrandFormValues>({
             name={path('name')}
             control={control}
             render={({ field }) => (
-              <Input {...field} value={field.value as string} placeholder={copy.namePlaceholder} className="!rounded-lg" />
+              <Input
+                {...field}
+                value={field.value as string}
+                maxLength={255}
+                placeholder={copy.namePlaceholder}
+                className="!rounded-lg"
+              />
             )}
           />
         </Form.Item>
@@ -196,22 +207,26 @@ export function BrandFormDrawer({
   open,
   brand,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   brand?: BrandDto;
   onClose: () => void;
+  /** Gọi sau khi tạo mới thành công, sau `onClose`. */
+  onCreated?: () => void;
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const form = useForm<BrandFormValues>({ resolver: yupResolver(brandSchema), defaultValues: brandDefaults });
-  const complete = async (label: string) => {
+  const complete = async (label: string, created = false) => {
     await queryClient.invalidateQueries({ queryKey: getListAdminBrandsQueryKey() });
     void message.success(label);
     onClose();
+    if (created) onCreated?.();
   };
   const create = useCreateAdminBrand({
     mutation: {
-      onSuccess: () => complete('Đã tạo thương hiệu mới thành công.'),
+      onSuccess: () => complete('Đã tạo thương hiệu mới thành công.', true),
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo thương hiệu.')),
     },
   });
@@ -274,23 +289,27 @@ export function CategoryFormDrawer({
   category,
   categories,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   category?: CategoryDto;
   categories: CategoryDto[];
   onClose: () => void;
+  /** Gọi sau khi tạo mới thành công, sau `onClose`. */
+  onCreated?: () => void;
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const form = useForm<CategoryFormValues>({ resolver: yupResolver(categorySchema), defaultValues: categoryDefaults });
-  const complete = async (label: string) => {
+  const complete = async (label: string, created = false) => {
     await queryClient.invalidateQueries({ queryKey: getListAdminCategoriesQueryKey() });
     void message.success(label);
     onClose();
+    if (created) onCreated?.();
   };
   const create = useCreateAdminCategory({
     mutation: {
-      onSuccess: () => complete('Đã tạo danh mục mới thành công.'),
+      onSuccess: () => complete('Đã tạo danh mục mới thành công.', true),
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo danh mục.')),
     },
   });
@@ -370,7 +389,14 @@ export function CategoryFormDrawer({
       {!category && (
         <Form.Item
           label={fieldLabel('Danh mục cha (Cấp trên)')}
-          help={<span className="text-xs text-slate-400">Để trống nếu đây là danh mục gốc cao nhất.</span>}
+          validateStatus={form.formState.errors.parentId ? 'error' : undefined}
+          help={
+            form.formState.errors.parentId ? (
+              <FieldError message={form.formState.errors.parentId.message} />
+            ) : (
+              <span className="text-xs text-slate-400">Để trống nếu đây là danh mục gốc cao nhất.</span>
+            )
+          }
         >
           <Controller
             name="parentId"
@@ -382,7 +408,12 @@ export function CategoryFormDrawer({
         </Form.Item>
       )}
 
-      <Form.Item label={fieldLabel('Thứ tự hiển thị')} required>
+      <Form.Item
+        label={fieldLabel('Thứ tự hiển thị')}
+        required
+        validateStatus={form.formState.errors.sortOrder ? 'error' : undefined}
+        help={<FieldError message={form.formState.errors.sortOrder?.message} />}
+      >
         <Controller
           name="sortOrder"
           control={form.control}

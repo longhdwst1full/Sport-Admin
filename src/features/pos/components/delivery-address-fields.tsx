@@ -6,7 +6,7 @@ import {
   useListShippingProvinces,
   useListShippingWards,
 } from '@/generated/api/shipping/shipping';
-import type { PosDeliveryValues } from '../model/pos-checkout';
+import type { PosCheckoutErrors, PosDeliveryValues } from '../model/pos-checkout';
 
 const toAreaOptions = (items: { code: string; name: string }[] | undefined) =>
   (items ?? []).map((item) => ({ value: item.code, label: item.name }));
@@ -19,9 +19,11 @@ const toAreaOptions = (items: { code: string; name: string }[] | undefined) =>
  */
 export function DeliveryAddressFields({
   value,
+  errors = {},
   onChange,
 }: {
   value: PosDeliveryValues;
+  errors?: PosCheckoutErrors;
   onChange: (patch: Partial<PosDeliveryValues>) => void;
 }) {
   const provinces = useListShippingProvinces({ query: { ...CACHE_POLICY.REFERENCE } });
@@ -40,7 +42,12 @@ export function DeliveryAddressFields({
 
   return (
     <>
-      <Form.Item label="Người nhận" required>
+      <Form.Item
+        label="Người nhận"
+        required
+        validateStatus={errors.deliveryRecipient ? 'error' : undefined}
+        help={errors.deliveryRecipient}
+      >
         <Input
           value={value.recipient}
           placeholder="Tên người nhận hàng"
@@ -48,7 +55,12 @@ export function DeliveryAddressFields({
         />
       </Form.Item>
 
-      <Form.Item label="Điện thoại người nhận" required>
+      <Form.Item
+        label="Điện thoại người nhận"
+        required
+        validateStatus={errors.deliveryPhone ? 'error' : undefined}
+        help={errors.deliveryPhone}
+      >
         <Input
           value={value.phone}
           placeholder="09xxxxxxxx"
@@ -56,7 +68,12 @@ export function DeliveryAddressFields({
         />
       </Form.Item>
 
-      <Form.Item label="Tỉnh/Thành" required>
+      <Form.Item
+        label="Tỉnh/Thành"
+        required
+        validateStatus={errors.deliveryProvinceCode ? 'error' : undefined}
+        help={errors.deliveryProvinceCode}
+      >
         <Select
           showSearch
           optionFilterProp="label"
@@ -78,7 +95,12 @@ export function DeliveryAddressFields({
         />
       </Form.Item>
 
-      <Form.Item label="Quận/Huyện" required>
+      <Form.Item
+        label="Quận/Huyện"
+        required
+        validateStatus={errors.deliveryDistrictCode ? 'error' : undefined}
+        help={errors.deliveryDistrictCode}
+      >
         <Select
           showSearch
           optionFilterProp="label"
@@ -98,7 +120,12 @@ export function DeliveryAddressFields({
         />
       </Form.Item>
 
-      <Form.Item label="Phường/Xã" required>
+      <Form.Item
+        label="Phường/Xã"
+        required
+        validateStatus={errors.deliveryWardCode ? 'error' : undefined}
+        help={errors.deliveryWardCode}
+      >
         <Select
           showSearch
           optionFilterProp="label"
@@ -113,7 +140,12 @@ export function DeliveryAddressFields({
         />
       </Form.Item>
 
-      <Form.Item label="Địa chỉ chi tiết" required>
+      <Form.Item
+        label="Địa chỉ chi tiết"
+        required
+        validateStatus={errors.deliveryAddressLine ? 'error' : undefined}
+        help={errors.deliveryAddressLine}
+      >
         <Input
           value={value.addressLine}
           placeholder="Số nhà, tên đường"

@@ -16,6 +16,8 @@ export const inventoryBalanceStatusPresentation: Record<InventoryBalanceDtoStatu
   OUT_OF_STOCK: { color: 'danger', label: 'Hết hàng' },
 };
 
+export const inventoryBalanceStatusOptions = toOptions(inventoryBalanceStatusPresentation);
+
 /** Cột tuỳ chỉnh được của bảng tồn; `id` trùng `key` cột trong `InventoryBalancePanel`. */
 export const BALANCE_COLUMN_ITEMS: ColumnItem[] = [
   { id: 'sku', label: 'Sản phẩm / SKU', fixed: true },

@@ -43,3 +43,20 @@ export const orderActorTypeLabels: Record<string, string> = {
 // paymentStatusPresentation là single source ở feature payments (rule 08); import qua barrel `@/features/payments`.
 export { paymentStatusPresentation } from '@/features/payments';
 
+
+/** CONTRACT: `paymentMethod` là string thô (CASH/BANK_TRANSFER/COD); mã lạ hiện nguyên văn. */
+export const orderPaymentMethodLabels: Record<string, string> = {
+  CASH: 'Tiền mặt tại quầy',
+  BANK_TRANSFER: 'Chuyển khoản',
+  COD: 'Tiền mặt khi nhận (COD)',
+};
+
+/**
+ * Ô "Thanh toán lúc": có `paidAt` thì hiện giờ; chưa có thì nói đúng trạng thái thay vì luôn ghi
+ * "Chưa thanh toán" (đơn đã hoàn tiền/đã xác nhận nhưng thiếu mốc giờ từng bị hiện sai).
+ */
+export function toPaidAtLabel(order: { paymentStatus: string; paymentMethod: string }): string {
+  if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'REFUNDED') return 'Không ghi nhận thời điểm';
+  if (order.paymentStatus === 'PENDING' && order.paymentMethod === 'COD') return 'Thu khi giao hàng';
+  return 'Chưa thanh toán';
+}

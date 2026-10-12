@@ -43,7 +43,7 @@ export function SupplierReturnPanel() {
       onOpen={list.openDetail}
     >
       <SupplierReturnDetailDrawer id={list.selectedId} onClose={list.closeDetail} onEdit={list.openEdit} />
-      <SupplierReturnFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} />
+      <SupplierReturnFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} onCreated={list.onCreated} />
     </ProcurementListPanel>
   );
 }

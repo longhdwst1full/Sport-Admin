@@ -217,7 +217,7 @@ function FacebookActionContent({
         {action === 'reconcile' && <SocialReconcileFields copy={FACEBOOK_RECONCILE_COPY} mode={reconcileMode} />}
         {action === 'editCaption' &&
           (isSocial ? (
-            <Form.Item name="body" label="Nội dung mới" rules={EDIT_CAPTION_RULES}>
+            <Form.Item name="body" label="Nội dung mới" required rules={EDIT_CAPTION_RULES}>
               <SocialCaptionInput max={SOCIAL_LIMITS.MESSAGE_MAX} disabled={command.isPending} />
             </Form.Item>
           ) : (

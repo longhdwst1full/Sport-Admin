@@ -16,7 +16,9 @@ import {
   useGetAdminCustomer,
 } from '@/generated/api/customers/customers';
 import { CustomerStatus } from '@/generated/api/customers/customers.schemas';
-import { customerBlockPresentation } from '../constants/customer.constants';
+import {
+  customerBlockPresentation,
+} from '../constants/customer.constants';
 import { CustomerAvatarField } from './customer-avatar-field';
 import type { CustomerRowView } from '../model/customer.mapper';
 import {
@@ -29,6 +31,7 @@ import {
 import { CustomerAddressFields } from './customer-address-fields';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import { FormDrawer } from '@/foundation/overlay';
+import { PHONE_RULE } from '@/lib/validation/phone';
 
 const FORM_FIELDS = ['name', 'phone', 'email', 'marketingConsent'] as const;
 
@@ -56,10 +59,13 @@ export function CustomerFormDrawer({
   open,
   editing,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   editing?: CustomerRowView;
   onClose: () => void;
+  /** Gọi sau khi tạo mới thành công (không gọi khi sửa) để trang đưa danh sách về trang đầu. */
+  onCreated?: () => void;
 }) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -100,6 +106,7 @@ export function CustomerFormDrawer({
     onSuccess: async () => {
       await invalidate();
       void message.success(editing ? 'Đã cập nhật khách hàng.' : 'Đã thêm khách hàng.');
+      if (!editing) onCreated?.();
       onClose();
     },
     onError: (error) => {
@@ -199,17 +206,13 @@ export function CustomerFormDrawer({
               </Form.Item>
 
               <div className="grid gap-x-4 sm:grid-cols-2">
+                {/* Contract tạo khách bắt buộc cả SĐT lẫn email (`CreateAdminCustomerDto`); sửa thì tuỳ chọn (hồ sơ cũ có thể thiếu). */}
                 <Form.Item
                   name="phone"
                   label="Số điện thoại"
-                  dependencies={['email']}
                   rules={[
-                    ({ getFieldValue }) => ({
-                      validator: (_rule, value: string | undefined) =>
-                        value?.trim() || String(getFieldValue('email') ?? '').trim()
-                          ? Promise.resolve()
-                          : Promise.reject(new Error('Nhập số điện thoại hoặc email')),
-                    }),
+                    { required: !editing, whitespace: true, message: 'Nhập số điện thoại' },
+                    PHONE_RULE,
                   ]}
                 >
                   <Input maxLength={32} placeholder="0912345678" />
@@ -217,15 +220,9 @@ export function CustomerFormDrawer({
                 <Form.Item
                   name="email"
                   label="Email"
-                  dependencies={['phone']}
                   rules={[
+                    { required: !editing, whitespace: true, message: 'Nhập email' },
                     { type: 'email', message: 'Email không hợp lệ' },
-                    ({ getFieldValue }) => ({
-                      validator: (_rule, value: string | undefined) =>
-                        value?.trim() || String(getFieldValue('phone') ?? '').trim()
-                          ? Promise.resolve()
-                          : Promise.reject(new Error('Nhập email hoặc số điện thoại')),
-                    }),
                   ]}
                 >
                   <Input maxLength={255} placeholder="minh.anh@example.com" />

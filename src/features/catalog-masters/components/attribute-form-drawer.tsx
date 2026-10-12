@@ -18,14 +18,14 @@ import { FormDrawer } from '@/foundation/overlay';
 
 const schema: yup.ObjectSchema<AttributeFormValues> = yup.object({
   code: yup.string().trim().uppercase().matches(/^[A-Z][A-Z0-9_]{1,63}$/, 'Chỉ A-Z, 0-9, _ và bắt đầu bằng chữ').required('Nhập mã'),
-  name: yup.string().trim().required('Nhập tên').max(255),
-  dataType: yup.mixed<AttributeFormValues['dataType']>().oneOf(Object.values(AttributeDataType)).required(),
-  unit: yup.string().trim().max(16).optional(),
+  name: yup.string().trim().required('Nhập tên').max(255, 'Tên tối đa 255 ký tự'),
+  dataType: yup.mixed<AttributeFormValues['dataType']>().oneOf(Object.values(AttributeDataType), 'Chọn kiểu giá trị').required('Chọn kiểu giá trị'),
+  unit: yup.string().trim().max(16, 'Đơn vị tối đa 16 ký tự').optional(),
   isVariantAxis: yup.boolean().required(),
-  sortOrder: yup.number().integer().min(0).required(),
+  sortOrder: yup.number().typeError('Nhập thứ tự').integer('Thứ tự là số nguyên').min(0, 'Thứ tự không được âm').required('Nhập thứ tự'),
   options: yup.array().of(yup.object({
     code: yup.string().trim().uppercase().matches(/^[A-Z0-9][A-Z0-9_-]{0,63}$/, 'Mã không hợp lệ').required('Nhập mã'),
-    label: yup.string().trim().required('Nhập nhãn').max(255),
+    label: yup.string().trim().required('Nhập nhãn').max(255, 'Nhãn tối đa 255 ký tự'),
     colorHex: yup.string().trim().matches(/^(#[0-9A-Fa-f]{6})?$/, 'Dạng #RRGGBB').optional(),
   })).required()
     .test('options-for-option', 'Thuộc tính lựa chọn cần ít nhất một giá trị', function check(value) {
@@ -41,7 +41,18 @@ const empty: AttributeFormValues = {
  * Tạo/sửa thuộc tính. Mã và kiểu chỉ nhập khi tạo (API không cho đổi vì thông số sản phẩm tham chiếu
  * theo mã). Đổi đơn vị hay bỏ lựa chọn đang được sản phẩm dùng sẽ bị API từ chối (409).
  */
-export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolean; attribute?: AttributeDto; onClose: () => void }) {
+export function AttributeFormDrawer({
+  open,
+  attribute,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  attribute?: AttributeDto;
+  onClose: () => void;
+  /** Gọi sau khi tạo mới thành công, sau `onClose`. */
+  onCreated?: () => void;
+}) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const form = useForm<AttributeFormValues>({ resolver: yupResolver(schema), defaultValues: empty });
@@ -64,12 +75,13 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
       : empty);
   }, [attribute, form, open]);
 
-  const done = async (text: string) => {
+  const done = async (text: string, created = false) => {
     await queryClient.invalidateQueries({ queryKey: getListAdminAttributesQueryKey() });
     void message.success(text);
     onClose();
+    if (created) onCreated?.();
   };
-  const create = useCreateAdminAttribute({ mutation: { onSuccess: () => done('Đã tạo thuộc tính.'), onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo thuộc tính.')) } });
+  const create = useCreateAdminAttribute({ mutation: { onSuccess: () => done('Đã tạo thuộc tính.', true), onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể tạo thuộc tính.')) } });
   const update = useUpdateAdminAttribute({ mutation: { onSuccess: () => done('Đã cập nhật thuộc tính.'), onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể cập nhật thuộc tính.')) } });
 
   const submit = form.handleSubmit((values) => {
@@ -96,6 +108,16 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
     validateStatus: form.formState.errors[name] ? ('error' as const) : undefined,
     help: form.formState.errors[name]?.message as string | undefined,
   });
+  // Lỗi của danh sách lựa chọn: lỗi cấp mảng (thiếu giá trị) trước, sau đó lỗi đầu tiên của từng dòng.
+  const optionErrors = form.formState.errors.options;
+  const optionsHelp =
+    optionErrors?.message ??
+    optionErrors?.root?.message ??
+    (Array.isArray(optionErrors)
+      ? optionErrors
+          .map((item) => item?.code?.message ?? item?.label?.message ?? item?.colorHex?.message)
+          .find(Boolean)
+      : undefined);
 
   return (
     <FormDrawer
@@ -113,20 +135,20 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
           )} />
         </Form.Item>
         <Form.Item label="Tên hiển thị" required {...field('name')}>
-          <Controller name="name" control={form.control} render={({ field: input }) => <Input {...input} placeholder="Chiều cao điều chỉnh" />} />
+          <Controller name="name" control={form.control} render={({ field: input }) => <Input {...input} maxLength={255} placeholder="Chiều cao điều chỉnh" />} />
         </Form.Item>
         <Space className="w-full" size="middle" wrap>
-          <Form.Item label="Kiểu giá trị" required extra={isEdit ? 'Không đổi được sau khi tạo' : undefined}>
+          <Form.Item label="Kiểu giá trị" required extra={isEdit ? 'Không đổi được sau khi tạo' : undefined} {...field('dataType')}>
             <Controller name="dataType" control={form.control} render={({ field: input }) => (
               <Select {...input} disabled={isEdit} className="min-w-44" options={ATTRIBUTE_TYPE_OPTIONS} />
             )} />
           </Form.Item>
           {dataType === AttributeDataType.NUMBER && (
             <Form.Item label="Đơn vị" extra="Khoá khi đã có sản phẩm dùng" {...field('unit')}>
-              <Controller name="unit" control={form.control} render={({ field: input }) => <Input {...input} className="w-28" placeholder="m, kg" />} />
+              <Controller name="unit" control={form.control} render={({ field: input }) => <Input {...input} className="w-28" maxLength={16} placeholder="m, kg" />} />
             </Form.Item>
           )}
-          <Form.Item label="Thứ tự">
+          <Form.Item label="Thứ tự" required {...field('sortOrder')}>
             <Controller name="sortOrder" control={form.control} render={({ field: input }) => <InputNumber {...input} min={0} />} />
           </Form.Item>
           <Form.Item label="Có thể làm trục biến thể" extra="Dành cho bước Option; chưa dùng">
@@ -135,7 +157,13 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
         </Space>
 
         {dataType === AttributeDataType.OPTION && (
-          <Form.Item label="Các giá trị lựa chọn" required {...field('options')} extra="Không bỏ được giá trị đang có sản phẩm dùng">
+          <Form.Item
+            label="Các giá trị lựa chọn"
+            required
+            validateStatus={optionsHelp ? 'error' : undefined}
+            help={optionsHelp}
+            extra="Không bỏ được giá trị đang có sản phẩm dùng"
+          >
             <Space direction="vertical" className="w-full">
               {options.fields.map((option, index) => (
                 <Space key={option.id} align="start" wrap>
@@ -144,10 +172,10 @@ export function AttributeFormDrawer({ open, attribute, onClose }: { open: boolea
                       onChange={(event) => input.onChange(event.target.value.toUpperCase())} />
                   )} />
                   <Controller name={`options.${index}.label`} control={form.control} render={({ field: input }) => (
-                    <Input {...input} className="w-48" placeholder="Trắng" status={form.formState.errors.options?.[index]?.label ? 'error' : undefined} />
+                    <Input {...input} className="w-48" maxLength={255} placeholder="Trắng" status={form.formState.errors.options?.[index]?.label ? 'error' : undefined} />
                   )} />
                   <Controller name={`options.${index}.colorHex`} control={form.control} render={({ field: input }) => (
-                    <Input {...input} className="w-28" placeholder="#FFFFFF" />
+                    <Input {...input} className="w-28" maxLength={7} placeholder="#FFFFFF" status={form.formState.errors.options?.[index]?.colorHex ? 'error' : undefined} />
                   )} />
                   <Button icon={<DeleteOutlined />} aria-label="Bỏ giá trị" onClick={() => options.remove(index)} />
                 </Space>

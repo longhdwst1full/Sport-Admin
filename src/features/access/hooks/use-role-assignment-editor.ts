@@ -37,7 +37,7 @@ export interface AssignmentEditorValues extends AssignmentFormValues {
 const schema: yup.ObjectSchema<AssignmentEditorValues> = yup.object({
   roleCode: yup
     .mixed<AssignmentFormValues['roleCode']>()
-    .oneOf(Object.values(AssignableStaffRoleCode))
+    .oneOf(Object.values(AssignableStaffRoleCode), 'Vui lòng chọn vai trò cần gán')
     .required('Vui lòng chọn vai trò cần gán'),
   branchId: yup.string().matches(ENTITY_ID_PATTERN, 'Chi nhánh không hợp lệ').required('Vui lòng chọn chi nhánh'),
   reason: yup.string().defined().max(255, 'Tối đa 255 ký tự'),
@@ -156,7 +156,8 @@ export function useRoleAssignmentEditor({
 
       if (!editing) {
         void message.success('Đã gán vai trò cho người dùng thành công.');
-        startAdd();
+        // Gán mới xong thì đóng drawer, trả người dùng về danh sách (đã được làm mới ở `finally`).
+        close();
         return;
       }
 

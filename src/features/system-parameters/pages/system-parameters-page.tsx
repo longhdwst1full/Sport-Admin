@@ -49,9 +49,11 @@ export function SystemParametersPage() {
 
   const { saveMutation, deactivateMutation, mfaModal } = useSystemParameterCommands({
     editing,
-    onSaved: () => {
+    onSaved: (mode) => {
       setFormOpen(false);
       setEditing(undefined);
+      // UX: tạo xong về trang 1 để thấy tham số mới; sửa thì giữ nguyên trang đang xem.
+      if (mode === 'create') url.set('page', undefined);
     },
   });
 

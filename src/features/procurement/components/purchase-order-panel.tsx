@@ -84,7 +84,7 @@ export function PurchaseOrderPanel() {
       onOpen={openDetail}
     >
       <PurchaseOrderDetailDrawer id={list.selectedId} onClose={list.closeDetail} onEdit={openEdit} />
-      <PurchaseOrderFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} />
+      <PurchaseOrderFormDrawer open={list.formOpen} editing={list.editing} onClose={list.closeForm} onCreated={list.onCreated} />
     </ProcurementListPanel>
   );
 }

@@ -18,10 +18,13 @@ import { useAuth } from '@/core/auth/auth-context';
  */
 export function PosCounterHeader({
   branchId,
+  error,
   disabled,
   onChange,
 }: {
   branchId?: string;
+  /** Lỗi bắt buộc chọn chi nhánh, chỉ truyền khi đã bấm tạo đơn. */
+  error?: string;
   disabled?: boolean;
   onChange: (branchId: string) => void;
 }) {
@@ -61,6 +64,8 @@ export function PosCounterHeader({
         <Form.Item
           label={<span className="text-xs font-semibold text-slate-600">Chi nhánh bán</span>}
           required
+          validateStatus={error ? 'error' : undefined}
+          help={error}
           className="!mb-0"
           extra={
             lockedToSingleBranch ? (

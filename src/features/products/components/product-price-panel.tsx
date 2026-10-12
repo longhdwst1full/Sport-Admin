@@ -97,9 +97,15 @@ export function ProductPricePanel({
   const openWindow = timeline.data?.upcoming.at(-1)
     ?? (timeline.data?.current?.endsAt ? undefined : timeline.data?.current);
 
-  const submit = form.handleSubmit((values) => {
+  // CONTRACT: lý do bắt buộc khi giảm quá 20% so với giá tham chiếu (`CreatePriceDto.reason`).
+  const reductionRatio = (amount: string) => {
     const reference = openWindow ? Number(openWindow.amount) : undefined;
-    const reduction = reference && reference > 0 ? (reference - Number(values.amount)) / reference : 0;
+    return reference && reference > 0 && amount ? (reference - Number(amount)) / reference : 0;
+  };
+  const reasonRequired = reductionRatio(form.watch('amount')) > 0.2;
+
+  const submit = form.handleSubmit((values) => {
+    const reduction = reductionRatio(values.amount);
     if (reduction > 0.2 && !values.reason?.trim()) {
       form.setError('reason', { message: 'Bắt buộc nhập lý do khi giảm giá quá 20%' });
       return;
@@ -169,7 +175,7 @@ export function ProductPricePanel({
           <Form.Item label="Áp dụng từ" required validateStatus={form.formState.errors.startsAt ? 'error' : undefined} help={form.formState.errors.startsAt?.message}>
             <Controller name="startsAt" control={form.control} render={({ field }) => <Input {...field} type="datetime-local" prefix={<CalendarOutlined />} />} />
           </Form.Item>
-          <Form.Item label="Lý do / ghi chú" validateStatus={form.formState.errors.reason ? 'error' : undefined} help={form.formState.errors.reason?.message ?? 'Bắt buộc nếu giá giảm trên 20%.'}>
+          <Form.Item label="Lý do / ghi chú" required={reasonRequired} validateStatus={form.formState.errors.reason ? 'error' : undefined} help={form.formState.errors.reason?.message ?? 'Bắt buộc nếu giá giảm trên 20%.'}>
             <Controller name="reason" control={form.control} render={({ field }) => <Input.TextArea {...field} rows={3} maxLength={500} showCount placeholder="Nhập lý do hoặc ghi chú..." />} />
           </Form.Item>
           <Button type="primary" htmlType="submit" block loading={createPrice.isPending || replacePrice.isPending} disabled={!variantId}>
