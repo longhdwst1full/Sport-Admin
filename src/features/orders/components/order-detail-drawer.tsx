@@ -23,6 +23,11 @@ import {
   useGetAdminOrder,
 } from '@/generated/api/orders/orders';
 import type { OrderItemDto } from '@/generated/api/orders/orders.schemas';
+import {
+  getGetAdminFulfillmentByOrderQueryKey,
+  getListAdminFulfillmentsQueryKey,
+} from '@/generated/api/fulfillments/fulfillments';
+import { getListAdminPaymentsQueryKey } from '@/generated/api/payments/payments';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
@@ -61,6 +66,8 @@ const ORDER_STEPS = [
   { title: 'Đang vận chuyển', key: 'SHIPPED' },
   { title: 'Hoàn thành', key: 'DELIVERED' },
 ];
+
+const PREPAID_PAYMENT_METHODS: ReadonlySet<string> = new Set(['BANK_TRANSFER', 'VNPAY']);
 
 function getOrderCurrentStep(status: string): number {
   switch (status) {
@@ -156,7 +163,13 @@ export function OrderDetailDrawer({
     retry: false,
     onSuccess: async (updated) => {
       queryClient.setQueryData(getGetAdminOrderQueryKey(updated.id), updated);
-      await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
+      // Xác nhận/huỷ đơn đổi luôn phiếu giao vận (vận đơn GHN, trạng thái đơn mà bước lấy hàng kiểm tra) và thanh toán.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetAdminFulfillmentByOrderQueryKey(updated.id) }),
+        queryClient.invalidateQueries({ queryKey: getListAdminFulfillmentsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() }),
+      ]);
       idempotencyRef.current = undefined;
       setAction(undefined);
       setReason('');
@@ -176,12 +189,13 @@ export function OrderDetailDrawer({
   const canCancel =
     canManage &&
     order?.status === 'PENDING_CONFIRMATION' &&
-    order.paymentStatus === 'PENDING' &&
+    (order.paymentStatus === 'PENDING' || order.paymentStatus === 'FAILED') &&
     order.fulfillmentStatus === 'PENDING';
+  // API chỉ chặn đơn trả trước (BANK_TRANSFER/VNPAY) chưa thu tiền; COD/CASH xác nhận được ngay.
   const canConfirm =
     canManage &&
     order?.status === 'PENDING_CONFIRMATION' &&
-    (order.paymentMethod === 'COD' || order.paymentStatus === 'SUCCESS') &&
+    (!PREPAID_PAYMENT_METHODS.has(order.paymentMethod) || order.paymentStatus === 'SUCCESS') &&
     order.fulfillmentStatus === 'PENDING';
   const canComplete =
     canManage &&

@@ -4,6 +4,8 @@ import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_TABLE_DEFAULT_PAGE_SIZE } from '@/foundation/table';
 import {
+  getGetAdminPostQueryKey,
+  getGetAdminSocialPostQueryKey,
   getListAdminPostsQueryKey,
   getListAdminSocialPostsQueryKey,
   updateAdminPost,
@@ -67,18 +69,21 @@ export function useContentPosts() {
   );
 
   // CACHE: màn này đọc danh sách gộp; danh sách bài website vẫn invalidate cho màn khác.
-  const invalidateLists = () =>
+  // Chi tiết của bài vừa đổi cũng invalidate: version tăng, form sửa/drawer đọc cache cũ sẽ gửi version lệch (409).
+  const invalidateLists = (postId: string) =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: getListAdminSocialPostsQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminPostQueryKey(postId) }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminSocialPostQueryKey(postId) }),
     ]);
 
   // Cờ hiển thị tách khỏi trạng thái: ẩn tạm một bài viết không phải lưu trữ nó.
   const visibility = useMutation({
     mutationFn: ({ row, next }: { row: SocialPostSummaryDto; next: boolean }) =>
       updateAdminPost(row.id, { expectedVersion: row.version, isPublished: next }),
-    onSuccess: async (_result, { next }) => {
-      await invalidateLists();
+    onSuccess: async (_result, { row, next }) => {
+      await invalidateLists(row.id);
       void message.success(next ? 'Đã hiện bài viết trên website' : 'Đã ẩn bài viết khỏi website');
     },
     onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
@@ -86,8 +91,8 @@ export function useContentPosts() {
 
   const archive = useDeleteAdminPost({
     mutation: {
-      onSuccess: async () => {
-        await invalidateLists();
+      onSuccess: async (_result, { id }) => {
+        await invalidateLists(id);
         void message.success('Đã lưu trữ bài viết và gỡ khỏi website.');
       },
       onError: (error) => void message.error(getApiErrorMessage(error, 'Không thể lưu trữ bài viết.')),

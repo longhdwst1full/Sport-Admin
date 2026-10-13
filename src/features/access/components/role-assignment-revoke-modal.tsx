@@ -37,7 +37,7 @@ export function RoleAssignmentRevokeModal({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: getListAdminUsersQueryKey() });
-        void message.success('Đã thu hồi vai trò và làm mới permission version.');
+        void message.success('Đã thu hồi vai trò và làm mới phiên bản quyền.');
         close();
       },
       onError: (error) => {

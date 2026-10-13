@@ -15,7 +15,7 @@ import {
   type CreateGoodsReceiptDto,
   type GoodsReceiptDetailDto,
 } from '@/generated/api/procurement/procurement.schemas';
-import { costAllocationOptions, directReceiptReasonOptions, goodsReceiptTypeOptions, receiptCostTypeOptions, withSelectedOption, withSelectedParty } from '../constants/procurement.constants';
+import { costAllocationOptions, directReceiptReasonOptions, goodsReceiptTypeOptions, lineVariantOptions, receiptCostTypeOptions, withSelectedOption, withSelectedOptions, withSelectedParty } from '../constants/procurement.constants';
 import { useReceivablePurchaseOrderLookup, useSupplierLookup, useVariantLookup, useWarehouseLookup } from '../hooks/use-procurement-lookups';
 import { useDocumentSave } from '../hooks/use-procurement-mutations';
 import { toRemainingPoReceiptItems } from '../model/po-receipt.mapper';
@@ -102,7 +102,7 @@ export function GoodsReceiptFormDrawer({ open, editing, onClose, onCreated }: { 
         <Form.Item name="note" label="Ghi chú"><Input maxLength={2000} /></Form.Item>
       </div>
       <div className="mb-2 font-semibold text-slate-800">Dòng hàng <span className="text-red-500">*</span></div>
-      {withPo ? purchaseOrder.isPending && purchaseOrderId ? <TableSkeleton rows={3} /> : purchaseOrder.isError ? <QueryErrorAlert message="Không tải được dòng đơn mua hàng" error={purchaseOrder.error} retry={() => void purchaseOrder.refetch()} /> : <PoReceiptItemsFields purchaseOrder={purchaseOrder.data} /> : <LineItemsFields variantOptions={variants.options} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số nhận" unitCostRequired />}
+      {withPo ? purchaseOrder.isPending && purchaseOrderId ? <TableSkeleton rows={3} /> : purchaseOrder.isError ? <QueryErrorAlert message="Không tải được dòng đơn mua hàng" error={purchaseOrder.error} retry={() => void purchaseOrder.refetch()} /> : <PoReceiptItemsFields purchaseOrder={purchaseOrder.data} /> : <LineItemsFields variantOptions={withSelectedOptions(variants.options, lineVariantOptions(editing?.items))} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số nhận" unitCostRequired />}
       <div className="mb-2 mt-6 font-semibold text-slate-800">Chi phí nhập</div>
       <Form.List name="costs">{(fields, { add, remove }) => <div className="space-y-3">{fields.map((field) => <div key={field.key} className="grid gap-3 md:grid-cols-[180px_180px_1fr_90px]">
         <Form.Item {...field} name={[field.name, 'costType']} label="Loại chi phí" rules={[{ required: true, message: 'Chọn loại chi phí' }]}><Select placeholder="Loại chi phí" options={receiptCostTypeOptions} /></Form.Item>

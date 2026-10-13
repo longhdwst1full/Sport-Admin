@@ -8,7 +8,7 @@ import {
   updatePurchaseOrder,
 } from '@/generated/api/procurement/procurement';
 import type { CreatePurchaseOrderDto, PurchaseOrderDetailDto } from '@/generated/api/procurement/procurement.schemas';
-import { withSelectedParty } from '../constants/procurement.constants';
+import { lineVariantOptions, withSelectedOptions, withSelectedParty } from '../constants/procurement.constants';
 import { useSupplierLookup, useVariantLookup, useWarehouseLookup } from '../hooks/use-procurement-lookups';
 import { useDocumentSave } from '../hooks/use-procurement-mutations';
 import { LineItemsFields } from './line-items-fields';
@@ -71,7 +71,7 @@ export function PurchaseOrderFormDrawer({ open, editing, onClose, onCreated }: {
           <Form.Item name="note" label="Ghi chú"><Input.TextArea rows={2} maxLength={2000} /></Form.Item>
         </div>
         <div className="mb-2 font-semibold text-slate-800">Dòng hàng <span className="text-red-500">*</span></div>
-        <LineItemsFields variantOptions={variants.options} onVariantSearch={variants.onSearch} quantityName="orderedQty" quantityLabel="Số đặt" maxQuantity={100_000} unitCostRequired taxRate uniqueVariant />
+        <LineItemsFields variantOptions={withSelectedOptions(variants.options, lineVariantOptions(editing?.items))} onVariantSearch={variants.onSearch} quantityName="orderedQty" quantityLabel="Số đặt" maxQuantity={100_000} unitCostRequired taxRate uniqueVariant />
       </Form>
     </FormDrawer>
   );

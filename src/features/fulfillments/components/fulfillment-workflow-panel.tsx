@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import {
   CheckCircleOutlined,
   InboxOutlined,
+  PrinterOutlined,
   RocketOutlined,
   RollbackOutlined,
 } from '@ant-design/icons';
@@ -12,6 +13,7 @@ import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { StatusTag } from '@/foundation/management';
 import { FormModal } from '@/foundation/overlay';
 import {
+  createAdminFulfillmentLabel,
   deliverAdminFulfillment,
   failAdminFulfillmentDelivery,
   getGetAdminFulfillmentByOrderQueryKey,
@@ -24,7 +26,7 @@ import {
   shipAdminFulfillment,
   useGetAdminFulfillmentByOrder,
 } from '@/generated/api/fulfillments/fulfillments';
-import type { FulfillmentDetailDto } from '@/generated/api/fulfillments/fulfillments.schemas';
+import type { FulfillmentDetailDto, FulfillmentLabelDto } from '@/generated/api/fulfillments/fulfillments.schemas';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
@@ -70,7 +72,8 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
 
   const availableActions = useMemo(() => {
     if (!fulfillment) return [] as FulfillmentAction[];
-    if (fulfillment.status === 'PENDING' && canPick) return ['pick'];
+    // API chỉ cho lấy hàng khi đơn đã được xác nhận (`orderStatus === CONFIRMED`).
+    if (fulfillment.status === 'PENDING' && fulfillment.orderStatus === 'CONFIRMED' && canPick) return ['pick'];
     if (fulfillment.status === 'PICKING' && canPack) return ['pack'];
     if (fulfillment.status === 'PACKED' && canShip) return ['ship'];
     if (fulfillment.status === 'SHIPPED' && canUpdateDelivery) return ['deliver', 'fail'];
@@ -106,6 +109,28 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       void message.error(getApiErrorMessage(error, 'Không thể tạo lại vận đơn.'));
     },
   });
+
+  // URL phiếu giao do hãng phát hành và chỉ sống vài phút: lấy mới mỗi lần bấm, không cache.
+  // Mở tab trống ngay trong click rồi mới gán URL, vì window.open sau await bị trình duyệt chặn popup.
+  const printLabel = useMutation<FulfillmentLabelDto, unknown, { fulfillmentId: string; target: Window | null }>({
+    mutationFn: ({ fulfillmentId }) => createAdminFulfillmentLabel(fulfillmentId),
+    retry: false,
+    onSuccess: ({ labelUrl }, { target }) => {
+      if (target) {
+        target.opener = null;
+        target.location.href = labelUrl;
+      } else {
+        window.open(labelUrl, '_blank', 'noopener,noreferrer');
+      }
+    },
+    onError: (error, { target }) => {
+      target?.close();
+      void message.error(getApiErrorMessage(error, 'Không lấy được phiếu giao từ hãng vận chuyển.'));
+    },
+  });
+  const openLabel = (fulfillmentId: string) => {
+    printLabel.mutate({ fulfillmentId, target: window.open('', '_blank') });
+  };
 
   const mutation = useMutation<FulfillmentDetailDto, unknown>({
     mutationFn: async () => {
@@ -196,7 +221,21 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       <Descriptions size="small" column={{ xs: 1, sm: 2 }}>
         <Descriptions.Item label="Kho xuất">{fulfillment.warehouseName}</Descriptions.Item>
         <Descriptions.Item label="Đơn vị vận chuyển">{fulfillment.carrierCode || 'Nhân viên / thỏa thuận'}</Descriptions.Item>
-        <Descriptions.Item label="Mã vận đơn">{fulfillment.trackingNo || 'Chưa có'}</Descriptions.Item>
+        <Descriptions.Item label="Mã vận đơn">
+          {fulfillment.trackingNo || 'Chưa có'}
+          {/* API chỉ in được khi đã có mã vận đơn và cần quyền đóng gói (`fulfillment.pack`). */}
+          {fulfillment.trackingNo && canPack && (
+            <Button
+              size="small"
+              type="link"
+              icon={<PrinterOutlined />}
+              loading={printLabel.isPending}
+              onClick={() => openLabel(fulfillment.id)}
+            >
+              In phiếu giao
+            </Button>
+          )}
+        </Descriptions.Item>
         <Descriptions.Item label="Phiên bản">{fulfillment.version}</Descriptions.Item>
         {fulfillment.carrierShipmentStatus && (
           <Descriptions.Item label="Vận đơn GHN tự tạo">

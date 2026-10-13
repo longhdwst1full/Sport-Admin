@@ -65,6 +65,7 @@ export function useDashboardReport() {
     canSeeRevenue,
     canSeeOperation,
     canSeeInventory,
+    granularity,
     revenue: revenue.data,
     overview: overview.data,
     inventory: inventory.data,

@@ -10,6 +10,7 @@ import {
   getGetStocktakeQueryKey,
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
+  getSummarizeInventoryBalancesQueryKey,
   getListStocktakesQueryKey,
   useApproveStocktake,
   useCancelStocktake,
@@ -73,6 +74,7 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
       queryClient.invalidateQueries({ queryKey: getListStocktakesQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getGetStocktakeQueryKey(stocktakeId) }),
       queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getSummarizeInventoryBalancesQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
     ]);
   };

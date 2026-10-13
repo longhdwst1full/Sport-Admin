@@ -7,7 +7,7 @@ import { StatusTag } from '@/foundation/management';
 import { DetailDrawer } from '@/foundation/overlay';
 import { RefreshButton } from '@/foundation/table';
 import { useGetAdminSocialPost } from '@/generated/api/content/content';
-import { FacebookPublicationStatus, SocialMediaDtoKind } from '@/generated/api/content/content.schemas';
+import { AnyContentPostType, FacebookPublicationStatus, SocialMediaDtoKind } from '@/generated/api/content/content.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
 import {
   fbOriginLabels,
@@ -161,10 +161,15 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
           <Descriptions size="small" column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 2 }} bordered className="mb-4">
             <Descriptions.Item label="Loại bài">{postTypeLabels[post.postType]}</Descriptions.Item>
             <Descriptions.Item label="Website">
-              <StatusTag
-                status={post.isPublished ? WEBSITE_VISIBILITY.VISIBLE : WEBSITE_VISIBILITY.HIDDEN}
-                presentations={websiteVisibilityPresentation}
-              />
+              {/* Khớp cột "Website" ở danh sách: bài chỉ mạng xã hội không bao giờ lên web. */}
+              {post.postType === AnyContentPostType.SOCIAL ? (
+                <span className="text-xs text-slate-400">Không đăng web</span>
+              ) : (
+                <StatusTag
+                  status={post.isPublished ? WEBSITE_VISIBILITY.VISIBLE : WEBSITE_VISIBILITY.HIDDEN}
+                  presentations={websiteVisibilityPresentation}
+                />
+              )}
             </Descriptions.Item>
             {facebook ? (
               <>

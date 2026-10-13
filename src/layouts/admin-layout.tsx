@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import {
   Avatar,
-  Badge,
   Button,
   Layout,
   Menu,
@@ -87,11 +86,14 @@ export function AdminLayout() {
     .map((g) => `sub-${g}`);
   const [openKeys, setOpenKeys] = useState<string[]>(() => allSubKeys);
 
-  useEffect(() => {
-    if (activeGroup && activeGroup !== 'overview') {
-      setOpenKeys((prev) => (prev.includes(`sub-${activeGroup}`) ? prev : [...prev, `sub-${activeGroup}`]));
+  // Chuyển sang màn thuộc nhóm đang đóng thì mở nhóm đó; điều chỉnh ngay lúc render (RULE-HOOK-01).
+  const [syncedGroup, setSyncedGroup] = useState(activeGroup);
+  if (activeGroup !== syncedGroup) {
+    setSyncedGroup(activeGroup);
+    if (activeGroup && activeGroup !== 'overview' && !openKeys.includes(`sub-${activeGroup}`)) {
+      setOpenKeys([...openKeys, `sub-${activeGroup}`]);
     }
-  }, [activeGroup]);
+  }
 
   const GROUP_ICONS: Record<string, React.ReactNode> = {
     overview: <DashboardOutlined />,
@@ -222,10 +224,11 @@ export function AdminLayout() {
             />
 
             {/* ── DEV notice ────────────────────────────────── */}
-            {!collapsed && import.meta.env.DEV && (
+            {/* Chỉ báo khi bypass thật sự bật; `VITE_DEV_BYPASS_PERMISSIONS=false` thì dev đang thử quyền thật. */}
+            {!collapsed && auth.developmentBypass && (
               <div className="mx-3 mb-2 rounded border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-400">
                 <span className="mr-1.5 inline-block size-1.5 rounded-full bg-amber-400" />
-                Bypass permission
+                Đang bỏ qua phân quyền (DEV)
               </div>
             )}
 
@@ -333,18 +336,16 @@ export function AdminLayout() {
                   />
                 </Tooltip>
 
-                {/* Notifications with badge count 4 (JARVIS Style) */}
+                {/* Chưa có nguồn đếm thông báo trong hệ thống: không hiện số giả trên chuông. */}
                 <Tooltip title="Thông báo">
-                  <Badge count={4} size="small" offset={[-2, 2]}>
-                    <Button
-                      type="text"
-                      shape="circle"
-                      size="small"
-                      aria-label="Thông báo"
-                      icon={<BellOutlined />}
-                      className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
-                    />
-                  </Badge>
+                  <Button
+                    type="text"
+                    shape="circle"
+                    size="small"
+                    aria-label="Thông báo"
+                    icon={<BellOutlined />}
+                    className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
+                  />
                 </Tooltip>
 
                 {/* Settings gear icon */}

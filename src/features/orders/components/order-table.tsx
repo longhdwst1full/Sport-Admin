@@ -6,7 +6,11 @@ import type { OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton, col } from '@/foundation/table';
-import { orderStatusPresentation, paymentStatusPresentation } from '../constants/order.constants';
+import {
+  orderPaymentMethodLabels,
+  orderStatusPresentation,
+  paymentStatusPresentation,
+} from '../constants/order.constants';
 
 interface OrderTableProps {
   rows: OrderSummaryDto[];
@@ -108,7 +112,7 @@ const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
       <div className="space-y-1">
         <StatusTag status={row.paymentStatus} presentations={paymentStatusPresentation} />
         <div className="text-[10px] text-slate-400">
-          {row.paymentMethod === 'COD' ? 'Tiền mặt khi nhận (COD)' : 'Chuyển khoản'}
+          {orderPaymentMethodLabels[row.paymentMethod] ?? row.paymentMethod}
         </div>
       </div>
     ),

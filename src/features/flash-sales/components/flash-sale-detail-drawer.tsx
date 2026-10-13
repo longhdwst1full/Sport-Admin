@@ -255,7 +255,8 @@ export function FlashSaleDetailDrawer({
         )
       }
       actions={
-        campaign && canManage ? (
+        // UX: API từ chối sửa chiến dịch đã ENDED/CANCELLED nên không mở form cho trạng thái kết thúc.
+        campaign && canManage && FLASH_SALE_TRANSITIONS[campaign.status].length > 0 ? (
           <Button
             type="primary"
             ghost

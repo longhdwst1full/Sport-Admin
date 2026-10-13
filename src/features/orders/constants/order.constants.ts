@@ -44,11 +44,12 @@ export const orderActorTypeLabels: Record<string, string> = {
 export { paymentStatusPresentation } from '@/features/payments';
 
 
-/** CONTRACT: `paymentMethod` là string thô (CASH/BANK_TRANSFER/COD); mã lạ hiện nguyên văn. */
+/** CONTRACT: `paymentMethod` là string thô (CASH/BANK_TRANSFER/COD/VNPAY); mã lạ hiện nguyên văn. */
 export const orderPaymentMethodLabels: Record<string, string> = {
   CASH: 'Tiền mặt tại quầy',
   BANK_TRANSFER: 'Chuyển khoản',
   COD: 'Tiền mặt khi nhận (COD)',
+  VNPAY: 'VNPay',
 };
 
 /**

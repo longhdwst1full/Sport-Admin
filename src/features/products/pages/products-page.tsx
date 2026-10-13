@@ -29,7 +29,7 @@ export function ProductsPage() {
   return (
     <>
       <ManagementPage
-        eyebrow="Catalog"
+        eyebrow="Danh mục hàng hoá"
         title="Sản phẩm"
         description="Quản lý danh mục sản phẩm, biến thể, giá và trạng thái xuất bản."
         actions={

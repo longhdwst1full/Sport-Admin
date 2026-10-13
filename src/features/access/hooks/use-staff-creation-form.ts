@@ -22,7 +22,7 @@ import { getApiErrorMessage, getApiErrorPayload, getApiFieldErrors } from '@/lib
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import { useSearchState } from '@/shared/hooks/use-search-state';
-import { STAFF_CREATION_ERROR_MESSAGES } from '../constants/access.constants';
+import { roleCodeLabel, STAFF_CREATION_ERROR_MESSAGES } from '../constants/access.constants';
 import { groupPermissionsByModule } from '../model/permission-groups';
 import { type AssignmentFormValues, assignmentIdentity, pickAssignableRoles } from '../model/role-assignment.mapper';
 import {
@@ -172,7 +172,7 @@ export function useStaffCreationForm({ open, onClose, onMfaProvisioned }: StaffC
         try {
           await assignRole.mutateAsync({ userId: created.id, data: dto });
         } catch (error) {
-          failures.push(`${dto.roleCode}: ${getApiErrorMessage(error, 'không gán được')}`);
+          failures.push(`${roleCodeLabel(dto.roleCode)}: ${getApiErrorMessage(error, 'không gán được')}`);
         }
       }
       await queryClient.invalidateQueries({ queryKey: getListAdminUsersQueryKey() });

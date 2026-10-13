@@ -75,9 +75,9 @@ export function NotificationsPage() {
 
   return (
     <ManagementPage
-      eyebrow="Email operations"
+      eyebrow="Vận hành email"
       title="Thông báo email"
-      description="Theo dõi hàng đợi gửi email nghiệp vụ và xử lý lại các dead-letter đã khắc phục nguyên nhân."
+      description="Theo dõi hàng đợi gửi email nghiệp vụ và đưa lại hàng đợi các thông báo đã dừng xử lý sau khi khắc phục nguyên nhân."
       metrics={[
         {
           key: 'total',

@@ -84,7 +84,7 @@ export function SystemParametersPage() {
   return (
     <>
       <ManagementPage
-        eyebrow="System configuration"
+        eyebrow="Cấu hình hệ thống"
         title="Tham số hệ thống"
         description="Ngưỡng nghiệp vụ sửa được tại đây và có hiệu lực ngay, không cần deploy lại."
         metrics={[

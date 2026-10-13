@@ -42,7 +42,7 @@ export function FlashSalesPage() {
   return (
     <>
       <ManagementPage
-        eyebrow="Marketing operations"
+        eyebrow="Khuyến mãi & tiếp thị"
         title="Flash Sale"
         description="Chiến dịch giảm giá theo khung giờ với số suất giới hạn cho từng SKU."
         metrics={[

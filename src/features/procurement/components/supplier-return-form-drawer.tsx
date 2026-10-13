@@ -7,7 +7,7 @@ import {
   updateSupplierReturn,
 } from '@/generated/api/procurement/procurement';
 import type { CreateSupplierReturnDto, SupplierReturnDetailDto } from '@/generated/api/procurement/procurement.schemas';
-import { withSelectedOption, withSelectedParty } from '../constants/procurement.constants';
+import { lineVariantOptions, withSelectedOption, withSelectedOptions, withSelectedParty } from '../constants/procurement.constants';
 import { usePostedReceiptLookup, useSupplierLookup, useVariantLookup, useWarehouseLookup } from '../hooks/use-procurement-lookups';
 import { useDocumentSave } from '../hooks/use-procurement-mutations';
 import { LineItemsFields } from './line-items-fields';
@@ -54,7 +54,7 @@ export function SupplierReturnFormDrawer({ open, editing, onClose, onCreated }: 
         <Form.Item name="reason" label="Lý do trả" rules={[{ required: true, whitespace: true, message: 'Nhập lý do trả' }, { min: 3, message: 'Lý do tối thiểu 3 ký tự' }]}><Input.TextArea rows={2} maxLength={1000} /></Form.Item>
       </div>
       <div className="mb-2 font-semibold text-slate-800">Dòng hàng <span className="text-red-500">*</span></div>
-      <LineItemsFields variantOptions={variants.options} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số trả" unitCostRequired={false} costName="invoiceUnitCost" costLabel="Giá hoá đơn" />
+      <LineItemsFields variantOptions={withSelectedOptions(variants.options, lineVariantOptions(editing?.items))} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số trả" unitCostRequired={false} costName="invoiceUnitCost" costLabel="Giá hoá đơn" />
     </Form>
   </FormDrawer>;
 }

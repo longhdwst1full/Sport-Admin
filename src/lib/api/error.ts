@@ -33,7 +33,11 @@ export function getApiErrorMessage(
   fallback = 'Có lỗi xảy ra. Vui lòng thử lại.',
 ): string {
   const payload = getApiErrorPayload(error);
-  if (!payload) return error instanceof Error && error.message ? error.message : fallback;
+  // `ApiError` không có envelope (mất mạng, gateway 502 trả HTML…) mang câu tiếng Anh nội bộ
+  // "API request failed with status …": người dùng phải thấy câu tiếng Việt của chỗ gọi.
+  if (!payload) {
+    return error instanceof Error && !(error instanceof ApiError) && error.message ? error.message : fallback;
+  }
   return payload.message;
 }
 

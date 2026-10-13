@@ -29,7 +29,7 @@ import type { AuditLogDto } from '@/generated/api/audit/audit.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { useUrlSearch } from '@/shared/hooks/use-url-search';
-import { ENTITY_TYPE_OPTIONS, entityTypeLabel } from '../constants/audit.constants';
+import { ENTITY_TYPE_OPTIONS, actorTypeLabel, entityTypeLabel } from '../constants/audit.constants';
 
 const { RangePicker } = DatePicker;
 
@@ -62,7 +62,7 @@ const AUDIT_COLUMNS: ColumnsType<AuditLogDto> = [
     key: 'actor',
     render: (_, row) => (
       <div className="text-xs">
-        <span className="font-semibold text-slate-800">{row.actorDisplayName ?? row.actorType}</span>
+        <span className="font-semibold text-slate-800">{row.actorDisplayName ?? actorTypeLabel(row.actorType)}</span>
         <div className="text-[11px] font-mono text-slate-400">{row.actorUserId ?? 'Hệ thống tự động'}</div>
       </div>
     ),
@@ -232,7 +232,7 @@ export function AuditPage() {
                   {entityTypeLabel(selected.entityType)} ({selected.entityId ?? '—'})
                 </Descriptions.Item>
                 <Descriptions.Item label="Người thực hiện">
-                  {selected.actorDisplayName ?? '—'} ({selected.actorType})
+                  {selected.actorDisplayName ?? '—'} ({actorTypeLabel(selected.actorType)})
                 </Descriptions.Item>
                 <Descriptions.Item label="Lý do">{selected.reason || '—'}</Descriptions.Item>
                 <Descriptions.Item label="Mã request">

@@ -1,10 +1,15 @@
 import type { ReactNode } from 'react';
 import { AsyncPagedSelect } from '@/foundation/inputs/async-paged-select';
-import { searchActiveAdminBranches } from '@/generated/api/organization/organization';
+import {
+  getSearchActiveAdminBranchesQueryKey,
+  searchActiveAdminBranches,
+} from '@/generated/api/organization/organization';
 import type { ActiveLookupOptionDto } from '@/generated/api/organization/organization.schemas';
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 
-const BRANCH_LOOKUP_QUERY_KEY = ['organization', 'branch-lookup'] as const;
+// Bắt đầu bằng key của endpoint sinh tự động để `REFERENCE_DATA.organization` (làm mới sau khi tạo/sửa/
+// ngừng chi nhánh) cũng làm mới ô chọn này; key riêng sẽ giữ danh sách cũ tới hết staleTime 30 phút.
+const BRANCH_LOOKUP_QUERY_KEY = [...getSearchActiveAdminBranchesQueryKey(), 'paged-select'] as const;
 
 export type BranchSelectLabelFormat = 'name' | 'code-name';
 

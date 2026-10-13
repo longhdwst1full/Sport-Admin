@@ -152,7 +152,7 @@ describe('FulfillmentWorkflowPanel transition modal', () => {
     let resolvePick: (value: unknown) => void = () => undefined;
     vi.mocked(pickAdminFulfillment).mockImplementation(() => new Promise((resolve) => { resolvePick = resolve; }) as never);
     useGetAdminFulfillmentByOrderMock.mockReturnValue({
-      data: baseFulfillment({ status: 'PENDING', carrierShipmentStatus: null, carrierShipmentError: null }),
+      data: baseFulfillment({ status: 'PENDING', orderStatus: 'CONFIRMED', carrierShipmentStatus: null, carrierShipmentError: null }),
       isLoading: false,
       isError: false,
       refetch: vi.fn(),

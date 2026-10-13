@@ -2,6 +2,8 @@ import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { PermissionRoute } from '@/core/auth/permission-route';
 import { AuthenticatedRoute } from '@/core/auth/authenticated-route';
+import { usePermissions } from '@/core/auth/permissions';
+import { canSeeNavigationItem, NAVIGATION_ITEMS_DATA } from '@/shared/constants/navigation';
 
 // Khung admin (menu, tab, command palette, copilot) chỉ tải sau đăng nhập; /login không kéo theo.
 const AdminLayout = lazy(async () => {
@@ -138,6 +140,27 @@ const NotificationsPage = lazy(() =>
   })),
 );
 
+/**
+ * Trang chủ `/` là đích mặc định sau đăng nhập và của mọi đường dẫn lạ. Người không có quyền báo cáo
+ * (vd. nhân viên vận hành) được đưa tới màn đầu tiên trong menu mà họ được thấy, thay vì kẹt ở màn 403.
+ */
+function HomeRoute() {
+  const granted = usePermissions();
+  const home = NAVIGATION_ITEMS_DATA.find((item) => item.path === '/');
+  if (home && !canSeeNavigationItem(home, granted)) {
+    const firstAllowed = NAVIGATION_ITEMS_DATA.find(
+      (item) => item.path !== '/' && canSeeNavigationItem(item, granted),
+    );
+    if (firstAllowed) return <Navigate to={firstAllowed.path} replace />;
+  }
+  return (
+    // Bảng điều khiển ghép ba nhóm báo cáo, mỗi nhóm một quyền riêng ở API.
+    <PermissionRoute permission={['report.operation.view', 'report.revenue.view', 'report.inventory.view']}>
+      <DashboardPage />
+    </PermissionRoute>
+  );
+}
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -162,17 +185,7 @@ export function AppRoutes() {
           // Bảng điều khiển ghép ba nhóm báo cáo, mỗi nhóm một quyền riêng ở API. Gác bằng
           // `system.module.view` như trước làm người có quyền xem báo cáo vào được trang
           // nhưng mọi widget đều nhận 403.
-          element={
-            <PermissionRoute
-              permission={[
-                'report.operation.view',
-                'report.revenue.view',
-                'report.inventory.view',
-              ]}
-            >
-              <DashboardPage />
-            </PermissionRoute>
-          }
+          element={<HomeRoute />}
         />
         <Route
           path="products"

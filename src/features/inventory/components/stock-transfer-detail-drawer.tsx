@@ -13,6 +13,7 @@ import {
   getGetStockTransferQueryKey,
   getListInventoryBalancesQueryKey,
   getListInventoryMovementsQueryKey,
+  getSummarizeInventoryBalancesQueryKey,
   getListStockTransfersQueryKey,
   useCancelStockTransfer,
   useGetStockTransfer,
@@ -88,6 +89,7 @@ export function StockTransferDetailDrawer({ id, onClose }: { id?: string; onClos
       queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getGetStockTransferQueryKey(transferId) }),
       queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getSummarizeInventoryBalancesQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
     ]);
   };

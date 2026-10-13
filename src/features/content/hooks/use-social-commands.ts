@@ -10,6 +10,7 @@ import {
   createAdminTikTokDraft,
   deleteAdminFacebookPost,
   deleteAdminTikTokPost,
+  getGetAdminPostQueryKey,
   getGetAdminSocialPostQueryKey,
   getListAdminPostsQueryKey,
   getListAdminSocialPostsQueryKey,
@@ -70,6 +71,8 @@ function useSocialCacheSync() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: getListAdminSocialPostsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() }),
+        // Bản đầy đủ của bài (form sửa bài website) mang version của bài; lệnh vừa chạy có thể đã tăng nó.
+        queryClient.invalidateQueries({ queryKey: getGetAdminPostQueryKey(saved.id) }),
       ]);
     },
     stale: async (error: unknown, postId?: string) => {

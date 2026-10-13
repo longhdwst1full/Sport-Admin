@@ -18,3 +18,13 @@ export const ENTITY_TYPE_OPTIONS = toOptions(ENTITY_TYPE_LABELS);
 
 export const entityTypeLabel = (value: string): string =>
   (ENTITY_TYPE_LABELS as Record<string, string>)[value] ?? value;
+
+/** CONTRACT: `actorType` là chuỗi tự do (API: USER/SYSTEM/GUEST, một số luồng ghi CUSTOMER). */
+const ACTOR_TYPE_LABELS: Record<string, string> = {
+  USER: 'Nhân viên',
+  SYSTEM: 'Hệ thống',
+  GUEST: 'Khách vãng lai',
+  CUSTOMER: 'Khách hàng',
+};
+
+export const actorTypeLabel = (value: string): string => ACTOR_TYPE_LABELS[value] ?? value;

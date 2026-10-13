@@ -3,6 +3,8 @@ import { App, Form, Input, Select } from 'antd';
 import { useState } from 'react';
 import {
   createAdminPost,
+  getGetAdminPostQueryKey,
+  getGetAdminSocialPostQueryKey,
   getListAdminPostsQueryKey,
   getListAdminSocialPostsQueryKey,
   updateAdminPost,
@@ -98,9 +100,16 @@ export function ContentEditorDrawer({
         : createAdminPost(payload),
     onSuccess: async () => {
       // Màn bài viết đọc danh sách gộp (`listAdminSocialPosts`); vẫn invalidate list website cho màn khác.
+      // Chi tiết cũng invalidate: version đã tăng, mở lại form/drawer trong `staleTime` mà đọc cache cũ sẽ 409.
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListAdminSocialPostsQueryKey() }),
+        ...(editing
+          ? [
+              queryClient.invalidateQueries({ queryKey: getGetAdminPostQueryKey(editing.id) }),
+              queryClient.invalidateQueries({ queryKey: getGetAdminSocialPostQueryKey(editing.id) }),
+            ]
+          : []),
       ]);
       void message.success(editing ? 'Đã cập nhật bài viết' : 'Đã tạo và xuất bản bài viết');
       onClose();

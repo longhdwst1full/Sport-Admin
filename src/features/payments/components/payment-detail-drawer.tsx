@@ -1,13 +1,16 @@
 import { useRef, useState } from 'react';
-import { Alert, App, Button, Descriptions, Empty, Form, Image, Input, Space, Typography } from 'antd';
+import { Alert, App, Button, DatePicker, Descriptions, Empty, Form, Image, Input, Space, Typography } from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   confirmAdminPayment,
   getAdminPayment,
   getGetAdminPaymentQueryKey,
   getListAdminPaymentsQueryKey,
+  recordLatePaymentReceipt,
   rejectAdminPayment,
 } from '@/generated/api/payments/payments';
+import { getGetAdminFulfillmentByOrderQueryKey } from '@/generated/api/fulfillments/fulfillments';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { OrderStatus } from '@/generated/api/orders/orders.schemas';
 import { useCan } from '@/core/auth/permissions';
@@ -37,6 +40,13 @@ interface ConfirmValues {
   note?: string;
 }
 
+interface LateReceiptValues {
+  amount: number;
+  bankReference: string;
+  receivedAt: Dayjs;
+  note?: string;
+}
+
 type SettleRequest = { action: 'confirm'; values: ConfirmValues } | { action: 'reject'; reason: string };
 
 export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string; onClose: () => void }) {
@@ -46,6 +56,9 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [form] = Form.useForm<ConfirmValues>();
   const idempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
+  const [lateReceiptOpen, setLateReceiptOpen] = useState(false);
+  const [lateReceiptForm] = Form.useForm<LateReceiptValues>();
+  const lateReceiptIdempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
   const detail = useQuery({
     queryKey: getGetAdminPaymentQueryKey(paymentId),
     enabled: Boolean(paymentId),
@@ -71,12 +84,15 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
         )
         : rejectAdminPayment(payment.id, { expectedVersion: payment.version, reason: request.reason }, options);
     },
-    onSuccess: async (updated) => {
+    onSuccess: async (updated, variables) => {
       queryClient.setQueryData(getGetAdminPaymentQueryKey(updated.id), updated);
       // Không truyền params: khớp tiền tố nên mọi trang/filter đang cache của danh sách payment đều bị invalidate.
       await queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() });
       await queryClient.invalidateQueries({ queryKey: getGetAdminOrderQueryKey(updated.orderId) });
       await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
+      // Đơn trả trước đủ tiền thì API tạo vận đơn GHN ngay: panel giao vận của đơn phải tải lại.
+      await queryClient.invalidateQueries({ queryKey: getGetAdminFulfillmentByOrderQueryKey(updated.orderId) });
+      void message.success(variables.action === 'confirm' ? 'Đã xác nhận thanh toán' : 'Đã từ chối bằng chứng thanh toán');
       // onSuccess chạy khi mutation vẫn còn isPending (query-core await onSuccess trước khi dispatch success),
       // nên phải gọi bản reset không chặn; closeConfirm chỉ dành cho thao tác huỷ của người dùng.
       resetAction();
@@ -85,6 +101,44 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       void message.error(getApiErrorMessage(error, 'Không cập nhật được thanh toán.'));
     },
   });
+  // D04: chỉ ghi sổ tiền về trễ để đối soát/hoàn tay; payment và đơn vẫn CANCELLED nên chỉ cần làm mới payment.
+  const lateReceipt = useMutation({
+    retry: false,
+    mutationFn: async (values: LateReceiptValues) => {
+      if (!payment) throw new Error('Chưa tải được thanh toán');
+      const body = {
+        expectedVersion: payment.version,
+        amount: String(values.amount),
+        bankReference: values.bankReference.trim(),
+        receivedAt: values.receivedAt.toISOString(),
+        note: values.note?.trim() || undefined,
+      };
+      const signature = `late-receipt:${payment.id}:${JSON.stringify(body)}`;
+      lateReceiptIdempotencyRef.current = nextIdempotencyKey(lateReceiptIdempotencyRef.current, signature);
+      return recordLatePaymentReceipt(payment.id, body, {
+        headers: { 'idempotency-key': lateReceiptIdempotencyRef.current.key },
+      });
+    },
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(getGetAdminPaymentQueryKey(updated.id), updated);
+      await queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() });
+      void message.success('Đã ghi nhận tiền về trễ');
+      resetLateReceipt();
+    },
+    onError: (error) => {
+      void message.error(getApiErrorMessage(error, 'Không ghi nhận được tiền về trễ.'));
+    },
+  });
+  const resetLateReceipt = () => {
+    lateReceipt.reset();
+    lateReceiptIdempotencyRef.current = undefined;
+    lateReceiptForm.resetFields();
+    setLateReceiptOpen(false);
+  };
+  const closeLateReceipt = () => {
+    if (lateReceipt.isPending) return;
+    resetLateReceipt();
+  };
   const resetAction = () => {
     mutation.reset();
     idempotencyRef.current = undefined;
@@ -96,8 +150,9 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
     resetAction();
   };
   const closeDrawer = () => {
-    if (mutation.isPending) return;
+    if (mutation.isPending || lateReceipt.isPending) return;
     closeConfirm();
+    closeLateReceipt();
     onClose();
   };
   // UX: COD chỉ mở thao tác thu tiền khi đơn đã giao; backend vẫn kiểm tra lại
@@ -105,11 +160,13 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
   // SECURITY: payment.confirm là quyền riêng với payment.view. Không có nó thì hai thao tác
   // đối soát phải tắt ngay ở UI thay vì để người dùng bấm rồi nhận 403 từ backend.
   const canSettle = useCan('payment.confirm');
-  const canConfirm = canSettle && payment && !['SUCCESS', 'CANCELLED'].includes(payment.status)
+  const canConfirm = canSettle && payment && !['SUCCESS', 'CANCELLED', 'REFUNDED'].includes(payment.status)
     && (payment.method === 'COD'
       ? payment.orderStatus === 'DELIVERED'
       : ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status));
   const canReject = canSettle && payment && ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status);
+  // API chỉ nhận tiền về trễ cho payment chuyển khoản đã CANCELLED (đơn đã nhả hàng).
+  const canRecordLateReceipt = canSettle && payment?.method === 'BANK_TRANSFER' && payment.status === 'CANCELLED';
   const orderStatus = payment ? parseEnum(OrderStatus, payment.orderStatus) : undefined;
 
   const reject = () => {
@@ -176,6 +233,23 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
                 </div>
               )}
             </section>
+            {(payment.lateReceipts?.length ?? 0) > 0 && (
+              <section>
+                <Typography.Title level={5}>Tiền về sau khi hủy</Typography.Title>
+                <Alert className="!mb-3" type="warning" showIcon message="Khoản tiền này cần hoàn thủ công cho khách; đơn và thanh toán vẫn giữ trạng thái đã hủy." />
+                <Space direction="vertical" className="w-full">
+                  {payment.lateReceipts?.map((receipt) => (
+                    <Descriptions key={receipt.id} bordered size="small" column={2} items={[
+                      { key: 'amount', label: 'Số tiền', children: moneyFormatter.format(Number(receipt.amount)) },
+                      { key: 'reference', label: 'Tham chiếu', children: receipt.reference },
+                      { key: 'receivedAt', label: 'Tiền về lúc', children: formatDateTime(receipt.receivedAt) },
+                      { key: 'provider', label: 'Nguồn', children: receipt.provider === 'VNPAY' ? 'VNPay' : 'Ghi nhận thủ công' },
+                      ...(receipt.note ? [{ key: 'note', label: 'Ghi chú', span: 2, children: receipt.note }] : []),
+                    ]} />
+                  ))}
+                </Space>
+              </section>
+            )}
             {!canSettle && <Alert type="info" showIcon message="Bạn chỉ có quyền xem thanh toán; thao tác đối soát cần quyền payment.confirm." />}
             <Space>
               <Button
@@ -191,6 +265,9 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
               <Button danger disabled={!canReject} loading={mutation.isPending && mutation.variables?.action === 'reject'} onClick={reject}>
                 Từ chối bằng chứng
               </Button>
+              {canRecordLateReceipt && (
+                <Button onClick={() => setLateReceiptOpen(true)}>Ghi nhận tiền về trễ</Button>
+              )}
             </Space>
           </div>
         )}
@@ -209,6 +286,38 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
           </Form.Item>
           <Form.Item name="reference" label="Mã giao dịch/đối soát" rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập mã đối soát' }]}>
             <Input maxLength={255} />
+          </Form.Item>
+          <Form.Item name="note" label="Ghi chú">
+            <Input.TextArea rows={3} maxLength={1000} />
+          </Form.Item>
+        </Form>
+      </FormModal>
+      <FormModal
+        open={lateReceiptOpen}
+        title="Ghi nhận tiền về trễ"
+        okText="Ghi nhận"
+        onClose={closeLateReceipt}
+        onSubmit={() => lateReceiptForm.submit()}
+        submitting={lateReceipt.isPending}
+        isDirty={() => lateReceiptForm.isFieldsTouched()}
+      >
+        <Typography.Paragraph type="secondary">
+          Chỉ ghi sổ để đối soát và hoàn tiền thủ công. Thanh toán và đơn vẫn giữ trạng thái đã hủy, không giữ lại hàng.
+        </Typography.Paragraph>
+        <Form form={lateReceiptForm} layout="vertical" onFinish={(values) => lateReceipt.mutate(values)}>
+          <Form.Item name="amount" label="Số tiền nhận được" rules={[{ required: true, message: 'Vui lòng nhập số tiền nhận được' }, { type: 'number', min: 1, message: 'Số tiền phải lớn hơn 0' }]}>
+            <MoneyInput className="!w-full" />
+          </Form.Item>
+          <Form.Item name="bankReference" label="Số tham chiếu sao kê" rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập số tham chiếu' }]}>
+            <Input maxLength={255} />
+          </Form.Item>
+          <Form.Item name="receivedAt" label="Thời điểm tiền về" rules={[{ required: true, message: 'Vui lòng chọn thời điểm tiền về' }]}>
+            <DatePicker
+              showTime={{ format: 'HH:mm' }}
+              format="DD/MM/YYYY HH:mm"
+              className="w-full"
+              disabledDate={(date) => date.isAfter(dayjs(), 'day')}
+            />
           </Form.Item>
           <Form.Item name="note" label="Ghi chú">
             <Input.TextArea rows={3} maxLength={1000} />

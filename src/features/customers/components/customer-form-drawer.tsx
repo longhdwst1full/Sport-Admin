@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { EnvironmentOutlined, PlusOutlined as AddIcon, StopOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Form, Input, Space, Switch } from 'antd';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
@@ -79,13 +79,24 @@ export function CustomerFormDrawer({
   const current = detail.data;
   const blocked = (current?.status ?? editing?.status) === CustomerStatus.INACTIVE;
 
+  // Nạp form một lần mỗi lần mở: khoá/mở khoá làm detail refetch, nạp lại sẽ xoá phần đang sửa dở.
+  const hydratedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (!open) return;
-    if (!editing) {
-      form.setFieldsValue(defaults);
+    if (!open) {
+      hydratedFor.current = null;
       return;
     }
-    if (current) form.setFieldsValue(toCustomerFormValues(current));
+    const key = editing?.id ?? 'new';
+    if (hydratedFor.current === key) return;
+    if (!editing) {
+      form.setFieldsValue(defaults);
+      hydratedFor.current = key;
+      return;
+    }
+    if (current) {
+      form.setFieldsValue(toCustomerFormValues(current));
+      hydratedFor.current = key;
+    }
   }, [open, editing, current, form]);
 
   const invalidate = async () => {

@@ -8,7 +8,7 @@ import type {
   RevenueReportDto,
 } from '@/generated/api/reporting/reporting.schemas';
 import { formatMoney } from '@/lib/format/money';
-import { LOOKBACK_DAYS, type Granularity } from '../constants/dashboard.constants';
+import { LOOKBACK_DAYS, PERIOD_DESCRIPTION, type Granularity } from '../constants/dashboard.constants';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -89,6 +89,8 @@ export interface KpiInput {
   canSeeRevenue: boolean;
   canSeeOperation: boolean;
   canSeeInventory: boolean;
+  /** Mức gom đang xem: doanh thu/dự thu tính trên khoảng của mức này, không cố định 30 ngày. */
+  granularity: Granularity;
   revenue: RevenueReportDto | undefined;
   overview: OverviewReportDto | undefined;
   inventory: InventoryReportDto | undefined;
@@ -105,7 +107,7 @@ export function toKpiCards(input: KpiInput): KpiCard[] {
       key: 'netRevenue',
       // Số chính là doanh thu thuần: hoàn tiền không đổi trạng thái đơn, nên con số gộp vẫn đếm cả
       // đơn đã hoàn toàn bộ.
-      label: 'Doanh thu thuần (30 ngày)',
+      label: `Doanh thu thuần (${PERIOD_DESCRIPTION[input.granularity]})`,
       value: canSeeRevenue ? formatMoney(revenue?.netRevenue ?? 0) : '—',
       hint: canSeeRevenue
         ? `${revenue?.completedOrderCount ?? 0} đơn hoàn tất · đã hoàn ${formatMoney(revenue?.refundedAmount ?? 0)}`

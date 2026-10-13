@@ -101,6 +101,14 @@ export const partyLabel = (party: { code: string; name: string }): string => `${
 export const withSelectedOption = (options: LabelOption[], selected?: LabelOption | null): LabelOption[] =>
   selected && !options.some((option) => option.value === selected.value) ? [selected, ...options] : options;
 
+/** Như `withSelectedOption` cho nhiều bản ghi (vd. SKU của các dòng chứng từ đang sửa). */
+export const withSelectedOptions = (options: LabelOption[], selected: readonly LabelOption[]): LabelOption[] =>
+  selected.reduce((merged, option) => withSelectedOption(merged, option), options);
+
+/** SKU của các dòng chứng từ đang sửa để Select dòng hàng hiển thị `SKU · tên` thay vì ID trần. */
+export const lineVariantOptions = (items?: readonly { productVariantId: string; sku: string; variantName: string }[]): LabelOption[] =>
+  (items ?? []).map((item) => ({ value: item.productVariantId, label: `${item.sku} · ${item.variantName}` }));
+
 export const withSelectedParty = (
   options: LabelOption[],
   party?: { id: string; code: string; name: string } | null,

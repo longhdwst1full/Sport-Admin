@@ -27,7 +27,7 @@ export function DashboardKpiSection({ cards }: { cards: KpiCard[] }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map(({ key, ...card }, index) => (
           <div
-            key={card.label}
+            key={key}
             className="dctd-card-enter"
             // Thẻ hiện lần lượt thay vì bật cùng lúc; đủ nhanh để không thành thời gian chờ.
             style={{ animationDelay: `${index * 60}ms` }}

@@ -32,7 +32,8 @@ const labelledPaymentMethods = {
   COD: 'COD',
 } satisfies Partial<Record<PaymentMethod, string>>;
 
-export const paymentMethodLabels: Record<string, string> = labelledPaymentMethods;
+/** Nhãn hiển thị cho mọi phương thức (kể cả VNPAY chưa mở lọc) để không lộ mã thô. */
+export const paymentMethodLabels: Record<string, string> = { ...labelledPaymentMethods, VNPAY: 'VNPay' };
 
 export const paymentMethodOptions = toOptions(labelledPaymentMethods);
 

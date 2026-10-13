@@ -60,6 +60,10 @@ export function AsyncPagedSelect<T>({
   enabled = true,
   staleTimeMs,
   onSelectItem,
+  // Tách riêng: để trong `selectProps` thì phần spread cuối đè mất handler bọc bên dưới
+  // (onSelectItem không bao giờ chạy, mở dropdown không bật query).
+  onChange,
+  onDropdownVisibleChange,
   ...selectProps
 }: AsyncPagedSelectProps<T>) {
   const [search, setSearch] = useState('');
@@ -104,6 +108,7 @@ export function AsyncPagedSelect<T>({
       onDropdownVisibleChange={(visible) => {
         setOpen(visible);
         if (!visible) setSearch('');
+        onDropdownVisibleChange?.(visible);
       }}
       loading={query.isFetching && !query.isFetchingNextPage}
       onPopupScroll={(event) => {
@@ -119,7 +124,7 @@ export function AsyncPagedSelect<T>({
       onChange={(value, option) => {
         const picked = options.find((candidate) => candidate.value === value)?.item;
         if (picked) onSelectItem?.(picked);
-        selectProps.onChange?.(value, option);
+        onChange?.(value, option);
       }}
       optionRender={
         renderOption

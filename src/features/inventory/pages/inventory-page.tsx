@@ -13,6 +13,8 @@ import {
   getListStockAdjustmentsQueryKey,
   getListStocktakesQueryKey,
   getListStockTransfersQueryKey,
+  getSummarizeInventoryBalancesQueryKey,
+  useSummarizeInventoryBalances,
 } from '@/generated/api/inventory/inventory';
 import type { InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
 import { useUrlFilters } from '@/shared/hooks/use-url-filters';
@@ -50,7 +52,22 @@ export function InventoryPage() {
   const [selectedTransferId, setSelectedTransferId] = useState<string>();
   const [stocktakeOpen, setStocktakeOpen] = useState(false);
   const [selectedStocktakeId, setSelectedStocktakeId] = useState<string>();
-  const [metrics, setMetrics] = useState({ total: 0, low: 0, out: 0, available: 0 });
+  /**
+   * Thẻ số liệu hỏi riêng endpoint tổng hợp theo bộ lọc tìm/kho của tab tồn (`balance.q`,
+   * `balance.warehouse` trên URL) — không theo trang, để đổi trang không đổi tổng.
+   */
+  const balanceSearch = url.get('balance.q');
+  const balanceWarehouse = url.get('balance.warehouse');
+  const summary = useSummarizeInventoryBalances({
+    ...(balanceSearch ? { search: balanceSearch } : {}),
+    ...(balanceWarehouse ? { warehouseCode: balanceWarehouse } : {}),
+  });
+  const metrics = {
+    total: summary.data?.trackedBalances ?? 0,
+    low: summary.data?.lowStock ?? 0,
+    out: summary.data?.outOfStock ?? 0,
+    available: summary.data?.totalAvailable ?? 0,
+  };
   // SECURITY: xem phiếu chuyển kho là quyền riêng với xem tồn; thiếu quyền thì ẩn hẳn tab thay vì
   // để panel gọi API rồi hiển thị lỗi 403.
   const canViewTransfers = useCan('inventory.transfer.view');
@@ -78,6 +95,8 @@ export function InventoryPage() {
     try {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
+        // CACHE: key thẻ số liệu (`/balances/summary`) không cùng tiền tố với key danh sách tồn.
+        queryClient.invalidateQueries({ queryKey: getSummarizeInventoryBalancesQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListStockTransfersQueryKey() }),
@@ -163,9 +182,9 @@ export function InventoryPage() {
             {
               key: 'balances',
               label: 'Tồn theo kho',
-              children: <InventoryBalancePanel onAdjust={openAdjustment} onMetricsChange={setMetrics} />,
+              children: <InventoryBalancePanel onAdjust={openAdjustment} />,
             },
-            { key: 'movements', label: 'Sổ kho (Ledger)', children: <InventoryMovementPanel /> },
+            { key: 'movements', label: 'Sổ kho', children: <InventoryMovementPanel /> },
             // Đổi key sau khi tạo phiếu để panel cursor quay về trang đầu.
             { key: 'adjustments', label: 'Phiếu điều chỉnh', children: <StockAdjustmentPanel key={adjustmentListKey} /> },
             canViewTransfers && {

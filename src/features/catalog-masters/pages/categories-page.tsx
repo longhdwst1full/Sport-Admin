@@ -63,7 +63,16 @@ export function CategoriesPage() {
   };
   const activateCategory = useActivateAdminCategory(lifecycleOptions);
   const deactivateCategory = useDeactivateAdminCategory(lifecycleOptions);
-  const deleteCategory = useDeleteAdminCategory(lifecycleOptions);
+  const deleteCategory = useDeleteAdminCategory({
+    mutation: {
+      onSuccess: async () => {
+        await refresh();
+        void message.success('Đã xoá danh mục.');
+      },
+      onError: (error: unknown) =>
+        void message.error(getApiErrorMessage(error, 'Không thể xoá danh mục.')),
+    },
+  });
 
   return (
     <MasterDataListPage<CategoryDto>

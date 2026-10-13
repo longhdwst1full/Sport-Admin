@@ -41,6 +41,7 @@ describe('dashboard.mapper', () => {
       canSeeRevenue: false,
       canSeeOperation: false,
       canSeeInventory: false,
+      granularity: 'DAY',
       revenue: undefined,
       overview: undefined,
       inventory: undefined,
@@ -58,6 +59,7 @@ describe('dashboard.mapper', () => {
       canSeeRevenue: true,
       canSeeOperation: true,
       canSeeInventory: true,
+      granularity: 'MONTH',
       revenue: undefined,
       overview: undefined,
       inventory: { trackedBalances: 1, outOfStock: 4, lowStock: 7, items: [] },
@@ -67,5 +69,6 @@ describe('dashboard.mapper', () => {
     });
     expect(cards.map((card) => card.loading)).toEqual([true, true, false, false, false]);
     expect(cards[4]).toMatchObject({ value: 7, hint: '4 SKU đã hết hàng bán' });
+    expect(cards[0].label).toBe('Doanh thu thuần (12 tháng gần nhất)');
   });
 });

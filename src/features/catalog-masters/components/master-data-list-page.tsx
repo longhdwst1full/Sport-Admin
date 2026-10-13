@@ -65,6 +65,7 @@ interface MasterDataListPageProps<T extends MasterDataRow> {
   /** Cột riêng của từng màn, nằm giữa cột mã và cột trạng thái; khai ở mức module để không dựng lại. */
   columns: ColumnType<T>[];
   scrollX: number;
+  /** Hệ quả khi ngừng dùng; chỉ hiện ở xác nhận ngừng, không hiện khi kích hoạt lại. */
   toggleDescription: string;
   onToggleStatus: (row: T) => void;
   deleteConfirm: { title: string; description: string; okText?: string };
@@ -129,7 +130,7 @@ export function MasterDataListPage<T extends MasterDataRow>({
               />
               <Popconfirm
                 title={row.status === 'ACTIVE' ? `Ngừng ${entity}?` : `Kích hoạt ${entity}?`}
-                description={toggleDescription}
+                description={row.status === 'ACTIVE' ? toggleDescription : undefined}
                 onConfirm={() => onToggleStatus(row)}
               >
                 <TableActionButton

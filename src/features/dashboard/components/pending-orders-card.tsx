@@ -15,6 +15,7 @@ import {
   OrderStatusGroup,
   type OrderSummaryDto,
 } from '@/generated/api/orders/orders.schemas';
+import { getGetAdminReportOverviewQueryKey } from '@/generated/api/reporting/reporting';
 import { getApiErrorMessage } from '@/lib/api/error';
 
 const PENDING_ORDER_COLUMNS: ColumnsType<OrderSummaryDto> = [
@@ -70,7 +71,11 @@ export function PendingOrdersCard() {
       );
     },
     onSuccess: async (order) => {
-      await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
+      // Thẻ KPI và biểu đồ trạng thái đọc báo cáo tổng quan: không làm mới thì lệch với danh sách tới hết staleTime.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetAdminReportOverviewQueryKey() }),
+      ]);
       void message.success(`Đã xác nhận đơn ${order.orderNo}.`);
     },
     onError: (error) => {

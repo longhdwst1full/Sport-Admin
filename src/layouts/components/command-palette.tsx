@@ -10,6 +10,11 @@ export function CommandPalette() {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Trình nghe phím đăng ký một lần nên đọc trạng thái mở qua ref thay vì closure cũ.
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
   const navigate = useNavigate();
   const permissions = usePermissions();
 
@@ -31,41 +36,41 @@ export function CommandPalette() {
     );
   }, [query, visibleItems]);
 
+  // Đóng luôn dọn từ khoá và vị trí chọn, để lần mở sau bắt đầu sạch (thay cho effect theo `open`).
+  const close = useCallback(() => {
+    setOpen(false);
+    setQuery('');
+    setSelectedIndex(0);
+  }, []);
+
   const execute = useCallback(
     (item: NavigationItem) => {
       navigate(item.path);
-      setOpen(false);
-      setQuery('');
+      close();
     },
-    [navigate],
+    [close, navigate],
   );
 
   // Keyboard shortcut: Ctrl+K / Cmd+K
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setOpen((prev) => !prev);
+        if (openRef.current) close();
+        else setOpen(true);
       }
-      if (event.key === 'Escape') {
-        setOpen(false);
-        setQuery('');
-      }
+      if (event.key === 'Escape' && openRef.current) close();
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, []);
+  }, [close]);
 
-  // Focus input when opened
+  // Focus input when opened (DOM, có dọn timer khi đóng/unmount).
   useEffect(() => {
-    if (open) {
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (!open) return;
+    const timer = setTimeout(() => inputRef.current?.focus(), 50);
+    return () => clearTimeout(timer);
   }, [open]);
-
-  // Reset selection on query change
-  useEffect(() => setSelectedIndex(0), [query]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'ArrowDown') {
@@ -86,10 +91,7 @@ export function CommandPalette() {
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
-        onClick={() => {
-          setOpen(false);
-          setQuery('');
-        }}
+        onClick={close}
       />
 
       {/* Palette */}
@@ -101,7 +103,10 @@ export function CommandPalette() {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setSelectedIndex(0);
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Tìm kiếm trang, chức năng..."
             className="h-14 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"

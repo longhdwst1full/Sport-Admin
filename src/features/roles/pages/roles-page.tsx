@@ -98,7 +98,7 @@ export function RolesPage() {
   return (
     <>
       <ManagementPage
-        eyebrow="Access control"
+        eyebrow="Danh tính & truy cập"
         title="Vai trò & phân quyền"
         description="Tạo vai trò riêng cho cửa hàng và tích chọn đúng những gì vai trò đó được làm."
         metrics={[

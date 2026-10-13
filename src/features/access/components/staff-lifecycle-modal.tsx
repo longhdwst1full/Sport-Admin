@@ -41,7 +41,7 @@ export function StaffLifecycleModal({ action, user, onClose }: StaffLifecycleMod
   });
   const deleteUser = useDeleteAdminStaffUser({
     mutation: {
-      onSuccess: () => finish('Đã ngừng hoạt động tài khoản và thu hồi toàn bộ phiên đăng nhập.'),
+      onSuccess: () => finish('Đã xoá (khóa) tài khoản và thu hồi toàn bộ phiên đăng nhập.'),
       onError: (error) =>
         void message.error(getApiErrorMessage(error, 'Không thể xoá tài khoản nhân viên.')),
     },

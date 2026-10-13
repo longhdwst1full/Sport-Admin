@@ -253,7 +253,8 @@ export function BrandFormDrawer({
         data: {
           name: values.name,
           ...(values.slug ? { slug: values.slug } : {}),
-          ...(values.description ? { description: values.description } : {}),
+          // CONTRACT: gửi cả chuỗi rỗng để xoá được mô tả; bỏ khoá thì API giữ nguyên mô tả cũ.
+          description: values.description ?? '',
           expectedVersion: brand.version,
         },
       });
@@ -343,7 +344,8 @@ export function CategoryFormDrawer({
         data: {
           name: values.name,
           ...(values.slug ? { slug: values.slug } : {}),
-          ...(values.description ? { description: values.description } : {}),
+          // CONTRACT: gửi cả chuỗi rỗng để xoá được mô tả; bỏ khoá thì API giữ nguyên mô tả cũ.
+          description: values.description ?? '',
           sortOrder: values.sortOrder,
           returnable: values.returnable,
           expectedVersion: category.version,

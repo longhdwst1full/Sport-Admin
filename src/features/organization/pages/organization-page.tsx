@@ -142,7 +142,7 @@ export function OrganizationPage() {
               />
               <Popconfirm
                 title={row.status === OrganizationStatus.ACTIVE ? 'Ngừng chi nhánh và kho?' : 'Kích hoạt lại chi nhánh và kho?'}
-                description="Hai bản ghi sẽ đổi trạng thái trong cùng transaction."
+                description="Chi nhánh và kho sẽ cùng đổi trạng thái trong một giao dịch."
                 disabled={!row.warehouse}
                 onConfirm={() => {
                   if (!row.warehouse) return;
@@ -174,7 +174,7 @@ export function OrganizationPage() {
 
   return (
     <ManagementPage
-      eyebrow="Organization"
+      eyebrow="Cơ cấu tổ chức"
       title="Chi nhánh & kho"
       description="Cấu trúc vận hành V1: mỗi chi nhánh sở hữu đúng một kho bán hàng."
       actions={
@@ -207,7 +207,7 @@ export function OrganizationPage() {
           value: '1 : 1',
           icon: <LinkOutlined />,
           tone: 'green',
-          hint: 'Một branch — một warehouse',
+          hint: 'Một chi nhánh — một kho',
         },
         {
           key: 'regions',

@@ -1,6 +1,8 @@
 import { select, takeEvery } from 'redux-saga/effects';
 import {
+  closeAllTabs,
   closeNavigationTab,
+  closeOtherTabs,
   openNavigationTab,
   setSidebarCollapsed,
   toggleSidebar,
@@ -50,7 +52,8 @@ function isPersistedLayout(parsed: unknown): parsed is LayoutState {
 function normalizePersistedLayout(parsed: LayoutState): LayoutState {
   return {
     sidebarCollapsed: parsed.sidebarCollapsed,
-    openTabs: parsed.openTabs.slice(0, 12),
+    // Chỉ giữ `path`/`label`: field lạ trong bản ghi cũ không được lọt vào state.
+    openTabs: parsed.openTabs.slice(0, 12).map(({ path, label }) => ({ path, label })),
     activePath: parsed.activePath,
   };
 }
@@ -61,7 +64,15 @@ export function readPersistedLayout(): LayoutState | undefined {
 
 export function* rootSaga() {
   yield takeEvery(
-    [toggleSidebar.type, setSidebarCollapsed.type, openNavigationTab.type, closeNavigationTab.type],
+    // Mọi action đổi tab phải ghi lại; thiếu "đóng tab khác/đóng tất cả" thì F5 làm các tab đã đóng hiện lại.
+    [
+      toggleSidebar.type,
+      setSidebarCollapsed.type,
+      openNavigationTab.type,
+      closeNavigationTab.type,
+      closeOtherTabs.type,
+      closeAllTabs.type,
+    ],
     persistLayout,
   );
 }

@@ -115,7 +115,7 @@ export function MediaLibraryPage() {
 
   return (
     <ManagementPage
-      eyebrow="Media"
+      eyebrow="Tệp đa phương tiện"
       title="Thư viện ảnh"
       description="Tất cả ảnh đã tải lên Cloudinary, nơi đang dùng từng ảnh và xoá ảnh không còn dùng."
       metrics={[

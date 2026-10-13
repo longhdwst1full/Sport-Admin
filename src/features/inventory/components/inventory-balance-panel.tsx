@@ -1,6 +1,6 @@
 import { EditOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button, Card, Progress, Select } from 'antd';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
@@ -13,10 +13,7 @@ import {
   col,
   useColumnVisibility,
 } from '@/foundation/table';
-import {
-  useListInventoryBalances,
-  useSummarizeInventoryBalances,
-} from '@/generated/api/inventory/inventory';
+import { useListInventoryBalances } from '@/generated/api/inventory/inventory';
 import {
   ListInventoryBalancesStatus,
   type InventoryBalanceDto,
@@ -89,13 +86,7 @@ const DATA_COLUMNS: ColumnsType<InventoryBalanceDto> = [
   ),
 ];
 
-export function InventoryBalancePanel({
-  onAdjust,
-  onMetricsChange,
-}: {
-  onAdjust: (balance: InventoryBalanceDto) => void;
-  onMetricsChange: (metrics: { total: number; low: number; out: number; available: number }) => void;
-}) {
+export function InventoryBalancePanel({ onAdjust }: { onAdjust: (balance: InventoryBalanceDto) => void }) {
   const filters = useTabUrlFilters('balance');
   const { search, page } = filters;
   const debouncedSearch = search.debounced;
@@ -113,28 +104,6 @@ export function InventoryBalancePanel({
     ...(status ? { status } : {}),
   });
   const items = useMemo(() => query.data?.items ?? [], [query.data?.items]);
-
-  /**
-   * Thẻ số liệu hỏi riêng một endpoint tổng hợp.
-   *
-   * Trước đây ba thẻ đếm trên `items` của trang đang xem, nên "sắp hết hàng: 12" thực
-   * chất là "12 trong số dòng đang hiện" và đổi trang là số đổi theo. `page`/`limit` KHÔNG truyền
-   * vào đây — chỉ bộ lọc, để đổi trang không phải tính lại tổng.
-   */
-  const summary = useSummarizeInventoryBalances({
-    ...(debouncedSearch ? { search: debouncedSearch } : {}),
-    ...(warehouseCode ? { warehouseCode } : {}),
-  });
-
-  useEffect(() => {
-    if (!summary.data) return;
-    onMetricsChange({
-      total: summary.data.trackedBalances,
-      low: summary.data.lowStock,
-      out: summary.data.outOfStock,
-      available: summary.data.totalAvailable,
-    });
-  }, [onMetricsChange, summary.data]);
 
   const { visibility } = columnsState;
   const columns = useMemo(
