@@ -32,7 +32,7 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
     };
   }
   if (domain === 'payments') {
-    return { confirmAdminPayment: withOptions, rejectAdminPayment: withOptions };
+    return { confirmAdminPayment: withOptions, rejectAdminPayment: withOptions, recordLatePaymentReceipt: withOptions, recordManualRefundAdmin: withOptions };
   }
   if (domain === 'fulfillments') {
     return {
@@ -42,6 +42,7 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
       deliverAdminFulfillment: withOptions,
       failAdminFulfillmentDelivery: withOptions,
       receiveAdminFulfillmentReturn: withOptions,
+      reshipAdminFulfillment: withOptions,
     };
   }
   if (domain === 'returns') {

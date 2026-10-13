@@ -1159,7 +1159,7 @@ paths:
         - purchase.receipt.create
   /api/v1/admin/procurement/goods-receipts/{id}/post:
     post:
-      description: Không thể hoàn tác (không un-post). Vượt dung sai PO trả 409 PROCUREMENT_OVER_RECEIPT với details theo SKU. Phiếu đã POSTED trả lại trạng thái hiện tại.
+      description: Không thể hoàn tác (không un-post). Vượt dung sai PO trả 409 PROCUREMENT_OVER_RECEIPT với details theo SKU. Dòng lệch đơn giá quá PROCUREMENT_RECEIPT_PRICE_DEVIATION_PCT so với giá PO (hoặc WAC khi nhập không PO) trả 409 PROCUREMENT_RECEIPT_PRICE_DEVIATION với details theo SKU, trừ khi gửi acknowledgePriceDeviation = true kèm priceDeviationReason (thiếu lý do trả 400 PROCUREMENT_PRICE_DEVIATION_REASON_REQUIRED). Phiếu đã POSTED trả lại trạng thái hiện tại.
       operationId: postGoodsReceipt
       parameters:
         - name: id
@@ -1172,7 +1172,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GoodsReceiptTransitionDto"
+              $ref: "#/components/schemas/PostGoodsReceiptDto"
       responses:
         "200":
           description: ""
@@ -2359,7 +2359,12 @@ components:
         - goodsValue
         - costsTotal
         - landedTotal
-    GoodsReceiptTransitionDto:
+    GoodsReceiptType:
+      type: string
+      enum:
+        - WITH_PO
+        - DIRECT_RECEIPT
+    PostGoodsReceiptDto:
       type: object
       properties:
         expectedVersion:
@@ -2367,13 +2372,19 @@ components:
           pattern: ^\d+$
           example: "0"
           description: Current optimistic-lock version
+        acknowledgePriceDeviation:
+          type: boolean
+          default: false
+          example: true
+          description: Xác nhận chấp nhận các dòng lệch đơn giá vượt ngưỡng PROCUREMENT_RECEIPT_PRICE_DEVIATION_PCT. Bắt buộc kèm priceDeviationReason; mức lệch và lý do được ghi vào audit.
+        priceDeviationReason:
+          type: string
+          minLength: 5
+          maxLength: 500
+          example: NCC tăng giá nguyên liệu từ 10/2026, đã xác nhận qua email.
+          description: Lý do chấp nhận lệch giá; bắt buộc khi acknowledgePriceDeviation = true.
       required:
         - expectedVersion
-    GoodsReceiptType:
-      type: string
-      enum:
-        - WITH_PO
-        - DIRECT_RECEIPT
     PurchaseOrderApprovalLevel:
       type: string
       enum:

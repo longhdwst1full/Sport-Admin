@@ -303,6 +303,71 @@ paths:
         - Admin Payments
       x-required-permissions:
         - payment.confirm
+  /api/v1/admin/payments/{id}/manual-refund:
+    post:
+      description: Chỉ cho payment SUCCESS có cờ hoàn tiền thủ công của đơn CANCELLED; payment và đơn chuyển REFUNDED. 400 PAYMENT_MANUAL_REFUND_AMOUNT_INVALID; 404 ngoài phạm vi; 409 PAYMENT_MANUAL_REFUND_NOT_ALLOWED, PAYMENT_MANUAL_REFUND_AMOUNT_EXCEEDED, PAYMENT_MANUAL_REFUND_VERSION_CONFLICT, PAYMENT_MANUAL_REFUND_IDEMPOTENCY_CONFLICT, PAYMENT_MANUAL_REFUND_DUPLICATE_REFERENCE.
+      operationId: recordManualRefundAdmin
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          required: true
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordManualRefundDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Ghi nhận đã chuyển trả tiền thủ công cho đơn trả trước bị huỷ sau giao thất bại
+      tags:
+        - Admin Payments
+      x-required-permissions:
+        - payment.refund.approve
 components:
   schemas:
     AdminPaymentListDto:
@@ -438,6 +503,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PaymentLateReceiptDto"
+        manualRefund:
+          description: "Chỉ có ở API Admin: đơn đã huỷ sau giao thất bại, tiền đã thu phải hoàn thủ công"
+          allOf:
+            - $ref: "#/components/schemas/PaymentManualRefundDto"
       required:
         - id
         - orderId
@@ -553,6 +622,31 @@ components:
         - amount
         - receivedAt
         - recordedAt
+    PaymentManualRefundDto:
+      type: object
+      properties:
+        requiredAmount:
+          type: string
+          example: "1490000.00"
+          description: Số tiền đã thu phải hoàn lại tại thời điểm huỷ đơn
+        flaggedAt:
+          type: string
+          format: date-time
+        refundedAmount:
+          type: string
+          example: "1490000.00"
+          description: Số tiền kế toán đã chuyển trả
+        externalRef:
+          type: string
+          description: Mã giao dịch chuyển trả bên ngoài
+        refundedAt:
+          type: string
+          format: date-time
+        note:
+          type: string
+      required:
+        - requiredAmount
+        - flaggedAt
     PaymentMethod:
       type: string
       enum:
@@ -586,6 +680,30 @@ components:
         - amount
         - bankReference
         - receivedAt
+    RecordManualRefundDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+          description: Payment version đã đọc trước khi ghi nhận
+        amount:
+          type: string
+          example: "1490000.00"
+          pattern: ^\d{1,17}(\.\d{1,2})?$
+          description: Số tiền đã chuyển trả; > 0 và ≤ số đã thu
+        externalRef:
+          type: string
+          example: VCB-REFUND-20261010-001
+          maxLength: 200
+          description: Mã giao dịch chuyển trả trên sao kê; mỗi mã chỉ ghi nhận một lần
+        note:
+          type: string
+          maxLength: 1000
+      required:
+        - expectedVersion
+        - amount
+        - externalRef
     RejectPaymentDto:
       type: object
       properties:

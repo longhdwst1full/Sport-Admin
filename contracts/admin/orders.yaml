@@ -325,6 +325,71 @@ paths:
         - Admin Orders
       x-required-permissions:
         - order.manage
+  /api/v1/admin/orders/{id}/cancel-after-failed-delivery:
+    post:
+      description: "Chỉ áp cho đơn SHIPPED có fulfillment RETURNED_TO_WAREHOUSE (orders.fulfillment_status = RETURNED). Đơn → CANCELLED, fulfillment → CANCELLED, payment chưa thu → CANCELLED, suất flash sale đã chốt trả về pool; tồn kho không đổi (đã nhập lại khi nhận hàng hoàn). Đơn trả trước đã thu tiền: payment giữ SUCCESS và được gắn cờ hoàn tiền thủ công (kế toán chuyển trả ngoài hệ thống, đóng bằng recordManualRefundAdmin). 409 ORDER_FAILED_DELIVERY_CANCEL_NOT_ALLOWED; 409 FULFILLMENT_NOT_RETURNED_TO_WAREHOUSE."
+      operationId: cancelAdminOrderAfterFailedDelivery
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          required: true
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderCancelCommandDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Admin huỷ đơn có hàng giao thất bại đã nhận về kho
+      tags:
+        - Admin Orders
+      x-required-permissions:
+        - order.manage
   /api/v1/admin/orders/{id}/confirm:
     post:
       operationId: confirmAdminOrder

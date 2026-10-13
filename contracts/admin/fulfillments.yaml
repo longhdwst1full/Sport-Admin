@@ -465,6 +465,71 @@ paths:
         - Admin Fulfillments
       x-required-permissions:
         - fulfillment.delivery_update
+  /api/v1/admin/fulfillments/{id}/reship:
+    post:
+      description: "Chỉ áp cho RETURNED_TO_WAREHOUSE khi đơn còn SHIPPED. Giữ chỗ lại tồn kho của đơn (reservation về ACTIVE), xoá mã vận đơn cũ và đưa giao vận về PACKED (hàng hoàn SELLABLE) hoặc PICKING (DAMAGED/MISSING). Không trừ tồn: bước ship tiếp theo tạo vận đơn mới và trừ tồn đúng một lần. 409 FULFILLMENT_RESHIP_NOT_ALLOWED / FULFILLMENT_RESHIP_RESERVATION_INVALID / FULFILLMENT_RESHIP_INSUFFICIENT_STOCK."
+      operationId: reshipAdminFulfillment
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: idempotency-key
+          required: true
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReshipFulfillmentDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FulfillmentDetailDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Mở lại lần giao mới cho đơn có hàng giao thất bại đã nhận về kho
+      tags:
+        - Admin Fulfillments
+      x-required-permissions:
+        - fulfillment.ship
 components:
   schemas:
     AdminFulfillmentListDto:
@@ -755,6 +820,23 @@ components:
       required:
         - expectedVersion
         - condition
+        - reason
+    ReshipFulfillmentDto:
+      type: object
+      properties:
+        expectedVersion:
+          type: string
+          pattern: ^\d+$
+        note:
+          type: string
+          maxLength: 500
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: "Lý do giao lại (ví dụ: khách hẹn nhận lại, đã xác nhận địa chỉ)"
+      required:
+        - expectedVersion
         - reason
     ShipFulfillmentDto:
       type: object
