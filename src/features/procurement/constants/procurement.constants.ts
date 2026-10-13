@@ -120,3 +120,8 @@ export const actorAt = (displayName?: string | null, at?: string | null, empty =
 
 /** Số ký tự tối thiểu của lý do huỷ chứng từ (khớp validate của API). */
 export const CANCEL_REASON_MIN_LENGTH = 3;
+
+/** 409 khi ghi sổ phiếu nhập có dòng lệch đơn giá vượt ngưỡng; gửi lại kèm xác nhận + lý do (API `postGoodsReceipt`). */
+export const RECEIPT_PRICE_DEVIATION_CODE = 'PROCUREMENT_RECEIPT_PRICE_DEVIATION';
+/** Độ dài lý do chấp nhận lệch đơn giá (khớp `PRICE_DEVIATION_REASON_LENGTH` của API). */
+export const PRICE_DEVIATION_REASON_LENGTH = { MIN: 5, MAX: 500 } as const;

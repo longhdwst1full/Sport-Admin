@@ -12,6 +12,7 @@ import {
   useGetGoodsReceipt,
 } from '@/generated/api/procurement/procurement';
 import type { GoodsReceiptCostType, GoodsReceiptDetailDto } from '@/generated/api/procurement/procurement.schemas';
+import { getApiErrorPayload } from '@/lib/api/error';
 import { formatMoney } from '@/lib/format/money';
 import {
   actorAt,
@@ -22,6 +23,8 @@ import {
   goodsReceiptStatusPresentation,
   goodsReceiptTypeLabels,
   partyLabel,
+  PRICE_DEVIATION_REASON_LENGTH,
+  RECEIPT_PRICE_DEVIATION_CODE,
   receiptCostTypeLabels,
 } from '../constants/procurement.constants';
 import { useDocumentCommand } from '../hooks/use-procurement-mutations';
@@ -54,11 +57,34 @@ export function GoodsReceiptDetailDrawer({ id, onClose, onEdit }: { id?: string;
   const confirmWithReason = useConfirmWithReason();
   const command = useDocumentCommand(RECEIPT_KEYS);
 
+  // 409 lệch đơn giá không đổi version phiếu (transaction rollback) nên gửi lại với cùng `expectedVersion`.
+  const confirmPriceDeviation = (current: GoodsReceiptDetailDto, details: { message: string }[]) => confirmWithReason({
+    title: `Đơn giá ${current.receiptNo} lệch vượt ngưỡng`,
+    consequence: <div className="space-y-1">
+      <div>Xác nhận vẫn ghi sổ với đơn giá hiện tại; mức lệch và lý do được lưu vào nhật ký.</div>
+      {details.length > 0 && <ul className="list-disc pl-5">{details.map((detail) => <li key={detail.message}>{detail.message}</li>)}</ul>}
+    </div>,
+    okText: 'Vẫn ghi sổ',
+    danger: false,
+    placeholder: 'Lý do chấp nhận lệch đơn giá',
+    minLength: PRICE_DEVIATION_REASON_LENGTH.MIN,
+    maxLength: PRICE_DEVIATION_REASON_LENGTH.MAX,
+    onOk: (reason) => command(current.id, () => postGoodsReceipt(current.id, {
+      expectedVersion: current.version,
+      acknowledgePriceDeviation: true,
+      priceDeviationReason: reason,
+    }), 'Đã ghi sổ phiếu nhập.'),
+  });
   const post = (current: GoodsReceiptDetailDto) => modal.confirm({
     title: `Ghi sổ ${current.receiptNo}?`,
     content: 'Thao tác sẽ cộng tồn và cập nhật giá vốn bình quân, không thể hoàn tác.',
     okText: 'Ghi sổ',
-    onOk: () => command(current.id, () => postGoodsReceipt(current.id, { expectedVersion: current.version }), 'Đã ghi sổ phiếu nhập.'),
+    onOk: () => command(current.id, () => postGoodsReceipt(current.id, { expectedVersion: current.version }), 'Đã ghi sổ phiếu nhập.')
+      .catch((error: unknown) => {
+        const payload = getApiErrorPayload(error);
+        if (payload?.code !== RECEIPT_PRICE_DEVIATION_CODE) throw error;
+        confirmPriceDeviation(current, payload.details ?? []);
+      }),
   });
   const cancel = (current: GoodsReceiptDetailDto) => confirmWithReason({
     title: `Huỷ ${current.receiptNo}?`,

@@ -4,6 +4,7 @@ import {
   InboxOutlined,
   PrinterOutlined,
   RocketOutlined,
+  RedoOutlined,
   RollbackOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ import {
   packAdminFulfillment,
   pickAdminFulfillment,
   receiveAdminFulfillmentReturn,
+  reshipAdminFulfillment,
   retryAdminFulfillmentCarrierShipment,
   shipAdminFulfillment,
   useGetAdminFulfillmentByOrder,
@@ -38,7 +40,7 @@ import {
 } from '../constants/fulfillment.constants';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
 
-type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive';
+type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive' | 'reship';
 
 const actionPresentation: Record<FulfillmentAction, { title: string; okText: string; note: string }> = {
   pick: { title: 'Bắt đầu lấy hàng', okText: 'Bắt đầu lấy', note: 'Đơn phải được xác nhận trước khi nhân viên bắt đầu lấy hàng.' },
@@ -47,6 +49,7 @@ const actionPresentation: Record<FulfillmentAction, { title: string; okText: str
   deliver: { title: 'Xác nhận giao thành công', okText: 'Đã giao', note: 'Xác nhận khách đã nhận đủ hàng. Đơn COD vẫn cần ghi nhận thu tiền trước khi hoàn tất.' },
   fail: { title: 'Ghi nhận giao thất bại', okText: 'Xác nhận thất bại', note: 'Hàng sẽ chuyển sang trạng thái đang quay về đúng kho xuất.' },
   receive: { title: 'Kho nhận lại hàng', okText: 'Nhận hàng hoàn', note: 'Chỉ hàng SELLABLE được cộng lại vào tồn có thể bán.' },
+  reship: { title: 'Giao lại đơn hàng', okText: 'Mở lần giao mới', note: 'Giữ chỗ lại tồn kho của đơn và xoá mã vận đơn cũ. Hàng hoàn SELLABLE chuyển về Đã đóng gói; hàng hỏng/thiếu chuyển về Đang lấy hàng để lấy hàng khác. Tồn chỉ bị trừ khi bàn giao vận chuyển lần mới.' },
 };
 
 interface FulfillmentWorkflowPanelProps {
@@ -78,6 +81,8 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
     if (fulfillment.status === 'PACKED' && canShip) return ['ship'];
     if (fulfillment.status === 'SHIPPED' && canUpdateDelivery) return ['deliver', 'fail'];
     if (fulfillment.status === 'RETURNING_TO_WAREHOUSE' && canUpdateDelivery) return ['receive'];
+    // API chỉ cho giao lại khi hàng đã nhận về kho và đơn vẫn SHIPPED (đơn đã huỷ thì không mở lại).
+    if (fulfillment.status === 'RETURNED_TO_WAREHOUSE' && fulfillment.orderStatus === 'SHIPPED' && canShip) return ['reship'];
     return [] as FulfillmentAction[];
   }, [canPack, canPick, canShip, canUpdateDelivery, fulfillment]);
 
@@ -157,6 +162,9 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
           reason: normalizedNote,
         }, request);
       }
+      if (action === 'reship') {
+        return reshipAdminFulfillment(fulfillment.id, { ...transition, reason: normalizedNote }, request);
+      }
       return receiveAdminFulfillmentReturn(fulfillment.id, {
         ...transition,
         condition,
@@ -203,7 +211,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
   }
   if (!fulfillment) return null;
 
-  const requiresReason = action === 'fail' || action === 'receive';
+  const requiresReason = action === 'fail' || action === 'receive' || action === 'reship';
   const isValid = !requiresReason || note.trim().length >= 5;
   const noteError =
     requiresReason && note.length > 0 && note.trim().length < 5 ? 'Lý do tối thiểu 5 ký tự' : undefined;
@@ -278,6 +286,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
           {availableActions.includes('deliver') && <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setAction('deliver')}>Đã giao hàng</Button>}
           {availableActions.includes('fail') && <Button danger icon={<RollbackOutlined />} onClick={() => setAction('fail')}>Giao thất bại</Button>}
           {availableActions.includes('receive') && <Button type="primary" icon={<InboxOutlined />} onClick={() => setAction('receive')}>Kho nhận hàng hoàn</Button>}
+          {availableActions.includes('reship') && <Button type="primary" icon={<RedoOutlined />} onClick={() => setAction('reship')}>Giao lại</Button>}
         </div>
       )}
 

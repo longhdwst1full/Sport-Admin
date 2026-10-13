@@ -1,5 +1,5 @@
-import { Form, Input, Select } from 'antd';
-import { useEffect } from 'react';
+import { Alert, Form, Input, Select } from 'antd';
+import { useEffect, useMemo } from 'react';
 import {
   createSupplierReturn,
   getGetSupplierReturnQueryKey,
@@ -8,10 +8,12 @@ import {
 } from '@/generated/api/procurement/procurement';
 import type { CreateSupplierReturnDto, SupplierReturnDetailDto } from '@/generated/api/procurement/procurement.schemas';
 import { lineVariantOptions, withSelectedOption, withSelectedOptions, withSelectedParty } from '../constants/procurement.constants';
-import { usePostedReceiptLookup, useSupplierLookup, useVariantLookup, useWarehouseLookup } from '../hooks/use-procurement-lookups';
+import { usePostedReceiptLookup, useReceiptReturnable, useSupplierLookup, useVariantLookup, useWarehouseLookup } from '../hooks/use-procurement-lookups';
 import { useDocumentSave } from '../hooks/use-procurement-mutations';
 import { LineItemsFields } from './line-items-fields';
 import { FormDrawer } from '@/foundation/overlay';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { TableSkeleton } from '@/foundation/feedback/page-skeleton';
 
 const RETURN_KEYS = { list: getListSupplierReturnsQueryKey(), detail: getGetSupplierReturnQueryKey };
 
@@ -19,12 +21,21 @@ export function SupplierReturnFormDrawer({ open, editing, onClose, onCreated }: 
   const [form] = Form.useForm<CreateSupplierReturnDto>();
   const supplierId = Form.useWatch('supplierId', form);
   const warehouseId = Form.useWatch('warehouseId', form);
+  const goodsReceiptId = Form.useWatch('goodsReceiptId', form);
   // PERF: NCC/kho/phiếu gốc khoá khi sửa nên chỉ tải lookup lúc tạo; phiếu gốc cần chọn đủ NCC + kho.
   const creating = open && !editing;
   const suppliers = useSupplierLookup(creating);
   const warehouses = useWarehouseLookup(creating);
   const receipts = usePostedReceiptLookup({ supplierId, warehouseId }, creating && Boolean(supplierId && warehouseId));
   const variants = useVariantLookup(open);
+  // INVARIANT: có phiếu nhập gốc thì chỉ trả SKU của phiếu đó và không vượt số còn trả (Backend kiểm lại khi lưu).
+  const returnable = useReceiptReturnable({ goodsReceiptId, supplierId, warehouseId, excludeReturnId: editing?.id }, open);
+  const quantityLimits = useMemo(() => new Map(returnable.lines.map((line) => [line.productVariantId, line.remaining])), [returnable.lines]);
+  const receiptVariantOptions = useMemo(() => returnable.lines.map((line) => ({
+    value: line.productVariantId,
+    label: `${line.sku} · ${line.variantName} · còn trả ${line.remaining}/${line.received}`,
+    disabled: line.remaining <= 0,
+  })), [returnable.lines]);
   const { save, submitting, resetKey } = useDocumentSave(RETURN_KEYS);
   useEffect(() => {
     if (!open) return;
@@ -54,7 +65,14 @@ export function SupplierReturnFormDrawer({ open, editing, onClose, onCreated }: 
         <Form.Item name="reason" label="Lý do trả" rules={[{ required: true, whitespace: true, message: 'Nhập lý do trả' }, { min: 3, message: 'Lý do tối thiểu 3 ký tự' }]}><Input.TextArea rows={2} maxLength={1000} /></Form.Item>
       </div>
       <div className="mb-2 font-semibold text-slate-800">Dòng hàng <span className="text-red-500">*</span></div>
-      <LineItemsFields variantOptions={withSelectedOptions(variants.options, lineVariantOptions(editing?.items))} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số trả" unitCostRequired={false} costName="invoiceUnitCost" costLabel="Giá hoá đơn" />
+      {!returnable.active
+        ? <LineItemsFields variantOptions={withSelectedOptions(variants.options, lineVariantOptions(editing?.items))} onVariantSearch={variants.onSearch} quantityName="quantity" quantityLabel="Số trả" unitCostRequired={false} costName="invoiceUnitCost" costLabel="Giá hoá đơn" />
+        : returnable.isPending ? <TableSkeleton rows={3} />
+        : returnable.error ? <QueryErrorAlert message="Không tải được số còn trả của phiếu nhập" error={returnable.error} retry={returnable.refetch} />
+        : <>
+          <Alert className="!mb-3" type="info" showIcon message="Chỉ trả SKU thuộc phiếu nhập gốc. Số còn trả = số nhập − số trên các phiếu trả chưa huỷ; hệ thống kiểm tra lại khi lưu." />
+          <LineItemsFields variantOptions={receiptVariantOptions} quantityName="quantity" quantityLabel="Số trả" unitCostRequired={false} costName="invoiceUnitCost" costLabel="Giá hoá đơn" quantityLimits={quantityLimits} />
+        </>}
     </Form>
   </FormDrawer>;
 }

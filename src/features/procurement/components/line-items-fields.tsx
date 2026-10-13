@@ -8,7 +8,8 @@ const TAX_RATE_PATTERN = /^\d{1,3}(\.\d{1,2})?$/;
 
 interface LineItemsFieldsProps {
   variantOptions: Array<{ value: string; label: string }>;
-  onVariantSearch: (value: string) => void;
+  /** Bỏ trống khi danh sách SKU đã cố định (lọc tại chỗ theo nhãn thay vì tìm server). */
+  onVariantSearch?: (value: string) => void;
   quantityName: 'orderedQty' | 'quantity';
   quantityLabel: string;
   unitCostRequired?: boolean;
@@ -19,6 +20,8 @@ interface LineItemsFieldsProps {
   maxQuantity?: number;
   /** CONTRACT PO: mỗi SKU chỉ một dòng. */
   uniqueVariant?: boolean;
+  /** Số tối đa còn được dùng theo SKU (phiếu trả gắn phiếu nhập); SKU ngoài map bị chặn. */
+  quantityLimits?: ReadonlyMap<string, number>;
 }
 
 function LineRow({
@@ -30,6 +33,9 @@ function LineRow({
   remove: (index: number | number[]) => void;
   props: LineItemsFieldsProps;
 }) {
+  const form = Form.useFormInstance();
+  const variantId = Form.useWatch(['items', field.name, 'productVariantId'], form) as string | undefined;
+  const limit = props.quantityLimits && variantId ? props.quantityLimits.get(variantId) ?? 0 : undefined;
   return (
     <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(240px,2fr)_120px_150px_120px_40px]">
       <Form.Item
@@ -41,7 +47,8 @@ function LineRow({
       >
         <Select
           showSearch
-          filterOption={false}
+          filterOption={props.onVariantSearch ? false : undefined}
+          optionFilterProp="label"
           onSearch={props.onVariantSearch}
           options={props.variantOptions}
           placeholder="Tìm theo SKU/tên"
@@ -54,7 +61,10 @@ function LineRow({
         rules={[
           { required: true, message: 'Nhập số lượng' },
           { type: 'integer', min: 1, max: props.maxQuantity ?? 1_000_000, message: `Số lượng là số nguyên từ 1 đến ${(props.maxQuantity ?? 1_000_000).toLocaleString('vi-VN')}` },
+          ...(limit === undefined ? [] : [{ type: 'integer' as const, max: limit, message: `Còn tối đa ${limit.toLocaleString('vi-VN')}` }]),
         ]}
+        dependencies={props.quantityLimits ? [['items', field.name, 'productVariantId']] : undefined}
+        extra={limit === undefined ? undefined : `Còn trả: ${limit.toLocaleString('vi-VN')}`}
         className="!mb-0"
       >
         <InputNumber min={1} max={props.maxQuantity ?? 1_000_000} precision={0} className="!w-full" />

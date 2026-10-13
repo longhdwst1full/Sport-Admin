@@ -8,6 +8,7 @@ import {
   getGetAdminPaymentQueryKey,
   getListAdminPaymentsQueryKey,
   recordLatePaymentReceipt,
+  recordManualRefundAdmin,
   rejectAdminPayment,
 } from '@/generated/api/payments/payments';
 import { getGetAdminFulfillmentByOrderQueryKey } from '@/generated/api/fulfillments/fulfillments';
@@ -47,6 +48,12 @@ interface LateReceiptValues {
   note?: string;
 }
 
+interface ManualRefundValues {
+  amount: number;
+  externalRef: string;
+  note?: string;
+}
+
 type SettleRequest = { action: 'confirm'; values: ConfirmValues } | { action: 'reject'; reason: string };
 
 export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string; onClose: () => void }) {
@@ -59,6 +66,9 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
   const [lateReceiptOpen, setLateReceiptOpen] = useState(false);
   const [lateReceiptForm] = Form.useForm<LateReceiptValues>();
   const lateReceiptIdempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
+  const [manualRefundOpen, setManualRefundOpen] = useState(false);
+  const [manualRefundForm] = Form.useForm<ManualRefundValues>();
+  const manualRefundIdempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
   const detail = useQuery({
     queryKey: getGetAdminPaymentQueryKey(paymentId),
     enabled: Boolean(paymentId),
@@ -129,6 +139,45 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       void message.error(getApiErrorMessage(error, 'Không ghi nhận được tiền về trễ.'));
     },
   });
+  // Đóng cờ hoàn tiền thủ công: payment và trạng thái thanh toán của đơn chuyển REFUNDED.
+  const manualRefund = useMutation({
+    retry: false,
+    mutationFn: async (values: ManualRefundValues) => {
+      if (!payment) throw new Error('Chưa tải được thanh toán');
+      const body = {
+        expectedVersion: payment.version,
+        amount: String(values.amount),
+        externalRef: values.externalRef.trim(),
+        note: values.note?.trim() || undefined,
+      };
+      const signature = `manual-refund:${payment.id}:${JSON.stringify(body)}`;
+      manualRefundIdempotencyRef.current = nextIdempotencyKey(manualRefundIdempotencyRef.current, signature);
+      return recordManualRefundAdmin(payment.id, body, {
+        headers: { 'idempotency-key': manualRefundIdempotencyRef.current.key },
+      });
+    },
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(getGetAdminPaymentQueryKey(updated.id), updated);
+      await queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetAdminOrderQueryKey(updated.orderId) });
+      await queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
+      void message.success('Đã ghi nhận hoàn tiền thủ công');
+      resetManualRefund();
+    },
+    onError: (error) => {
+      void message.error(getApiErrorMessage(error, 'Không ghi nhận được hoàn tiền thủ công.'));
+    },
+  });
+  const resetManualRefund = () => {
+    manualRefund.reset();
+    manualRefundIdempotencyRef.current = undefined;
+    manualRefundForm.resetFields();
+    setManualRefundOpen(false);
+  };
+  const closeManualRefund = () => {
+    if (manualRefund.isPending) return;
+    resetManualRefund();
+  };
   const resetLateReceipt = () => {
     lateReceipt.reset();
     lateReceiptIdempotencyRef.current = undefined;
@@ -150,9 +199,10 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
     resetAction();
   };
   const closeDrawer = () => {
-    if (mutation.isPending || lateReceipt.isPending) return;
+    if (mutation.isPending || lateReceipt.isPending || manualRefund.isPending) return;
     closeConfirm();
     closeLateReceipt();
+    closeManualRefund();
     onClose();
   };
   // UX: COD chỉ mở thao tác thu tiền khi đơn đã giao; backend vẫn kiểm tra lại
@@ -167,6 +217,10 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
   const canReject = canSettle && payment && ['AWAITING_CONFIRMATION', 'NEED_REVIEW'].includes(payment.status);
   // API chỉ nhận tiền về trễ cho payment chuyển khoản đã CANCELLED (đơn đã nhả hàng).
   const canRecordLateReceipt = canSettle && payment?.method === 'BANK_TRANSFER' && payment.status === 'CANCELLED';
+  // API chỉ cho đóng cờ hoàn tay khi payment SUCCESS, đơn CANCELLED và còn cờ chưa hoàn (quyền payment.refund.approve).
+  const canRefundManually = useCan('payment.refund.approve');
+  const canRecordManualRefund = canRefundManually && payment?.status === 'SUCCESS' && payment.orderStatus === 'CANCELLED'
+    && Boolean(payment.manualRefund) && !payment.manualRefund?.refundedAt;
   const orderStatus = payment ? parseEnum(OrderStatus, payment.orderStatus) : undefined;
 
   const reject = () => {
@@ -250,6 +304,24 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
                 </Space>
               </section>
             )}
+            {payment.manualRefund && (
+              <section>
+                <Typography.Title level={5}>Hoàn tiền thủ công</Typography.Title>
+                {!payment.manualRefund.refundedAt && (
+                  <Alert className="!mb-3" type="warning" showIcon message="Đơn đã huỷ sau giao thất bại; kế toán cần chuyển trả số tiền đã thu cho khách rồi ghi nhận tại đây." />
+                )}
+                <Descriptions bordered size="small" column={2} items={[
+                  { key: 'required', label: 'Phải hoàn', children: moneyFormatter.format(Number(payment.manualRefund.requiredAmount)) },
+                  { key: 'flaggedAt', label: 'Phát sinh lúc', children: formatDateTime(payment.manualRefund.flaggedAt) },
+                  ...(payment.manualRefund.refundedAt ? [
+                    { key: 'refunded', label: 'Đã hoàn', children: moneyFormatter.format(Number(payment.manualRefund.refundedAmount ?? 0)) },
+                    { key: 'refundedAt', label: 'Hoàn lúc', children: formatDateTime(payment.manualRefund.refundedAt) },
+                    { key: 'externalRef', label: 'Mã giao dịch', span: 2, children: payment.manualRefund.externalRef ?? '—' },
+                  ] : []),
+                  ...(payment.manualRefund.note ? [{ key: 'note', label: 'Ghi chú', span: 2, children: payment.manualRefund.note }] : []),
+                ]} />
+              </section>
+            )}
             {!canSettle && <Alert type="info" showIcon message="Bạn chỉ có quyền xem thanh toán; thao tác đối soát cần quyền payment.confirm." />}
             <Space>
               <Button
@@ -267,6 +339,16 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
               </Button>
               {canRecordLateReceipt && (
                 <Button onClick={() => setLateReceiptOpen(true)}>Ghi nhận tiền về trễ</Button>
+              )}
+              {canRecordManualRefund && (
+                <Button
+                  onClick={() => {
+                    setManualRefundOpen(true);
+                    manualRefundForm.setFieldsValue({ amount: Number(payment.manualRefund?.requiredAmount ?? payment.receivedAmount) });
+                  }}
+                >
+                  Ghi nhận đã hoàn tiền
+                </Button>
               )}
             </Space>
           </div>
@@ -318,6 +400,38 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
               className="w-full"
               disabledDate={(date) => date.isAfter(dayjs(), 'day')}
             />
+          </Form.Item>
+          <Form.Item name="note" label="Ghi chú">
+            <Input.TextArea rows={3} maxLength={1000} />
+          </Form.Item>
+        </Form>
+      </FormModal>
+      <FormModal
+        open={manualRefundOpen}
+        title="Ghi nhận hoàn tiền thủ công"
+        okText="Ghi nhận"
+        onClose={closeManualRefund}
+        onSubmit={() => manualRefundForm.submit()}
+        submitting={manualRefund.isPending}
+        isDirty={() => manualRefundForm.isFieldsTouched()}
+      >
+        <Typography.Paragraph type="secondary">
+          Chỉ ghi nhận sau khi đã chuyển trả tiền cho khách ngoài hệ thống. Thanh toán và đơn sẽ chuyển sang đã hoàn tiền, không thể hoàn tác.
+        </Typography.Paragraph>
+        <Form form={manualRefundForm} layout="vertical" onFinish={(values) => manualRefund.mutate(values)}>
+          <Form.Item
+            name="amount"
+            label="Số tiền đã chuyển trả"
+            rules={[
+              { required: true, message: 'Vui lòng nhập số tiền đã chuyển trả' },
+              { type: 'number', min: 1, message: 'Số tiền phải lớn hơn 0' },
+              { type: 'number', max: Number(payment?.receivedAmount ?? 0), message: 'Số tiền không được vượt số đã thu' },
+            ]}
+          >
+            <MoneyInput className="!w-full" />
+          </Form.Item>
+          <Form.Item name="externalRef" label="Mã giao dịch chuyển trả" rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập mã giao dịch chuyển trả' }]}>
+            <Input maxLength={200} />
           </Form.Item>
           <Form.Item name="note" label="Ghi chú">
             <Input.TextArea rows={3} maxLength={1000} />

@@ -1,8 +1,9 @@
-import { DeleteOutlined, DownOutlined, EditOutlined, StarOutlined, UpOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DisconnectOutlined, DownOutlined, EditOutlined, StarOutlined, UpOutlined, UploadOutlined } from '@ant-design/icons';
 import { App, Button, Form, Image, Input, Select, Space, Tag, Upload } from 'antd';
 import { useMemo, useRef, useState } from 'react';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
 import {
+  useArchiveAdminProductMedia,
   useAttachAdminProductMedia,
   useDeleteAdminProductMedia,
   useReorderAdminProductMedia,
@@ -29,6 +30,7 @@ export function ProductMediaPanel({
   const [targetVariantId, setTargetVariantId] = useState<string>();
   // SECURITY: thêm ảnh sản phẩm ghi qua media API, cần media.asset.upload ngoài quyền sửa sản phẩm.
   const canUpload = useCan('media.asset.upload');
+  const canManage = useCan('catalog.product.manage');
   const [editing, setEditing] = useState<ProductMediaDto>();
   const [altText, setAltText] = useState('');
   const variantOptions = useMemo(() => toVariantOptions(product.variants), [product.variants]);
@@ -99,7 +101,17 @@ export function ProductMediaPanel({
       },
     },
   });
-  const pending = attach.isPending || update.isPending || reorder.isPending || remove.isPending;
+  // Gỡ ảnh khỏi sản phẩm (INACTIVE) nhưng giữ asset trong thư viện media; khác Xoá là xoá cả Cloudinary.
+  const archive = useArchiveAdminProductMedia({
+    mutation: {
+      onSuccess: () => mutationSuccess('Đã gỡ ảnh khỏi sản phẩm, ảnh vẫn còn trong thư viện.'),
+      onError: async (error) => {
+        await onChanged();
+        mutationError(error, 'Không thể gỡ ảnh.');
+      },
+    },
+  });
+  const pending = attach.isPending || update.isPending || reorder.isPending || remove.isPending || archive.isPending;
 
   const move = (index: number, direction: -1 | 1) => {
     const items = reorderProductMedia(product.media, index, direction);
@@ -152,6 +164,24 @@ export function ProductMediaPanel({
             />
           )}
           <TableActionButton
+            label="Gỡ khỏi sản phẩm"
+            icon={<DisconnectOutlined />}
+            disabled={pending || !canManage}
+            onClick={() => modal.confirm({
+              title: 'Gỡ ảnh khỏi sản phẩm?',
+              content: row.isPrimary
+                ? 'Ảnh sẽ không còn hiển thị trên sản phẩm nhưng vẫn giữ trong thư viện media. Ảnh kế tiếp cùng phạm vi sẽ thành ảnh chính.'
+                : 'Ảnh sẽ không còn hiển thị trên sản phẩm nhưng vẫn giữ trong thư viện media.',
+              okText: 'Gỡ ảnh',
+              cancelText: 'Huỷ',
+              onOk: () => archive.mutateAsync({
+                id: product.id,
+                mediaId: row.id,
+                data: { expectedProductVersion: product.version },
+              }),
+            })}
+          />
+          <TableActionButton
             label="Xoá ảnh"
             danger
             icon={<DeleteOutlined />}
@@ -171,7 +201,7 @@ export function ProductMediaPanel({
           />
         </>
       ),
-      { title: '', width: 130 },
+      { title: '', width: 160 },
     ),
   ];
 
