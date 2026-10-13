@@ -5,29 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useCan } from '@/core/auth/permissions';
 import {
-  getGetAdminProductQueryKey,
-  getGetAdminProductSetupStatusQueryKey,
-  getListAdminProductsQueryKey,
-  useArchiveAdminProduct,
-  useCreateAdminProduct,
   useGetAdminProduct,
   useGetAdminProductSetupStatus,
-  usePublishAdminProduct,
-  useReactivateAdminProduct,
   useUpdateAdminProduct,
 } from '@/generated/api/catalog/catalog';
-import { ProductType } from '@/generated/api/catalog/catalog.schemas';
-import {
-  getListInventoryBalancesQueryKey,
-  getListInventoryMovementsQueryKey,
-  getListStockAdjustmentsQueryKey,
-  useCreateStockAdjustment,
-} from '@/generated/api/inventory/inventory';
-import {
-  StockAdjustmentReason,
-  StockAdjustmentType,
-  type CreateStockAdjustmentDto,
-} from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
 import type { PendingOpeningStock } from '../components/product-form/product-stock-panel';
 import { PRODUCT_FORM_DEFAULTS, productFormSchema, toProductFormErrorTarget } from '../model/product-form.schema';
@@ -44,9 +25,11 @@ import {
   toUpdateProductDto,
   type ProductFormValues,
 } from '../model/product-form.mapper';
-import { toOpeningStockItems } from '../model/product-opening-stock.mapper';
 import { toSpecificationPayload } from '../model/product-specifications';
+import { invalidateProductQueries } from './product-query-cache';
+import { useProductCreate } from './use-product-create';
 import { useProductFormLookups } from './use-product-form-lookups';
+import { useProductLifecycle } from './use-product-lifecycle';
 
 /**
  * Toàn bộ state, query và lệnh của workspace sản phẩm (Tạo + Sửa).
@@ -64,7 +47,7 @@ export function useProductWorkspace({
   /** Tạo xong (kể cả tồn đầu) thì gọi để nơi dùng đóng workspace và quay về danh sách. */
   onCreated?: () => void;
 }) {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canAdjustStock = useCan('inventory.stock.adjust');
   const canManagePrice = useCan('catalog.price.manage');
@@ -74,15 +57,6 @@ export function useProductWorkspace({
   const [activeTab, setActiveTab] = useState<ProductFormTab>('info');
   /** Tab mở sau khi sản phẩm vừa tạo được tải về (mặc định về `info`). */
   const [tabAfterLoad, setTabAfterLoad] = useState<ProductFormTab>();
-  /** IDEMPOTENCY: một khoá cho phiếu tồn đầu của phiên này; thử ghi lại dùng cùng khoá. */
-  const [openingStockIdempotencyKey] = useState(() => crypto.randomUUID());
-  /**
-   * IDEMPOTENCY: một id cho một lần mở form tạo. Bấm lại sau khi mất response (timeout, rớt mạng)
-   * gửi cùng id nên API trả lại sản phẩm đã tạo thay vì tạo bản thứ hai; sửa dữ liệu rồi gửi lại
-   * sau khi sản phẩm đã tạo thì API trả 409 để người dùng tải lại thay vì nhân đôi.
-   */
-  const [createProductRequestId] = useState(() => crypto.randomUUID());
-  const submittedCreateValues = useRef<ProductFormValues | undefined>(undefined);
   const form = useForm<ProductFormValues>({
     resolver: yupResolver(productFormSchema),
     defaultValues: PRODUCT_FORM_DEFAULTS,
@@ -148,11 +122,7 @@ export function useProductWorkspace({
 
   /** SKU, giá, ảnh, combo, thông tin đổi version; đọc lại để lần gửi sau không dùng version cũ. */
   async function refreshProduct() {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
-      queryClient.invalidateQueries({ queryKey: getGetAdminProductQueryKey(activeSlug) }),
-      queryClient.invalidateQueries({ queryKey: getGetAdminProductSetupStatusQueryKey(product?.id) }),
-    ]);
+    await invalidateProductQueries(queryClient, { id: product?.id, slug: activeSlug });
   }
 
   function handleError(error: unknown, fallback: string) {
@@ -164,71 +134,19 @@ export function useProductWorkspace({
     void message.error(getApiErrorMessage(error, fallback));
   }
 
-  const openingStock = useCreateStockAdjustment({
-    request: { headers: { 'Idempotency-Key': openingStockIdempotencyKey } },
-  });
-  const createProduct = useCreateAdminProduct({
-    request: { headers: { 'x-request-id': createProductRequestId } },
-    mutation: {
-      onSuccess: async (createdProduct) => {
-        // CONTRACT: dùng snapshot lúc submit để SKU/tồn đầu không lệch nếu response về chậm.
-        const values = submittedCreateValues.current ?? form.getValues();
-        let pending: PendingOpeningStock | undefined;
-        let stockData: CreateStockAdjustmentDto | undefined;
-        try {
-          const items = toOpeningStockItems(values.variants, createdProduct);
-          if (items.length > 0 && values.initialWarehouseCode) {
-            stockData = {
-              warehouseCode: values.initialWarehouseCode,
-              adjustmentType: StockAdjustmentType.OPENING_BALANCE,
-              reasonCode: StockAdjustmentReason.INITIAL_STOCK,
-              reason: `Khởi tạo tồn đầu khi tạo sản phẩm ${createdProduct.productNo}`,
-              items,
-            };
-            await openingStock.mutateAsync({ data: stockData });
-          }
-        } catch (error) {
-          // Giá, ảnh và thông số đã nằm trong transaction tạo sản phẩm; chỉ tồn đầu (nghiệp vụ kho của
-          // chi nhánh) là bước riêng có thể lỗi sau khi sản phẩm đã tạo. Giữ payload + khoá để ghi lại.
-          if (stockData) {
-            pending = {
-              idempotencyKey: openingStockIdempotencyKey,
-              data: stockData,
-              error: getApiErrorMessage(error),
-            };
-          } else {
-            void message.error(getApiErrorMessage(error));
-          }
-        }
-
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() }),
-          queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
-          queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
-          queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
-        ]);
-        submittedCreateValues.current = undefined;
+  const createProduct = useProductCreate({
+    onCreated: (createdProduct, pending) => {
+      if (pending) {
+        // Tồn đầu chưa ghi được: chuyển tại chỗ sang chế độ Sửa để giữ payload + khoá và cho "Thử ghi lại".
         setPendingOpeningStock(pending);
-        if (pending) {
-          void message.warning(`Đã tạo sản phẩm nhưng chưa ghi được tồn đầu. Bấm “Thử ghi tồn đầu lại” ở mục Tồn kho, tab "${PRODUCT_TAB_LABELS.variants}".`, 8);
-        } else {
-          const stockMessage = stockData ? ' và đã ghi tồn đầu' : '';
-          void message.success(`Đã tạo sản phẩm cùng ${createdProduct.variants.length} biến thể${stockMessage}.`);
-        }
-        if (pending) {
-          // Tồn đầu chưa ghi được: chuyển tại chỗ sang chế độ Sửa để giữ payload + khoá và cho "Thử ghi lại".
-          setTabAfterLoad('variants');
-          setActiveSlug(createdProduct.slug);
-          return;
-        }
-        // Tạo thành công: đóng workspace, danh sách (đã invalidate ở trên) hiện sản phẩm mới.
-        onCreated?.();
-      },
-      onError: (error) => {
-        submittedCreateValues.current = undefined;
-        handleError(error, 'Không thể tạo sản phẩm.');
-      },
+        setTabAfterLoad('variants');
+        setActiveSlug(createdProduct.slug);
+        return;
+      }
+      // Tạo thành công: đóng workspace, danh sách (đã invalidate) hiện sản phẩm mới.
+      onCreated?.();
     },
+    onError: (error) => handleError(error, 'Không thể tạo sản phẩm.'),
   });
   const updateProduct = useUpdateAdminProduct({
     mutation: {
@@ -241,19 +159,8 @@ export function useProductWorkspace({
       onError: (error) => handleError(error, 'Không thể cập nhật sản phẩm.'),
     },
   });
-  const lifecycleMutation = (success: string, failure: string) => ({
-    mutation: {
-      onSuccess: async () => {
-        await refreshProduct();
-        void message.success(success);
-      },
-      onError: (error: unknown) => void message.error(getApiErrorMessage(error, failure)),
-    },
-  });
-  const publish = usePublishAdminProduct(lifecycleMutation('Đã xuất bản sản phẩm lên website.', 'Không xuất bản được sản phẩm.'));
-  const archiveProduct = useArchiveAdminProduct(lifecycleMutation('Đã lưu trữ; sản phẩm không còn hiển thị trên website.', 'Không lưu trữ được sản phẩm.'));
-  const reactivateProduct = useReactivateAdminProduct(lifecycleMutation('Đã đưa sản phẩm về bản nháp để kiểm tra trước khi xuất bản lại.', 'Không thể khôi phục sản phẩm.'));
-  const mutationPending = createProduct.isPending || updateProduct.isPending || openingStock.isPending;
+  const lifecycle = useProductLifecycle();
+  const mutationPending = createProduct.isPending || updateProduct.isPending;
 
   const submit = form.handleSubmit((values) => {
     const specificationResult = toSpecificationPayload(values.specifications, lookups.attributes);
@@ -272,17 +179,10 @@ export function useProductWorkspace({
         data: toUpdateProductDto(values, product, specificationsDirty ? specificationResult.specifications : undefined),
       });
     } else {
-      submittedCreateValues.current = {
-        ...values,
-        categoryIds: [...values.categoryIds],
-        variants: values.variants.map((variant) => ({ ...variant })),
-      };
-      createProduct.mutate({
-        data: toCreateProductDto(values, {
-          includePrices: canManagePrice,
-          specifications: specificationResult.specifications,
-        }),
-      });
+      createProduct.create(
+        values,
+        toCreateProductDto(values, { includePrices: canManagePrice, specifications: specificationResult.specifications }),
+      );
     }
   });
 
@@ -300,35 +200,6 @@ export function useProductWorkspace({
       return;
     }
     await submit();
-  };
-
-  const confirmPublish = () => {
-    if (!product) return;
-    modal.confirm({
-      title: `Xuất bản “${product.name}”?`,
-      content: 'Sản phẩm sẽ hiển thị công khai với giá đã bao gồm VAT. Version hiện tại được kiểm tra để không ghi đè thay đổi của người khác.',
-      okText: 'Xuất bản',
-      cancelText: 'Huỷ',
-      onOk: () => publish.mutateAsync({ id: product.id, data: { expectedVersion: product.version } }),
-    });
-  };
-  const confirmLifecycle = () => {
-    if (!product) return;
-    const archived = product.status === 'ARCHIVED';
-    modal.confirm({
-      title: archived
-        ? `Đưa “${product.name}” về bản nháp?`
-        : `Lưu trữ ${product.productType === ProductType.BUNDLE ? 'combo' : 'sản phẩm'} “${product.name}”?`,
-      content: archived
-        ? 'Sản phẩm chưa hiển thị lại ngay. Cần kiểm tra SKU, giá rồi xuất bản lại.'
-        : 'Sản phẩm sẽ ẩn ngay khỏi website và chặn giao dịch mới. Đơn hàng lịch sử không bị thay đổi.',
-      okText: archived ? 'Đưa về bản nháp' : 'Lưu trữ',
-      okButtonProps: { danger: !archived },
-      cancelText: 'Huỷ',
-      onOk: () => archived
-        ? reactivateProduct.mutateAsync({ id: product.id, data: { expectedVersion: product.version } })
-        : archiveProduct.mutateAsync({ id: product.id, data: { expectedVersion: product.version } }),
-    });
   };
 
   return {
@@ -360,10 +231,10 @@ export function useProductWorkspace({
     refreshProduct,
     mutationPending,
     submitWithTabValidation,
-    confirmPublish,
-    confirmLifecycle,
-    publishPending: publish.isPending,
-    lifecyclePending: archiveProduct.isPending || reactivateProduct.isPending,
+    confirmPublish: () => product && lifecycle.confirmPublish(product),
+    confirmLifecycle: () => product && lifecycle.confirmLifecycle(product),
+    publishPending: Boolean(product) && lifecycle.publishBusyId === product?.id,
+    lifecyclePending: Boolean(product) && lifecycle.lifecycleBusyId === product?.id,
   };
 }
 

@@ -109,6 +109,7 @@ export function ProductsPage() {
           pageSize={list.query.data?.meta.limit ?? list.pageSize}
           total={total}
           canManage={actions.canManage}
+          canPublish={actions.canPublish}
           visibilityBusyId={actions.visibilityBusyId}
           archiveBusyId={actions.archiveBusyId}
           onPageChange={list.onPageChange}

@@ -1,5 +1,4 @@
-import type { ProductStatus, ProductSummaryDto } from '@/generated/api/catalog/catalog.schemas';
-
+import { ProductType, type ProductStatus, type ProductSummaryDto } from '@/generated/api/catalog/catalog.schemas';
 import { moneyFormatter } from '@/lib/format/money';
 
 export interface ProductListRow {
@@ -11,6 +10,9 @@ export interface ProductListRow {
   imageUrl?: string;
   priceLabel: string;
   productType: string;
+  /** Nhãn ngắn cho cột Loại; combo có màu riêng. */
+  productTypeLabel: string;
+  isBundle: boolean;
   status: ProductStatus;
   isPublished: boolean;
   version: number;
@@ -27,6 +29,8 @@ export function toProductListRow(dto: ProductSummaryDto): ProductListRow {
     ...(dto.imageUrl ? { imageUrl: dto.imageUrl } : {}),
     priceLabel: dto.minPrice ? moneyFormatter.format(Number(dto.minPrice)) : '—',
     productType: dto.productType,
+    productTypeLabel: dto.productType === ProductType.BUNDLE ? 'Combo' : 'Thường',
+    isBundle: dto.productType === ProductType.BUNDLE,
     status: dto.status,
     isPublished: dto.isPublished,
     version: dto.version,

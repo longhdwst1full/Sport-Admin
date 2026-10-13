@@ -1,100 +1,47 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCan } from '@/core/auth/permissions';
-import {
-  deleteAdminProduct,
-  getListAdminProductsQueryKey,
-  publishAdminProduct,
-  updateAdminProduct,
-} from '@/generated/api/catalog/catalog';
+import { useUpdateAdminProduct } from '@/generated/api/catalog/catalog';
 import { getApiErrorMessage } from '@/lib/api/error';
 import type { ProductListRow } from '../model/product-list.mapper';
+import { invalidateProductQueries } from './product-query-cache';
+import { useProductLifecycle } from './use-product-lifecycle';
 
 /** Gói action của list để page không biết chi tiết payload, confirm hay cache invalidation. */
 export function useProductListActions() {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
+  // PERMISSION: bật/tắt hiển thị đi qua `updateAdminProduct` (catalog.product.manage); xuất bản và lưu trữ
+  // là lệnh vòng đời, API đòi `catalog.product.publish`. API vẫn là nơi kiểm cuối.
   const canManage = useCan('catalog.product.manage');
-  const invalidateList = () =>
-    queryClient.invalidateQueries({ queryKey: getListAdminProductsQueryKey() });
+  const canPublish = useCan('catalog.product.publish');
+  const lifecycle = useProductLifecycle();
 
-  const visibilityMutation = useMutation({
-    mutationFn: ({ row, next }: { row: ProductListRow; next: boolean }) =>
-      updateAdminProduct(row.id, { expectedVersion: row.version, isPublished: next }),
-    onSuccess: async (_result, { next }) => {
-      // CACHE: thay đổi visibility ảnh hưởng mọi trang/filter của danh sách product.
-      await invalidateList();
-      void message.success(next ? 'Đã hiện sản phẩm trên website' : 'Đã ẩn sản phẩm khỏi website');
+  const visibility = useUpdateAdminProduct({
+    mutation: {
+      onSuccess: async (updated, { data }) => {
+        await invalidateProductQueries(queryClient, updated);
+        void message.success(data.isPublished ? 'Đã hiện sản phẩm trên website' : 'Đã ẩn sản phẩm khỏi website');
+      },
+      onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
     },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
   });
-
-  /**
-   * Xuất bản nằm ở cột thao tác của danh sách, không nằm trong form sửa thông tin.
-   * Sửa nội dung và đổi vòng đời là hai việc khác nhau; gộp vào một chỗ khiến người dùng
-   * bấm Lưu mà không rõ sản phẩm có lên website hay chưa.
-   */
-  const publishMutation = useMutation({
-    mutationFn: (row: ProductListRow) =>
-      publishAdminProduct(row.id, { expectedVersion: row.version }),
-    onSuccess: async () => {
-      await invalidateList();
-      void message.success('Đã xuất bản sản phẩm lên website');
-    },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
-  });
-
-  const confirmPublish = (row: ProductListRow) => {
-    modal.confirm({
-      title: `Xuất bản ${row.name}?`,
-      content: (
-        <div className="space-y-2 text-sm text-slate-500">
-          <p>Sản phẩm sẽ hiển thị công khai với giá đã bao gồm VAT.</p>
-          <p>SKU phải có giá hiệu lực, nếu không backend sẽ từ chối.</p>
-        </div>
-      ),
-      okText: 'Xuất bản',
-      cancelText: 'Huỷ',
-      onOk: () => publishMutation.mutateAsync(row),
-    });
-  };
-
-  const archiveMutation = useMutation({
-    mutationFn: (row: ProductListRow) =>
-      deleteAdminProduct(row.id, { expectedVersion: row.version }),
-    onSuccess: async () => {
-      await invalidateList();
-      void message.success('Đã chuyển sản phẩm sang lưu trữ');
-    },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
-  });
-
-  const confirmArchive = (row: ProductListRow) => {
-    modal.confirm({
-      title: `Xoá sản phẩm ${row.name}?`,
-      content: (
-        <div className="space-y-2 text-sm text-slate-500">
-          <p>Sản phẩm chuyển sang trạng thái <strong>Lưu trữ</strong> và biến mất khỏi trang bán.</p>
-          <p>Không xoá hẳn khỏi database vì đơn hàng cũ vẫn tham chiếu sản phẩm này.</p>
-        </div>
-      ),
-      okText: 'Xoá',
-      okButtonProps: { danger: true },
-      cancelText: 'Huỷ',
-      onOk: () => archiveMutation.mutateAsync(row),
-    });
-  };
 
   return {
     canManage,
-    confirmPublish,
-    publishBusyId: publishMutation.isPending ? publishMutation.variables?.id : undefined,
-    confirmArchive,
-    archiveBusyId: archiveMutation.isPending ? archiveMutation.variables?.id : undefined,
+    canPublish,
+    /**
+     * Xuất bản nằm ở cột thao tác của danh sách, không nằm trong form sửa thông tin.
+     * Sửa nội dung và đổi vòng đời là hai việc khác nhau; gộp vào một chỗ khiến người dùng
+     * bấm Lưu mà không rõ sản phẩm có lên website hay chưa.
+     */
+    confirmPublish: lifecycle.confirmPublish,
+    publishBusyId: lifecycle.publishBusyId,
+    /** Lưu trữ logic (`archiveAdminProduct`): đơn hàng cũ vẫn tham chiếu sản phẩm nên không xoá hẳn. */
+    confirmArchive: lifecycle.confirmLifecycle,
+    archiveBusyId: lifecycle.lifecycleBusyId,
     toggleVisibility: (row: ProductListRow, next: boolean) =>
-      visibilityMutation.mutate({ row, next }),
-    visibilityBusyId: visibilityMutation.isPending
-      ? visibilityMutation.variables?.row.id
-      : undefined,
+      visibility.mutate({ id: row.id, data: { expectedVersion: row.version, isPublished: next } }),
+    visibilityBusyId: visibility.isPending ? visibility.variables?.id : undefined,
   };
 }

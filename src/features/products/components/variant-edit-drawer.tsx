@@ -1,24 +1,22 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { App, Form, Input, InputNumber } from 'antd';
+import { App, Form, Input } from 'antd';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { FormDrawer } from '@/foundation/overlay';
 import { useUpdateAdminProductVariant } from '@/generated/api/catalog/catalog';
 import type { ProductVariantDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api/error';
-import { toUpdateVariantDto, toVariantEditValues, type VariantEditValues } from '../model/variant-edit.mapper';
+import { VARIANT_DIMENSION_FIELDS } from '../constants/product-list.constants';
 import { VARIANT_FIELD_RULES } from '../model/product-form.schema';
-import { FormDrawer } from '@/foundation/overlay';
+import { toUpdateVariantDto, toVariantEditValues, type VariantEditValues } from '../model/variant-edit.mapper';
+import { FieldItem, VariantNumberInput } from './product-form/form-field-parts';
 
+/** Cùng luật ô với form Tạo; riêng barcode luôn là chuỗi và khối lượng bắt buộc vì PATCH gửi đủ các ô. */
 const schema: yup.ObjectSchema<VariantEditValues> = yup.object({
-  name: yup.string().trim().required('Nhập tên phiên bản').max(255, 'Tối đa 255 ký tự'),
-  barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').defined(),
-  weightGrams: yup
-    .number()
-    .typeError('Nhập khối lượng')
-    .integer('Khối lượng phải là số nguyên')
-    .min(0, 'Tối thiểu 0')
-    .required('Nhập khối lượng'),
+  name: VARIANT_FIELD_RULES.name,
+  barcode: VARIANT_FIELD_RULES.barcode.defined(),
+  weightGrams: VARIANT_FIELD_RULES.weightGrams.typeError('Nhập khối lượng').required('Nhập khối lượng'),
   lengthMm: VARIANT_FIELD_RULES.lengthMm,
   widthMm: VARIANT_FIELD_RULES.widthMm,
   heightMm: VARIANT_FIELD_RULES.heightMm,
@@ -45,7 +43,7 @@ export function VariantEditDrawer({
     mutation: {
       onSuccess: async () => {
         await onUpdated();
-        void message.success('Đã cập nhật metadata SKU.');
+        void message.success('Đã cập nhật thông tin SKU.');
         onClose();
       },
       onError: (error) => {
@@ -57,6 +55,7 @@ export function VariantEditDrawer({
     },
   });
 
+  // Drawer giữ mount để có animation đóng; nạp lại react-hook-form mỗi khi mở cho SKU khác.
   useEffect(() => {
     if (!variant) return;
     reset(toVariantEditValues(variant));
@@ -64,10 +63,8 @@ export function VariantEditDrawer({
 
   const submit = handleSubmit((values) => {
     if (!variant) return;
-    update.mutate({
-      variantId: variant.id,
-      data: toUpdateVariantDto(values, variant.version),
-    });
+    // CONCURRENCY: gửi version SKU đã nạp để API trả 409 thay vì ghi đè bản sửa của người khác.
+    update.mutate({ variantId: variant.id, data: toUpdateVariantDto(values, variant.version) });
   });
 
   return (
@@ -82,28 +79,23 @@ export function VariantEditDrawer({
       isDirty={() => isDirty}
     >
       <Form layout="vertical">
-        <Form.Item label="Tên phiên bản" required validateStatus={errors.name ? 'error' : undefined} help={errors.name?.message}>
+        <FieldItem label="Tên biến thể" required error={errors.name}>
           <Controller name="name" control={control} render={({ field }) => <Input {...field} maxLength={255} />} />
-        </Form.Item>
-        <Form.Item label="Barcode" validateStatus={errors.barcode ? 'error' : undefined} help={errors.barcode?.message}>
+        </FieldItem>
+        <FieldItem label="Barcode" error={errors.barcode}>
           <Controller name="barcode" control={control} render={({ field }) => <Input {...field} maxLength={64} />} />
-        </Form.Item>
+        </FieldItem>
         <div className="grid grid-cols-2 gap-3">
-          {([
-            ['weightGrams', 'Khối lượng (g)', 0],
-            ['lengthMm', 'Dài (mm)', 1],
-            ['widthMm', 'Rộng (mm)', 1],
-            ['heightMm', 'Cao (mm)', 1],
-          ] as const).map(([name, label, min]) => (
-            <Form.Item key={name} label={label} required={name === 'weightGrams'} validateStatus={errors[name] ? 'error' : undefined} help={errors[name]?.message}>
+          {VARIANT_DIMENSION_FIELDS.map(([name, label, min]) => (
+            <FieldItem key={name} label={label} required={name === 'weightGrams'} error={errors[name]}>
               <Controller
                 name={name}
                 control={control}
                 render={({ field }) => (
-                  <InputNumber {...field} min={min} precision={0} className="w-full" onChange={(value) => field.onChange(value ?? undefined)} />
+                  <VariantNumberInput min={min} value={field.value} onBlur={field.onBlur} onChange={field.onChange} />
                 )}
               />
-            </Form.Item>
+            </FieldItem>
           ))}
         </div>
       </Form>

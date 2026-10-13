@@ -5,9 +5,10 @@ import {
   OrderStatus,
   type OrderSummaryDto,
 } from '@/generated/api/orders/orders.schemas';
+import { toOrderRow } from '../model/order.mapper';
 import { OrderTable } from './order-table';
 
-const demoRows: OrderSummaryDto[] = [
+const demoDtos: OrderSummaryDto[] = [
   {
     id: '101',
     orderNo: 'ORD-20260911-00000101',
@@ -34,6 +35,8 @@ const demoRows: OrderSummaryDto[] = [
     version: 0,
   },
 ];
+
+const demoRows = demoDtos.map(toOrderRow);
 
 const meta = {
   title: 'Features/Orders/Table',

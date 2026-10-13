@@ -1,22 +1,23 @@
-import { useRef } from 'react';
-import { App, Card, Empty, Popconfirm, Skeleton, Tag, Typography } from 'antd';
+import { useMemo, useRef } from 'react';
+import { App, Popconfirm, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col, TableActionButton } from '@/foundation/table';
 import { CheckOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/core/auth/permissions';
-import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { TableSkeleton } from '@/foundation/feedback/page-skeleton';
 import {
   confirmAdminOrder,
   getListAdminOrdersQueryKey,
   useListAdminOrders,
 } from '@/generated/api/orders/orders';
-import {
-  OrderStatusGroup,
-  type OrderSummaryDto,
-} from '@/generated/api/orders/orders.schemas';
+import { OrderStatusGroup, type OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
 import { getGetAdminReportOverviewQueryKey } from '@/generated/api/reporting/reporting';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { useQueryState } from '../hooks/use-dashboard-report';
+import { CardStateBody, DashboardCard } from './dashboard-card';
+
+const PENDING_ORDER_LIMIT = 10;
 
 const PENDING_ORDER_COLUMNS: ColumnsType<OrderSummaryDto> = [
   {
@@ -56,7 +57,7 @@ export function PendingOrdersCard() {
 
   const query = useListAdminOrders({
     statusGroup: OrderStatusGroup.PENDING_CONFIRMATION,
-    limit: 10,
+    limit: PENDING_ORDER_LIMIT,
   });
 
   // Dùng thẳng hàm SDK thay vì hook sinh sẵn: tuỳ chọn `request` của hook là cấp hook, không
@@ -79,71 +80,67 @@ export function PendingOrdersCard() {
       void message.success(`Đã xác nhận đơn ${order.orderNo}.`);
     },
     onError: (error) => {
+      // CONCURRENCY: lỗi thường do đơn đã đổi version (người khác vừa duyệt/huỷ); tải lại danh sách để
+      // lần bấm sau gửi version mới thay vì lặp lại cùng một lỗi.
+      void queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });
       void message.error(
         getApiErrorMessage(error, 'Không xác nhận được đơn. Tải lại rồi thử lại.'),
       );
     },
   });
 
+  const state = useQueryState(query);
   const rows = query.data?.items ?? [];
 
-  const columns: ColumnsType<OrderSummaryDto> = [
-    ...PENDING_ORDER_COLUMNS,
-    col.actions<OrderSummaryDto>(
-      (row) => (
-        <PermissionGate permission="order.manage">
-          <Popconfirm
-            title="Xác nhận đơn này?"
-            description="Kho sẽ bắt đầu lấy hàng sau khi xác nhận."
-            okText="Xác nhận"
-            cancelText="Để sau"
-            onConfirm={() =>
-              confirmOrder.mutate({ id: row.id, expectedVersion: row.version })
-            }
-          >
-            <TableActionButton
-              label={`Duyệt đơn ${row.orderNo}`}
-              icon={<CheckOutlined />}
-              loading={confirmOrder.isPending && confirmOrder.variables?.id === row.id}
-            />
-          </Popconfirm>
-        </PermissionGate>
+  const { mutate: confirm, isPending: confirming, variables: confirmingVars } = confirmOrder;
+  const confirmingId = confirming ? confirmingVars?.id : undefined;
+  const columns = useMemo<ColumnsType<OrderSummaryDto>>(
+    () => [
+      ...PENDING_ORDER_COLUMNS,
+      col.actions<OrderSummaryDto>(
+        (row) => (
+          <PermissionGate permission="order.manage">
+            <Popconfirm
+              title="Xác nhận đơn này?"
+              description="Kho sẽ bắt đầu lấy hàng sau khi xác nhận."
+              okText="Xác nhận"
+              cancelText="Để sau"
+              onConfirm={() => confirm({ id: row.id, expectedVersion: row.version })}
+            >
+              <TableActionButton
+                label={`Duyệt đơn ${row.orderNo}`}
+                icon={<CheckOutlined />}
+                loading={confirmingId === row.id}
+              />
+            </Popconfirm>
+          </PermissionGate>
+        ),
+        { title: '', width: 120 },
       ),
-      { title: '', width: 120 },
-    ),
-  ];
+    ],
+    [confirm, confirmingId],
+  );
 
   return (
-    <Card
-      className="!rounded-2xl !border-amber-200/70 !bg-gradient-to-br !from-white !to-amber-50/30 !shadow-card"
-      title={
-        <div className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200">
-            <ClockCircleOutlined />
-          </span>
-          <div>
-            <div className="font-bold text-slate-900">Đơn chờ xác nhận</div>
-            <div className="text-xs font-normal text-slate-500">
-              Duyệt đơn để kho có thể bắt đầu lấy hàng
-            </div>
-          </div>
-        </div>
-      }
+    <DashboardCard
+      tone="amber"
+      icon={<ClockCircleOutlined />}
+      title="Đơn chờ xác nhận"
+      description={`Duyệt đơn để kho có thể bắt đầu lấy hàng · hiện tối đa ${PENDING_ORDER_LIMIT} đơn`}
       extra={
         rows.length > 0 ? (
-          <Tag className="!m-0 !rounded-full !border-amber-200 !bg-amber-100 !px-3 !py-1 !font-semibold !text-amber-800">
+          <Tag className="!m-0 !rounded-full !border-amber-200 !bg-amber-100 !px-3 !py-0.5 !font-semibold !text-amber-800">
             {query.data?.total ?? rows.length} đơn cần xử lý
           </Tag>
         ) : undefined
       }
     >
-      {query.isError ? (
-        <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />
-      ) : query.isPending ? (
-        <Skeleton active />
-      ) : rows.length === 0 ? (
-        <Empty description="Không còn đơn nào chờ xác nhận" />
-      ) : (
+      <CardStateBody
+        state={state}
+        isEmpty={rows.length === 0}
+        emptyText="Không còn đơn nào chờ xác nhận"
+        skeleton={<TableSkeleton rows={3} />}
+      >
         <AdminTable<OrderSummaryDto>
           rowKey="id"
           size="small"
@@ -152,7 +149,7 @@ export function PendingOrdersCard() {
           scroll={{ x: 760 }}
           columns={columns}
         />
-      )}
-    </Card>
+      </CardStateBody>
+    </DashboardCard>
   );
 }

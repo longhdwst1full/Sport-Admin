@@ -11,7 +11,9 @@ const demoRows: ProductListRow[] = [
     secondaryLabel: 'PRD-000101 · MGSport · Máy chạy bộ',
     imageUrl: 'https://placehold.co/96x96/e2e8f0/475569?text=MG',
     priceLabel: '18.990.000 ₫',
-    productType: 'SIMPLE',
+    productType: 'STANDARD',
+    productTypeLabel: 'Thường',
+    isBundle: false,
     status: 'PUBLISHED',
     isPublished: true,
     version: 3,
@@ -24,6 +26,8 @@ const demoRows: ProductListRow[] = [
     secondaryLabel: 'PRD-000102 · MGSport · Combo tập luyện',
     priceLabel: '—',
     productType: 'BUNDLE',
+    productTypeLabel: 'Combo',
+    isBundle: true,
     status: 'DRAFT',
     isPublished: false,
     version: 1,
@@ -41,6 +45,7 @@ const meta = {
     pageSize: 30,
     total: demoRows.length,
     canManage: true,
+    canPublish: true,
     onPageChange: () => undefined,
     onOpen: () => undefined,
     onToggleVisibility: () => undefined,
@@ -53,6 +58,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Populated: Story = {};
-export const ReadOnly: Story = { args: { canManage: false } };
+export const ReadOnly: Story = { args: { canManage: false, canPublish: false } };
 export const Loading: Story = { args: { rows: [], loading: true, total: 0 } };
 export const Empty: Story = { args: { rows: [], total: 0 } };

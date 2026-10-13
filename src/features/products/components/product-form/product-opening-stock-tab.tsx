@@ -1,11 +1,12 @@
 import { InboxOutlined } from '@ant-design/icons';
-import { Alert, Form, InputNumber, Select } from 'antd';
+import { Alert, InputNumber, Select } from 'antd';
 import { useMemo } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { FormSection } from '@/foundation/layout/form-section';
 import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 import { toLookupOptions } from '../../model/product-lookup-options';
+import { FieldItem } from './form-field-parts';
 import type { SearchOptionsQuery } from './types';
 
 /**
@@ -71,12 +72,7 @@ export function ProductOpeningStockTab({
       icon={<InboxOutlined />}
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <Form.Item
-          label="Chi nhánh nhập tồn đầu"
-          required={hasOpeningStock}
-          validateStatus={form.formState.errors.initialBranchId ? 'error' : undefined}
-          help={form.formState.errors.initialBranchId?.message}
-        >
+        <FieldItem label="Chi nhánh nhập tồn đầu" required={hasOpeningStock} error={form.formState.errors.initialBranchId}>
           <Controller
             name="initialBranchId"
             control={form.control}
@@ -97,13 +93,8 @@ export function ProductOpeningStockTab({
               />
             )}
           />
-        </Form.Item>
-        <Form.Item
-          label="Kho nhập tồn đầu"
-          required={hasOpeningStock}
-          validateStatus={form.formState.errors.initialWarehouseCode ? 'error' : undefined}
-          help={form.formState.errors.initialWarehouseCode?.message}
-        >
+        </FieldItem>
+        <FieldItem label="Kho nhập tồn đầu" required={hasOpeningStock} error={form.formState.errors.initialWarehouseCode}>
           <Controller
             name="initialWarehouseCode"
             control={form.control}
@@ -121,43 +112,40 @@ export function ProductOpeningStockTab({
               />
             )}
           />
-        </Form.Item>
+        </FieldItem>
       </div>
 
       <div className="space-y-2">
-        {variants.map((variant, index) => {
-          const error = form.formState.errors.variants?.[index]?.openingQuantity;
-          return (
-            <div key={index} className="grid items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-[1fr_180px]">
-              <div className="pt-1 text-sm">
-                <div className="font-medium text-slate-700">{variant.name?.trim() || `Biến thể ${index + 1}`}</div>
-                <div className="text-xs text-slate-500">{variant.sku?.trim() || 'SKU tự sinh'}</div>
-              </div>
-              <Form.Item
-                label="Số lượng tồn đầu"
-                required
-                style={{ marginBottom: 0 }}
-                validateStatus={error ? 'error' : undefined}
-                help={error?.message}
-              >
-                <Controller
-                  name={`variants.${index}.openingQuantity`}
-                  control={form.control}
-                  render={({ field }) => (
-                    <InputNumber
-                      className="!w-full"
-                      min={0}
-                      precision={0}
-                      value={field.value}
-                      onBlur={field.onBlur}
-                      onChange={(value) => field.onChange(value ?? 0)}
-                    />
-                  )}
-                />
-              </Form.Item>
+        {variants.map((variant, index) => (
+          // Dòng theo đúng thứ tự mảng `variants` của form (không xoá/chèn ở khối này) nên index là khoá ổn định.
+          <div key={index} className="grid items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-[1fr_180px]">
+            <div className="pt-1 text-sm">
+              <div className="font-medium text-slate-700">{variant.name?.trim() || `Biến thể ${index + 1}`}</div>
+              <div className="text-xs text-slate-500">{variant.sku?.trim() || 'SKU tự sinh'}</div>
             </div>
-          );
-        })}
+            <FieldItem
+              label="Số lượng tồn đầu"
+              required
+              style={{ marginBottom: 0 }}
+              error={form.formState.errors.variants?.[index]?.openingQuantity}
+            >
+              <Controller
+                name={`variants.${index}.openingQuantity`}
+                control={form.control}
+                render={({ field }) => (
+                  <InputNumber
+                    className="!w-full"
+                    min={0}
+                    precision={0}
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChange={(value) => field.onChange(value ?? 0)}
+                  />
+                )}
+              />
+            </FieldItem>
+          </div>
+        ))}
       </div>
     </FormSection>
   );

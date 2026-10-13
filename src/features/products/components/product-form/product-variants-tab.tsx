@@ -1,11 +1,15 @@
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Form, Input, InputNumber, Tag } from 'antd';
-import { BarcodeOutlined } from '@ant-design/icons';
-import { FormSection } from '@/foundation/layout/form-section';
+import { BarcodeOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Input, Tag } from 'antd';
 import { Controller, type UseFieldArrayReturn, type UseFormReturn } from 'react-hook-form';
-import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import { MoneyInput } from '@/foundation/inputs/money-input';
+import { FormSection } from '@/foundation/layout/form-section';
+import { ProductType } from '@/generated/api/catalog/catalog.schemas';
+import { VARIANT_DIMENSION_FIELDS } from '../../constants/product-list.constants';
 import { emptyVariant, type ProductFormValues } from '../../model/product-form.mapper';
+import { FieldItem, SkuInput, VariantNumberInput } from './form-field-parts';
+
+/** CONTRACT: cùng giới hạn `variants.max(50)` của schema tạo sản phẩm. */
+const MAX_VARIANTS = 50;
 
 /**
  * Khối SKU & giá (tab "SKU, giá & tồn kho") ở chế độ Tạo. Chế độ Sửa dùng `ProductVariantsManager` (SKU thật, lưu ngay).
@@ -25,14 +29,14 @@ export function ProductVariantsTab({
   /** `catalog.price.manage`: giá ban đầu gửi kèm lệnh tạo sản phẩm. */
   canManagePrice: boolean;
 }) {
+  const errors = form.formState.errors.variants;
   return (
-    <div className="space-y-4">
-      <FormSection
-        title="Biến thể bán hàng (SKU)"
-        description="Khai báo màu sắc, kích thước hoặc phiên bản khách sẽ chọn khi mua. SKU bỏ trống thì hệ thống tự sinh."
-        icon={<BarcodeOutlined />}
-        extra={<Tag color="blue">{variantFields.fields.length} biến thể</Tag>}
-      >
+    <FormSection
+      title="Biến thể bán hàng (SKU)"
+      description="Khai báo màu sắc, kích thước hoặc phiên bản khách sẽ chọn khi mua. SKU bỏ trống thì hệ thống tự sinh."
+      icon={<BarcodeOutlined />}
+      extra={<Tag color="blue">{variantFields.fields.length} biến thể</Tag>}
+    >
       <Alert
         className="mb-4"
         type="info"
@@ -75,81 +79,44 @@ export function ProductVariantsTab({
             )}
           >
             <div className="grid gap-x-4 md:grid-cols-2 xl:grid-cols-3">
-              <Form.Item
-                label="Tên biến thể"
-                required
-                validateStatus={form.formState.errors.variants?.[index]?.name ? 'error' : undefined}
-                help={form.formState.errors.variants?.[index]?.name?.message}
-              >
+              <FieldItem label="Tên biến thể" required error={errors?.[index]?.name}>
                 <Controller
                   name={`variants.${index}.name`}
                   control={form.control}
                   render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Đen - Size 40" />}
                 />
-              </Form.Item>
-              <Form.Item
+              </FieldItem>
+              <FieldItem
                 label="SKU (mã hàng)"
                 extra="Mã cửa hàng đang dùng, ví dụ TD-02. Bỏ trống để hệ thống tự sinh; không sửa được sau khi tạo."
-                validateStatus={form.formState.errors.variants?.[index]?.sku ? 'error' : undefined}
-                help={form.formState.errors.variants?.[index]?.sku?.message}
+                error={errors?.[index]?.sku}
               >
-                <Controller
-                  name={`variants.${index}.sku`}
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input {...field} maxLength={40} placeholder="Bỏ trống để tự sinh" onChange={(event) => field.onChange(event.target.value.toUpperCase())} />
-                  )}
-                />
-              </Form.Item>
-              <Form.Item
-                label="Barcode"
-                validateStatus={form.formState.errors.variants?.[index]?.barcode ? 'error' : undefined}
-                help={form.formState.errors.variants?.[index]?.barcode?.message}
-              >
+                <Controller name={`variants.${index}.sku`} control={form.control} render={({ field }) => <SkuInput {...field} />} />
+              </FieldItem>
+              <FieldItem label="Barcode" error={errors?.[index]?.barcode}>
                 <Controller
                   name={`variants.${index}.barcode`}
                   control={form.control}
                   render={({ field }) => <Input {...field} maxLength={64} placeholder="Không bắt buộc" />}
                 />
-              </Form.Item>
-              {([
-                ['weightGrams', 'Khối lượng (g)', 0],
-                ['lengthMm', 'Dài (mm)', 1],
-                ['widthMm', 'Rộng (mm)', 1],
-                ['heightMm', 'Cao (mm)', 1],
-              ] as const).map(([fieldName, label, min]) => {
-                const error = form.formState.errors.variants?.[index]?.[fieldName];
-                return (
-                  <Form.Item
-                    key={fieldName}
-                    label={label}
-                    validateStatus={error ? 'error' : undefined}
-                    help={error?.message}
-                  >
-                    <Controller
-                      name={`variants.${index}.${fieldName}`}
-                      control={form.control}
-                      render={({ field }) => (
-                        <InputNumber
-                          className="!w-full"
-                          min={min}
-                          precision={0}
-                          value={field.value}
-                          onBlur={field.onBlur}
-                          onChange={(value) => field.onChange(value ?? undefined)}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                );
-              })}
+              </FieldItem>
+              {VARIANT_DIMENSION_FIELDS.map(([fieldName, label, min]) => (
+                <FieldItem key={fieldName} label={label} error={errors?.[index]?.[fieldName]}>
+                  <Controller
+                    name={`variants.${index}.${fieldName}`}
+                    control={form.control}
+                    render={({ field }) => (
+                      <VariantNumberInput min={min} value={field.value} onBlur={field.onBlur} onChange={field.onChange} />
+                    )}
+                  />
+                </FieldItem>
+              ))}
               {/* Chỉ người có quyền giá mới thấy ô này: gửi giá mà thiếu quyền thì API từ chối cả lệnh tạo. */}
               {canManagePrice && (
-                <Form.Item
+                <FieldItem
                   label="Giá bán (đã gồm VAT)"
                   extra="Bỏ trống nếu chưa chốt giá; sản phẩm chỉ xuất bản được khi SKU đã có giá."
-                  validateStatus={form.formState.errors.variants?.[index]?.price ? 'error' : undefined}
-                  help={form.formState.errors.variants?.[index]?.price?.message}
+                  error={errors?.[index]?.price}
                 >
                   <Controller
                     name={`variants.${index}.price`}
@@ -163,7 +130,7 @@ export function ProductVariantsTab({
                       />
                     )}
                   />
-                </Form.Item>
+                </FieldItem>
               )}
             </div>
           </Card>
@@ -174,12 +141,11 @@ export function ProductVariantsTab({
         type="dashed"
         block
         icon={<PlusOutlined />}
-        disabled={variantFields.fields.length >= 50}
+        disabled={variantFields.fields.length >= MAX_VARIANTS}
         onClick={() => variantFields.append(emptyVariant())}
       >
         Thêm biến thể
       </Button>
-      </FormSection>
-    </div>
+    </FormSection>
   );
 }

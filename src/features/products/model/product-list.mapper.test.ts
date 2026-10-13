@@ -24,6 +24,7 @@ describe('toProductListRow', () => {
     expect(row.secondaryLabel).toBe('SP000012 · DCTD · Cardio');
     expect(row.priceLabel).toContain('12.500.000');
     expect(row).not.toHaveProperty('imageUrl');
+    expect(row).toMatchObject({ productTypeLabel: 'Thường', isBundle: false });
     expect(dto.imageUrl).toBeNull();
   });
 });

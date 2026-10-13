@@ -1,10 +1,22 @@
 # Dashboard — maintenance note
 
-> **Document version:** 2.3.0
+> **Document version:** 2.4.0
 >
-> **Last updated:** 2026-10-10
+> **Last updated:** 2026-10-13
 >
-> **Change summary:** Gộp hai bảng top khách/sản phẩm thành `TopRankingCard`; đường dẫn tải báo cáo lấy từ query key sinh ra (`REPORT_EXPORT_PATH`).
+> **Change summary:** Vỏ thẻ + chuỗi trạng thái dùng chung (`DashboardCard`/`CardStateBody`); KPI hiện lỗi thay vì 0; chuỗi kỳ điền kỳ trống theo giờ VN; bộ chọn kỳ chuyển lên hero.
+
+## Trình bày
+
+- Mọi khối dùng `components/dashboard-card.tsx`: `DashboardCard` (vỏ + header) và `CardStateBody`
+  (thiếu quyền → lỗi → đang tải → rỗng → nội dung, cùng `minHeight` để không giật layout).
+- KPI mang `status` (`ready|loading|error|denied`) theo đúng endpoint; lỗi hiện `—` + "Thử lại",
+  **không** hiện 0. Chỉ thẻ `ready` mới là link sang màn danh sách.
+- Bộ chọn kỳ nằm ở hero; khối tổng quan (đơn hôm nay, đang chờ giao, đơn theo trạng thái, tồn) ghi
+  kỳ riêng vì Backend cố định 30 ngày/hiện tại.
+- `toRevenueSeries` điền kỳ trống bằng 0 (khoá kỳ theo giờ Việt Nam như `vietnam-time.ts`), trả
+  rỗng khi Backend không có điểm nào để thẻ hiện empty state.
+- Donut trạng thái tối đa `CHART_COLORS.length` lát; phần đuôi gộp "Khác". Chú giải là HTML (số + %).
 
 ## Biểu đồ và bảng màu
 
@@ -35,12 +47,14 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 | `getAdminReportRevenue`     | `report.revenue.view`   | Thẻ doanh thu, biểu đồ theo ngày          |
 | `getAdminReportInventory`   | `report.inventory.view` | Thẻ tồn dưới ngưỡng, bảng cần nhập thêm   |
 | `getAdminReportTopProducts` | `report.revenue.view`   | Bảng bán chạy                             |
+| `getAdminReportTopCustomers` | `report.revenue.view`  | Bảng khách mua nhiều                      |
+| `listAdminOrders` + `confirmAdminOrder` | `order.view` / `order.manage` | Thẻ đơn chờ xác nhận |
+| `listJobHealth`             | `system.module.view`    | Thẻ tác vụ nền                            |
 
 ## Bất biến
 
-- **Doanh thu là tiền đã thực nhận**, chỉ cộng đơn có `paymentStatus = SUCCESS`. Đơn COD chưa
-  giao và chuyển khoản chờ xác nhận nằm ở `pendingRevenue`, không trộn vào doanh thu — trộn vào
-  là báo lãi cho khoản tiền chưa về.
+- **Doanh thu theo vòng đời đơn**: thuần = đơn `COMPLETED` (cắt theo `completedAt`) trừ hoàn tiền
+  `SUCCEEDED` trong kỳ; đơn `DELIVERED` là dự thu. Định nghĩa nằm ở `reporting.service.ts`.
 - **Số liệu bị giới hạn theo phạm vi chi nhánh** của người đăng nhập. Quản lý chi nhánh không
   nhìn thấy doanh thu toàn hệ thống.
 - **Không gọi API doanh thu khi thiếu quyền.** `report.revenue.view` và `report.inventory.view`
@@ -66,9 +80,10 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 
 ## Revision history
 
-| Version | Date       | Change summary                                                         |
-| ------- | ---------- | ---------------------------------------------------------------------- |
+| Version | Date       | Change summary                                                             |
+| ------- | ---------- | -------------------------------------------------------------------------- |
+| 2.4.0   | 2026-10-13 | Card shell chung, KPI lỗi ≠ 0, điền kỳ trống, donut gộp "Khác", bộ chọn kỳ ở hero. |
 | 2.3.0   | 2026-10-10 | `TopRankingCard` dùng chung; `REPORT_EXPORT_PATH` thay đường dẫn viết tay. |
-| 2.1.0   | 2026-09-18 | Làm mới hierarchy, KPI, biểu đồ và thẻ đơn chờ; loading theo từng API. |
-| 2.0.0   | 2026-09-15 | Chuyển sang số liệu kinh doanh thật; gỡ `system-module-list`.          |
-| 1.0.0   | 2026-09-04 | Bản đầu, hiển thị tiến độ rà soát model.                               |
+| 2.1.0   | 2026-09-18 | Làm mới hierarchy, KPI, biểu đồ và thẻ đơn chờ; loading theo từng API.     |
+| 2.0.0   | 2026-09-15 | Chuyển sang số liệu kinh doanh thật; gỡ `system-module-list`.              |
+| 1.0.0   | 2026-09-04 | Bản đầu, hiển thị tiến độ rà soát model.                                   |

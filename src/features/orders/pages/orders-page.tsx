@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { PosOrderDrawer } from '@/features/pos';
@@ -28,7 +28,9 @@ import { PageTransition } from '@/foundation/layout/page-transition';
 import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
-import { moneyFormatter, ORDER_COLUMN_ITEMS, orderTabs } from '../constants/order.constants';
+import { moneyFormatter } from '@/lib/format/money';
+import { ORDER_COLUMN_ITEMS, orderTabs } from '../constants/order.constants';
+import { toOrderRow } from '../model/order.mapper';
 
 // Nạp lười để phá vòng chunk tĩnh orders ↔ fulfillments (FulfillmentsPage lại import OrderDetailDrawer
 // từ barrel orders); vẫn đi qua barrel theo RULE-FA-03.
@@ -68,8 +70,7 @@ export function OrdersPage() {
     recipientName: url.get('name'),
     recipientPhone: url.get('phone'),
   });
-  const rows = orders.data?.items ?? [];
-
+  const rows = useMemo(() => (orders.data?.items ?? []).map(toOrderRow), [orders.data]);
   const totalValue = rows.reduce((sum, order) => sum + Number(order.grandTotal), 0);
 
   return (

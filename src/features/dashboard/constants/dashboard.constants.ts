@@ -36,9 +36,30 @@ export const PERIOD_DESCRIPTION: Record<Granularity, string> = {
   YEAR: '5 năm gần nhất',
 };
 
-/** Màn hình chỉ hiện top 5; file tải về là toàn bộ danh sách của khoảng đang xem. */
+/** Màn hình chỉ hiện top 5; file tải về lấy mức tối đa Backend cho phép (`@Max(50)`). */
 export const TOP_LIST_LIMIT = 5;
 export const TOP_LIST_EXPORT_LIMIT = 50;
+
+/** Báo cáo tổng quan luôn tính trên 30 ngày (Backend `DEFAULT_RANGE_DAYS`), không theo bộ chọn kỳ. */
+export const OVERVIEW_PERIOD = '30 ngày gần nhất';
+
+/**
+ * Bảng màu phân loại, thứ tự cố định — không bao giờ xoay vòng sang màu thứ 7.
+ *
+ * Bảng cũ (`#059669,#0ea5e9,#8b5cf6,#f59e0b,#ef4444,#ec4899`) trượt kiểm tra: cặp hồng/đỏ cạnh nhau
+ * chỉ cách ΔE 11.4 với mắt thường (ngưỡng 15), và hai màu xanh/cam dưới 3:1 tương phản với nền.
+ * Đặt ở đây (không import `recharts`) để chú giải HTML dùng chung màu mà không kéo thư viện đồ thị.
+ */
+export const CHART_COLORS = [
+  '#047857',
+  '#0284c7',
+  '#a16207',
+  '#7c3aed',
+  '#dc2626',
+  '#0891b2',
+] as const;
+/** Số lát tối đa của biểu đồ tròn; phần còn lại gộp thành "Khác" để không lặp màu. */
+export const MAX_STATUS_SLICES = CHART_COLORS.length;
 
 /**
  * CONTRACT: Endpoint tải báo cáo. SDK sinh không có hàm dựng URL, còn hàm `export*` trả Blob nên mất
@@ -54,4 +75,8 @@ export const REPORT_EXPORT_PATH = {
   topCustomers: getExportAdminReportTopCustomersQueryKey()[0],
 } as const;
 
-export const DASHBOARD_CARD_CLASS = '!rounded-2xl !border-slate-200/80 !shadow-card';
+/** PERMISSION: lý do thẻ trống khi thiếu quyền; UI chỉ không gọi API, Backend vẫn là nơi chặn. */
+export const DENIED_TEXT = {
+  revenue: 'Tài khoản của bạn không có quyền xem doanh thu',
+  operation: 'Tài khoản của bạn không có quyền xem vận hành',
+} as const;

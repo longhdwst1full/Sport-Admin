@@ -1,16 +1,16 @@
 # Products — maintenance note
 
-> **Document version:** 2.1.0
+> **Document version:** 2.2.0
 >
-> **Last updated:** 2026-09-26
+> **Last updated:** 2026-10-13
 >
-> **Change summary:** Gộp 7 tab của workspace thành 3 tab (Thông tin · SKU, giá & tồn kho · Kiểm tra xuất bản) cho cả Tạo và Sửa; Combo thành khối trong tab SKU, chỉ hiện với BUNDLE; bỏ `visibleProductTabs`.
+> **Change summary:** Tách `use-product-workspace` thành `use-product-create` + `use-product-lifecycle` (dùng chung với menu danh sách); menu danh sách gate Xuất bản/Lưu trữ theo `catalog.product.publish` và lưu trữ qua `archiveAdminProduct`; cache invalidation gom ở `hooks/product-query-cache.ts`; khối ảnh khoá khi thiếu `catalog.product.manage` hoặc sản phẩm đã lưu trữ.
 
 ## Workspace Tạo/Sửa
 
 `components/product-workspace-drawer.tsx` là **nơi duy nhất** tạo và sửa sản phẩm (rộng 1040px). Mở không
 có `slug` là Tạo, có `slug` là Sửa; tạo xong drawer đóng, danh sách được invalidate và về trang 1; riêng khi tồn đầu lỗi, workspace chuyển tại chỗ sang Sửa để ghi lại tồn đầu.
-State/query/lệnh nằm ở `hooks/use-product-workspace.ts` (tra cứu ở `use-product-form-lookups.ts`, schema +
+State/query/lệnh nằm ở `hooks/use-product-workspace.ts` (lệnh Tạo + tồn đầu ở `use-product-create.ts`, Xuất bản/Lưu trữ/Đưa về nháp ở `use-product-lifecycle.ts`, tra cứu ở `use-product-form-lookups.ts`, schema +
 map lỗi API → ô ở `model/product-form.schema.ts`); header/footer là `product-workspace-{header-actions,footer}.tsx`.
 Mỗi lần mở là một phiên mới: `ProductsPage` đổi `key` (`session`) nên state và khoá idempotency khởi tạo
 lại khi mount, không reset trong effect.
@@ -30,7 +30,15 @@ chỉ thông báo Combo lúc Tạo (không có tiêu đề riêng) được thê
 | | Combo (chỉ BUNDLE) | thông báo: khai sau khi tạo (cần SKU thật) | `product-bundle-manager.tsx` — lưu ngay |
 | Kiểm tra xuất bản | — | tóm tắt từ `watch()` | tóm tắt + checklist `getAdminProductSetupStatus` |
 
-Xuất bản / Lưu trữ / Đưa về nháp nằm ở header workspace (và menu của danh sách).
+Xuất bản / Lưu trữ / Đưa về nháp nằm ở header workspace (và menu của danh sách), cùng một hook
+`use-product-lifecycle.ts` nên cùng nội dung xác nhận và cache invalidation.
+
+PERMISSION (chỉ ẩn/khoá ở UI, API vẫn kiểm): lệnh vòng đời cần `catalog.product.publish`; sửa thông tin, SKU,
+ảnh, combo và công tắc hiển thị cần `catalog.product.manage`; ảnh tải mới cần thêm `media.asset.upload`; giá cần
+`catalog.price.manage`. Sản phẩm `ARCHIVED`: API chặn sửa thông tin/SKU/ảnh, UI khoá theo.
+
+CACHE: `hooks/product-query-cache.ts` — `invalidateProductQueries` (danh sách + detail theo slug + setup-status theo
+id) sau mọi lệnh ghi sản phẩm; `invalidateStockQueries` (số dư, sổ kho, phiếu điều chỉnh) sau phiếu tồn đầu.
 
 `model/product-form-tabs.ts` giữ bộ 3 tab (`PRODUCT_FORM_TABS`), `productTabFields` (trường theo tab gộp
 và chế độ: thông tin/ảnh/thông số → `info`; SKU/giá/tồn đầu → `variants`) và `validateProductTabs` — nhảy
@@ -63,7 +71,7 @@ khối Combo nằm trong nội dung tab SKU. Khi Sửa không validate SKU/ảnh
 | Tầng | File |
 | --- | --- |
 | `pages/` | `products-page.tsx` — chỉ compose trang, toolbar, table và drawer |
-| `hooks/` | `use-product-list.ts` sở hữu query/filter/pagination; `use-product-list-actions.tsx` sở hữu permission, mutation, confirm và cache invalidation |
+| `hooks/` | `use-product-list.ts` sở hữu query/filter/pagination; `use-product-list-actions.tsx` sở hữu permission, công tắc hiển thị và nối `use-product-lifecycle.ts` |
 | `components/` | `product-list-toolbar`, `product-list-table` và các drawer/panel nghiệp vụ |
 | `constants/` | Hằng số page size của danh sách, không đặt trong page/hook/component |
 | `model/` | `product-list.mapper.ts` tạo view model bất biến; policy/mapper nghiệp vụ khác đều có `.test.ts` |
@@ -72,7 +80,7 @@ Import từ ngoài chỉ qua `index.ts`.
 
 ## Generated operation
 
-Các operation từ `src/generated/api/catalog/catalog.ts` (kiểu ở `catalog.schemas.ts`), gồm `useListAdminProducts`, `useGetAdminProduct`, `useCreateAdminProduct`, `useUpdateAdminProduct`, `usePublishAdminProduct`, `useArchiveAdminProduct`, `useReactivateAdminProduct`, nhóm variant (`create/update/archive/reactivate`), media (`attach/update/reorder/archive/delete`), giá (`create/replace/timeline`), bundle, `getAdminProductSetupStatus`, `listAdminAttributes`; `deleteAdminProduct` dùng cho mục Lưu trữ ở menu danh sách (lưu trữ logic).
+Các operation từ `src/generated/api/catalog/catalog.ts` (kiểu ở `catalog.schemas.ts`), gồm `useListAdminProducts`, `useGetAdminProduct`, `useCreateAdminProduct`, `useUpdateAdminProduct`, `usePublishAdminProduct`, `useArchiveAdminProduct`, `useReactivateAdminProduct`, nhóm variant (`create/update/archive/reactivate`), media (`attach/update/reorder/archive/delete`), giá (`create/replace/timeline`), bundle, `getAdminProductSetupStatus`, `listAdminAttributes`; mục Lưu trữ ở menu danh sách dùng `archiveAdminProduct` (lưu trữ logic; `deleteAdminProduct` cùng hiệu ứng nhưng không dùng).
 
 ## Quyết định đã ghi
 
@@ -121,6 +129,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.2.0 | 2026-10-13 | Tách hook Tạo/vòng đời, gate lệnh vòng đời ở danh sách theo `catalog.product.publish`, cache helper chung, khoá khối ảnh khi lưu trữ/thiếu quyền. |
 | 2.1.0 | 2026-09-26 | Gộp 7 tab thành 3 tab (Thông tin · SKU, giá & tồn kho · Kiểm tra xuất bản); Combo là khối trong tab SKU chỉ với BUNDLE; validate map lỗi về tab gộp. |
 | 2.0.0 | 2026-09-26 | `ProductWorkspaceDrawer` hợp nhất Tạo/Sửa (7 tab), thông số trong create/update, retry tồn đầu, Playwright PRD-10..12. |
 | 1.8.0 | 2026-09-21 | Màn tạo chia bốn tab, validate theo tab. |

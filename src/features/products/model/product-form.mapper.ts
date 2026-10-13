@@ -8,16 +8,9 @@ import type {
 } from '@/generated/api/catalog/catalog.schemas';
 import { toInitialPriceAmount } from './product-initial-setup';
 import { toSpecificationRows, type SpecificationRow } from './product-specifications';
+import { toCreateVariantDto, toVariantEditValues, type VariantFieldValues } from './variant-edit.mapper';
 
-export interface ProductVariantFormValues {
-  name: string;
-  /** Mã hàng của cửa hàng; bỏ trống thì API tự sinh. */
-  sku?: string;
-  barcode?: string;
-  weightGrams?: number;
-  lengthMm?: number;
-  widthMm?: number;
-  heightMm?: number;
+export interface ProductVariantFormValues extends VariantFieldValues {
   openingQuantity: number;
   /** Giá bán đã gồm VAT, nhập ngay ở màn tạo; gửi kèm lệnh tạo (cùng transaction với SKU). */
   price?: string;
@@ -57,21 +50,13 @@ export const emptyVariant = (): ProductVariantFormValues => ({
 
 const optionalText = (value?: string): string | undefined => value?.trim() || undefined;
 
-const toCreateVariantDto = (
+const toCreateProductVariantDto = (
   variant: ProductVariantFormValues,
   includePrices: boolean,
-): CreateProductVariantDto => ({
-  name: variant.name.trim(),
-  ...(optionalText(variant.sku) ? { sku: optionalText(variant.sku)?.toUpperCase() } : {}),
-  ...(optionalText(variant.barcode) ? { barcode: optionalText(variant.barcode) } : {}),
-  weightGrams: variant.weightGrams ?? 0,
-  ...(variant.lengthMm === undefined ? {} : { lengthMm: variant.lengthMm }),
-  ...(variant.widthMm === undefined ? {} : { widthMm: variant.widthMm }),
-  ...(variant.heightMm === undefined ? {} : { heightMm: variant.heightMm }),
-  ...(includePrices && toInitialPriceAmount(variant.price)
-    ? { initialPriceAmount: toInitialPriceAmount(variant.price) }
-    : {}),
-});
+): CreateProductVariantDto => {
+  const initialPriceAmount = includePrices ? toInitialPriceAmount(variant.price) : undefined;
+  return { ...toCreateVariantDto(variant), ...(initialPriceAmount ? { initialPriceAmount } : {}) };
+};
 
 /**
  * `includePrices` chỉ bật khi tài khoản có `catalog.price.manage`: API trả 403 cho CẢ lệnh tạo nếu gửi
@@ -93,7 +78,7 @@ export const toCreateProductDto = (
   ...(optionalText(values.description) ? { description: optionalText(values.description) } : {}),
   categoryIds: values.categoryIds,
   primaryCategoryId: values.primaryCategoryId,
-  variants: values.variants.map((variant) => toCreateVariantDto(variant, includePrices)),
+  variants: values.variants.map((variant) => toCreateProductVariantDto(variant, includePrices)),
   ...(values.images.length > 0
     ? { media: values.images.map(({ assetId }) => ({ mediaAssetId: assetId })) }
     : {}),
@@ -123,15 +108,7 @@ export const toUpdateProductDto = (
 export const toProductFormValues = (
   product: ProductDetailDto,
 ): ProductFormValues => {
-  const variants = product.variants.map((variant) => ({
-    name: variant.name,
-    barcode: variant.barcode ?? '',
-    weightGrams: variant.weightGrams,
-    lengthMm: variant.lengthMm ?? undefined,
-    widthMm: variant.widthMm ?? undefined,
-    heightMm: variant.heightMm ?? undefined,
-    openingQuantity: 0,
-  }));
+  const variants = product.variants.map((variant) => ({ ...toVariantEditValues(variant), openingQuantity: 0 }));
   return {
     productType: product.productType,
     name: product.name,

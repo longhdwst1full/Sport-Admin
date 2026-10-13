@@ -1,27 +1,31 @@
-import { useMemo, useRef } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Form, Input, Select, Space, Spin, Typography } from 'antd';
+import { Alert, App, Button, Card, Form, Input, Select, Space, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, col } from '@/foundation/table';
-import { MoneyInput } from '@/foundation/inputs/money-input';
+import { useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
-import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
+import { useCan } from '@/core/auth/permissions';
+import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { MoneyInput } from '@/foundation/inputs/money-input';
+import { AdminTable, col } from '@/foundation/table';
 import {
   getGetAdminProductPriceTimelineQueryKey,
   useCreateAdminProductPrice,
   useGetAdminProductPriceTimeline,
   useReplaceAdminProductPrice,
 } from '@/generated/api/catalog/catalog';
-import type { ProductDetailDto, ProductPriceWindowDto } from '@/generated/api/catalog/catalog.schemas';
+import type { ProductPriceWindowDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { useCan } from '@/core/auth/permissions';
 import { formatDateTime } from '@/lib/format/datetime';
 import { formatMoney } from '@/lib/format/money';
+import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
 import { PRODUCT_PRICE_STATUS_PRESENTATION } from '../constants/product-status.constants';
+import { INITIAL_PRICE_PATTERN } from '../model/product-initial-setup';
 import { toVariantOptions } from '../model/product-lookup-options';
+import { FieldItem } from './product-form/form-field-parts';
+import type { ProductPanelProps } from './product-form/types';
 
 interface PriceFormValues {
   variantId: string;
@@ -32,10 +36,13 @@ interface PriceFormValues {
 
 const schema: yup.ObjectSchema<PriceFormValues> = yup.object({
   variantId: yup.string().matches(ENTITY_ID_PATTERN, 'SKU không hợp lệ').required('Chọn SKU'),
-  amount: yup.string().trim().matches(/^(?=.*[1-9])\d+(?:\.\d{1,2})?$/, 'Giá phải lớn hơn 0').required('Nhập giá bán'),
+  amount: yup.string().trim().matches(INITIAL_PRICE_PATTERN, 'Giá phải lớn hơn 0').required('Nhập giá bán'),
   startsAt: yup.string().required('Chọn thời điểm áp dụng'),
   reason: yup.string().trim().max(500, 'Tối đa 500 ký tự').optional(),
 });
+
+/** CONTRACT: API bắt buộc lý do khi giảm quá 20% so với giá tham chiếu (`CreatePriceDto.reason`). */
+const LARGE_REDUCTION_RATIO = 0.2;
 
 const inputNow = () => {
   const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60_000);
@@ -49,13 +56,7 @@ const PRICE_COLUMNS: ColumnsType<ProductPriceWindowDto> = [
   col.status<ProductPriceWindowDto, string>('status', 'Trạng thái', PRODUCT_PRICE_STATUS_PRESENTATION, { width: undefined }),
 ];
 
-export function ProductPricePanel({
-  product,
-  onChanged,
-}: {
-  product: ProductDetailDto;
-  onChanged: () => Promise<void>;
-}) {
+export function ProductPricePanel({ product, onChanged }: ProductPanelProps) {
   const { message, modal } = App.useApp();
   const canManage = useCan('catalog.price.manage');
   const queryClient = useQueryClient();
@@ -97,16 +98,16 @@ export function ProductPricePanel({
   const openWindow = timeline.data?.upcoming.at(-1)
     ?? (timeline.data?.current?.endsAt ? undefined : timeline.data?.current);
 
-  // CONTRACT: lý do bắt buộc khi giảm quá 20% so với giá tham chiếu (`CreatePriceDto.reason`).
   const reductionRatio = (amount: string) => {
     const reference = openWindow ? Number(openWindow.amount) : undefined;
     return reference && reference > 0 && amount ? (reference - Number(amount)) / reference : 0;
   };
-  const reasonRequired = reductionRatio(form.watch('amount')) > 0.2;
+  const reasonRequired = reductionRatio(form.watch('amount')) > LARGE_REDUCTION_RATIO;
 
   const submit = form.handleSubmit((values) => {
     const reduction = reductionRatio(values.amount);
-    if (reduction > 0.2 && !values.reason?.trim()) {
+    const largeReduction = reduction > LARGE_REDUCTION_RATIO;
+    if (largeReduction && !values.reason?.trim()) {
       form.setError('reason', { message: 'Bắt buộc nhập lý do khi giảm giá quá 20%' });
       return;
     }
@@ -128,109 +129,134 @@ export function ProductPricePanel({
         });
 
     modal.confirm({
-      title: reduction > 0.2 ? 'Xác nhận giảm giá trên 20%' : 'Xác nhận lịch giá',
-      content: reduction > 0.2
+      title: largeReduction ? 'Xác nhận giảm giá trên 20%' : 'Xác nhận lịch giá',
+      content: largeReduction
         ? `Giá giảm ${(reduction * 100).toFixed(1)}%. Lý do sẽ được lưu vào audit và không thể sửa lịch sử.`
         : 'Lịch giá cũ sẽ được giữ nguyên để truy vết; giá mới bắt đầu đúng thời điểm đã chọn.',
       okText: 'Xác nhận lưu',
       cancelText: 'Kiểm tra lại',
-      okButtonProps: { danger: reduction > 0.2 },
+      okButtonProps: { danger: largeReduction },
       onOk: run,
     });
   });
+
+  const errors = form.formState.errors;
+  const timelineLoading = Boolean(variantId) && timeline.isLoading;
 
   return (
     <Card className="border-emerald-100 bg-emerald-50/30" title={<Space><DollarOutlined /> Quản lý lịch giá</Space>}>
       <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
         {canManage ? (
           <Form layout="vertical" onFinish={() => void submit()}>
-          <Form.Item label="SKU" required validateStatus={form.formState.errors.variantId ? 'error' : undefined} help={form.formState.errors.variantId?.message}>
-            <Controller name="variantId" control={form.control} render={({ field }) => (
-              <Select
-                {...field}
-                placeholder="Chọn SKU cần đặt giá"
-                options={variantOptions}
+            <FieldItem label="SKU" required error={errors.variantId}>
+              <Controller
+                name="variantId"
+                control={form.control}
+                render={({ field }) => <Select {...field} placeholder="Chọn SKU cần đặt giá" options={variantOptions} />}
               />
-            )} />
-          </Form.Item>
-          <Form.Item label="Giá bán đã VAT (VND)" required validateStatus={form.formState.errors.amount ? 'error' : undefined} help={form.formState.errors.amount?.message}>
-            {/* Giá niêm yết 6-8 chữ số: không có dấu phân cách thì 1890000 và 18900000 nhìn gần
-                như nhau, và sai một chữ số là sai giá gấp mười lần. Form giữ giá dạng chuỗi thập
-                phân vì contract nhận `1990000.00`, nên chuyển qua lại ở đúng chỗ này. */}
-            <Controller
-              name="amount"
-              control={form.control}
-              render={({ field }) => (
-                <MoneyInput
-                  className="!w-full"
-                  prefix="₫"
-                  placeholder="Nhập giá bán..."
-                  value={field.value ? Number(field.value) : undefined}
-                  onBlur={field.onBlur}
-                  onChange={(value) => field.onChange(value == null ? '' : String(value))}
-                />
-              )}
-            />
-          </Form.Item>
-          <Form.Item label="Áp dụng từ" required validateStatus={form.formState.errors.startsAt ? 'error' : undefined} help={form.formState.errors.startsAt?.message}>
-            <Controller name="startsAt" control={form.control} render={({ field }) => <Input {...field} type="datetime-local" prefix={<CalendarOutlined />} />} />
-          </Form.Item>
-          <Form.Item label="Lý do / ghi chú" required={reasonRequired} validateStatus={form.formState.errors.reason ? 'error' : undefined} help={form.formState.errors.reason?.message ?? 'Bắt buộc nếu giá giảm trên 20%.'}>
-            <Controller name="reason" control={form.control} render={({ field }) => <Input.TextArea {...field} rows={3} maxLength={500} showCount placeholder="Nhập lý do hoặc ghi chú..." />} />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" block loading={createPrice.isPending || replacePrice.isPending} disabled={!variantId}>
-            {openWindow ? 'Lập giá thay thế' : 'Tạo giá đầu tiên'}
-          </Button>
-        </Form>
+            </FieldItem>
+            <FieldItem label="Giá bán đã VAT (VND)" required error={errors.amount}>
+              {/* Giá niêm yết 6-8 chữ số: không có dấu phân cách thì 1890000 và 18900000 nhìn gần
+                  như nhau, và sai một chữ số là sai giá gấp mười lần. Form giữ giá dạng chuỗi thập
+                  phân vì contract nhận `1990000.00`, nên chuyển qua lại ở đúng chỗ này. */}
+              <Controller
+                name="amount"
+                control={form.control}
+                render={({ field }) => (
+                  <MoneyInput
+                    className="!w-full"
+                    prefix="₫"
+                    placeholder="Nhập giá bán..."
+                    value={field.value ? Number(field.value) : undefined}
+                    onBlur={field.onBlur}
+                    onChange={(value) => field.onChange(value == null ? '' : String(value))}
+                  />
+                )}
+              />
+            </FieldItem>
+            <FieldItem label="Áp dụng từ" required error={errors.startsAt}>
+              <Controller
+                name="startsAt"
+                control={form.control}
+                render={({ field }) => <Input {...field} type="datetime-local" prefix={<CalendarOutlined />} />}
+              />
+            </FieldItem>
+            <FieldItem
+              label="Lý do / ghi chú"
+              required={reasonRequired}
+              error={errors.reason}
+              help={`Bắt buộc nếu giá giảm trên ${LARGE_REDUCTION_RATIO * 100}%.`}
+            >
+              <Controller
+                name="reason"
+                control={form.control}
+                render={({ field }) => (
+                  <Input.TextArea {...field} rows={3} maxLength={500} showCount placeholder="Nhập lý do hoặc ghi chú..." />
+                )}
+              />
+            </FieldItem>
+            <Button type="primary" htmlType="submit" block loading={createPrice.isPending || replacePrice.isPending} disabled={!variantId}>
+              {openWindow ? 'Lập giá thay thế' : 'Tạo giá đầu tiên'}
+            </Button>
+          </Form>
         ) : (
-            <Alert
-              showIcon
-              type="info"
-              message="Chỉ xem lịch giá"
-              description="Tài khoản này không có quyền tạo hoặc thay giá."
-            />
+          <Alert showIcon type="info" message="Chỉ xem lịch giá" description="Tài khoản này không có quyền tạo hoặc thay giá." />
         )}
 
         <div className="min-w-0 space-y-4">
-          {timeline.isError && <Alert showIcon type="error" message="Không tải được lịch giá" description={getApiErrorMessage(timeline.error, 'Vui lòng thử lại.')} />}
-          <div>
-            <Typography.Title level={5}>Giá hiện tại</Typography.Title>
-            {timeline.isLoading && Boolean(variantId) ? (
-              <div className="py-4 text-center">
-                <Spin size="small" />
-              </div>
-            ) : timeline.data?.current ? (
-              <AdminTable<ProductPriceWindowDto> size="small" rowKey="id" pagination={false} dataSource={[timeline.data.current]} columns={PRICE_COLUMNS} />
-            ) : (
-              <Typography.Text type="secondary">Chưa có giá đang hiệu lực.</Typography.Text>
-            )}
-          </div>
-          <div>
-            <Typography.Title level={5}>Sắp áp dụng</Typography.Title>
-            <AdminTable<ProductPriceWindowDto>
-              size="small"
-              rowKey="id"
-              loading={Boolean(variantId) && timeline.isLoading}
-              pagination={false}
-              dataSource={timeline.data?.upcoming ?? []}
-              columns={PRICE_COLUMNS}
-              locale={{ emptyText: 'Chưa có giá tương lai' }}
-            />
-          </div>
-          <div>
-            <Typography.Title level={5}>Lịch sử bất biến</Typography.Title>
-            <AdminTable<ProductPriceWindowDto>
-              size="small"
-              rowKey="id"
-              loading={Boolean(variantId) && timeline.isLoading}
-              pagination={{ pageSize: 5, hideOnSinglePage: true }}
-              dataSource={timeline.data?.history ?? []}
-              columns={PRICE_COLUMNS}
-              locale={{ emptyText: 'Chưa có lịch sử giá' }}
-            />
-          </div>
+          {timeline.isError && (
+            <QueryErrorAlert error={timeline.error} message="Không tải được lịch giá" retry={() => void timeline.refetch()} />
+          )}
+          <PriceWindowTable
+            title="Giá hiện tại"
+            loading={timelineLoading}
+            rows={timeline.data?.current ? [timeline.data.current] : []}
+            emptyText="Chưa có giá đang hiệu lực"
+          />
+          <PriceWindowTable
+            title="Sắp áp dụng"
+            loading={timelineLoading}
+            rows={timeline.data?.upcoming ?? []}
+            emptyText="Chưa có giá tương lai"
+          />
+          <PriceWindowTable
+            title="Lịch sử bất biến"
+            loading={timelineLoading}
+            rows={timeline.data?.history ?? []}
+            emptyText="Chưa có lịch sử giá"
+            paginated
+          />
         </div>
       </div>
     </Card>
+  );
+}
+
+function PriceWindowTable({
+  title,
+  loading,
+  rows,
+  emptyText,
+  paginated = false,
+}: {
+  title: string;
+  loading: boolean;
+  rows: ProductPriceWindowDto[];
+  emptyText: string;
+  paginated?: boolean;
+}) {
+  return (
+    <div>
+      <Typography.Title level={5}>{title}</Typography.Title>
+      <AdminTable<ProductPriceWindowDto>
+        size="small"
+        rowKey="id"
+        loading={loading}
+        pagination={paginated ? { pageSize: 5, hideOnSinglePage: true } : false}
+        dataSource={rows}
+        columns={PRICE_COLUMNS}
+        locale={{ emptyText }}
+      />
+    </div>
   );
 }

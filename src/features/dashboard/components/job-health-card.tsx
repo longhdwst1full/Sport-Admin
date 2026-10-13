@@ -1,11 +1,14 @@
-import { Alert, Card, Skeleton, Tooltip, Typography } from 'antd';
-import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { CloudServerOutlined } from '@ant-design/icons';
+import { Alert, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { TableSkeleton } from '@/foundation/feedback/page-skeleton';
 import { StatusTag, type StatusPresentation } from '@/foundation/management';
 import { AdminTable, col } from '@/foundation/table';
 import { useListJobHealth } from '@/generated/api/system/system';
 import { formatDateTime } from '@/lib/format/datetime';
 import type { JobHealthDto } from '@/generated/api/system/system.schemas';
+import { useQueryState } from '../hooks/use-dashboard-report';
+import { CardStateBody, DashboardCard } from './dashboard-card';
 
 const healthPresentation: Record<JobHealthDto['health'], StatusPresentation> = {
   HEALTHY: { label: 'Bình thường', color: 'success' },
@@ -21,7 +24,6 @@ const jobLabel: Record<string, string> = {
   'notification-dispatch': 'Gửi thông báo',
 };
 
-
 const JOB_HEALTH_COLUMNS: ColumnsType<JobHealthDto> = [
   {
     title: 'Tác vụ',
@@ -32,7 +34,9 @@ const JOB_HEALTH_COLUMNS: ColumnsType<JobHealthDto> = [
       </Tooltip>
     ),
   },
-  col.status<JobHealthDto, JobHealthDto['health']>('health', 'Trạng thái', healthPresentation, { width: 130 }),
+  col.status<JobHealthDto, JobHealthDto['health']>('health', 'Trạng thái', healthPresentation, {
+    width: 130,
+  }),
   {
     title: 'Thành công gần nhất',
     width: 160,
@@ -50,9 +54,8 @@ const JOB_HEALTH_COLUMNS: ColumnsType<JobHealthDto> = [
     dataIndex: 'consecutiveFailures',
     width: 110,
     align: 'right',
-    render: (value: number) => value > 0
-      ? <Typography.Text type="danger">{value}</Typography.Text>
-      : '—',
+    render: (value: number) =>
+      value > 0 ? <Typography.Text type="danger">{value}</Typography.Text> : '—',
   },
 ];
 
@@ -66,39 +69,46 @@ const JOB_HEALTH_COLUMNS: ColumnsType<JobHealthDto> = [
  */
 export function JobHealthCard() {
   const query = useListJobHealth({ query: { refetchInterval: 60_000 } });
+  const state = useQueryState(query);
   const items = query.data?.items ?? [];
   const down = items.filter((item) => item.health === 'DOWN');
-  const alertedButUnseen = items.filter((item) => item.health === 'DOWN' && item.lastStaleAlertAt);
+  const alertedButUnseen = down.some((item) => item.lastStaleAlertAt);
+  // UX: chỉ kết luận "bình thường" khi đã có dữ liệu; đang tải hoặc lỗi mà hiện xanh là báo sai.
+  const ready = !query.isPending && !query.isError;
 
   return (
-    <Card
-      variant="borderless"
+    <DashboardCard
+      icon={<CloudServerOutlined />}
       title="Tác vụ nền"
+      description="Tự làm mới mỗi phút"
       extra={
-        <StatusTag
-          status={down.length > 0 ? 'DOWN' : 'HEALTHY'}
-          presentations={{
-            ...healthPresentation,
-            DOWN: { label: `${down.length} đang chết`, color: 'danger' },
-            HEALTHY: { label: 'Tất cả bình thường', color: 'success' },
-          }}
-        />
+        ready ? (
+          <StatusTag
+            status={down.length > 0 ? 'DOWN' : 'HEALTHY'}
+            presentations={{
+              ...healthPresentation,
+              DOWN: { label: `${down.length} đang chết`, color: 'danger' },
+              HEALTHY: { label: 'Tất cả bình thường', color: 'success' },
+            }}
+          />
+        ) : undefined
       }
     >
-      {query.isError && <QueryErrorAlert error={query.error} retry={() => void query.refetch()} />}
-      {query.isPending && <Skeleton active paragraph={{ rows: 4 }} />}
-
-      {alertedButUnseen.length > 0 && (
-        <Alert
-          className="mb-4"
-          type="error"
-          showIcon
-          message="Hệ thống đã tự cảnh báo nhưng không ai nhận được"
-          description="Có job đã ghi cảnh báo vào nhật ký mà vẫn chết. Kênh gửi cảnh báo (Telegram) nhiều khả năng chưa cấu hình."
-        />
-      )}
-
-      {!query.isPending && !query.isError && (
+      <CardStateBody
+        state={state}
+        isEmpty={false}
+        emptyText=""
+        skeleton={<TableSkeleton rows={4} />}
+      >
+        {alertedButUnseen && (
+          <Alert
+            className="!mb-4"
+            type="error"
+            showIcon
+            message="Hệ thống đã tự cảnh báo nhưng không ai nhận được"
+            description="Có job đã ghi cảnh báo vào nhật ký mà vẫn chết. Kênh gửi cảnh báo (Telegram) nhiều khả năng chưa cấu hình."
+          />
+        )}
         <AdminTable
           rowKey="name"
           dataSource={items}
@@ -107,7 +117,7 @@ export function JobHealthCard() {
           locale={{ emptyText: 'Chưa có tác vụ nền nào.' }}
           columns={JOB_HEALTH_COLUMNS}
         />
-      )}
-    </Card>
+      </CardStateBody>
+    </DashboardCard>
   );
 }

@@ -13,9 +13,10 @@ const meta = {
     ),
   ],
   args: {
-    label: 'Doanh thu đã hoàn tất',
+    label: 'Doanh thu thuần',
+    period: '30 ngày gần nhất',
     value: '128.500.000 ₫',
-    hint: '24 đơn đã thu đủ tiền trong 30 ngày',
+    hint: '24 đơn hoàn tất · đã hoàn 0 ₫',
     icon: <DollarOutlined />,
     tone: 'brand',
   },
@@ -27,11 +28,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Loading: Story = {
-  args: { loading: true },
+  args: { status: 'loading' },
+};
+
+export const LoadError: Story = {
+  args: { status: 'error', value: '—', hint: 'Không tải được số liệu', retry: () => undefined },
 };
 
 export const Restricted: Story = {
   args: {
+    status: 'denied',
     value: '—',
     hint: 'Cần quyền xem doanh thu',
     tone: 'violet',

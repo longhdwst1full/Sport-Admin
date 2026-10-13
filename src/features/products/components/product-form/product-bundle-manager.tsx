@@ -2,14 +2,16 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { ApartmentOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Descriptions, Form, InputNumber, Select, Space } from 'antd';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { useSearchState } from '@/shared/hooks/use-search-state';
 import * as yup from 'yup';
 import { PermissionGate } from '@/core/auth/permissions';
 import { FormSection } from '@/foundation/layout/form-section';
 import { useCreateAdminProductBundle, useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
-import type { ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
+import { useSearchState } from '@/shared/hooks/use-search-state';
+import { toLookupOptions, toVariantOptions } from '../../model/product-lookup-options';
+import { FieldItem } from './form-field-parts';
+import type { ProductPanelProps } from './types';
 
 interface BundleFormValues {
   bundleVariantId: string;
@@ -27,6 +29,11 @@ const bundleSchema: yup.ObjectSchema<BundleFormValues> = yup.object({
       }),
     )
     .min(1, 'Combo cần ít nhất một thành phần')
+    // CONTRACT: API từ chối cả combo khi một SKU thành phần lặp lại ("Bundle components must be unique").
+    .test('unique-components', 'Mỗi SKU thành phần chỉ khai một lần; gộp số lượng vào một dòng', (items) => {
+      const ids = (items ?? []).map(({ componentVariantId }) => componentVariantId).filter(Boolean);
+      return new Set(ids).size === ids.length;
+    })
     .required(),
 });
 
@@ -37,7 +44,7 @@ const emptyBundle: BundleFormValues = { bundleVariantId: '', items: [{ component
  *
  * Lưu ngay theo từng SKU; chỉ khai được khi sản phẩm còn DRAFT vì combo đã bán không được đổi thành phần.
  */
-export function ProductBundleManager({ product, onChanged }: { product: ProductDetailDto; onChanged: () => Promise<void> }) {
+export function ProductBundleManager({ product, onChanged }: ProductPanelProps) {
   const { message } = App.useApp();
   const componentSearch = useSearchState('', 300);
   const isDraft = product.status === 'DRAFT';
@@ -58,6 +65,8 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
     },
   });
   const submitBundle = bundleForm.handleSubmit((values) => createBundle.mutate({ id: product.id, data: values }));
+  const errors = bundleForm.formState.errors;
+  const componentSelectOptions = toLookupOptions(componentOptions.data?.items, (option) => option.id);
   const declared = product.variants.filter((variant) => variant.bundle);
   const pendingVariants = product.variants.filter((variant) => variant.status === 'ACTIVE' && !variant.bundle);
 
@@ -85,12 +94,7 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
         <PermissionGate permission="catalog.product.manage">
           <FormSection title="Khai thành phần cho SKU combo" icon={<ApartmentOutlined />}>
             <Form layout="vertical" onFinish={() => void submitBundle()}>
-              <Form.Item
-                label="SKU combo"
-                required
-                validateStatus={bundleForm.formState.errors.bundleVariantId ? 'error' : undefined}
-                help={bundleForm.formState.errors.bundleVariantId?.message}
-              >
+              <FieldItem label="SKU combo" required error={errors.bundleVariantId}>
                 <Controller
                   name="bundleVariantId"
                   control={bundleForm.control}
@@ -98,19 +102,18 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
                     <Select
                       {...field}
                       placeholder="Chọn SKU chưa khai thành phần"
-                      options={pendingVariants.map((variant) => ({ value: variant.id, label: `${variant.sku} — ${variant.name}` }))}
+                      options={toVariantOptions(pendingVariants)}
                     />
                   )}
                 />
-              </Form.Item>
+              </FieldItem>
               <div className="space-y-3">
                 {bundleItems.fields.map((item, index) => (
                   <div key={item.id} className="grid gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-[1fr_140px_auto]">
-                    <Form.Item
+                    <FieldItem
                       label={`Thành phần ${index + 1}`}
                       required
-                      validateStatus={bundleForm.formState.errors.items?.[index]?.componentVariantId ? 'error' : undefined}
-                      help={bundleForm.formState.errors.items?.[index]?.componentVariantId?.message}
+                      error={errors.items?.[index]?.componentVariantId}
                       style={{ marginBottom: 0 }}
                     >
                       <Controller
@@ -123,21 +126,12 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
                             filterOption={false}
                             onSearch={componentSearch.setValue}
                             loading={componentOptions.isFetching}
-                            options={(componentOptions.data?.items ?? []).map((option) => ({
-                              value: option.id,
-                              label: `${option.code} — ${option.label}`,
-                            }))}
+                            options={componentSelectOptions}
                           />
                         )}
                       />
-                    </Form.Item>
-                    <Form.Item
-                      label="Số lượng"
-                      required
-                      validateStatus={bundleForm.formState.errors.items?.[index]?.quantity ? 'error' : undefined}
-                      help={bundleForm.formState.errors.items?.[index]?.quantity?.message}
-                      style={{ marginBottom: 0 }}
-                    >
+                    </FieldItem>
+                    <FieldItem label="Số lượng" required error={errors.items?.[index]?.quantity} style={{ marginBottom: 0 }}>
                       <Controller
                         name={`items.${index}.quantity`}
                         control={bundleForm.control}
@@ -152,7 +146,7 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
                           />
                         )}
                       />
-                    </Form.Item>
+                    </FieldItem>
                     <Button
                       htmlType="button"
                       danger
@@ -165,6 +159,9 @@ export function ProductBundleManager({ product, onChanged }: { product: ProductD
                   </div>
                 ))}
               </div>
+              {errors.items?.root?.message && (
+                <div className="mt-2 text-sm text-red-500" role="alert">{errors.items.root.message}</div>
+              )}
               <Space className="mt-3">
                 <Button htmlType="button" onClick={() => bundleItems.append({ componentVariantId: '', quantity: 1 })}>
                   Thêm thành phần

@@ -2,18 +2,13 @@ import { EyeOutlined } from '@ant-design/icons';
 import { Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import type { OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
-import { formatDateTime } from '@/lib/format/datetime';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton, col } from '@/foundation/table';
-import {
-  orderPaymentMethodLabels,
-  orderStatusPresentation,
-  paymentStatusPresentation,
-} from '../constants/order.constants';
+import { orderStatusPresentation, paymentStatusPresentation } from '../constants/order.constants';
+import type { OrderRow } from '../model/order.mapper';
 
 interface OrderTableProps {
-  rows: OrderSummaryDto[];
+  rows: OrderRow[];
   loading: boolean;
   page: number;
   pageSize: number;
@@ -40,7 +35,7 @@ function getRecipientGradient(name: string): string {
 }
 
 // Mọi cột có `key` trùng `id` trong `ORDER_COLUMN_ITEMS` để ẩn/hiện theo cài đặt cột.
-const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
+const DATA_COLUMNS: ColumnsType<OrderRow> = [
   {
     title: 'Mã đơn hàng',
     key: 'order',
@@ -49,7 +44,7 @@ const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
     render: (_, row) => (
       <div>
         <span className="font-mono font-bold text-slate-800 text-sm">{row.orderNo}</span>
-        <div className="mt-0.5 text-xs text-slate-400">{formatDateTime(row.placedAt)}</div>
+        <div className="mt-0.5 text-xs text-slate-400">{row.placedAtLabel}</div>
       </div>
     ),
   },
@@ -57,25 +52,21 @@ const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
     title: 'Khách nhận hàng',
     key: 'recipient',
     width: 240,
-    render: (_, row) => {
-      const gradient = getRecipientGradient(row.recipient.name);
-      const initial = row.recipient.name.slice(0, 1).toUpperCase();
-      return (
-        <div className="flex items-center gap-2.5">
-          <div
-            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${gradient} text-white font-semibold text-xs shadow-xs`}
-          >
-            {initial}
-          </div>
-          <div className="min-w-0">
-            <Typography.Text strong className="block truncate text-slate-800 text-xs">
-              {row.recipient.name}
-            </Typography.Text>
-            <div className="text-[11px] font-mono text-slate-400">{row.recipient.phone}</div>
-          </div>
+    render: (_, row) => (
+      <div className="flex items-center gap-2.5">
+        <div
+          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${getRecipientGradient(row.recipientName)} text-white font-semibold text-xs shadow-xs`}
+        >
+          {row.recipientInitial}
         </div>
-      );
-    },
+        <div className="min-w-0">
+          <Typography.Text strong className="block truncate text-slate-800 text-xs">
+            {row.recipientName}
+          </Typography.Text>
+          <div className="text-[11px] font-mono text-slate-400">{row.recipientPhone}</div>
+        </div>
+      </div>
+    ),
   },
   {
     title: 'Chi nhánh xuất',
@@ -88,10 +79,7 @@ const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
       </div>
     ),
   },
-  {
-    title: 'SL',
-    key: 'itemCount',
-    dataIndex: 'itemCount',
+  col.number<OrderRow>('itemCount', 'SL', {
     align: 'center',
     width: 80,
     render: (value: number) => (
@@ -99,8 +87,8 @@ const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
         {value}
       </span>
     ),
-  },
-  col.money<OrderSummaryDto>('grandTotal', 'Tổng tiền', {
+  }),
+  col.money<OrderRow>('grandTotal', 'Tổng tiền', {
     width: 150,
     className: 'font-semibold text-slate-800',
   }),
@@ -111,20 +99,11 @@ const DATA_COLUMNS: ColumnsType<OrderSummaryDto> = [
     render: (_, row) => (
       <div className="space-y-1">
         <StatusTag status={row.paymentStatus} presentations={paymentStatusPresentation} />
-        <div className="text-[10px] text-slate-400">
-          {orderPaymentMethodLabels[row.paymentMethod] ?? row.paymentMethod}
-        </div>
+        <div className="text-[10px] text-slate-400">{row.paymentMethodLabel}</div>
       </div>
     ),
   },
-  col.status<OrderSummaryDto, OrderSummaryDto['status']>(
-    'status',
-    'Trạng thái',
-    orderStatusPresentation,
-    {
-      width: 160,
-    },
-  ),
+  col.status<OrderRow, OrderRow['status']>('status', 'Trạng thái', orderStatusPresentation, { width: 160 }),
 ];
 
 export function OrderTable({
@@ -141,7 +120,7 @@ export function OrderTable({
     () =>
       [
         ...DATA_COLUMNS,
-        col.actions<OrderSummaryDto>(
+        col.actions<OrderRow>(
           (row) => (
             <TableActionButton
               label={`Xem đơn ${row.orderNo}`}

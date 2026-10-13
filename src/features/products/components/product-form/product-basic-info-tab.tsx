@@ -1,5 +1,5 @@
 import { AppstoreOutlined, FileTextOutlined, TagsOutlined } from '@ant-design/icons';
-import { Form, Input, Select, Typography } from 'antd';
+import { Input, Select } from 'antd';
 import { useMemo } from 'react';
 import { FormSection } from '@/foundation/layout/form-section';
 import { Controller, type UseFormReturn } from 'react-hook-form';
@@ -8,6 +8,7 @@ import { ProductType, type ProductDetailDto } from '@/generated/api/catalog/cata
 import { PRODUCT_TYPE_OPTIONS } from '../../constants/product-list.constants';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 import { toLookupOptions } from '../../model/product-lookup-options';
+import { FieldItem } from './form-field-parts';
 import type { SearchOptionsQuery } from './types';
 
 /**
@@ -62,6 +63,7 @@ export function ProductBasicInfoTab({
       })),
     [categories.data?.items, categoryIds, product?.categories],
   );
+  const errors = form.formState.errors;
   return (
     <div className="space-y-4">
       <FormSection
@@ -69,49 +71,42 @@ export function ProductBasicInfoTab({
         description="Tên hiển thị cho khách và loại sản phẩm. Mã sản phẩm cùng đường dẫn do hệ thống tự sinh từ tên."
         icon={<AppstoreOutlined />}
       >
-  <Typography.Title level={5}>Thông tin sản phẩm</Typography.Title>
-  <Form.Item
-    label="Loại sản phẩm"
-    required
-    validateStatus={form.formState.errors.productType ? 'error' : undefined}
-    help={form.formState.errors.productType?.message}
-    extra="Sản phẩm thường bán theo từng SKU; combo cố định gồm nhiều SKU thành phần, mỗi SKU combo phải khai báo thành phần trước khi xuất bản."
-  >
-    <Controller
-      name="productType"
-      control={form.control}
-      render={({ field }) => (
-        <Select
-          {...field}
-          disabled={Boolean(product?.variants.length)}
-          options={PRODUCT_TYPE_OPTIONS}
-          onChange={(value) => {
-            field.onChange(value);
-            if (value === ProductType.BUNDLE) {
-              // Combo không có tồn vật lý riêng: tồn bán được tính từ SKU thành phần.
-              form.getValues('variants').forEach((_variant, index) => {
-                form.setValue(`variants.${index}.openingQuantity`, 0);
-              });
-              form.setValue('initialBranchId', undefined);
-              form.setValue('initialWarehouseCode', undefined);
-            }
-          }}
-        />
-      )}
-    />
-  </Form.Item>
-      <Form.Item
-        label="Tên sản phẩm"
-        required
-        validateStatus={form.formState.errors.name ? 'error' : undefined}
-        help={form.formState.errors.name?.message}
-      >
-        <Controller
-          name="name"
-          control={form.control}
-          render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Máy chạy bộ Kingsport X900" />}
-        />
-      </Form.Item>
+        <FieldItem
+          label="Loại sản phẩm"
+          required
+          error={errors.productType}
+          extra="Sản phẩm thường bán theo từng SKU; combo cố định gồm nhiều SKU thành phần, mỗi SKU combo phải khai báo thành phần trước khi xuất bản."
+        >
+          <Controller
+            name="productType"
+            control={form.control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                disabled={Boolean(product?.variants.length)}
+                options={PRODUCT_TYPE_OPTIONS}
+                onChange={(value) => {
+                  field.onChange(value);
+                  if (value === ProductType.BUNDLE) {
+                    // Combo không có tồn vật lý riêng: tồn bán được tính từ SKU thành phần.
+                    form.getValues('variants').forEach((_variant, index) => {
+                      form.setValue(`variants.${index}.openingQuantity`, 0);
+                    });
+                    form.setValue('initialBranchId', undefined);
+                    form.setValue('initialWarehouseCode', undefined);
+                  }
+                }}
+              />
+            )}
+          />
+        </FieldItem>
+        <FieldItem label="Tên sản phẩm" required error={errors.name}>
+          <Controller
+            name="name"
+            control={form.control}
+            render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Máy chạy bộ Kingsport X900" />}
+          />
+        </FieldItem>
       </FormSection>
 
       <FormSection
@@ -120,59 +115,50 @@ export function ProductBasicInfoTab({
         icon={<TagsOutlined />}
       >
         <div className="grid gap-x-4 sm:grid-cols-2">
-    <Form.Item label="Thương hiệu" validateStatus={form.formState.errors.brandId ? 'error' : undefined} help={form.formState.errors.brandId?.message}>
-      <Controller
-        name="brandId"
-        control={form.control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            allowClear
-            showSearch
-            filterOption={false}
-            onSearch={onBrandSearch}
-            loading={brands.isFetching}
-            options={brandOptions}
+          <FieldItem label="Thương hiệu" error={errors.brandId}>
+            <Controller
+              name="brandId"
+              control={form.control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  allowClear
+                  showSearch
+                  filterOption={false}
+                  onSearch={onBrandSearch}
+                  loading={brands.isFetching}
+                  options={brandOptions}
+                />
+              )}
+            />
+          </FieldItem>
+          <FieldItem label="Danh mục" required error={errors.categoryIds}>
+            <Controller
+              name="categoryIds"
+              control={form.control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  mode="multiple"
+                  showSearch
+                  filterOption={false}
+                  onSearch={onCategorySearch}
+                  loading={categories.isFetching}
+                  options={categoryOptions}
+                />
+              )}
+            />
+          </FieldItem>
+        </div>
+        <FieldItem label="Danh mục chính" required error={errors.primaryCategoryId}>
+          <Controller
+            name="primaryCategoryId"
+            control={form.control}
+            render={({ field }) => (
+              <Select {...field} options={primaryCategoryOptions} placeholder="Chọn trong danh mục đã gán" />
+            )}
           />
-        )}
-      />
-    </Form.Item>
-    <Form.Item label="Danh mục" required validateStatus={form.formState.errors.categoryIds ? 'error' : undefined} help={form.formState.errors.categoryIds?.message}>
-      <Controller
-        name="categoryIds"
-        control={form.control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            mode="multiple"
-            showSearch
-            filterOption={false}
-            onSearch={onCategorySearch}
-            loading={categories.isFetching}
-            options={categoryOptions}
-          />
-        )}
-      />
-    </Form.Item>
-  </div>
-  <Form.Item
-    label="Danh mục chính"
-    required
-    validateStatus={form.formState.errors.primaryCategoryId ? 'error' : undefined}
-    help={form.formState.errors.primaryCategoryId?.message}
-  >
-    <Controller
-      name="primaryCategoryId"
-      control={form.control}
-      render={({ field }) => (
-        <Select
-          {...field}
-          options={primaryCategoryOptions}
-          placeholder="Chọn trong danh mục đã gán"
-        />
-      )}
-    />
-  </Form.Item>
+        </FieldItem>
       </FormSection>
 
       <FormSection
@@ -180,32 +166,26 @@ export function ProductBasicInfoTab({
         description="Mô tả ngắn hiện ở thẻ sản phẩm; mô tả chi tiết hiện trong trang sản phẩm."
         icon={<FileTextOutlined />}
       >
-        <Form.Item
-          label="Mô tả ngắn"
-          validateStatus={form.formState.errors.shortDescription ? 'error' : undefined}
-          help={form.formState.errors.shortDescription?.message}
-        >
-    <Controller
-      name="shortDescription"
-      control={form.control}
-      render={({ field }) => <Input.TextArea {...field} rows={2} maxLength={1000} showCount />}
-    />
-  </Form.Item>
-  <Form.Item
-    label="Mô tả chi tiết"
-  >
-    <Controller
-      name="description"
-      control={form.control}
-      render={({ field }) => (
-        <RichTextEditor
-          value={field.value}
-          onChange={field.onChange}
-          placeholder="Nhập mô tả, thông số và hướng dẫn sử dụng sản phẩm..."
-        />
-      )}
-    />
-  </Form.Item>
+        <FieldItem label="Mô tả ngắn" error={errors.shortDescription}>
+          <Controller
+            name="shortDescription"
+            control={form.control}
+            render={({ field }) => <Input.TextArea {...field} rows={2} maxLength={1000} showCount />}
+          />
+        </FieldItem>
+        <FieldItem label="Mô tả chi tiết" error={errors.description}>
+          <Controller
+            name="description"
+            control={form.control}
+            render={({ field }) => (
+              <RichTextEditor
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Nhập mô tả, thông số và hướng dẫn sử dụng sản phẩm..."
+              />
+            )}
+          />
+        </FieldItem>
       </FormSection>
     </div>
   );

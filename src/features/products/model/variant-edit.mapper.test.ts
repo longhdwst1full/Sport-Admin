@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toUpdateVariantDto, toVariantEditValues } from './variant-edit.mapper';
+import { toCreateVariantDto, toUpdateVariantDto, toVariantEditValues } from './variant-edit.mapper';
 
 describe('variant edit mapping', () => {
   it('keeps SKU outside the mutable payload and normalizes empty optional fields', () => {
@@ -20,6 +20,15 @@ describe('variant edit mapping', () => {
       widthMm: null,
       heightMm: null,
       expectedVersion: 3,
+    });
+  });
+
+  it('drops blank optional fields from the add-variant payload and upper-cases a manual SKU', () => {
+    expect(toCreateVariantDto({ name: ' Size L ', sku: ' td-02 ', barcode: '  ', lengthMm: 300 })).toEqual({
+      name: 'Size L',
+      sku: 'TD-02',
+      weightGrams: 0,
+      lengthMm: 300,
     });
   });
 });

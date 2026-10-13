@@ -8,11 +8,10 @@ import { Avatar, Button, Dropdown, Switch, Tag, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
-import { useMemo } from 'react';
+import type { ProductStatus } from '@/generated/api/catalog/catalog.schemas';
 import { PRODUCT_LIST_PAGE_SIZE_OPTIONS } from '../constants/product-list.constants';
 import { PRODUCT_STATUS_PRESENTATION } from '../constants/product-status.constants';
 import type { ProductListRow } from '../model/product-list.mapper';
-import type { ProductStatus } from '@/generated/api/catalog/catalog.schemas';
 
 /** Cột dữ liệu đứng trước công tắc hiển thị; không phụ thuộc quyền/handler. */
 const PRODUCT_LEADING_COLUMNS: ColumnsType<ProductListRow> = [
@@ -55,15 +54,12 @@ const PRODUCT_LEADING_COLUMNS: ColumnsType<ProductListRow> = [
   },
   {
     title: 'Loại',
-    dataIndex: 'productType',
+    dataIndex: 'productTypeLabel',
     align: 'center',
     width: 120,
-    render: (value: string) => (
-      <Tag
-        className="!rounded-full !border-0 !px-3 !text-xs !font-medium"
-        color={value === 'BUNDLE' ? 'purple' : 'default'}
-      >
-        {value === 'BUNDLE' ? 'Combo' : 'Thường'}
+    render: (label: string, row) => (
+      <Tag className="!rounded-full !border-0 !px-3 !text-xs !font-medium" color={row.isBundle ? 'purple' : 'default'}>
+        {label}
       </Tag>
     ),
   },
@@ -85,6 +81,7 @@ export function ProductListTable({
   pageSize,
   total,
   canManage,
+  canPublish,
   visibilityBusyId,
   archiveBusyId,
   publishBusyId,
@@ -99,7 +96,10 @@ export function ProductListTable({
   page: number;
   pageSize: number;
   total: number;
+  /** `catalog.product.manage`: bật/tắt hiển thị. */
   canManage: boolean;
+  /** `catalog.product.publish`: xuất bản và lưu trữ (lệnh vòng đời). */
+  canPublish: boolean;
   visibilityBusyId?: string;
   archiveBusyId?: string;
   publishBusyId?: string;
@@ -109,108 +109,104 @@ export function ProductListTable({
   onArchive: (row: ProductListRow) => void;
   onPublish: (row: ProductListRow) => void;
 }) {
-  const columns = useMemo<ColumnsType<ProductListRow>>(
-    () => [
-      ...PRODUCT_LEADING_COLUMNS,
-      {
-        title: 'Hiện trên web',
-        key: 'isPublished',
-        align: 'center',
-        width: 120,
-        render: (_value, row) => (
-          <Tooltip
-            title={
-              row.status === 'PUBLISHED'
-                ? 'Bật/tắt hiển thị trên website'
-                : 'Chỉ sản phẩm đã xuất bản mới hiện trên website'
-            }
-          >
-            <span>
-              <Switch
-                size="small"
-                checked={row.isPublished}
-                disabled={row.status !== 'PUBLISHED' || !canManage}
-                loading={visibilityBusyId === row.id}
-                onChange={(next) => onToggleVisibility(row, next)}
-              />
-            </span>
-          </Tooltip>
-        ),
-      },
-      PRODUCT_VERSION_COLUMN,
-      col.actions<ProductListRow>(
-        (row) => {
-          // Gom thao tác vào menu ba chấm để cột giữ hẹp khi thêm hành động. Xuất bản và Lưu trữ
-          // vẫn đi qua confirm ở page; mục chỉ hiện khi trạng thái hiện tại cho phép.
-          const items: NonNullable<MenuProps['items']> = [
-            { key: 'open', icon: <EditOutlined />, label: 'Xem / sửa' },
-          ];
-          if (canManage && row.status === 'DRAFT') {
-            items.push({ key: 'publish', icon: <CloudUploadOutlined />, label: 'Xuất bản' });
+  // Cột phụ thuộc handler/busy id đổi mỗi render của page nên dựng lại mỗi render, không memo.
+  const columns: ColumnsType<ProductListRow> = [
+    ...PRODUCT_LEADING_COLUMNS,
+    {
+      title: 'Hiện trên web',
+      key: 'isPublished',
+      align: 'center',
+      width: 120,
+      render: (_value, row) => (
+        <Tooltip
+          title={
+            row.status === 'PUBLISHED'
+              ? 'Bật/tắt hiển thị trên website'
+              : 'Chỉ sản phẩm đã xuất bản mới hiện trên website'
           }
-          if (canManage && row.status !== 'ARCHIVED') {
-            items.push({ type: 'divider' });
-            items.push({ key: 'archive', icon: <DeleteOutlined />, label: 'Lưu trữ', danger: true });
-          }
-          const busy = publishBusyId === row.id || archiveBusyId === row.id;
-          return (
-            <Dropdown
-              trigger={['click']}
-              placement="bottomRight"
-              disabled={busy}
-              menu={{
-                items,
-                onClick: ({ key, domEvent }) => {
-                  domEvent.stopPropagation();
-                  if (key === 'open') onOpen(row.slug);
-                  if (key === 'publish') onPublish(row);
-                  if (key === 'archive') onArchive(row);
-                },
-              }}
-            >
-              {/* Button trực tiếp (không qua Tooltip) để Dropdown gắn được sự kiện click vào nó. */}
-              <Button
-                type="text"
-                size="small"
-                aria-label={`Thao tác với sản phẩm ${row.name}`}
-                icon={<MoreOutlined />}
-                loading={busy}
-                className="!rounded-lg !text-slate-500 hover:!bg-slate-100"
-              />
-            </Dropdown>
-          );
-        },
-        { title: '', width: 56 },
+        >
+          <span>
+            <Switch
+              size="small"
+              checked={row.isPublished}
+              disabled={row.status !== 'PUBLISHED' || !canManage}
+              loading={visibilityBusyId === row.id}
+              onChange={(next) => onToggleVisibility(row, next)}
+            />
+          </span>
+        </Tooltip>
       ),
-    ],
-    [archiveBusyId, canManage, onArchive, onOpen, onPublish, onToggleVisibility, publishBusyId, visibilityBusyId],
-  );
+    },
+    PRODUCT_VERSION_COLUMN,
+    col.actions<ProductListRow>(
+      (row) => {
+        // Gom thao tác vào menu ba chấm để cột giữ hẹp khi thêm hành động. Xuất bản và Lưu trữ
+        // vẫn đi qua confirm ở page; mục chỉ hiện khi trạng thái hiện tại cho phép.
+        const items: NonNullable<MenuProps['items']> = [
+          { key: 'open', icon: <EditOutlined />, label: 'Xem / sửa' },
+        ];
+        if (canPublish && row.status === 'DRAFT') {
+          items.push({ key: 'publish', icon: <CloudUploadOutlined />, label: 'Xuất bản' });
+        }
+        if (canPublish && row.status !== 'ARCHIVED') {
+          items.push({ type: 'divider' });
+          items.push({ key: 'archive', icon: <DeleteOutlined />, label: 'Lưu trữ', danger: true });
+        }
+        const busy = publishBusyId === row.id || archiveBusyId === row.id;
+        return (
+          <Dropdown
+            trigger={['click']}
+            placement="bottomRight"
+            disabled={busy}
+            menu={{
+              items,
+              onClick: ({ key, domEvent }) => {
+                domEvent.stopPropagation();
+                if (key === 'open') onOpen(row.slug);
+                if (key === 'publish') onPublish(row);
+                if (key === 'archive') onArchive(row);
+              },
+            }}
+          >
+            {/* Button trực tiếp (không qua Tooltip) để Dropdown gắn được sự kiện click vào nó. */}
+            <Button
+              type="text"
+              size="small"
+              aria-label={`Thao tác với sản phẩm ${row.name}`}
+              icon={<MoreOutlined />}
+              loading={busy}
+              className="!rounded-lg !text-slate-500 hover:!bg-slate-100"
+            />
+          </Dropdown>
+        );
+      },
+      { title: '', width: 56 },
+    ),
+  ];
 
   return (
-    <>
-      <AdminTable<ProductListRow>
-        rowKey="id"
-        emptyEntity="sản phẩm"
-        loading={loading}
-        dataSource={rows}
-        tableLayout="fixed"
-        scroll={{
-          x: 1120,
-          // Giữ header/pagination trong viewport; phần dữ liệu tự cuộn khi đủ 30 dòng.
-          y: 'clamp(280px, calc(100vh - 500px), 640px)',
-        }}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          pageSizeOptions: PRODUCT_LIST_PAGE_SIZE_OPTIONS,
-          responsive: true,
-          showTotal: (value) => `${value} sản phẩm`,
-          onChange: onPageChange,
-        }}
-        columns={columns}
-      />
-    </>
+    <AdminTable<ProductListRow>
+      rowKey="id"
+      emptyEntity="sản phẩm"
+      loading={loading}
+      dataSource={rows}
+      tableLayout="fixed"
+      scroll={{
+        x: 1120,
+        // Giữ header/pagination trong viewport; phần dữ liệu tự cuộn khi đủ 30 dòng.
+        y: 'clamp(280px, calc(100vh - 500px), 640px)',
+      }}
+      pagination={{
+        current: page,
+        pageSize,
+        total,
+        showSizeChanger: true,
+        pageSizeOptions: PRODUCT_LIST_PAGE_SIZE_OPTIONS,
+        responsive: true,
+        showTotal: (value) => `${value} sản phẩm`,
+        onChange: onPageChange,
+      }}
+      columns={columns}
+    />
   );
 }

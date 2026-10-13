@@ -9,7 +9,7 @@ import {
   useReorderAdminProductMedia,
   useUpdateAdminProductMedia,
 } from '@/generated/api/catalog/catalog';
-import type { ProductDetailDto, ProductMediaDto } from '@/generated/api/catalog/catalog.schemas';
+import type { ProductMediaDto } from '@/generated/api/catalog/catalog.schemas';
 import { useCan } from '@/core/auth/permissions';
 import type { ColumnsType } from 'antd/es/table';
 import { FormModal } from '@/foundation/overlay';
@@ -18,14 +18,9 @@ import { uploadImage } from '@/lib/media/upload-image';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { toVariantOptions } from '../model/product-lookup-options';
 import { reorderProductMedia } from '../model/product-media.policy';
+import type { ProductPanelProps } from './product-form/types';
 
-export function ProductMediaPanel({
-  product,
-  onChanged,
-}: {
-  product: ProductDetailDto;
-  onChanged: () => Promise<void>;
-}) {
+export function ProductMediaPanel({ product, onChanged }: ProductPanelProps) {
   const { message, modal } = App.useApp();
   const [targetVariantId, setTargetVariantId] = useState<string>();
   // SECURITY: thêm ảnh sản phẩm ghi qua media API, cần media.asset.upload ngoài quyền sửa sản phẩm.
@@ -112,6 +107,9 @@ export function ProductMediaPanel({
     },
   });
   const pending = attach.isPending || update.isPending || reorder.isPending || remove.isPending || archive.isPending;
+  // PERMISSION/STATE: mọi lệnh ảnh cần `catalog.product.manage` và API từ chối (422) khi sản phẩm đã lưu trữ.
+  // Truyền `disabled` tường minh cho nút nên phải tự khoá ở đây; `disabled` của Form cha không đè được.
+  const locked = pending || !canManage || product.status === 'ARCHIVED';
 
   const move = (index: number, direction: -1 | 1) => {
     const items = reorderProductMedia(product.media, index, direction);
@@ -142,20 +140,20 @@ export function ProductMediaPanel({
       width: 110,
       render: (_, row, index) => (
         <Space size={0}>
-          <Button type="text" icon={<UpOutlined />} disabled={pending || index === 0} onClick={() => move(index, -1)} />
-          <Button type="text" icon={<DownOutlined />} disabled={pending || index === product.media.length - 1} onClick={() => move(index, 1)} />
+          <Button type="text" icon={<UpOutlined />} aria-label="Đưa ảnh lên" disabled={locked || index === 0} onClick={() => move(index, -1)} />
+          <Button type="text" icon={<DownOutlined />} aria-label="Đưa ảnh xuống" disabled={locked || index === product.media.length - 1} onClick={() => move(index, 1)} />
         </Space>
       ),
     },
     col.actions<ProductMediaDto>(
       (row) => (
         <>
-          <TableActionButton label="Sửa thông tin ảnh" icon={<EditOutlined />} disabled={pending} onClick={() => startEditing(row)} />
+          <TableActionButton label="Sửa thông tin ảnh" icon={<EditOutlined />} disabled={locked} onClick={() => startEditing(row)} />
           {!row.isPrimary && (
             <TableActionButton
               label="Đặt làm ảnh chính"
               icon={<StarOutlined />}
-              disabled={pending}
+              disabled={locked}
               onClick={() => update.mutate({
                 id: product.id,
                 mediaId: row.id,
@@ -166,7 +164,7 @@ export function ProductMediaPanel({
           <TableActionButton
             label="Gỡ khỏi sản phẩm"
             icon={<DisconnectOutlined />}
-            disabled={pending || !canManage}
+            disabled={locked}
             onClick={() => modal.confirm({
               title: 'Gỡ ảnh khỏi sản phẩm?',
               content: row.isPrimary
@@ -185,7 +183,7 @@ export function ProductMediaPanel({
             label="Xoá ảnh"
             danger
             icon={<DeleteOutlined />}
-            disabled={pending}
+            disabled={locked}
             onClick={() => modal.confirm({
               title: 'Xoá vĩnh viễn ảnh?',
               content: 'Ảnh sẽ bị xoá khỏi sản phẩm và Cloudinary. Hệ thống sẽ chặn nếu ảnh còn được nghiệp vụ khác sử dụng.',
@@ -220,7 +218,7 @@ export function ProductMediaPanel({
         <Upload
           accept="image/jpeg,image/png,image/webp,image/avif"
           showUploadList={false}
-          disabled={pending || uploading || !canUpload || product.status === 'ARCHIVED'}
+          disabled={locked || uploading || !canUpload}
           customRequest={customRequest}
         >
           <Button type="primary" icon={<UploadOutlined />} loading={uploading || attach.isPending}>

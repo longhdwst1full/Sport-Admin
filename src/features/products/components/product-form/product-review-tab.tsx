@@ -1,10 +1,15 @@
 import { Alert, Descriptions, Empty, Tag, Typography } from 'antd';
 import type { UseFormReturn } from 'react-hook-form';
-import { ProductType, type ProductDetailDto, type ProductSetupStatusDto } from '@/generated/api/catalog/catalog.schemas';
+import type {
+  ProductDetailDto,
+  ProductSetupStatusDto,
+  ProductVariantStatus,
+} from '@/generated/api/catalog/catalog.schemas';
 import { formatMoney } from '@/lib/format/money';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
-import { PRODUCT_READINESS_LABEL } from '../../constants/product-list.constants';
+import { PRODUCT_READINESS_LABEL, PRODUCT_TYPE_LABEL } from '../../constants/product-list.constants';
+import { PRODUCT_VARIANT_STATUS_PRESENTATION } from '../../constants/product-status.constants';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 
 interface ReviewVariantRow {
@@ -14,7 +19,7 @@ interface ReviewVariantRow {
   barcode?: string;
   price?: string | null;
   openingQuantity?: number;
-  status?: string;
+  status?: ProductVariantStatus;
 }
 
 const VARIANT_SUMMARY_COLUMNS: ColumnsType<ReviewVariantRow> = [
@@ -38,7 +43,7 @@ const VARIANT_SUMMARY_COLUMNS: ColumnsType<ReviewVariantRow> = [
 /** Sản phẩm đã có: cột cuối là trạng thái SKU. */
 const EXISTING_VARIANT_COLUMNS: ColumnsType<ReviewVariantRow> = [
   ...VARIANT_SUMMARY_COLUMNS,
-  { title: 'Trạng thái', dataIndex: 'status', width: 110, render: (value: string) => <Tag>{value}</Tag> },
+  col.status<ReviewVariantRow, ProductVariantStatus>('status', 'Trạng thái', PRODUCT_VARIANT_STATUS_PRESENTATION, { width: 110 }),
 ];
 
 /** Đang tạo: cột cuối là tồn đầu sẽ ghi. */
@@ -48,7 +53,7 @@ const NEW_VARIANT_COLUMNS: ColumnsType<ReviewVariantRow> = [
 ];
 
 /**
- * Tab 5 — đọc lại trước khi lưu, cùng bố cục ở Tạo và Sửa.
+ * Tab Kiểm tra xuất bản — đọc lại trước khi lưu, cùng bố cục ở Tạo và Sửa.
  *
  * Thông tin, mô tả và thông số đọc từ `watch()` — đúng thứ sắp gửi đi. Khi Sửa, biến thể/ảnh là dữ liệu
  * đã lưu (`product`) và có thêm checklist xuất bản từ API (`readiness`, cùng policy với publish).
@@ -87,7 +92,8 @@ export function ProductReviewTab({
         price: variant.price?.trim() || undefined,
         openingQuantity: variant.openingQuantity,
       }));
-  const unpriced = rows.filter((row) => !row.price);
+  // SKU đã lưu trữ không cần giá để xuất bản (checklist API chỉ xét SKU đang bán).
+  const unpriced = rows.filter((row) => !row.price && row.status !== 'INACTIVE');
   const openingTotal = product ? 0 : formVariants.reduce((total, variant) => total + (variant.openingQuantity || 0), 0);
   const imageCount = product ? product.media.length : values.images?.length ?? 0;
 
@@ -118,7 +124,7 @@ export function ProductReviewTab({
           {values.name?.trim() || <Typography.Text type="secondary">Chưa nhập</Typography.Text>}
         </Descriptions.Item>
         <Descriptions.Item label="Loại">
-          {values.productType === ProductType.BUNDLE ? 'Combo cố định' : 'Sản phẩm thường'}
+          {PRODUCT_TYPE_LABEL[values.productType]}
         </Descriptions.Item>
         <Descriptions.Item label="Thương hiệu">
           {brandLabel ?? <Typography.Text type="secondary">Chưa chọn</Typography.Text>}

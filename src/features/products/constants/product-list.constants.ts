@@ -24,8 +24,22 @@ export const PRODUCT_READINESS_LABEL: Record<string, string> = {
   NO_AVAILABLE_STOCK: 'Chưa chi nhánh nào có tồn khả dụng — vẫn xuất bản được, website sẽ hiện hết hàng',
 };
 
-/** Loại sản phẩm cho ô chọn ở form; nhãn tiếng Việt thay cho mã enum. */
-export const PRODUCT_TYPE_OPTIONS = toOptions<ProductType>({
+/** Nhãn loại sản phẩm; ô chọn ở form và bảng kiểm tra xuất bản dùng chung. */
+export const PRODUCT_TYPE_LABEL: Record<ProductType, string> = {
   STANDARD: 'Sản phẩm thường',
   BUNDLE: 'Combo cố định',
-});
+};
+
+/** Loại sản phẩm cho ô chọn ở form; nhãn tiếng Việt thay cho mã enum. */
+export const PRODUCT_TYPE_OPTIONS = toOptions<ProductType>(PRODUCT_TYPE_LABEL);
+
+/**
+ * Ô kích thước của một SKU `[tên trường, nhãn, giá trị nhỏ nhất]` — cùng thứ tự ở form Tạo, thêm SKU và
+ * sửa SKU. Khối lượng cho phép 0 (hàng số), kích thước tối thiểu 1 mm (khớp `VARIANT_FIELD_RULES`).
+ */
+export const VARIANT_DIMENSION_FIELDS = [
+  ['weightGrams', 'Khối lượng (g)', 0],
+  ['lengthMm', 'Dài (mm)', 1],
+  ['widthMm', 'Rộng (mm)', 1],
+  ['heightMm', 'Cao (mm)', 1],
+] as const;

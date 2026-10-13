@@ -1,52 +1,22 @@
-import { useRef, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, col } from '@/foundation/table';
-import {
-  CloseCircleOutlined,
-  CopyOutlined,
-  CreditCardOutlined,
-  EnvironmentOutlined,
-  HistoryOutlined,
-  PrinterOutlined,
-  ShoppingOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
-import { App, Avatar, Button, Card, Drawer, Space, Steps, Timeline, Tooltip } from 'antd';
+import { useMemo, type ReactNode } from 'react';
+import { Drawer } from 'antd';
 import { useCan } from '@/core/auth/permissions';
-import {
-  cancelAdminOrder,
-  completeAdminOrder,
-  confirmAdminOrder,
-  getGetAdminOrderQueryKey,
-  getListAdminOrdersQueryKey,
-  useGetAdminOrder,
-} from '@/generated/api/orders/orders';
-import type { OrderItemDto } from '@/generated/api/orders/orders.schemas';
-import {
-  getGetAdminFulfillmentByOrderQueryKey,
-  getListAdminFulfillmentsQueryKey,
-} from '@/generated/api/fulfillments/fulfillments';
-import { getListAdminPaymentsQueryKey } from '@/generated/api/payments/payments';
-import { getApiErrorMessage } from '@/lib/api/error';
-import { formatDateTime } from '@/lib/format/datetime';
-import { CurrencyAmount } from '@/foundation/typography/currency-amount';
+import { useGetAdminOrder } from '@/generated/api/orders/orders';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { StatusTag } from '@/foundation/management';
-import {
-  orderActorTypeLabels,
-  orderStatusPresentation,
-  orderPaymentMethodLabels,
-  paymentStatusPresentation,
-  toPaidAtLabel,
-} from '../constants/order.constants';
-import { OrderActionConfirmation, type OrderAction } from './order-action-confirmation';
-import { OrderReturnPanel } from '@/features/returns';
-import { PrintableOrderReceipt, printOrderReceipt } from '@/features/receipt';
-import { nextIdempotencyKey } from '@/shared/utils/idempotency';
-import type { ReactNode } from 'react';
 import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { OrderReturnPanel } from '@/features/returns';
+import { PrintableOrderReceipt } from '@/features/receipt';
+import { useOrderAction } from '../hooks/use-order-action';
+import { getOrderActionAvailability } from '../model/order-actions.policy';
+import { toOrderDetailView } from '../model/order.mapper';
+import { OrderActionConfirmation } from './order-action-confirmation';
+import { OrderActionFooter } from './order-action-footer';
+import { OrderDetailHeader } from './order-detail-header';
+import { OrderItemsCard } from './order-items-card';
+import { OrderPaymentCard } from './order-payment-card';
+import { OrderRecipientCard } from './order-recipient-card';
+import { OrderStatusHistoryCard } from './order-status-history-card';
 
 interface OrderDetailDrawerProps {
   orderId?: string;
@@ -59,173 +29,26 @@ interface OrderDetailDrawerProps {
   renderShipmentStatus?: (status: string) => ReactNode;
 }
 
-const ORDER_STEPS = [
-  { title: 'Đặt hàng', key: 'PENDING_CONFIRMATION' },
-  { title: 'Xác nhận', key: 'CONFIRMED' },
-  { title: 'Xử lý & Đóng gói', key: 'PACKED' },
-  { title: 'Đang vận chuyển', key: 'SHIPPED' },
-  { title: 'Hoàn thành', key: 'DELIVERED' },
-];
-
-const PREPAID_PAYMENT_METHODS: ReadonlySet<string> = new Set(['BANK_TRANSFER', 'VNPAY']);
-
-function getOrderCurrentStep(status: string): number {
-  switch (status) {
-    case 'PENDING_CONFIRMATION':
-      return 0;
-    case 'CONFIRMED':
-      return 1;
-    case 'PICKING':
-    case 'PACKED':
-      return 2;
-    case 'SHIPPED':
-      return 3;
-    case 'DELIVERED':
-    case 'COMPLETED':
-      return 4;
-    case 'CANCELLED':
-      return -1;
-    default:
-      return 0;
-  }
-}
-
-const ORDER_ITEM_COLUMNS: ColumnsType<OrderItemDto> = [
-  {
-    title: 'Sản phẩm',
-    key: 'product',
-    render: (_, item) => (
-      <div className="flex items-center gap-3">
-        <Avatar
-          shape="square"
-          size={46}
-          src={item.imageUrl ?? undefined}
-          className="rounded-lg bg-slate-100 flex-shrink-0 text-slate-600 font-bold border border-slate-200"
-        >
-          {item.productName[0]}
-        </Avatar>
-        <div className="min-w-0">
-          <span className="font-medium text-slate-800 text-xs block truncate">
-            {item.productName}
-          </span>
-          <div className="text-[11px] text-slate-400 font-mono">
-            {item.variantName} · {item.sku}
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: 'SL',
-    dataIndex: 'quantity',
-    width: 60,
-    align: 'center',
-    render: (q: number) => (
-      <span className="font-semibold text-slate-700">{q}</span>
-    ),
-  },
-  col.money<OrderItemDto>('unitPrice', 'Đơn giá', { width: 120 }),
-  col.money<OrderItemDto>('lineTotal', 'Thành tiền', { width: 130, className: 'font-semibold text-slate-800' }),
-];
-
 export function OrderDetailDrawer({
   orderId,
   onClose,
   renderFulfillmentPanel,
   renderShipmentStatus,
 }: OrderDetailDrawerProps) {
-  const { message } = App.useApp();
-  const queryClient = useQueryClient();
   const canManage = useCan('order.manage');
-  const [action, setAction] = useState<OrderAction>();
-  const [reason, setReason] = useState('');
-  const idempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
   const detail = useGetAdminOrder(orderId ?? '', {
     query: { enabled: Boolean(orderId) },
   });
   const order = detail.data;
-
-  const actionMutation = useMutation({
-    mutationFn: async () => {
-      if (!order || !action) throw new Error('Thiếu thông tin thao tác đơn hàng');
-      const normalizedReason = reason.trim();
-      const signature = `${action}:${order.id}:${order.version}:${normalizedReason}`;
-      idempotencyRef.current = nextIdempotencyKey(idempotencyRef.current, signature);
-      const request = { headers: { 'Idempotency-Key': idempotencyRef.current.key } };
-      if (action === 'cancel') {
-        return cancelAdminOrder(order.id, { expectedVersion: order.version, reason: normalizedReason }, request);
-      }
-      if (action === 'confirm') {
-        return confirmAdminOrder(order.id, { expectedVersion: order.version, note: normalizedReason }, request);
-      }
-      return completeAdminOrder(order.id, { expectedVersion: order.version, reason: normalizedReason }, request);
-    },
-    retry: false,
-    onSuccess: async (updated) => {
-      queryClient.setQueryData(getGetAdminOrderQueryKey(updated.id), updated);
-      // Xác nhận/huỷ đơn đổi luôn phiếu giao vận (vận đơn GHN, trạng thái đơn mà bước lấy hàng kiểm tra) và thanh toán.
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() }),
-        queryClient.invalidateQueries({ queryKey: getGetAdminFulfillmentByOrderQueryKey(updated.id) }),
-        queryClient.invalidateQueries({ queryKey: getListAdminFulfillmentsQueryKey() }),
-        queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() }),
-      ]);
-      idempotencyRef.current = undefined;
-      setAction(undefined);
-      setReason('');
-      void message.success(
-        action === 'cancel'
-          ? 'Đã huỷ đơn hàng'
-          : action === 'confirm'
-            ? 'Đã xác nhận đơn hàng thành công'
-            : 'Đã hoàn tất đơn hàng thành công',
-      );
-    },
-    onError: (error) => {
-      void message.error(getApiErrorMessage(error, 'Không thực hiện được thao tác đơn hàng.'));
-    },
-  });
-
-  const canCancel =
-    canManage &&
-    order?.status === 'PENDING_CONFIRMATION' &&
-    (order.paymentStatus === 'PENDING' || order.paymentStatus === 'FAILED') &&
-    order.fulfillmentStatus === 'PENDING';
-  // API chỉ chặn đơn trả trước (BANK_TRANSFER/VNPAY) chưa thu tiền; COD/CASH xác nhận được ngay.
-  const canConfirm =
-    canManage &&
-    order?.status === 'PENDING_CONFIRMATION' &&
-    (!PREPAID_PAYMENT_METHODS.has(order.paymentMethod) || order.paymentStatus === 'SUCCESS') &&
-    order.fulfillmentStatus === 'PENDING';
-  const canComplete =
-    canManage &&
-    order?.status === 'DELIVERED' &&
-    order.paymentStatus === 'SUCCESS' &&
-    order.fulfillmentStatus === 'DELIVERED';
-
-  const closeAction = () => {
-    if (actionMutation.isPending) return;
-    actionMutation.reset();
-    idempotencyRef.current = undefined;
-    setAction(undefined);
-    setReason('');
-  };
+  const view = useMemo(() => (order ? toOrderDetailView(order) : undefined), [order]);
+  const orderAction = useOrderAction(order);
+  const availability = getOrderActionAvailability(order, canManage);
 
   const closeDrawer = () => {
-    if (actionMutation.isPending) return;
-    closeAction();
+    if (orderAction.pending) return;
+    orderAction.close();
     onClose();
   };
-
-  const copyOrderNo = () => {
-    if (order?.orderNo) {
-      navigator.clipboard.writeText(order.orderNo);
-      message.success(`Đã sao chép mã: ${order.orderNo}`);
-    }
-  };
-
-  const currentStep = order ? getOrderCurrentStep(order.status) : 0;
-  const isCancelled = order?.status === 'CANCELLED';
 
   return (
     <Drawer
@@ -252,297 +75,35 @@ export function OrderDetailDrawer({
         </div>
       )}
 
-      {order && (
+      {view && (
         <div className="flex flex-col min-h-full bg-slate-50/50">
-          {/* Header Banner */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 px-6 pt-7 pb-6 text-white">
-            <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-emerald-500/15 blur-2xl" />
-            <div className="relative flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider text-emerald-300 font-semibold">
-                    Đơn hàng chi tiết
-                  </span>
-                  <Tooltip title="Sao chép mã đơn">
-                    <button
-                      type="button"
-                      aria-label="Sao chép mã đơn"
-                      onClick={copyOrderNo}
-                      className="text-white/60 hover:text-white cursor-pointer"
-                    >
-                      <CopyOutlined className="text-xs" />
-                    </button>
-                  </Tooltip>
-                </div>
-                <h2 className="text-2xl font-black text-white tracking-tight mt-1 mb-0 font-mono">
-                  {order.orderNo}
-                </h2>
-                <div className="mt-1 text-xs text-slate-300">
-                  Thời gian đặt: {formatDateTime(order.placedAt)}
-                </div>
-              </div>
+          <OrderDetailHeader order={view} />
 
-              <div className="flex flex-col items-end gap-2">
-                <StatusTag status={order.status} presentations={orderStatusPresentation} />
-                <Button
-                  size="small"
-                  icon={<PrinterOutlined />}
-                  onClick={printOrderReceipt}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
-                >
-                  In phiếu
-                </Button>
-              </div>
-            </div>
-
-            {/* Order Progress Tracker */}
-            <div className="mt-6 rounded-xl bg-white/10 backdrop-blur-md p-4 border border-white/10">
-              {isCancelled ? (
-                <div className="flex items-center gap-2 text-rose-300 text-sm font-medium">
-                  <CloseCircleOutlined className="text-base" />
-                  <span>Đơn hàng đã huỷ</span>
-                </div>
-              ) : (
-                <Steps
-                  size="small"
-                  current={currentStep}
-                  items={ORDER_STEPS.map((s, idx) => ({
-                    title: <span className="text-xs text-white/90">{s.title}</span>,
-                    status: idx < currentStep ? 'finish' : idx === currentStep ? 'process' : 'wait',
-                  }))}
-                  className="order-steps-custom"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Drawer Body Sections */}
           <div className="flex-1 p-6 space-y-5">
-            {/* Customer & Shipping Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card
-                size="small"
-                title={
-                  <div className="flex items-center gap-2 text-slate-700 text-xs font-semibold uppercase tracking-wider">
-                    <UserOutlined className="text-emerald-600" />
-                    Người nhận hàng
-                  </div>
-                }
-                className="rounded-xl border-slate-200 shadow-xs"
-              >
-                <div className="space-y-1 text-xs">
-                  <div className="font-semibold text-slate-800 text-sm">
-                    {order.recipient.name}
-                  </div>
-                  <div className="font-mono text-slate-600">{order.recipient.phone}</div>
-                  <div className="text-slate-500">{order.recipient.email || 'Không có email'}</div>
-                  <div className="mt-2 text-slate-700 leading-relaxed border-t border-slate-100 pt-2 flex items-start gap-1.5">
-                    <EnvironmentOutlined className="text-slate-400 mt-0.5 flex-shrink-0" />
-                    <span>
-                      {[
-                        order.recipient.addressLine,
-                        order.recipient.ward,
-                        order.recipient.district,
-                        order.recipient.province,
-                      ]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-
-              <Card
-                size="small"
-                title={
-                  <div className="flex items-center gap-2 text-slate-700 text-xs font-semibold uppercase tracking-wider">
-                    <CreditCardOutlined className="text-emerald-600" />
-                    Thanh toán & Chi nhánh
-                  </div>
-                }
-                className="rounded-xl border-slate-200 shadow-xs"
-              >
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Trạng thái thanh toán:</span>
-                    <StatusTag status={order.paymentStatus} presentations={paymentStatusPresentation} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Phương thức:</span>
-                    <span className="font-medium text-slate-700">
-                      {orderPaymentMethodLabels[order.paymentMethod] ?? order.paymentMethod}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Thanh toán lúc:</span>
-                    <span className="text-slate-700">{order.paidAt ? formatDateTime(order.paidAt) : toPaidAtLabel(order)}</span>
-                  </div>
-                  {order.shipment && (
-                    <>
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-                        <span className="text-slate-500">Giao vận:</span>
-                        {renderShipmentStatus?.(order.shipment.status)}
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-slate-500">Vận đơn:</span>
-                        <span className="text-right font-medium text-slate-700">
-                          {order.shipment.carrierCode ? `${order.shipment.carrierCode} · ` : ''}
-                          {order.shipment.trackingNo && /^https?:\/\//.test(order.shipment.trackingUrl ?? '') ? (
-                            <a href={order.shipment.trackingUrl ?? undefined} target="_blank" rel="noopener noreferrer">{order.shipment.trackingNo}</a>
-                          ) : (order.shipment.trackingNo ?? 'Chưa có')}
-                        </span>
-                      </div>
-                      {order.shipment.shippedAt && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500">Bàn giao lúc:</span>
-                          <span className="text-slate-700">{formatDateTime(order.shipment.shippedAt)}</span>
-                        </div>
-                      )}
-                      {order.shipment.deliveredAt && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500">Giao thành công:</span>
-                          <span className="text-slate-700">{formatDateTime(order.shipment.deliveredAt)}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-                    <span className="text-slate-500">Chi nhánh xuất:</span>
-                    <span className="font-medium text-slate-800">{order.branchName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Kho thực xuất:</span>
-                    <span className="text-slate-600">{order.warehouseName}</span>
-                  </div>
-                </div>
-              </Card>
+              <OrderRecipientCard recipient={view.recipient} />
+              <OrderPaymentCard order={view} renderShipmentStatus={renderShipmentStatus} />
             </div>
-
-            {/* Products Table */}
-            <Card
-              size="small"
-              title={
-                <div className="flex items-center gap-2 text-slate-700 text-xs font-semibold uppercase tracking-wider">
-                  <ShoppingOutlined className="text-emerald-600" />
-                  Danh sách sản phẩm ({order.items.length})
-                </div>
-              }
-              className="rounded-xl border-slate-200 shadow-xs"
-            >
-              <AdminTable
-                rowKey="id"
-                size="small"
-                pagination={false}
-                dataSource={order.items}
-                columns={ORDER_ITEM_COLUMNS}
-              />
-            </Card>
-
-            {/* Financial Breakdown */}
-            <div className="ml-auto w-full max-w-sm rounded-xl bg-white p-4 border border-slate-200 shadow-xs space-y-2 text-xs">
-              <div className="flex justify-between text-slate-600">
-                <span>Tạm tính tiền hàng</span>
-                <CurrencyAmount amount={order.subtotal} />
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Phí vận chuyển</span>
-                <CurrencyAmount amount={order.shippingTotal} />
-              </div>
-              <div className="border-t border-dashed border-slate-200 pt-2.5 flex justify-between items-baseline">
-                <span className="text-sm font-bold text-slate-900">Tổng thanh toán</span>
-                <span className="text-base font-extrabold text-emerald-600">
-                  <CurrencyAmount amount={order.grandTotal} />
-                </span>
-              </div>
-              <div className="text-right text-[10px] text-slate-400">
-                Đã bao gồm thuế GTGT (VAT)
-              </div>
-            </div>
-
-            {/* Status History Timeline */}
-            {order.statusHistory?.length > 0 && (
-              <Card
-                size="small"
-                title={
-                  <div className="flex items-center gap-2 text-slate-700 text-xs font-semibold uppercase tracking-wider">
-                    <HistoryOutlined className="text-emerald-600" />
-                    Nhật ký xử lý đơn hàng
-                  </div>
-                }
-                className="rounded-xl border-slate-200 shadow-xs"
-              >
-                <Timeline
-                  className="mt-2 text-xs"
-                  items={order.statusHistory.map((history) => ({
-                    color: 'green',
-                    children: (
-                      <div>
-                        <span className="font-semibold text-slate-800">
-                          {orderStatusPresentation[history.toStatus].label}
-                        </span>
-                        <div className="text-[11px] text-slate-400">
-                          {formatDateTime(history.createdAt)} · {orderActorTypeLabels[history.actorType] ?? 'Không xác định'}
-                        </div>
-                        {history.reason && (
-                          <div className="mt-1 text-slate-600 bg-slate-50 p-2 rounded text-[11px] border border-slate-100">
-                            Ghi chú: {history.reason}
-                          </div>
-                        )}
-                      </div>
-                    ),
-                  }))}
-                />
-              </Card>
-            )}
-
-            {/* Fulfillment workflow panel */}
-            {renderFulfillmentPanel?.(order.id)}
-
+            <OrderItemsCard items={view.items} totals={view.totals} />
+            <OrderStatusHistoryCard history={view.history} />
+            {renderFulfillmentPanel?.(view.id)}
             {/* Đổi trả: tự ẩn khi đơn chưa giao hoặc tài khoản không có return.create */}
-            <OrderReturnPanel orderId={order.id} />
+            <OrderReturnPanel orderId={view.id} />
           </div>
 
-          {/* Sticky Bottom Action Footer */}
           {canManage && (
-            <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur-md px-6 py-4 flex flex-wrap items-center justify-between gap-2 z-10 shadow-lg">
-              <Button
-                danger
-                disabled={!canCancel}
-                onClick={() => setAction('cancel')}
-                className="font-medium"
-              >
-                Huỷ đơn
-              </Button>
-              <Space wrap>
-                <Button onClick={closeDrawer}>Đóng</Button>
-                <Button
-                  disabled={!canConfirm}
-                  onClick={() => setAction('confirm')}
-                  className="font-medium"
-                >
-                  Xác nhận đơn
-                </Button>
-                <Button
-                  type="primary"
-                  disabled={!canComplete}
-                  onClick={() => setAction('complete')}
-                  className="font-medium bg-emerald-600 hover:bg-emerald-500"
-                >
-                  Hoàn tất đơn
-                </Button>
-              </Space>
-            </div>
+            <OrderActionFooter availability={availability} onAction={orderAction.open} onClose={closeDrawer} />
           )}
         </div>
       )}
 
       <OrderActionConfirmation
-        action={action}
-        reason={reason}
-        pending={actionMutation.isPending}
-        onReasonChange={setReason}
-        onCancel={closeAction}
-        onConfirm={() => actionMutation.mutate()}
+        action={orderAction.action}
+        reason={orderAction.reason}
+        pending={orderAction.pending}
+        onReasonChange={orderAction.setReason}
+        onCancel={orderAction.close}
+        onConfirm={orderAction.submit}
       />
       <PrintableOrderReceipt order={order} />
     </Drawer>

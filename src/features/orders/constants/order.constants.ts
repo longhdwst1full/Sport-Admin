@@ -1,5 +1,6 @@
 import type { ColumnItem } from '@/foundation/table';
 import type { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
+import type { OrderAction } from '../model/order-actions.policy';
 
 /** Cột tuỳ chỉnh được của bảng đơn; `id` trùng `key` cột trong `OrderTable`. */
 export const ORDER_COLUMN_ITEMS: ColumnItem[] = [
@@ -12,8 +13,6 @@ export const ORDER_COLUMN_ITEMS: ColumnItem[] = [
   { id: 'status', label: 'Trạng thái đơn' },
   { id: 'actions', label: 'Thao tác', fixed: true },
 ];
-
-export { moneyFormatter } from '@/lib/format/money';
 
 export const orderTabs: Array<{
   key: 'ALL' | OrderStatusGroup;
@@ -43,7 +42,6 @@ export const orderActorTypeLabels: Record<string, string> = {
 // paymentStatusPresentation là single source ở feature payments (rule 08); import qua barrel `@/features/payments`.
 export { paymentStatusPresentation } from '@/features/payments';
 
-
 /** CONTRACT: `paymentMethod` là string thô (CASH/BANK_TRANSFER/COD/VNPAY); mã lạ hiện nguyên văn. */
 export const orderPaymentMethodLabels: Record<string, string> = {
   CASH: 'Tiền mặt tại quầy',
@@ -52,12 +50,47 @@ export const orderPaymentMethodLabels: Record<string, string> = {
   VNPAY: 'VNPay',
 };
 
-/**
- * Ô "Thanh toán lúc": có `paidAt` thì hiện giờ; chưa có thì nói đúng trạng thái thay vì luôn ghi
- * "Chưa thanh toán" (đơn đã hoàn tiền/đã xác nhận nhưng thiếu mốc giờ từng bị hiện sai).
- */
-export function toPaidAtLabel(order: { paymentStatus: string; paymentMethod: string }): string {
-  if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'REFUNDED') return 'Không ghi nhận thời điểm';
-  if (order.paymentStatus === 'PENDING' && order.paymentMethod === 'COD') return 'Thu khi giao hàng';
-  return 'Chưa thanh toán';
+/** Nhãn các bước tiến trình ở banner chi tiết; vị trí bước tính ở `getOrderProgress`. */
+export const ORDER_PROGRESS_STEP_LABELS = [
+  'Đặt hàng',
+  'Xác nhận',
+  'Xử lý & Đóng gói',
+  'Đang vận chuyển',
+  'Hoàn thành',
+] as const;
+
+interface OrderActionCopy {
+  title: string;
+  okText: string;
+  description: string;
+  successMessage: string;
+  /** Khớp `MinLength` của command DTO phía API (cancel 3, complete 5); confirm là chính sách FE. */
+  minReasonLength: number;
 }
+
+export const orderActionCopy: Record<OrderAction, OrderActionCopy> = {
+  cancel: {
+    title: 'Xác nhận huỷ đơn hàng',
+    okText: 'Huỷ đơn',
+    description:
+      'Hệ thống sẽ giải phóng toàn bộ số lượng đang giữ trong kho. Thao tác không áp dụng khi đơn đã thanh toán hoặc bắt đầu xử lý.',
+    successMessage: 'Đã huỷ đơn hàng',
+    minReasonLength: 3,
+  },
+  confirm: {
+    title: 'Xác nhận tiếp nhận đơn hàng',
+    okText: 'Xác nhận đơn',
+    description:
+      'Xác nhận đơn đã đủ điều kiện xử lý: chuyển khoản đã thành công hoặc đơn COD đã được tiếp nhận.',
+    successMessage: 'Đã xác nhận đơn hàng thành công',
+    minReasonLength: 5,
+  },
+  complete: {
+    title: 'Xác nhận hoàn tất đơn',
+    okText: 'Hoàn tất',
+    description:
+      'Chỉ dùng khi đã chắc chắn khách nhận đủ hàng và đã thu đủ tiền, kể cả đơn giao ngay trong ngày.',
+    successMessage: 'Đã hoàn tất đơn hàng thành công',
+    minReasonLength: 5,
+  },
+};

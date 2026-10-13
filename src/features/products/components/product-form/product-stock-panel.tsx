@@ -7,15 +7,10 @@ import { FormSection } from '@/foundation/layout/form-section';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
 import { ProductType, type ProductDetailDto } from '@/generated/api/catalog/catalog.schemas';
-import {
-  getListInventoryBalancesQueryKey,
-  getListInventoryMovementsQueryKey,
-  getListStockAdjustmentsQueryKey,
-  useCreateStockAdjustment,
-  useListInventoryBalances,
-} from '@/generated/api/inventory/inventory';
+import { useCreateStockAdjustment, useListInventoryBalances } from '@/generated/api/inventory/inventory';
 import type { CreateStockAdjustmentDto, InventoryBalanceDto } from '@/generated/api/inventory/inventory.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { invalidateStockQueries } from '../../hooks/product-query-cache';
 
 const BALANCE_COLUMNS: ColumnsType<InventoryBalanceDto> = [
   col.text<InventoryBalanceDto>('sku', 'SKU'),
@@ -69,11 +64,7 @@ export function ProductStockPanel({
     request: { headers: { 'Idempotency-Key': pendingOpeningStock?.idempotencyKey ?? '' } },
     mutation: {
       onSuccess: async () => {
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: getListInventoryBalancesQueryKey() }),
-          queryClient.invalidateQueries({ queryKey: getListInventoryMovementsQueryKey() }),
-          queryClient.invalidateQueries({ queryKey: getListStockAdjustmentsQueryKey() }),
-        ]);
+        await invalidateStockQueries(queryClient);
         onOpeningStockRecorded();
         void message.success('Đã ghi tồn đầu.');
       },
