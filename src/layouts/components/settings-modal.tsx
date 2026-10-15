@@ -71,12 +71,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           items={[
             {
               key: 'display',
-              label: (
-                <span className="flex items-center gap-1.5 text-xs font-medium">
-                  <DesktopOutlined />
-                  Giao diện & Hiển thị
-                </span>
-              ),
+              icon: <DesktopOutlined />,
+              label: 'Giao diện & Hiển thị',
               children: (
                 <div className="space-y-4">
                   {/* Table display density */}
@@ -191,12 +187,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             },
             {
               key: 'system',
-              label: (
-                <span className="flex items-center gap-1.5 text-xs font-medium">
-                  <InfoCircleOutlined />
-                  Thông tin hệ thống
-                </span>
-              ),
+              icon: <InfoCircleOutlined />,
+              label: 'Thông tin hệ thống',
               children: (
                 <div className="space-y-4">
                   <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">

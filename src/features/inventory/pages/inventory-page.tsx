@@ -1,6 +1,6 @@
 import { AuditOutlined, ContainerOutlined, InboxOutlined, PlusOutlined, SwapOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, Tabs } from 'antd';
+import { Button, Tabs, theme } from 'antd';
 import { useState } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
@@ -38,6 +38,7 @@ const DEFAULT_TAB: InventoryTab = 'balances';
  */
 export function InventoryPage() {
   const queryClient = useQueryClient();
+  const { token } = theme.useToken();
   const url = useUrlFilters();
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
   const [openingImportOpen, setOpeningImportOpen] = useState(false);
@@ -177,6 +178,12 @@ export function InventoryPage() {
         <Tabs
           destroyInactiveTabPane={false}
           activeKey={activeTab}
+          // UX: thanh tab dính đầu vùng cuộn, cuộn bảng dài vẫn đổi tab được ngay.
+          renderTabBar={(props, DefaultTabBar) => (
+            <div className="sticky top-0 z-10" style={{ background: token.colorBgContainer }}>
+              <DefaultTabBar {...props} />
+            </div>
+          )}
           onChange={(key) => url.set('tab', key === DEFAULT_TAB ? undefined : key)}
           items={[
             {

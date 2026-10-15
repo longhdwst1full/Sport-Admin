@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SearchOutlined } from '@ant-design/icons';
+import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import type { NavigationItem } from '@/app/navigation/navigation.config';
 import { canSeeNavigationItem, NAVIGATION_ITEMS } from '@/app/navigation/navigation.config';
 import { usePermissions } from '@/core/auth/permissions';
@@ -29,11 +29,7 @@ export function CommandPalette() {
   const filtered = useMemo(() => {
     if (!query.trim()) return visibleItems;
     const q = query.trim().toLowerCase();
-    return visibleItems.filter(
-      (item) =>
-        item.label.toLowerCase().includes(q) ||
-        item.path.toLowerCase().includes(q),
-    );
+    return visibleItems.filter((item) => item.label.toLowerCase().includes(q));
   }, [query, visibleItems]);
 
   // Đóng luôn dọn từ khoá và vị trí chọn, để lần mở sau bắt đầu sạch (thay cho effect theo `open`).
@@ -111,9 +107,14 @@ export function CommandPalette() {
             placeholder="Tìm kiếm trang, chức năng..."
             className="h-14 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
-          <kbd className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-400">
-            ESC
-          </kbd>
+          <button
+            type="button"
+            aria-label="Đóng"
+            onClick={close}
+            className="grid size-7 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          >
+            <CloseOutlined />
+          </button>
         </div>
 
         {/* Results */}
@@ -144,12 +145,7 @@ export function CommandPalette() {
                 >
                   {item.icon}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium">{item.label}</div>
-                  <div className="truncate text-xs text-slate-400">
-                    {item.path}
-                  </div>
-                </div>
+                <div className="min-w-0 flex-1 font-medium">{item.label}</div>
                 {index === selectedIndex && (
                   <span className="text-xs text-admin-500">↵</span>
                 )}
@@ -167,10 +163,6 @@ export function CommandPalette() {
           <span>
             <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px]">↵</kbd>{' '}
             mở trang
-          </span>
-          <span>
-            <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px]">esc</kbd>{' '}
-            đóng
           </span>
         </div>
       </div>

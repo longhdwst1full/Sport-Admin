@@ -35,6 +35,12 @@ export function useTabUrlFilters(prefix: string) {
     getEnum: <T extends string>(name: string, values: Record<string, T> | readonly T[]) =>
       url.getEnum(key(name), values),
     setFilter: (name: string, value: ParamValue) => url.patch({ [key(name)]: value, [pageKey]: undefined }),
+    /** Đổi nhiều bộ lọc trong một lần ghi URL (vd. khoảng ngày `from`/`to`). */
+    setFilters: (values: Record<string, ParamValue>) =>
+      url.patch({
+        ...Object.fromEntries(Object.entries(values).map(([name, value]) => [key(name), value])),
+        [pageKey]: undefined,
+      }),
     page: url.getNumber(pageKey, 1),
     setPage: (page: number) => url.set(pageKey, page > 1 ? page : undefined),
   };
