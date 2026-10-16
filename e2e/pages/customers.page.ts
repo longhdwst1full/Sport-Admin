@@ -8,6 +8,7 @@ export class CustomersPageObject {
   readonly createButton = () => this.page.getByRole('button', { name: 'Thêm khách hàng' });
   readonly form = () => this.page.getByRole('dialog', { name: 'Thêm khách hàng' });
   readonly nameInput = () => this.page.getByPlaceholder('Nguyễn Minh Anh');
+  readonly phoneInput = () => this.page.getByPlaceholder('0912345678');
   readonly emailInput = () => this.page.getByPlaceholder('minh.anh@example.com');
   readonly searchName = () => this.page.getByPlaceholder('Tên khách');
 

@@ -162,7 +162,9 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
       specifications: [{ code: 'MAX_LOAD', values: [120] }],
     });
 
-    // Tạo xong, cùng workspace chuyển sang chế độ Sửa với đúng ba tab như lúc tạo.
+    // Tạo xong, workspace đóng về danh sách; mở lại sản phẩm vừa tạo để vào chế độ Sửa (đúng ba tab như lúc tạo).
+    await expect(page.locator('.ant-drawer-content')).toHaveCount(0);
+    await products.openProduct('Ghế tập E2E');
     await expect(products.saveProduct()).toBeVisible();
     for (const tab of ['Thông tin', 'SKU, giá & tồn kho', 'Kiểm tra xuất bản']) {
       await expect(products.tab(tab)).toBeVisible();
@@ -186,12 +188,12 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
     await products.workspace().locator('.ant-drawer-header').getByRole('button', { name: 'Xuất bản', exact: true }).click();
     await page.locator('.ant-modal-confirm').getByRole('button', { name: 'Xuất bản' }).click();
     await expect.poll(() => captured.publish).toEqual({ expectedVersion: 1 });
-    await expect(products.workspace().getByText('PUBLISHED')).toBeVisible();
+    await expect(products.workspace().locator('.ant-drawer-header').getByText('Đang bán', { exact: true })).toBeVisible();
 
     await products.workspace().locator('.ant-drawer-header').getByRole('button', { name: 'Lưu trữ', exact: true }).click();
     await page.locator('.ant-modal-confirm').getByRole('button', { name: 'Lưu trữ' }).click();
     await expect.poll(() => captured.archive).toEqual({ expectedVersion: 2 });
-    await expect(products.workspace().getByText('ARCHIVED')).toBeVisible();
+    await expect(products.workspace().locator('.ant-drawer-header').getByText('Lưu trữ', { exact: true })).toBeVisible();
     await expect(products.saveProduct()).toBeDisabled();
   });
 
@@ -221,12 +223,11 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
     const products = new ProductsPageObject(page);
     await shell.open('/products');
     await createProductThroughWorkspace(page, products);
-    await expect(products.saveProduct()).toBeVisible();
-    await products.workspace().locator('.ant-drawer-footer').getByRole('button', { name: 'Đóng' }).click();
+    await expect(page.locator('.ant-drawer-content')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Thao tác với sản phẩm Ghế tập E2E' }).click();
     await page.getByRole('menuitem', { name: 'Lưu trữ' }).click();
-    await page.locator('.ant-modal-confirm').getByRole('button', { name: 'Xoá' }).click();
-    await expect.poll(() => captured.remove).toEqual({ expectedVersion: 0 });
+    await page.locator('.ant-modal-confirm').getByRole('button', { name: 'Lưu trữ' }).click();
+    await expect.poll(() => captured.archive).toEqual({ expectedVersion: 0 });
   });
 });

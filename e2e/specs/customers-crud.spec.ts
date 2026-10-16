@@ -23,7 +23,7 @@ test.describe('CUSTOMERS — Danh sách và tạo hồ sơ', () => {
     expect(url.searchParams.get('page')).toBe('1');
   });
 
-  test('CUS-02: thiếu cả email và SĐT thì không gửi yêu cầu tạo', async ({ page }) => {
+  test('CUS-02: thiếu cả email và SĐT (cả hai đều bắt buộc) thì không gửi yêu cầu tạo', async ({ page }) => {
     await seedSession(page, { permissions: ['customer.view', 'customer.manage'] });
     await mockJson(page, '**/api/v1/admin/customers?**', customerListResponse([]));
     let createCalls = 0;
@@ -38,7 +38,8 @@ test.describe('CUSTOMERS — Danh sách và tạo hồ sơ', () => {
     await customers.nameInput().fill('Khách thử nghiệm');
     await customers.form().getByRole('button', { name: 'Lưu' }).click();
 
-    await expect(customers.form().getByText('Nhập số điện thoại hoặc email')).toBeVisible();
+    await expect(customers.form().getByText('Nhập số điện thoại', { exact: true })).toBeVisible();
+    await expect(customers.form().getByText('Nhập email', { exact: true })).toBeVisible();
     expect(createCalls).toBe(0);
   });
 
@@ -65,6 +66,7 @@ test.describe('CUSTOMERS — Danh sách và tạo hồ sơ', () => {
     await customers.open();
     await customers.createButton().click();
     await customers.nameInput().fill('Khách thử nghiệm');
+    await customers.phoneInput().fill('0912345678');
     await customers.emailInput().fill('test@example.com');
     const request = page.waitForRequest((req) =>
       req.method() === 'POST' && new URL(req.url()).pathname === '/api/v1/admin/customers',
@@ -72,6 +74,7 @@ test.describe('CUSTOMERS — Danh sách và tạo hồ sơ', () => {
     await customers.form().getByRole('button', { name: 'Lưu' }).click();
     expect((await request).postDataJSON()).toMatchObject({
       name: 'Khách thử nghiệm',
+      phone: '0912345678',
       email: 'test@example.com',
       marketingConsent: false,
     });
