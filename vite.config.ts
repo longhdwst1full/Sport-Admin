@@ -13,8 +13,16 @@ type ManualChunkMeta = Rollup.ManualChunkMeta;
 const ANTD_CORE_ROOTS = [
   /\/antd\/es\/(config-provider|theme|app|locale|_util|style|version)\//,
   /\/@ant-design\/(cssinjs|cssinjs-utils|colors|fast-color)\//,
-  /\/@ant-design\/icons\/es\/(components|utils\.js|index\.js)/,
+  /\/@ant-design\/icons\/es\/(components|utils\.js)/,
 ];
+
+/**
+ * Barrel `@ant-design/icons` re-export cả nghìn icon. Rollup kéo mọi phụ thuộc tĩnh chưa gán của
+ * một module vào cùng manual chunk, nên đặt barrel vào lõi sẽ dồn MỌI icon mà bất kỳ trang nào dùng
+ * vào chunk tải ngay lúc khởi động. Barrel không có side effect; từng icon chỉ import một chiều vào
+ * khung icon trong lõi, nên để Rollup đặt nó cạnh trang dùng nó. Icon antd tự import vẫn vào lõi.
+ */
+const ICONS_BARREL = /\/@ant-design\/icons\/es\/index\.js$/;
 
 let antdCore: Set<string> | undefined;
 
@@ -36,7 +44,9 @@ function collectAntdCore(meta: ManualChunkMeta): Set<string> {
   );
   while (stack.length > 0) {
     const id = stack.pop()!;
-    if (core.has(id) || !id.includes('node_modules') || reactChunk(id)) continue;
+    if (core.has(id) || !id.includes('node_modules') || reactChunk(id) || ICONS_BARREL.test(id)) {
+      continue;
+    }
     core.add(id);
     stack.push(...(meta.getModuleInfo(id)?.importedIds ?? []));
   }
