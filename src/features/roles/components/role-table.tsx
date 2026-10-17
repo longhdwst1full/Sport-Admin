@@ -57,7 +57,7 @@ export function RoleTable({
       {
         title: 'Mã quyền',
         key: 'permissionCodes',
-        width: 420,
+        width: 120,
         render: (_value, row) => (
           <PermissionCodesCell codes={row.permissionCodes} onShowMore={() => onShowPermissions(row)} />
         ),

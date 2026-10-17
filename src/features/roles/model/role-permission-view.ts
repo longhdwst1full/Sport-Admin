@@ -1,23 +1,6 @@
 import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
 import { buildPermissionTree, type PermissionTreeGroup } from './permission-tree';
 
-/** Số mã quyền hiện thẳng trong ô bảng trước khi gom vào "+N". */
-export const PERMISSION_CODE_PREVIEW_LIMIT = 3;
-
-export interface PermissionCodeSummary {
-  visible: string[];
-  hiddenCount: number;
-}
-
-/** Ô "Mã quyền" chỉ hiện vài mã đầu (theo thứ tự chữ cái), phần còn lại gom thành "+N". */
-export function summarizePermissionCodes(
-  codes: readonly string[],
-  limit = PERMISSION_CODE_PREVIEW_LIMIT,
-): PermissionCodeSummary {
-  const sorted = [...codes].sort((left, right) => left.localeCompare(right));
-  return { visible: sorted.slice(0, limit), hiddenCount: Math.max(sorted.length - limit, 0) };
-}
-
 /**
  * Cây quyền (nhóm menu → màn hình → hành động) của MỘT vai trò, dùng chung `buildPermissionTree`
  * với ô chọn quyền nên không có cách gom thứ hai.

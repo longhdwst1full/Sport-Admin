@@ -217,7 +217,7 @@ export function useRoleColumns(users: readonly UserDto[], onShowPermissions: (ro
       {
         title: 'Mã quyền',
         key: 'permissionCodes',
-        width: 420,
+        width: 120,
         render: (_, role) => (
           <PermissionCodesCell codes={role.permissionCodes} onShowMore={() => onShowPermissions(role)} />
         ),

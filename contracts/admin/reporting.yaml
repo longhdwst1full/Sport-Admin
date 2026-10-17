@@ -772,6 +772,11 @@ components:
           type: string
         productName:
           type: string
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Ảnh nhỏ của SKU (ảnh biến thể, không có thì ảnh sản phẩm); null khi chưa có ảnh hoặc SKU đã xoá
         quantitySold:
           type: number
           description: Số lượng đã bán trong khoảng
@@ -781,6 +786,7 @@ components:
       required:
         - sku
         - productName
+        - imageUrl
         - quantitySold
         - revenue
     TopProductListDto:

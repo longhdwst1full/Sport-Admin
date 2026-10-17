@@ -5,7 +5,6 @@ import {
   buildRolePermissionTree,
   countGroupPermissions,
   filterPermissionTree,
-  summarizePermissionCodes,
 } from './role-permission-view';
 
 const permission = (code: string, action: string, sensitive = false): PermissionDto => ({
@@ -21,20 +20,6 @@ const catalog = [
   permission('catalog.product.view', 'view'),
   permission('catalog.product.manage', 'manage'),
 ];
-
-describe('tóm tắt mã quyền trong ô bảng', () => {
-  it('hiện vài mã đầu theo thứ tự và đếm phần còn lại', () => {
-    expect(summarizePermissionCodes(['order.view', 'a.view', 'z.view', 'b.view'], 2)).toEqual({
-      visible: ['a.view', 'b.view'],
-      hiddenCount: 2,
-    });
-  });
-
-  it('không có phần dư khi ít mã', () => {
-    expect(summarizePermissionCodes(['order.view'])).toEqual({ visible: ['order.view'], hiddenCount: 0 });
-    expect(summarizePermissionCodes([])).toEqual({ visible: [], hiddenCount: 0 });
-  });
-});
 
 describe('cây quyền của một vai trò', () => {
   it('chỉ gồm quyền vai trò đang có, gom theo màn hình', () => {
