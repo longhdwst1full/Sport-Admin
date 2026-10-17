@@ -69,8 +69,8 @@ export function DashboardPage() {
       </div>
 
       {/* UX: bảng chi nhánh đứng cạnh top khách thay vì trải hết chiều ngang; không có thì top khách giãn đủ hàng. */}
-      {/* items-start: mỗi thẻ cao theo nội dung, thẻ ít dòng không bị kéo dài theo thẻ bên cạnh. */}
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
+      {/* Thẻ cùng hàng cao bằng nhau (grid stretch + DashboardCard h-full); bảng chi nhánh tự cuộn khi nhiều dòng. */}
+      <div className="grid grid-cols-1 gap-4 xl:auto-rows-[minmax(360px,auto)] xl:grid-cols-12">
         {showBranchRevenue && (
           <div className="min-w-0 xl:col-span-7">
             <BranchRevenueCard
