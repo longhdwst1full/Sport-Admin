@@ -1,10 +1,10 @@
 # POS — Bán tại quầy — maintenance note
 
-> **Document version:** 2.0.0
+> **Document version:** 2.1.0
 >
-> **Last updated:** 2026-09-21
+> **Last updated:** 2026-10-17
 >
-> **Change summary:** Dựng lại màn theo phiếu bán tại cửa hàng: chi nhánh + nhân viên ở đầu phiếu, khách hàng → sản phẩm → thanh toán theo chiều dọc, thêm tiền khách đưa/tiền thối cho tiền mặt.
+> **Change summary:** Giỏ quầy: vượt số suất flash còn lại → phần trong suất giá flash, phần dư giá gốc (`flashQuantity`, `lineTotal`), khớp Backend tách hai dòng như checkout web.
 
 ## Bố cục màn hình
 
@@ -82,5 +82,6 @@ Ngoài phạm vi: sửa/huỷ đơn đã bán (dùng màn Đơn hàng), trả h�
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 2.1.0 | 2026-10-17 | Giỏ quầy: vượt số suất flash → phần trong suất giá flash + phần dư giá gốc (`flashQuantity`, `lineTotal`), khớp `PosOrderService` tách hai dòng; ô đơn giá hiện "N × flash / M × gốc". |  |
 | 1.1.0 | 2026-09-15 | Dùng `searchPosCatalog`: combo và tồn khả dụng theo chi nhánh, chặn bán vượt tồn ngay trên UI. | POS-20260915-CATALOG |
 | 1.0.0 | 2026-09-15 | Tạo màn bán tại quầy từ generated contract `createPosOrder`. | POS-20260915-COUNTER-SALES |

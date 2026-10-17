@@ -31,13 +31,26 @@ export interface PosCartLine {
 }
 
 /**
- * Giá thực sự thu của một dòng: có suất flash thì lấy giá flash.
+ * Số lượng của dòng được giá flash: tối đa bằng số suất còn lại.
+ *
+ * INVARIANT (khớp `PosOrderService.buildCheckout`, cùng luật checkout web): vượt suất thì phần trong
+ * suất giá flash, phần dư giá gốc — đơn có hai dòng. Trước đây màn này hiện giá flash cho cả dòng,
+ * nhân viên đọc cho khách con số thấp hơn số Backend thu.
+ */
+export function flashQuantity(line: PosCartLine): number {
+  if (line.flashPrice == null) return 0;
+  return Math.min(line.quantity, Math.max(line.flashSaleAvailableQuantity ?? 0, 0));
+}
+
+/**
+ * Đơn giá hiển thị: giá flash khi có ít nhất một sản phẩm hưởng giá flash, không thì giá gốc. Thành tiền
+ * tách phần dư theo giá gốc ở `lineTotal`.
  *
  * Màn này KHÔNG phải nguồn giá — Backend chốt lại lúc tạo đơn. Nhưng con số hiện ở đây là con số
  * nhân viên đọc cho khách, nên nó phải bằng con số Backend sẽ tính.
  */
 export function effectivePrice(line: PosCartLine): number | null {
-  return line.flashPrice ?? line.unitPrice;
+  return flashQuantity(line) > 0 ? line.flashPrice : line.unitPrice;
 }
 
 function toCartLine(item: PosCatalogItemDto): PosCartLine {
@@ -100,8 +113,9 @@ export function removeLine(lines: PosCartLine[], variantId: string): PosCartLine
 }
 
 export function lineTotal(line: PosCartLine): number {
-  const price = effectivePrice(line);
-  return price == null ? 0 : price * line.quantity;
+  if (line.unitPrice == null) return 0;
+  const flash = flashQuantity(line);
+  return flash * (line.flashPrice ?? line.unitPrice) + (line.quantity - flash) * line.unitPrice;
 }
 
 /**

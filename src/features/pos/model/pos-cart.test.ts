@@ -4,6 +4,8 @@ import {
   addLine,
   dropFlashPrice,
   effectivePrice,
+  flashQuantity,
+  lineTotal,
   cartQuantity,
   cartTotal,
   linesOverStock,
@@ -149,6 +151,17 @@ describe('giá flash sale tại quầy', () => {
     expect(line.unitPrice).toBe(16000000);
     expect(line.flashPrice).toBe(13900000);
     expect(effectivePrice(line)).toBe(13900000);
+  });
+
+  it('vượt số suất còn lại: phần trong suất giá flash, phần dư giá gốc (khớp Backend tách dòng)', () => {
+    const [line] = addLine([], { ...flashItem, flashSaleAvailableQuantity: 2 });
+    const over = { ...line, quantity: 3 };
+
+    expect(flashQuantity(over)).toBe(2);
+    expect(lineTotal({ ...line, quantity: 2 })).toBe(27800000);
+    expect(lineTotal(over)).toBe(2 * 13900000 + 16000000);
+    expect(cartTotal([over])).toBe(43800000);
+    expect(lineTotal({ ...line, quantity: 3, flashSaleAvailableQuantity: 0 })).toBe(48000000);
   });
 
   it('tổng giỏ tính theo giá flash', () => {

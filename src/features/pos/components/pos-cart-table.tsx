@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { moneyFormatter } from '../constants/pos.constants';
 import { PosItemThumb } from './pos-product-picker';
-import { effectivePrice, lineTotal, type PosCartLine } from '../model/pos-cart';
+import { effectivePrice, flashQuantity, lineTotal, type PosCartLine } from '../model/pos-cart';
 
 export function PosCartTable({
   lines,
@@ -54,6 +54,31 @@ export function PosCartTable({
           // Giá flash hiện kèm giá gốc gạch ngang: nhân viên đọc đúng số sẽ thu, và vẫn nói
           // được với khách là đang giảm bao nhiêu.
           if (line.flashPrice == null) return moneyFormatter.format(line.unitPrice);
+          // Vượt số suất: phần trong suất giá flash, phần dư giá gốc (Backend tách hai dòng y vậy).
+          const flash = flashQuantity(line);
+          if (flash === 0) {
+            return (
+              <div>
+                <div>{moneyFormatter.format(line.unitPrice)}</div>
+                <Tag color="gold" className="mt-1">Hết suất flash</Tag>
+              </div>
+            );
+          }
+          if (flash < line.quantity) {
+            return (
+              <div className="text-xs leading-5">
+                <div className="font-semibold text-rose-600">
+                  {flash} × {moneyFormatter.format(line.flashPrice)}
+                </div>
+                <div>
+                  {line.quantity - flash} × {moneyFormatter.format(line.unitPrice)}
+                </div>
+                <Tooltip title={`Còn ${flash} suất flash: ${flash} sản phẩm giá flash, ${line.quantity - flash} sản phẩm còn lại giá gốc.`}>
+                  <Tag color="volcano" className="mt-1">Flash · còn {flash} suất</Tag>
+                </Tooltip>
+              </div>
+            );
+          }
           return (
             <div>
               <div className="font-semibold text-rose-600">
