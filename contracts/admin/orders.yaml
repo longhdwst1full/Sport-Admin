@@ -986,6 +986,11 @@ components:
         name:
           type: string
           example: Giàn tạ đa năng HQ-909S
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: "Ảnh nhỏ để nhận diện tại quầy: ảnh của biến thể, không có thì ảnh sản phẩm; null khi chưa có ảnh"
         unitPrice:
           type: string
           nullable: true
@@ -1018,6 +1023,7 @@ components:
         - id
         - sku
         - name
+        - imageUrl
         - unitPrice
         - isBundle
         - components

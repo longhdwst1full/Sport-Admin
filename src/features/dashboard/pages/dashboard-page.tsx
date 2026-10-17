@@ -16,6 +16,9 @@ export function DashboardPage() {
     report.permissions;
   const { granularity, range, revenueState } = report;
   const period = PERIOD_DESCRIPTION[granularity];
+  // Lỗi đã hiện ở thẻ doanh thu cùng nguồn; chỉ ẩn bảng chi nhánh khi chắc chắn không có dòng nào.
+  const showBranchRevenue =
+    canSeeRevenue && !revenueState.isError && (revenueState.isPending || report.branchRevenue.length > 0);
 
   return (
     <div className="dctd-page-enter space-y-6 pb-4">
@@ -65,29 +68,19 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {canSeeRevenue &&
-        !revenueState.isError &&
-        (revenueState.isPending || report.branchRevenue.length > 0) && (
-          <BranchRevenueCard
-            granularity={granularity}
-            range={range}
-            state={revenueState}
-            rows={report.branchRevenue}
-          />
+      {/* UX: bảng chi nhánh đứng cạnh top khách thay vì trải hết chiều ngang; không có thì top khách giãn đủ hàng. */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        {showBranchRevenue && (
+          <div className="min-w-0 xl:col-span-7">
+            <BranchRevenueCard
+              granularity={granularity}
+              range={range}
+              state={revenueState}
+              rows={report.branchRevenue}
+            />
+          </div>
         )}
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12">
-        <div className="min-w-0 md:col-span-2 xl:col-span-7">
-          <RevenueSeriesCard
-            metric="orders"
-            range={range}
-            canSeeRevenue={canSeeRevenue}
-            granularity={granularity}
-            state={revenueState}
-            series={report.revenueSeries}
-          />
-        </div>
-        <div className="min-w-0 2xl:col-span-5">
+        <div className={showBranchRevenue ? 'min-w-0 xl:col-span-5' : 'min-w-0 xl:col-span-12'}>
           <TopRankingCard
             title="Khách mua nhiều nhất"
             description={`Theo tổng giá trị đơn hoàn tất · ${period}`}
@@ -102,7 +95,17 @@ export function DashboardPage() {
             exportFilename="bao-cao-khach-mua-nhieu"
           />
         </div>
-        <div className="min-w-0 xl:col-span-12">
+        <div className="min-w-0 xl:col-span-7">
+          <RevenueSeriesCard
+            metric="orders"
+            range={range}
+            canSeeRevenue={canSeeRevenue}
+            granularity={granularity}
+            state={revenueState}
+            series={report.revenueSeries}
+          />
+        </div>
+        <div className="min-w-0 xl:col-span-5">
           <TopRankingCard
             title="Sản phẩm bán chạy"
             description={`Xếp theo số lượng bán trong đơn hoàn tất · ${period}`}

@@ -1,9 +1,23 @@
 import { SearchOutlined } from '@ant-design/icons';
-import { Empty, Space, Tag, Tooltip } from 'antd';
+import { Avatar, Empty, Space, Tag, Tooltip } from 'antd';
 import { searchPosCatalog } from '@/generated/api/orders/orders';
 import type { PosCatalogItemDto } from '@/generated/api/orders/orders.schemas';
 import { AsyncPagedSelect } from '@/foundation/inputs/async-paged-select';
 import { moneyFormatter, POS_SEARCH_LIMIT } from '../constants/pos.constants';
+
+/** Ảnh nhỏ giúp nhân viên nhận ra đúng mặt hàng; chưa có ảnh thì hiện chữ cái đầu. */
+export function PosItemThumb({ name, imageUrl, size = 40 }: { name: string; imageUrl: string | null; size?: number }) {
+  return (
+    <Avatar
+      shape="square"
+      size={size}
+      src={imageUrl && <img src={imageUrl} alt={name} width={size} height={size} loading="lazy" decoding="async" />}
+      className="!shrink-0 !rounded-lg !border !border-slate-100"
+    >
+      {name.slice(0, 1)}
+    </Avatar>
+  );
+}
 
 /** Lý do một mặt hàng không bán được; undefined nghĩa là chọn được. */
 function blockedReasonOf(item: PosCatalogItemDto): string | undefined {
@@ -70,7 +84,8 @@ export function PosProductPicker({
         return (
           <Tooltip title={blockedReasonOf(item)} placement="left">
             <div className="flex items-center justify-between gap-3 py-1">
-              <div className="min-w-0">
+              <PosItemThumb name={item.name} imageUrl={item.imageUrl} />
+              <div className="min-w-0 flex-1">
                 <div className="truncate font-semibold text-slate-800">{item.name}</div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="font-mono text-slate-500">{item.sku}</span>

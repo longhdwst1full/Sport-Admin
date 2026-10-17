@@ -127,6 +127,8 @@ export function AdminTable<RecordType extends object>({
   }, []);
   const effectiveSurface: TableSurface =
     surface ?? (insideOverlay ? 'embedded' : contextSurface);
+  // UX: bảng chưa có dòng nào giữ chiều cao tự nhiên (chỉ ô trống), không kéo cao hết màn hình.
+  const fillsPage = effectiveSurface === 'page' && (props.dataSource?.length ?? 0) > 0;
 
   const normalizedColumns = useMemo(
     () => withCellLineClamp(withFixedColumnWidths(columns, defaultColumnWidth)),
@@ -144,7 +146,7 @@ export function AdminTable<RecordType extends object>({
   return (
     <div
       ref={containerRef}
-      className={effectiveSurface === 'page' ? 'admin-table-fill' : undefined}
+      className={fillsPage ? 'admin-table-fill' : undefined}
       onDoubleClick={copyCellOnDoubleClick}
     >
       <Table<RecordType>
@@ -156,7 +158,7 @@ export function AdminTable<RecordType extends object>({
           ...scroll,
           x: scroll?.x ?? 'max-content',
           // `scroll.y` do chỗ gọi truyền vào luôn thắng: vài bảng có chiều cao riêng theo bố cục.
-          ...(effectiveSurface === 'page' && scroll?.y === undefined
+          ...(fillsPage && scroll?.y === undefined
             ? { y: ADMIN_TABLE_BODY_HEIGHT }
             : {}),
         }}

@@ -8,6 +8,8 @@ export interface PosCartLine {
   variantId: string;
   sku: string;
   name: string;
+  /** Thumbnail nhận diện tại quầy; null khi sản phẩm chưa có ảnh. */
+  imageUrl: string | null;
   /** null khi biến thể chưa có bảng giá hiệu lực; không cho bán cho tới khi có giá. */
   unitPrice: number | null;
   quantity: number;
@@ -44,6 +46,7 @@ function toCartLine(item: PosCatalogItemDto): PosCartLine {
     variantId: item.id,
     sku: item.sku,
     name: item.name,
+    imageUrl: item.imageUrl,
     unitPrice: price == null || Number.isNaN(price) ? null : price,
     quantity: 1,
     isBundle: item.isBundle,

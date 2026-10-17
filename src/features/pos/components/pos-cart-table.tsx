@@ -4,6 +4,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
 import { AdminTable, TableActionButton } from '@/foundation/table';
 import { moneyFormatter } from '../constants/pos.constants';
+import { PosItemThumb } from './pos-product-picker';
 import { effectivePrice, lineTotal, type PosCartLine } from '../model/pos-cart';
 
 export function PosCartTable({
@@ -23,20 +24,23 @@ export function PosCartTable({
         title: 'Sản phẩm',
         dataIndex: 'name',
         render: (_value, line) => (
-          <div>
-            <div className="font-semibold text-slate-800">{line.name}</div>
-            <div className="font-mono text-xs text-slate-500">{line.sku}</div>
-            {line.isBundle && (
-              <Tooltip
-                title={line.components
-                  .map((component) => `${component.name} × ${component.quantity}`)
-                  .join(' · ')}
-              >
-                <Tag color="purple" className="mt-1">
-                  Combo {line.components.length} món
-                </Tag>
-              </Tooltip>
-            )}
+          <div className="flex items-start gap-3">
+            <PosItemThumb name={line.name} imageUrl={line.imageUrl} size={48} />
+            <div className="min-w-0">
+              <div className="font-semibold text-slate-800">{line.name}</div>
+              <div className="font-mono text-xs text-slate-500">{line.sku}</div>
+              {line.isBundle && (
+                <Tooltip
+                  title={line.components
+                    .map((component) => `${component.name} × ${component.quantity}`)
+                    .join(' · ')}
+                >
+                  <Tag color="purple" className="mt-1">
+                    Combo {line.components.length} món
+                  </Tag>
+                </Tooltip>
+              )}
+            </div>
           </div>
         ),
       },
