@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Empty, Input, Tag, Tooltip, Tree, Typography } from 'antd';
+import { Empty, Input, Tooltip, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import { LockOutlined } from '@ant-design/icons';
 import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
-import { permissionActionLabels } from '../constants/role.constants';
 import { buildPermissionTree } from '../model/permission-tree';
+import { filterPermissionTree } from '../model/role-permission-view';
+import { PermissionGroupTitle, PermissionLeafTitle, PermissionScreenTitle } from './permission-tree-titles';
 
 export interface PermissionPickerProps {
   permissions: PermissionDto[];
@@ -34,51 +34,20 @@ export function PermissionPicker({
 
   const groups = useMemo(() => buildPermissionTree(permissions), [permissions]);
 
-  const visibleGroups = useMemo(() => {
-    const needle = keyword.trim().toLowerCase();
-    if (!needle) return groups;
-    return groups
-      .map((group) => ({
-        ...group,
-        screens: group.screens
-          .map((screen) => ({
-            ...screen,
-            permissions: screen.permissions.filter(
-              (item) =>
-                item.code.toLowerCase().includes(needle) ||
-                screen.label.toLowerCase().includes(needle) ||
-                group.label.toLowerCase().includes(needle),
-            ),
-          }))
-          .filter((screen) => screen.permissions.length > 0),
-      }))
-      .filter((group) => group.screens.length > 0);
-  }, [groups, keyword]);
+  const visibleGroups = useMemo(() => filterPermissionTree(groups, keyword), [groups, keyword]);
 
   const treeData: DataNode[] = useMemo(
     () =>
       visibleGroups.map((group) => ({
         key: `${GROUP_PREFIX}${group.key}`,
-        title: <span className="font-semibold">{group.label}</span>,
+        title: <PermissionGroupTitle group={group} />,
         // Node nhóm và màn hình chỉ để gom; bỏ chọn được nhưng không gửi lên API.
         children: group.screens.map((screen) => ({
           key: `${SCREEN_PREFIX}${screen.key}`,
-          title: <span className="font-medium">{screen.label}</span>,
+          title: <PermissionScreenTitle label={screen.label} />,
           children: screen.permissions.map((item) => {
             const grantable = grantableCodes.has(item.code);
-            const label = (
-              <span className={grantable ? undefined : 'text-slate-400'}>
-                <span className="mr-2">{permissionActionLabels[item.action] ?? item.action}</span>
-                <Typography.Text type="secondary" className="text-xs">
-                  {item.code}
-                </Typography.Text>
-                {item.sensitive && (
-                  <Tag color="orange" className="ml-2" icon={<LockOutlined />}>
-                    Nhạy cảm
-                  </Tag>
-                )}
-              </span>
-            );
+            const label = <PermissionLeafTitle item={item} muted={!grantable} />;
             return {
               key: item.code,
               disabled: disabled || !grantable,
@@ -124,7 +93,7 @@ export function PermissionPicker({
     <div className="space-y-2">
       <Input.Search
         allowClear
-        placeholder="Tìm theo màn hình hoặc mã quyền"
+        placeholder="Tìm theo màn hình, tên hoặc mã quyền"
         value={keyword}
         onChange={(event) => setKeyword(event.target.value)}
       />

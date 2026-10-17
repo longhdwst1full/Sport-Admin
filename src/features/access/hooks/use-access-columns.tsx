@@ -12,6 +12,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { StatusTag } from '@/foundation/management';
 import { col, TableActionButton } from '@/foundation/table';
 import type { RoleDto, UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
+import { PermissionCodesCell } from '@/features/roles';
 import {
   PASSWORD_STATE_PRESENTATION,
   roleCodeLabel,
@@ -197,20 +198,11 @@ const ROLE_INFO_COLUMNS: ColumnsType<RoleDto> = [
   },
 ];
 
-const ROLE_PERMISSION_COLUMN: ColumnsType<RoleDto>[number] = {
-  title: 'Mã quyền',
-  dataIndex: 'permissionCodes',
-  render: (values: string[]) => (
-    <Space size={[4, 4]} wrap>
-      {values.map((value) => (
-        <Tag key={value}>{value}</Tag>
-      ))}
-    </Space>
-  ),
-};
-
-/** Cột bảng vai trò; số người dùng của vai trò đếm trên danh sách người dùng đang tải. */
-export function useRoleColumns(users: readonly UserDto[]) {
+/**
+ * Cột bảng vai trò; số người dùng của vai trò đếm trên danh sách người dùng đang tải.
+ * Cột "Mã quyền" chỉ tóm tắt — "Xem thêm" mở cây quyền theo màn hình của `features/roles`.
+ */
+export function useRoleColumns(users: readonly UserDto[], onShowPermissions: (role: RoleDto) => void) {
   return useMemo<ColumnsType<RoleDto>>(
     () => [
       ...ROLE_INFO_COLUMNS,
@@ -222,8 +214,15 @@ export function useRoleColumns(users: readonly UserDto[]) {
         render: (_, role) =>
           users.filter((user) => user.assignments.some((assignment) => assignment.roleId === role.id)).length,
       },
-      ROLE_PERMISSION_COLUMN,
+      {
+        title: 'Mã quyền',
+        key: 'permissionCodes',
+        width: 420,
+        render: (_, role) => (
+          <PermissionCodesCell codes={role.permissionCodes} onShowMore={() => onShowPermissions(role)} />
+        ),
+      },
     ],
-    [users],
+    [users, onShowPermissions],
   );
 }

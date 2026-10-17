@@ -1,9 +1,12 @@
 import { NAVIGATION_GROUP_LABELS, NAVIGATION_ITEMS_DATA } from '@/shared/constants/navigation';
 import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
+import { PERMISSION_LABELS, permissionActionLabels } from '../constants/role.constants';
 
 export interface PermissionTreeLeaf {
   code: string;
   action: string;
+  /** Nhãn tiếng Việt của quyền; không bao giờ là mảnh mã thô như `use`/`mfa_manage`. */
+  label: string;
   sensitive: boolean;
 }
 
@@ -20,9 +23,14 @@ export interface PermissionTreeGroup {
   screens: PermissionTreeScreen[];
 }
 
-/** Nhóm cho quyền chưa gắn với màn hình nào trong Admin. */
+/** Nhóm cho quyền thật sự không thuộc màn hình nào trong menu (vd. `system.module.view`). */
 export const UNMAPPED_GROUP_KEY = 'unmapped';
-export const UNMAPPED_GROUP_LABEL = 'Chưa có màn hình';
+export const UNMAPPED_GROUP_LABEL = 'Quyền hệ thống khác';
+
+/** Nhãn lá: bảng nhãn theo mã → nhãn hành động → "Quyền khác" (mã vẫn hiện bên cạnh). */
+export function permissionLeafLabel(code: string, action: string): string {
+  return PERMISSION_LABELS[code] ?? permissionActionLabels[action] ?? 'Quyền khác';
+}
 
 /**
  * Nhãn cho từng họ quyền. Menu chỉ khai một mã `*.view` cho mỗi màn, nên các họ quyền còn lại
@@ -65,6 +73,17 @@ const FAMILY_LABELS: Record<string, string> = {
   'purchase.receipt': 'Phiếu nhập kho',
   'purchase.return': 'Trả hàng NCC',
   supplier: 'Nhà cung cấp',
+  assistant: 'Trợ lý AI',
+  'social.post': 'Bài đăng mạng xã hội',
+};
+
+/**
+ * Họ quyền con gộp vào màn hình của họ cha — tránh hai "màn hình" cùng nhãn trong cây
+ * (vd. `assistant.tool.execute` thuộc màn Trợ lý AI, `iam.user.mfa.manage` thuộc màn Nhân sự).
+ */
+const FAMILY_ALIASES: Record<string, string> = {
+  'assistant.tool': 'assistant',
+  'iam.user.mfa': 'iam.user',
 };
 
 /** Họ quyền dùng chung một màn hình dù menu chỉ trỏ tới một mã. */
@@ -85,11 +104,21 @@ const FAMILY_TO_SCREEN_PERMISSION: Record<string, string> = {
   supplier: 'purchase.order.view',
   // Menu Đánh giá mở bằng `catalog.review.moderate` (không có `catalog.review.view`).
   'catalog.review': 'catalog.review.moderate',
+  // Trợ lý AI không có mục menu riêng; cấu hình nằm ở màn Tri thức trợ lý.
+  assistant: 'assistant.knowledge.manage',
+  // Bài đăng MXH thao tác trên màn Dashboard mạng xã hội (mở bằng `cms.content.view`).
+  'social.post': 'cms.content.view',
 };
 
 export function permissionFamily(code: string): string {
   const parts = code.split('.');
   return parts.length <= 1 ? code : parts.slice(0, -1).join('.');
+}
+
+/** Họ quyền dùng làm "màn hình" trong cây, sau khi gộp họ con theo `FAMILY_ALIASES`. */
+export function permissionScreenFamily(code: string): string {
+  const family = permissionFamily(code);
+  return FAMILY_ALIASES[family] ?? family;
 }
 
 interface ScreenBinding {
@@ -123,7 +152,7 @@ function buildScreenIndex(): Map<string, ScreenBinding> {
  * Danh sách phẳng hơn 50 mã không nói được "quyền này thuộc màn nào", nên người cấp quyền phải tự
  * dịch mã kỹ thuật sang màn hình trong đầu. Cây này lấy đúng cấu trúc menu mà họ đang nhìn thấy.
  *
- * Quyền không khớp màn nào rơi vào nhóm "Chưa có màn hình" thay vì bị giấu — giấu quyền nghĩa là
+ * Quyền không khớp màn nào rơi vào nhóm "Quyền hệ thống khác" thay vì bị giấu — giấu quyền nghĩa là
  * không ai cấp được nó nữa.
  */
 export function buildPermissionTree(permissions: PermissionDto[]): PermissionTreeGroup[] {
@@ -132,7 +161,7 @@ export function buildPermissionTree(permissions: PermissionDto[]): PermissionTre
   const screenOrder = new Map<string, number>();
 
   for (const permission of permissions) {
-    const family = permissionFamily(permission.code);
+    const family = permissionScreenFamily(permission.code);
     const binding =
       screenIndex.get(permission.code) ??
       screenIndex.get(`${family}.view`) ??
@@ -155,6 +184,7 @@ export function buildPermissionTree(permissions: PermissionDto[]): PermissionTre
     screen.permissions.push({
       code: permission.code,
       action: permission.action,
+      label: permissionLeafLabel(permission.code, permission.action),
       sensitive: permission.sensitive ?? false,
     });
   }

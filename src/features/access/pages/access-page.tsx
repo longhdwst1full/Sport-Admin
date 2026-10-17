@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   LockOutlined,
   PlusOutlined,
@@ -18,7 +18,8 @@ import {
   useListAdminRoles,
   useListAdminUsers,
 } from '@/generated/api/iam/iam';
-import type { UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
+import type { RoleDto, UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
+import { RolePermissionsDrawer } from '@/features/roles';
 import { RoleAssignmentDrawer } from '../components/role-assignment-drawer';
 import { RoleAssignmentRevokeModal } from '../components/role-assignment-revoke-modal';
 import { StaffCreationDrawer } from '../components/staff-creation-drawer';
@@ -37,6 +38,7 @@ export function AccessPage() {
   }>();
   const [staffCreationOpen, setStaffCreationOpen] = useState(false);
   const [lifecycle, setLifecycle] = useState<{ action: StaffLifecycleAction; user: UserDto }>();
+  const [permissionRoleId, setPermissionRoleId] = useState<string>();
   const canViewRoles = useCan('iam.role.view');
   const canAssignRoles = useCan('iam.assignment.manage');
   const canManageUsers = useCan('iam.user.manage');
@@ -53,7 +55,7 @@ export function AccessPage() {
   const assignmentUser = users.find((user) => user.id === assignmentUserId);
   const { developmentBypass } = useAuth();
   const roles = rolesQuery.data?.items ?? [];
-  const permissions = permissionsQuery.data?.items ?? [];
+  const permissions = useMemo(() => permissionsQuery.data?.items ?? [], [permissionsQuery.data]);
   const loading =
     usersQuery.isPending || (canViewRoles && (rolesQuery.isPending || permissionsQuery.isPending));
   const userColumns = useUserColumns({
@@ -65,7 +67,9 @@ export function AccessPage() {
     onLifecycle: (action, user) => setLifecycle({ action, user }),
     staffMfa,
   });
-  const roleColumns = useRoleColumns(users);
+  const permissionRole = roles.find((role) => role.id === permissionRoleId);
+  const showRolePermissions = useCallback((role: RoleDto) => setPermissionRoleId(role.id), []);
+  const roleColumns = useRoleColumns(users, showRolePermissions);
   const hasError =
     usersQuery.isError || (canViewRoles && (rolesQuery.isError || permissionsQuery.isError));
 
@@ -74,6 +78,13 @@ export function AccessPage() {
       eyebrow="Danh tính & truy cập"
       title="Người dùng & phân quyền"
       description="Hệ thống có một tài khoản Admin duy nhất; Admin tạo và phân quyền BRANCH_MANAGER hoặc STAFF theo chi nhánh."
+      actions={
+        canManageUsers && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setStaffCreationOpen(true)}>
+            Tạo nhân viên
+          </Button>
+        )
+      }
       metrics={[
         { key: 'users', label: 'Người dùng', value: users.length, icon: <UserOutlined /> },
         {
@@ -99,13 +110,6 @@ export function AccessPage() {
         },
       ]}
     >
-      {canManageUsers && (
-        <div className="mb-4 flex justify-end">
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setStaffCreationOpen(true)}>
-            Tạo nhân viên
-          </Button>
-        </div>
-      )}
       {developmentBypass && (
         <Alert
           className="mb-5"
@@ -158,7 +162,8 @@ export function AccessPage() {
                       loading={loading}
                       dataSource={roles}
                       pagination={false}
-                      scroll={{ x: 900 }}
+                      tableLayout="fixed"
+                      scroll={{ x: 960 }}
                       columns={roleColumns}
                     />
                   ),
@@ -172,6 +177,11 @@ export function AccessPage() {
         open={Boolean(assignmentUser)}
         onClose={() => setAssignmentUserId(undefined)}
         onRevoke={(assignment) => assignmentUser && setRevokeTarget({ user: assignmentUser, assignment })}
+      />
+      <RolePermissionsDrawer
+        role={permissionRole}
+        permissions={permissions}
+        onClose={() => setPermissionRoleId(undefined)}
       />
       <RoleAssignmentRevokeModal target={revokeTarget} onClose={() => setRevokeTarget(undefined)} />
       <StaffCreationDrawer

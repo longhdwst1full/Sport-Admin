@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { PermissionDto } from '@/generated/api/iam/iam.schemas';
+import { PERMISSION_LABELS } from '../constants/role.constants';
 import {
   UNMAPPED_GROUP_KEY,
+  UNMAPPED_GROUP_LABEL,
   buildPermissionTree,
   permissionFamily,
 } from './permission-tree';
@@ -93,5 +95,22 @@ describe('cây quyền theo màn hình', () => {
       group.screens.flatMap((screen) => screen.permissions.map((item) => item.code)),
     );
     expect(flattened.sort()).toEqual([...codes].sort());
+  });
+
+  it('mọi quyền đã có nhãn đều gắn vào một màn hình, trừ quyền truy cập chung', () => {
+    const tree = buildPermissionTree(
+      Object.keys(PERMISSION_LABELS).map((code) => permission(code, code.split('.').at(-1) ?? code)),
+    );
+    const unmapped = tree.find((group) => group.key === UNMAPPED_GROUP_KEY);
+    expect(unmapped?.label).toBe(UNMAPPED_GROUP_LABEL);
+    expect(unmapped?.screens.flatMap((screen) => screen.permissions.map((item) => item.code))).toEqual([
+      'system.module.view',
+    ]);
+    for (const group of tree) {
+      for (const screen of group.screens) {
+        expect(screen.label).not.toBe(screen.key);
+        for (const item of screen.permissions) expect(item.label).toBe(PERMISSION_LABELS[item.code]);
+      }
+    }
   });
 });

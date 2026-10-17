@@ -1,10 +1,10 @@
 # Roles — maintenance note
 
-> **Document version:** 1.4.0
+> **Document version:** 1.5.0
 >
-> **Last updated:** 2026-10-10
+> **Last updated:** 2026-10-17
 >
-> **Change summary:** Ô tìm vai trò (lọc tại chỗ, `q` trên URL); xoá vai trò dùng `useConfirmWithReason`; lỗi tải dùng `QueryErrorAlert`; bỏ `permissionLabel`/`permissionModuleLabels` không dùng.
+> **Change summary:** Bảng vai trò gọn (cột Mã quyền tóm tắt + "Xem thêm", nút "Xem chi tiết"); cây quyền chỉ đọc trong `RolePermissionsDrawer`; nhãn tiếng Việt cho từng mã quyền; gắn `assistant.*`, `iam.user.mfa`, `social.post.*` vào màn thật.
 
 ## Phạm vi
 
@@ -29,7 +29,8 @@ Menu **suy ra từ quyền**, không lưu riêng — giống `admin-client` (men
 - Drawer có hai tab cùng ghi field `permissionCodes`: **Menu hiển thị** (`components/menu-access-panel.tsx`) và **Chi tiết quyền** (`PermissionPicker`).
 - Bật một mục = thêm mã xem của nó (chỉ mã người thao tác cấp được). Tắt = bỏ mọi mã xem của mục; quyền thao tác `*.manage`... giữ nguyên.
 - Mục dùng chung mã (Sản phẩm/Thuộc tính → `catalog.product.view`; Tham số hệ thống/Thông báo email → `system.parameter.view`) được gắn tag "Chung quyền": bật/tắt một mục đổi cả mục kia.
-- Bảng vai trò, khi mở dòng, hiện "Menu sẽ hiển thị".
+- Bảng vai trò chỉ tóm tắt (vài mã đầu + "+N"). Nút "Xem chi tiết" ở cột thao tác và "Xem thêm" ở cột Mã quyền cùng mở `components/role-permissions-drawer.tsx` (chỉ đọc): "Menu sẽ hiển thị" + cây quyền theo màn hình có ô tìm, đếm số quyền mỗi nhóm/màn, mở hết mặc định. `PermissionCodesCell` và `RolePermissionsDrawer` được xuất qua barrel cho tab Vai trò của `features/access`.
+- Logic tóm tắt/lọc/cây của một vai trò ở `model/role-permission-view.ts` (có test).
 - Panel cảnh báo nếu menu khai mã không có trong catalog `listAdminPermissions`.
 - Logic thuần nằm ở `model/menu-visibility.ts`; mutation lưu/xoá vai trò ở `hooks/use-role-mutations.ts`.
 
@@ -49,16 +50,17 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 
 ## Checklist khi sửa
 
-- [ ] Thêm module quyền mới ở BE phải bổ sung nhãn vào `constants/role.constants.ts`, nếu không cây quyền hiện mã thô.
+- [ ] Thêm mã quyền mới ở BE phải thêm nhãn vào `PERMISSION_LABELS` (`constants/role.constants.ts`) — `PermissionDto` không có tên/mô tả; test `permission-tree.test.ts` kiểm mọi mã có nhãn đều gắn màn hình.
 - [ ] Không bỏ `grantableCodes` khỏi `PermissionPicker` — đó là lớp UI của quy tắc chống leo thang đặc quyền.
 - [ ] Không thêm ô cho phép sửa `code`.
 - [ ] Thêm/sửa mục menu chỉ ở `NAVIGATION_ITEMS_DATA`; không tạo danh sách menu thứ hai trong feature này.
-- [ ] Họ quyền mới thuộc một màn có sẵn phải khai `FAMILY_TO_SCREEN_PERMISSION`, nếu không rơi vào "Chưa có màn hình".
+- [ ] Họ quyền mới thuộc một màn có sẵn phải khai `FAMILY_TO_SCREEN_PERMISSION` (họ con gộp qua `FAMILY_ALIASES`), nếu không rơi vào "Quyền hệ thống khác" (chỉ dành cho quyền thật sự không có màn, vd. `system.module.view`).
 
 ## Revision history
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.5.0 | 2026-10-17 | Bảng gọn + drawer chi tiết quyền theo màn hình; nhãn tiếng Việt cho mã quyền; nhóm "Quyền hệ thống khác" thay "Chưa có màn hình"; cờ Nhạy cảm có tooltip. |
 | 1.4.0 | 2026-10-10 | Ô tìm vai trò (lọc tại chỗ, `q` trên URL); xoá vai trò dùng `useConfirmWithReason`; lỗi tải dùng `QueryErrorAlert`; bỏ `permissionLabel`/`permissionModuleLabels` không dùng. |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý vai trò. |
 | 1.0.1 | 2026-09-18 | Cho phép thu gọn cây quyền và ghi rõ cách nhóm theo màn hình. |

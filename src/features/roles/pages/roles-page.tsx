@@ -14,6 +14,7 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { RoleFormDrawer } from '../components/role-form-drawer';
+import { RolePermissionsDrawer } from '../components/role-permissions-drawer';
 import { RoleTable } from '../components/role-table';
 import { ROLE_DELETE_REASON_MIN_LENGTH } from '../constants/role.constants';
 import {
@@ -35,6 +36,8 @@ export function RolesPage() {
   const actorPermissions = usePermissions();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<RoleDto>();
+  // Lưu id thay vì DTO để drawer luôn đọc bản mới nhất sau khi refetch.
+  const [viewingRoleId, setViewingRoleId] = useState<string>();
 
   const roles = useListAdminAllRoles();
   const permissions = useListAdminPermissions();
@@ -46,6 +49,7 @@ export function RolesPage() {
     [roles.data, keyword],
   );
   const permissionItems = useMemo(() => permissions.data?.items ?? [], [permissions.data]);
+  const viewingRole = roles.data?.items.find((role) => role.id === viewingRoleId);
 
   /**
    * API chặn cấp quyền vượt quá quyền của chính người thao tác. Khi sửa một vai trò,
@@ -144,7 +148,6 @@ export function RolesPage() {
         {roles.isError && <QueryErrorAlert error={roles.error} retry={() => void roles.refetch()} />}
         <RoleTable
           rows={rows}
-          permissions={permissionItems}
           loading={roles.isLoading || roles.isFetching}
           canManage={canManage}
           onEdit={(row) => {
@@ -152,8 +155,15 @@ export function RolesPage() {
             setFormOpen(true);
           }}
           onDelete={confirmDelete}
+          onShowPermissions={(row) => setViewingRoleId(row.id)}
         />
       </ManagementPage>
+
+      <RolePermissionsDrawer
+        role={viewingRole}
+        permissions={permissionItems}
+        onClose={() => setViewingRoleId(undefined)}
+      />
 
       <RoleFormDrawer
         open={formOpen}
