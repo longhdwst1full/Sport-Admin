@@ -8,7 +8,7 @@ import type {
 import { formatMoney } from '@/lib/format/money';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
-import { PRODUCT_READINESS_LABEL, PRODUCT_TYPE_LABEL } from '../../constants/product-list.constants';
+import { AUTO_GENERATED_CODE_HINT, PRODUCT_READINESS_LABEL, PRODUCT_TYPE_LABEL } from '../../constants/product-list.constants';
 import { PRODUCT_VARIANT_STATUS_PRESENTATION } from '../../constants/product-status.constants';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 
@@ -22,15 +22,19 @@ interface ReviewVariantRow {
   status?: ProductVariantStatus;
 }
 
+/** SKU/barcode chỉ đọc: biến thể chưa lưu hiện gợi ý tự sinh, biến thể đã lưu hiện mã thật (thiếu thì `—`). */
+const codeColumns = (pending: boolean): ColumnsType<ReviewVariantRow> =>
+  pending
+    ? (['sku', 'barcode'] as const).map((key) => ({
+        title: key === 'sku' ? 'SKU' : 'Barcode',
+        key,
+        width: key === 'sku' ? 130 : 150,
+        render: () => <Typography.Text type="secondary">{AUTO_GENERATED_CODE_HINT}</Typography.Text>,
+      }))
+    : [col.text<ReviewVariantRow>('sku', 'SKU', { width: 130 }), col.text<ReviewVariantRow>('barcode', 'Barcode', { width: 150 })];
+
 const VARIANT_SUMMARY_COLUMNS: ColumnsType<ReviewVariantRow> = [
-  {
-    title: 'SKU',
-    dataIndex: 'sku',
-    width: 130,
-    render: (value?: string) => value || <Typography.Text type="secondary">Tự sinh</Typography.Text>,
-  },
   col.text<ReviewVariantRow>('name', 'Tên biến thể', { width: undefined }),
-  col.text<ReviewVariantRow>('barcode', 'Barcode', { width: 140 }),
   {
     title: 'Giá bán',
     dataIndex: 'price',
@@ -42,12 +46,14 @@ const VARIANT_SUMMARY_COLUMNS: ColumnsType<ReviewVariantRow> = [
 
 /** Sản phẩm đã có: cột cuối là trạng thái SKU. */
 const EXISTING_VARIANT_COLUMNS: ColumnsType<ReviewVariantRow> = [
+  ...codeColumns(false),
   ...VARIANT_SUMMARY_COLUMNS,
   col.status<ReviewVariantRow, ProductVariantStatus>('status', 'Trạng thái', PRODUCT_VARIANT_STATUS_PRESENTATION, { width: 110 }),
 ];
 
 /** Đang tạo: cột cuối là tồn đầu sẽ ghi. */
 const NEW_VARIANT_COLUMNS: ColumnsType<ReviewVariantRow> = [
+  ...codeColumns(true),
   ...VARIANT_SUMMARY_COLUMNS,
   col.text<ReviewVariantRow>('openingQuantity', 'Tồn đầu', { width: 100, align: 'right' }),
 ];
@@ -88,7 +94,6 @@ export function ProductReviewTab({
     : formVariants.map((variant, index) => ({
         key: String(index),
         name: variant.name,
-        barcode: variant.barcode,
         price: variant.price?.trim() || undefined,
         openingQuantity: variant.openingQuantity,
       }));
@@ -119,7 +124,8 @@ export function ProductReviewTab({
         <Alert type="info" showIcon message={readiness.warnings.map(({ code }) => PRODUCT_READINESS_LABEL[code] ?? code).join(' · ')} />
       )}
 
-      <Descriptions bordered size="small" column={1}>
+      {/* Hai cột trên màn rộng để bảng tóm tắt không kéo dài một cột. */}
+      <Descriptions bordered size="small" column={{ xs: 1, sm: 1, md: 2 }}>
         <Descriptions.Item label="Tên sản phẩm">
           {values.name?.trim() || <Typography.Text type="secondary">Chưa nhập</Typography.Text>}
         </Descriptions.Item>
@@ -140,7 +146,7 @@ export function ProductReviewTab({
         <Descriptions.Item label="Thông số kỹ thuật">
           {specificationCount ? `${specificationCount} thông số` : <Typography.Text type="secondary">Chưa nhập</Typography.Text>}
         </Descriptions.Item>
-        <Descriptions.Item label="Mã sản phẩm và đường dẫn">
+        <Descriptions.Item label="Mã sản phẩm và đường dẫn" span={2}>
           {product ? `${product.productNo} · /${product.slug}` : <Typography.Text type="secondary">Hệ thống tự sinh sau khi lưu</Typography.Text>}
         </Descriptions.Item>
       </Descriptions>

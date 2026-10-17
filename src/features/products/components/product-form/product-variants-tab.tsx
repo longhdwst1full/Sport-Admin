@@ -4,9 +4,9 @@ import { Controller, type UseFieldArrayReturn, type UseFormReturn } from 'react-
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { FormSection } from '@/foundation/layout/form-section';
 import { ProductType } from '@/generated/api/catalog/catalog.schemas';
-import { VARIANT_DIMENSION_FIELDS } from '../../constants/product-list.constants';
+import { AUTO_GENERATED_CODE_HINT, VARIANT_DIMENSION_FIELDS } from '../../constants/product-list.constants';
 import { emptyVariant, type ProductFormValues } from '../../model/product-form.mapper';
-import { FieldItem, SkuInput, VariantNumberInput } from './form-field-parts';
+import { FieldItem, VariantNumberInput } from './form-field-parts';
 
 /** CONTRACT: cùng giới hạn `variants.max(50)` của schema tạo sản phẩm. */
 const MAX_VARIANTS = 50;
@@ -14,7 +14,7 @@ const MAX_VARIANTS = 50;
 /**
  * Khối SKU & giá (tab "SKU, giá & tồn kho") ở chế độ Tạo. Chế độ Sửa dùng `ProductVariantsManager` (SKU thật, lưu ngay).
  *
- * SKU nhập tay hoặc để Backend sinh; người nhập khai tên biến thể, kích thước và giá. Tồn đầu nằm ở tab
+ * SKU và barcode do Backend sinh (không có ô nhập); người nhập khai tên biến thể, kích thước và giá. Tồn đầu nằm ở tab
  * Tồn kho.
  */
 export function ProductVariantsTab({
@@ -33,7 +33,7 @@ export function ProductVariantsTab({
   return (
     <FormSection
       title="Biến thể bán hàng (SKU)"
-      description="Khai báo màu sắc, kích thước hoặc phiên bản khách sẽ chọn khi mua. SKU bỏ trống thì hệ thống tự sinh."
+      description="Khai báo màu sắc, kích thước hoặc phiên bản khách sẽ chọn khi mua. SKU và barcode do hệ thống tự sinh khi lưu."
       icon={<BarcodeOutlined />}
       extra={<Tag color="blue">{variantFields.fields.length} biến thể</Tag>}
     >
@@ -65,6 +65,7 @@ export function ProductVariantsTab({
                   {index + 1}
                 </span>
                 Biến thể {index + 1}
+                <span className="text-xs font-normal text-slate-400">· SKU, barcode: {AUTO_GENERATED_CODE_HINT}</span>
               </span>
             }
             extra={(
@@ -84,20 +85,6 @@ export function ProductVariantsTab({
                   name={`variants.${index}.name`}
                   control={form.control}
                   render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Đen - Size 40" />}
-                />
-              </FieldItem>
-              <FieldItem
-                label="SKU (mã hàng)"
-                extra="Mã cửa hàng đang dùng, ví dụ TD-02. Bỏ trống để hệ thống tự sinh; không sửa được sau khi tạo."
-                error={errors?.[index]?.sku}
-              >
-                <Controller name={`variants.${index}.sku`} control={form.control} render={({ field }) => <SkuInput {...field} />} />
-              </FieldItem>
-              <FieldItem label="Barcode" error={errors?.[index]?.barcode}>
-                <Controller
-                  name={`variants.${index}.barcode`}
-                  control={form.control}
-                  render={({ field }) => <Input {...field} maxLength={64} placeholder="Không bắt buộc" />}
                 />
               </FieldItem>
               {VARIANT_DIMENSION_FIELDS.map(([fieldName, label, min]) => (

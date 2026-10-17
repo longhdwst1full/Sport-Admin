@@ -1,6 +1,7 @@
 import { Alert, Divider, Drawer, Form, Tabs } from 'antd';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { DRAWER_WIDTH } from '@/foundation/overlay';
 import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import { parseEnum } from '@/shared/utils/parse-enum';
 import { useProductWorkspace, type ProductWorkspace } from '../hooks/use-product-workspace';
@@ -49,9 +50,9 @@ export function ProductWorkspaceDrawer({
     <Drawer
       title={isEdit ? (product ? `${product.name} · ${product.productNo}` : 'Sản phẩm') : 'Tạo sản phẩm'}
       extra={<ProductWorkspaceHeaderActions workspace={workspace} />}
-      width="100%"
-      // Một độ rộng cho Tạo và Sửa: đủ cho bảng SKU và lịch giá cạnh nhau.
-      styles={{ wrapper: { maxWidth: 1040 }, body: { background: 'var(--color-surface-sunken)' } }}
+      // Một độ rộng cho Tạo và Sửa (cỡ `xl` dùng chung): đủ cho bảng SKU và lịch giá cạnh nhau.
+      width={DRAWER_WIDTH.xl}
+      styles={{ body: { background: 'var(--color-surface-sunken)', padding: 16 } }}
       push={false}
       open={open}
       onClose={() => { if (!mutationPending) onClose(); }}
@@ -72,18 +73,25 @@ export function ProductWorkspaceDrawer({
           Một `useForm` duy nhất trải qua các tab — đổi tab không lưu gì cả.
         */
         <Form component={false} layout="vertical" disabled={mutationPending || workspace.isArchived}>
-          <Tabs
-            activeKey={workspace.activeTab}
-            onChange={(key) => {
-              const tab = parseEnum(PRODUCT_FORM_TABS, key);
-              if (tab) workspace.setActiveTab(tab);
-            }}
-            items={PRODUCT_FORM_TABS.map((tab) => ({
-              key: tab,
-              label: PRODUCT_TAB_LABELS[tab],
-              children: <ProductWorkspaceTabContent tab={tab} workspace={workspace} />,
-            }))}
-          />
+          {/*
+            `dctd-form-compact` thu khoảng cách giữa các ô để tab ít phải cuộn.
+            Sản phẩm đã lưu trữ chỉ để xem: ô vẫn khoá nhưng `dctd-readonly-view` hiện giá trị chữ đậm, nền
+            trắng thay vì kiểu disabled xám của antd. Khoá tạm lúc đang gửi (mutationPending) vẫn giữ kiểu xám.
+          */}
+          <div className={workspace.isArchived ? 'dctd-form-compact dctd-readonly-view' : 'dctd-form-compact'}>
+            <Tabs
+              activeKey={workspace.activeTab}
+              onChange={(key) => {
+                const tab = parseEnum(PRODUCT_FORM_TABS, key);
+                if (tab) workspace.setActiveTab(tab);
+              }}
+              items={PRODUCT_FORM_TABS.map((tab) => ({
+                key: tab,
+                label: PRODUCT_TAB_LABELS[tab],
+                children: <ProductWorkspaceTabContent tab={tab} workspace={workspace} />,
+              }))}
+            />
+          </div>
         </Form>
       )}
     </Drawer>

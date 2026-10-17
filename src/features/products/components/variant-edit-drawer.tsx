@@ -1,5 +1,5 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { App, Form, Input } from 'antd';
+import { App, Descriptions, Form, Input } from 'antd';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -12,10 +12,9 @@ import { VARIANT_FIELD_RULES } from '../model/product-form.schema';
 import { toUpdateVariantDto, toVariantEditValues, type VariantEditValues } from '../model/variant-edit.mapper';
 import { FieldItem, VariantNumberInput } from './product-form/form-field-parts';
 
-/** Cùng luật ô với form Tạo; riêng barcode luôn là chuỗi và khối lượng bắt buộc vì PATCH gửi đủ các ô. */
+/** Cùng luật ô với form Tạo; riêng khối lượng bắt buộc vì PATCH gửi đủ các ô. SKU/barcode chỉ đọc. */
 const schema: yup.ObjectSchema<VariantEditValues> = yup.object({
   name: VARIANT_FIELD_RULES.name,
-  barcode: VARIANT_FIELD_RULES.barcode.defined(),
   weightGrams: VARIANT_FIELD_RULES.weightGrams.typeError('Nhập khối lượng').required('Nhập khối lượng'),
   lengthMm: VARIANT_FIELD_RULES.lengthMm,
   widthMm: VARIANT_FIELD_RULES.widthMm,
@@ -78,12 +77,14 @@ export function VariantEditDrawer({
       submitText="Lưu thay đổi"
       isDirty={() => isDirty}
     >
+      {/* CONTRACT: SKU và barcode do hệ thống sinh, bất biến ở admin — chỉ hiển thị, không gửi trong PATCH. */}
+      <Descriptions bordered size="small" column={1} className="mb-4">
+        <Descriptions.Item label="SKU">{variant?.sku}</Descriptions.Item>
+        <Descriptions.Item label="Barcode">{variant?.barcode || '—'}</Descriptions.Item>
+      </Descriptions>
       <Form layout="vertical">
         <FieldItem label="Tên biến thể" required error={errors.name}>
           <Controller name="name" control={control} render={({ field }) => <Input {...field} maxLength={255} />} />
-        </FieldItem>
-        <FieldItem label="Barcode" error={errors.barcode}>
-          <Controller name="barcode" control={control} render={({ field }) => <Input {...field} maxLength={64} />} />
         </FieldItem>
         <div className="grid grid-cols-2 gap-3">
           {VARIANT_DIMENSION_FIELDS.map(([name, label, min]) => (

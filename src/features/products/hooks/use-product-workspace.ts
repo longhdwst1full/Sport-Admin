@@ -15,7 +15,6 @@ import { PRODUCT_FORM_DEFAULTS, productFormSchema, toProductFormErrorTarget } fr
 import {
   PRODUCT_FORM_TABS,
   PRODUCT_TAB_LABELS,
-  adjacentTab,
   validateProductTabs,
   type ProductFormTab,
 } from '../model/product-form-tabs';
@@ -226,8 +225,6 @@ export function useProductWorkspace({
     clearPendingOpeningStock: () => setPendingOpeningStock(undefined),
     activeTab,
     setActiveTab,
-    previousTab: adjacentTab(activeTab, -1, PRODUCT_FORM_TABS),
-    nextTab: adjacentTab(activeTab, 1, PRODUCT_FORM_TABS),
     refreshProduct,
     mutationPending,
     submitWithTabValidation,

@@ -2,7 +2,6 @@ import type { FieldPath } from 'react-hook-form';
 import * as yup from 'yup';
 import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import { ENTITY_ID_PATTERN } from '@/lib/validation/entity-id';
-import { SKU_PATTERN, SKU_PATTERN_MESSAGE } from '../constants/product-list.constants';
 import { emptyVariant, type ProductFormValues } from './product-form.mapper';
 import { INITIAL_PRICE_PATTERN } from './product-initial-setup';
 
@@ -12,8 +11,6 @@ const hasOpeningStock = (values: ProductFormValues) =>
 /** Luật ô biến thể dùng chung cho form Tạo, thêm SKU sau tạo và sửa SKU — ba nơi không được lệch nhau. */
 export const VARIANT_FIELD_RULES = {
   name: yup.string().trim().required('Nhập tên biến thể').max(255, 'Tối đa 255 ký tự'),
-  sku: yup.string().trim().uppercase().test('sku-pattern', SKU_PATTERN_MESSAGE, (value) => !value || SKU_PATTERN.test(value)).optional(),
-  barcode: yup.string().trim().max(64, 'Tối đa 64 ký tự').optional(),
   weightGrams: yup.number().integer('Khối lượng phải là số nguyên').min(0, 'Tối thiểu 0').optional(),
   lengthMm: yup.number().integer('Chiều dài phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
   widthMm: yup.number().integer('Chiều rộng phải là số nguyên').min(1, 'Tối thiểu 1 mm').optional(),
@@ -101,7 +98,7 @@ export const PRODUCT_FORM_DEFAULTS: ProductFormValues = {
 
 /** Tên trường lỗi của API → ô của form (khác tên ở đúng một chỗ). */
 const API_VARIANT_FIELD: Record<string, string> = { initialPriceAmount: 'price' };
-const VARIANT_FORM_FIELD = /^(name|sku|barcode|weightGrams|lengthMm|widthMm|heightMm|openingQuantity|price)$/;
+const VARIANT_FORM_FIELD = /^(name|weightGrams|lengthMm|widthMm|heightMm|openingQuantity|price)$/;
 
 export type ProductApiFieldTarget =
   | { kind: 'field'; path: FieldPath<ProductFormValues> }

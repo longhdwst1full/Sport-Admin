@@ -2734,6 +2734,7 @@ components:
           description: Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
         barcode:
           type: string
+          description: Bỏ trống thì backend sinh EAN-13 nội bộ (đầu số 2).
         name:
           type: string
         weightGrams:
@@ -2761,6 +2762,7 @@ components:
           description: Mã hàng của cửa hàng; tự viết hoa. Bỏ trống thì backend sinh mã 8 ký tự. Không sửa được sau khi tạo.
         barcode:
           type: string
+          description: Bỏ trống thì backend sinh EAN-13 nội bộ (đầu số 2).
         name:
           type: string
         weightGrams:

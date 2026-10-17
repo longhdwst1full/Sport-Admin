@@ -16,19 +16,19 @@ import {
 import { ProductType, type ProductVariantDto, type ProductVariantStatus } from '@/generated/api/catalog/catalog.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { formatMoney } from '@/lib/format/money';
-import { VARIANT_DIMENSION_FIELDS } from '../../constants/product-list.constants';
+import { AUTO_GENERATED_CODE_HINT, VARIANT_DIMENSION_FIELDS } from '../../constants/product-list.constants';
 import { PRODUCT_VARIANT_STATUS_PRESENTATION } from '../../constants/product-status.constants';
 import { VARIANT_FIELD_RULES } from '../../model/product-form.schema';
 import { toCreateVariantDto, type VariantFieldValues } from '../../model/variant-edit.mapper';
 import { ProductPricePanel } from '../product-price-panel';
 import { VariantEditDrawer } from '../variant-edit-drawer';
-import { FieldItem, SkuInput, VariantNumberInput } from './form-field-parts';
+import { FieldItem, VariantNumberInput } from './form-field-parts';
 import type { ProductPanelProps } from './types';
 
 /** Cùng luật với ô biến thể của form Tạo, để thêm SKU sau này không dễ hơn/khó hơn lúc tạo. */
 const newVariantSchema: yup.ObjectSchema<VariantFieldValues> = yup.object(VARIANT_FIELD_RULES);
 
-const emptyNewVariant: VariantFieldValues = { name: '', sku: '', barcode: '', weightGrams: 0 };
+const emptyNewVariant: VariantFieldValues = { name: '', weightGrams: 0 };
 
 /**
  * Khối SKU & giá (tab "SKU, giá & tồn kho") ở chế độ Sửa — SKU thật của sản phẩm và lịch giá. Thành phần combo ở khối Combo cùng tab.
@@ -125,7 +125,7 @@ export function ProductVariantsManager({ product, onChanged }: ProductPanelProps
     <div className="space-y-4">
       <FormSection
         title="Biến thể bán hàng (SKU)"
-        description="SKU không sửa được sau khi tạo. Sửa tên, barcode, kích thước hoặc lưu trữ từng SKU; thao tác lưu ngay."
+        description="SKU và barcode do hệ thống sinh, không sửa được. Sửa tên, kích thước hoặc lưu trữ từng SKU; thao tác lưu ngay."
         icon={<BarcodeOutlined />}
         extra={<Tag color="blue">{product.variants.length} biến thể</Tag>}
       >
@@ -181,16 +181,12 @@ function NewVariantForm({ productId, onCreated }: { productId: string; onCreated
 
   return (
     <Form layout="vertical" className="mt-4 rounded-xl border border-dashed border-slate-300 p-4" onFinish={() => void submit()}>
-      <div className="mb-3 text-sm font-semibold text-slate-700">Thêm biến thể</div>
+      <div className="mb-3 text-sm font-semibold text-slate-700">
+        Thêm biến thể <span className="text-xs font-normal text-slate-400">· SKU, barcode: {AUTO_GENERATED_CODE_HINT}</span>
+      </div>
       <div className="grid gap-x-4 md:grid-cols-2 xl:grid-cols-3">
         <FieldItem label="Tên biến thể" required error={errors.name}>
           <Controller name="name" control={variantForm.control} render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Đen - Size 40" />} />
-        </FieldItem>
-        <FieldItem label="SKU (mã hàng)" extra="Bỏ trống để hệ thống tự sinh; không sửa được sau khi tạo." error={errors.sku}>
-          <Controller name="sku" control={variantForm.control} render={({ field }) => <SkuInput {...field} />} />
-        </FieldItem>
-        <FieldItem label="Barcode" error={errors.barcode}>
-          <Controller name="barcode" control={variantForm.control} render={({ field }) => <Input {...field} maxLength={64} placeholder="Không bắt buộc" />} />
         </FieldItem>
         {VARIANT_DIMENSION_FIELDS.map(([name, label, min]) => (
           <FieldItem key={name} label={label} error={errors[name]}>

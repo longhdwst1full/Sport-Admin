@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Alert, App, Button, Card, Form, Input, Select, Space, Typography } from 'antd';
+import { Alert, App, Button, Card, Form, Input, Select, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -145,7 +145,7 @@ export function ProductPricePanel({ product, onChanged }: ProductPanelProps) {
 
   return (
     <Card className="border-emerald-100 bg-emerald-50/30" title={<Space><DollarOutlined /> Quản lý lịch giá</Space>}>
-      <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
         {canManage ? (
           <Form layout="vertical" onFinish={() => void submit()}>
             <FieldItem label="SKU" required error={errors.variantId}>
@@ -203,7 +203,7 @@ export function ProductPricePanel({ product, onChanged }: ProductPanelProps) {
           <Alert showIcon type="info" message="Chỉ xem lịch giá" description="Tài khoản này không có quyền tạo hoặc thay giá." />
         )}
 
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-3">
           {timeline.isError && (
             <QueryErrorAlert error={timeline.error} message="Không tải được lịch giá" retry={() => void timeline.refetch()} />
           )}
@@ -247,7 +247,7 @@ function PriceWindowTable({
 }) {
   return (
     <div>
-      <Typography.Title level={5}>{title}</Typography.Title>
+      <div className="mb-2 text-sm font-semibold text-slate-700">{title}</div>
       <AdminTable<ProductPriceWindowDto>
         size="small"
         rowKey="id"

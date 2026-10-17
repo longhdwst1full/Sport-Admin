@@ -104,7 +104,8 @@ async function createProductThroughWorkspace(page: Page, products: ProductsPageO
 
   await products.tab('SKU, giá & tồn kho').click();
   await products.field('Tên biến thể').locator('input').fill('Đen');
-  await products.field('SKU (mã hàng)').locator('input').fill('ghe-01');
+  // SKU và barcode do API sinh: không còn ô nhập.
+  await expect(products.workspace().getByText('SKU (mã hàng)', { exact: true })).toHaveCount(0);
 
   // Thông số kỹ thuật là một khối của tab Thông tin; khoanh vào khối đó vì tab còn các ô chọn khác.
   await products.tab('Thông tin').click();
@@ -152,15 +153,18 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
 
     await createProductThroughWorkspace(page, products);
 
-    // Tạo: SKU viết hoa và thông số đi cùng lệnh tạo (một transaction).
+    // Tạo: thông số đi cùng lệnh tạo (một transaction); không gửi SKU/barcode để API tự sinh.
     await expect.poll(() => captured.create).toBeTruthy();
     expect(captured.create).toMatchObject({
       name: 'Ghế tập E2E',
       categoryIds: ['1'],
       primaryCategoryId: '1',
-      variants: [expect.objectContaining({ name: 'Đen', sku: 'GHE-01' })],
+      variants: [expect.objectContaining({ name: 'Đen' })],
       specifications: [{ code: 'MAX_LOAD', values: [120] }],
     });
+    const [createdVariant] = captured.create?.variants as Array<Record<string, unknown>>;
+    expect(createdVariant).not.toHaveProperty('sku');
+    expect(createdVariant).not.toHaveProperty('barcode');
 
     // Tạo xong, workspace đóng về danh sách; mở lại sản phẩm vừa tạo để vào chế độ Sửa (đúng ba tab như lúc tạo).
     await expect(page.locator('.ant-drawer-content')).toHaveCount(0);
@@ -225,8 +229,7 @@ test.describe('CATALOG — Workspace sản phẩm', () => {
     await createProductThroughWorkspace(page, products);
     await expect(page.locator('.ant-drawer-content')).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Thao tác với sản phẩm Ghế tập E2E' }).click();
-    await page.getByRole('menuitem', { name: 'Lưu trữ' }).click();
+    await products.row('Ghế tập E2E').getByRole('button', { name: 'Lưu trữ', exact: true }).click();
     await page.locator('.ant-modal-confirm').getByRole('button', { name: 'Lưu trữ' }).click();
     await expect.poll(() => captured.archive).toEqual({ expectedVersion: 0 });
   });

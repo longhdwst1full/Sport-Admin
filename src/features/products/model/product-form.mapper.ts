@@ -38,8 +38,6 @@ export interface ProductFormValues {
 
 export const emptyVariant = (): ProductVariantFormValues => ({
   name: '',
-  sku: '',
-  barcode: '',
   weightGrams: 0,
   lengthMm: undefined,
   widthMm: undefined,

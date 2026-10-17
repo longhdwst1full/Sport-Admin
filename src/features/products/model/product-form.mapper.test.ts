@@ -17,7 +17,7 @@ describe('product form mapper', () => {
       images: [],
       specifications: [],
       variants: [
-        { ...emptyVariant(), name: ' Đen - 40 ', barcode: ' BAR-40 ', weightGrams: 850, openingQuantity: 8 },
+        { ...emptyVariant(), name: ' Đen - 40 ', weightGrams: 850, openingQuantity: 8 },
         { ...emptyVariant(), name: 'Đen - 41', lengthMm: 300 },
       ],
     });
@@ -31,7 +31,7 @@ describe('product form mapper', () => {
       shortDescription: 'Mô tả ngắn',
       description: '<p>Chi tiết</p>',
       variants: [
-        { name: 'Đen - 40', barcode: 'BAR-40', weightGrams: 850 },
+        { name: 'Đen - 40', weightGrams: 850 },
         { name: 'Đen - 41', weightGrams: 0, lengthMm: 300 },
       ],
     });
@@ -62,7 +62,7 @@ describe('product form mapper', () => {
     expect(withoutPermission.variants.every((variant) => !('initialPriceAmount' in variant))).toBe(true);
   });
 
-  it('sends a manual SKU upper-cased and omits a blank one so the API generates it', () => {
+  it('never sends SKU or barcode so the API generates both', () => {
     const payload = toCreateProductDto({
       productType: ProductType.STANDARD,
       name: 'Trụ',
@@ -70,11 +70,13 @@ describe('product form mapper', () => {
       primaryCategoryId: '3',
       images: [],
       specifications: [],
-      variants: [{ ...emptyVariant(), name: 'A', sku: ' td-02 ' }, { ...emptyVariant(), name: 'B', sku: '' }],
+      variants: [{ ...emptyVariant(), name: 'A' }, { ...emptyVariant(), name: 'B' }],
     });
 
-    expect(payload.variants[0]).toMatchObject({ sku: 'TD-02' });
-    expect(payload.variants[1]).not.toHaveProperty('sku');
+    for (const variant of payload.variants) {
+      expect(variant).not.toHaveProperty('sku');
+      expect(variant).not.toHaveProperty('barcode');
+    }
   });
 
   it('sends specifications with create, and with update only when they were edited', () => {

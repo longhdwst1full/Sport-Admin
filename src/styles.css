@@ -588,6 +588,52 @@ a,
   color: #0f172a !important;
 }
 
+/* ─── Compact form spacing ───────────────────────────────────── */
+/* Form dài trong drawer (vd. workspace sản phẩm): thu khoảng cách giữa các ô (antd mặc định 24px) và
+   nhãn để một màn chứa nhiều ô hơn, ít phải cuộn. Ô có lỗi/help vẫn đủ chỗ vì antd tự cộng chiều cao help. */
+.dctd-form-compact .ant-form-item {
+  margin-bottom: 14px;
+}
+
+.dctd-form-compact .ant-form-vertical .ant-form-item-label,
+.dctd-form-compact.ant-form-vertical .ant-form-item-label,
+.dctd-form-compact .ant-form-item-vertical .ant-form-item-label {
+  padding-bottom: 4px;
+}
+
+/* ─── Read-only view of a disabled form ────────────────────────── */
+/* Form antd khoá để xem (vd. sản phẩm đã lưu trữ): giữ ô không sửa được nhưng hiện giá trị như văn bản
+   thường — chữ đậm, nền trắng, không con trỏ not-allowed — thay cho kiểu disabled xám khó đọc. */
+.dctd-readonly-view :is(.ant-input-disabled, .ant-input[disabled], .ant-input-affix-wrapper-disabled,
+    .ant-input-number-disabled, .ant-picker-disabled, .ant-select-disabled .ant-select-selector) {
+  color: var(--ba-iron-800) !important;
+  background: var(--ba-paper) !important;
+  border-color: var(--ba-iron-200) !important;
+  cursor: default !important;
+  box-shadow: none !important;
+}
+
+.dctd-readonly-view :is(.ant-input-number-disabled .ant-input-number-input, .ant-picker-disabled input,
+    .ant-select-disabled .ant-select-selection-item, .ant-checkbox-wrapper-disabled, .ant-radio-wrapper-disabled) {
+  color: var(--ba-iron-800) !important;
+  cursor: default !important;
+}
+
+.dctd-readonly-view .ant-select-multiple.ant-select-disabled .ant-select-selection-item {
+  background: var(--ba-iron-100) !important;
+  border-color: var(--ba-iron-200) !important;
+}
+
+.dctd-readonly-view .ant-select-disabled :is(.ant-select-arrow, .ant-input-show-count-suffix),
+.dctd-readonly-view .ant-input-disabled + .ant-input-data-count {
+  display: none;
+}
+
+.dctd-readonly-view .ant-switch-disabled {
+  opacity: 1;
+  cursor: default;
+}
+
 /* ─── CKEditor read-only state ────────────────────────────────── */
 .dctd-rich-text-editor[data-editor-state='read-only'] .cke_contents {
   background: var(--color-surface-sunken);
@@ -927,6 +973,31 @@ a,
 }
 .dctd-fill > .admin-table-fill {
   min-height: 240px;
+}
+
+/*
+ * Tabs lấp vùng `.dctd-fill`: thanh tab đứng yên, chỉ phần nội dung tab cuộn. Thay cho `position:
+ * sticky` (nội dung lọt qua khe/padding phía trên khi cuộn trông vỡ).
+ */
+.dctd-fill > .dctd-fill-tabs {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.dctd-fill-tabs > .ant-tabs-nav {
+  margin-bottom: 0;
+}
+.dctd-fill-tabs > .ant-tabs-nav .ant-tabs-tab {
+  padding: 10px 2px;
+  font-weight: 500;
+}
+.dctd-fill-tabs > .ant-tabs-nav .ant-tabs-tab-active {
+  font-weight: 600;
+}
+.dctd-fill-tabs > .ant-tabs-content-holder {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: 16px;
 }
 .dctd-fill > .admin-table-fill .ant-table-body {
   flex: 1 1 auto;

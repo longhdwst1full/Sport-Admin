@@ -1,14 +1,14 @@
 # Products — maintenance note
 
-> **Document version:** 2.2.0
+> **Document version:** 2.3.0
 >
-> **Last updated:** 2026-10-13
+> **Last updated:** 2026-10-17
 >
 > **Change summary:** Tách `use-product-workspace` thành `use-product-create` + `use-product-lifecycle` (dùng chung với menu danh sách); menu danh sách gate Xuất bản/Lưu trữ theo `catalog.product.publish` và lưu trữ qua `archiveAdminProduct`; cache invalidation gom ở `hooks/product-query-cache.ts`; khối ảnh khoá khi thiếu `catalog.product.manage` hoặc sản phẩm đã lưu trữ.
 
 ## Workspace Tạo/Sửa
 
-`components/product-workspace-drawer.tsx` là **nơi duy nhất** tạo và sửa sản phẩm (rộng 1040px). Mở không
+`components/product-workspace-drawer.tsx` là **nơi duy nhất** tạo và sửa sản phẩm (cỡ `DRAWER_WIDTH.xl`). Mở không
 có `slug` là Tạo, có `slug` là Sửa; tạo xong drawer đóng, danh sách được invalidate và về trang 1; riêng khi tồn đầu lỗi, workspace chuyển tại chỗ sang Sửa để ghi lại tồn đầu.
 State/query/lệnh nằm ở `hooks/use-product-workspace.ts` (lệnh Tạo + tồn đầu ở `use-product-create.ts`, Xuất bản/Lưu trữ/Đưa về nháp ở `use-product-lifecycle.ts`, tra cứu ở `use-product-form-lookups.ts`, schema +
 map lỗi API → ô ở `model/product-form.schema.ts`); header/footer là `product-workspace-{header-actions,footer}.tsx`.
@@ -25,7 +25,7 @@ chỉ thông báo Combo lúc Tạo (không có tiêu đề riêng) được thê
 | Thông tin | Thông tin cơ bản | `product-basic-info-tab.tsx`: loại, tên, thương hiệu, danh mục, mô tả | cùng ô, lưu bằng **Lưu** (`updateAdminProduct`) |
 | | Hình ảnh | `ProductImagePicker`, gắn trong lệnh tạo | `ProductMediaPanel` — lưu ngay |
 | | Thông số kỹ thuật | `product-specifications-tab.tsx`, gửi `specifications` trong lệnh tạo | cùng ô, gửi trong `updateAdminProduct` **chỉ khi đã sửa** |
-| SKU, giá & tồn kho | SKU & giá | `product-variants-tab.tsx`: SKU (nhập tay/để trống), kích thước, giá ban đầu | `product-variants-manager.tsx`: bảng SKU, sửa/lưu trữ, thêm SKU, lịch giá — lưu ngay |
+| SKU, giá & tồn kho | SKU & giá | `product-variants-tab.tsx`: tên biến thể, kích thước, giá ban đầu (SKU/barcode API tự sinh) | `product-variants-manager.tsx`: bảng SKU, sửa/lưu trữ, thêm SKU, lịch giá — lưu ngay |
 | | Tồn kho | `product-opening-stock-tab.tsx`: chi nhánh/kho + tồn đầu từng SKU | `product-stock-panel.tsx`: xem tồn, nút **Thử ghi tồn đầu lại** |
 | | Combo (chỉ BUNDLE) | thông báo: khai sau khi tạo (cần SKU thật) | `product-bundle-manager.tsx` — lưu ngay |
 | Kiểm tra xuất bản | — | tóm tắt từ `watch()` | tóm tắt + checklist `getAdminProductSetupStatus` |
@@ -47,6 +47,14 @@ khối Combo nằm trong nội dung tab SKU. Khi Sửa không validate SKU/ảnh
 
 ## Ghi chú bảo trì quan trọng
 
+- CONTRACT: SKU (8 ký tự) và barcode (EAN-13 nội bộ đầu '2') luôn do API sinh khi tạo sản phẩm/thêm SKU; admin
+  không có ô nhập, không gửi `sku`/`barcode` khi tạo và không gửi `barcode` khi sửa SKU. Hai mã chỉ hiển thị
+  (bảng SKU, tab Kiểm tra, drawer sửa SKU); biến thể chưa lưu hiện "Tự sinh khi lưu".
+- Footer chỉ có Đóng/Huỷ và **Lưu/Tạo** (có ở mọi tab, cả khi Tạo); không có nút Tiếp tục/Quay lại — đổi tab
+  bằng thanh tab. Danh sách: mỗi dòng có nút icon riêng Xem chi tiết · Sửa (`catalog.product.manage`, chưa lưu
+  trữ) · Xuất bản · Lưu trữ (`catalog.product.publish`); Xem và Sửa cùng mở workspace.
+- Sản phẩm đã lưu trữ mở workspace ở dạng chỉ xem: `Form disabled` + class `dctd-readonly-view` (styles.css)
+  để giá trị đọc rõ thay kiểu disabled xám; `dctd-form-compact` thu khoảng cách ô.
 - Nút **Lưu/Tạo** ở footer gọi thẳng `submitWithTabValidation()`. `Form` dùng `component={false}` (không
   render `<form>`): các khối lưu ngay có `<form>` riêng, lồng form làm Enter ở ô con submit nhầm sản phẩm.
 - Form chỉ reset khi mở workspace hoặc nạp sản phẩm **khác** (`productId`). SKU/giá/ảnh lưu ngay làm
@@ -129,6 +137,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.3.0 | 2026-10-17 | SKU/barcode do API sinh (bỏ ô nhập), nút "Thêm mới"; bỏ menu ba chấm ở danh sách (nút icon riêng), bỏ Tiếp tục/Quay lại ở footer (Tạo có ở mọi tab), chế độ chỉ xem đọc rõ cho sản phẩm lưu trữ, bố cục tab Thông tin lưới 3 cột. |
 | 2.2.0 | 2026-10-13 | Tách hook Tạo/vòng đời, gate lệnh vòng đời ở danh sách theo `catalog.product.publish`, cache helper chung, khoá khối ảnh khi lưu trữ/thiếu quyền. |
 | 2.1.0 | 2026-09-26 | Gộp 7 tab thành 3 tab (Thông tin · SKU, giá & tồn kho · Kiểm tra xuất bản); Combo là khối trong tab SKU chỉ với BUNDLE; validate map lỗi về tab gộp. |
 | 2.0.0 | 2026-09-26 | `ProductWorkspaceDrawer` hợp nhất Tạo/Sửa (7 tab), thông số trong create/update, retry tồn đầu, Playwright PRD-10..12. |

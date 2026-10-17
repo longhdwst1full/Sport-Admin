@@ -1,4 +1,4 @@
-import { AppstoreOutlined, FileTextOutlined, TagsOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, FileTextOutlined } from '@ant-design/icons';
 import { Input, Select } from 'antd';
 import { useMemo } from 'react';
 import { FormSection } from '@/foundation/layout/form-section';
@@ -66,55 +66,49 @@ export function ProductBasicInfoTab({
   const errors = form.formState.errors;
   return (
     <div className="space-y-4">
+      {/* Định danh + phân loại gộp một khối, lưới 3 cột trên màn rộng để ô ngắn không chiếm cả dòng. */}
       <FormSection
-        title="Định danh sản phẩm"
-        description="Tên hiển thị cho khách và loại sản phẩm. Mã sản phẩm cùng đường dẫn do hệ thống tự sinh từ tên."
+        title="Thông tin chung"
+        description="Tên, loại và phân loại quyết định sản phẩm xuất hiện ở đâu ngoài cửa hàng. Mã sản phẩm cùng đường dẫn do hệ thống tự sinh từ tên."
         icon={<AppstoreOutlined />}
       >
-        <FieldItem
-          label="Loại sản phẩm"
-          required
-          error={errors.productType}
-          extra="Sản phẩm thường bán theo từng SKU; combo cố định gồm nhiều SKU thành phần, mỗi SKU combo phải khai báo thành phần trước khi xuất bản."
-        >
-          <Controller
-            name="productType"
-            control={form.control}
-            render={({ field }) => (
-              <Select
-                {...field}
-                disabled={Boolean(product?.variants.length)}
-                options={PRODUCT_TYPE_OPTIONS}
-                onChange={(value) => {
-                  field.onChange(value);
-                  if (value === ProductType.BUNDLE) {
-                    // Combo không có tồn vật lý riêng: tồn bán được tính từ SKU thành phần.
-                    form.getValues('variants').forEach((_variant, index) => {
-                      form.setValue(`variants.${index}.openingQuantity`, 0);
-                    });
-                    form.setValue('initialBranchId', undefined);
-                    form.setValue('initialWarehouseCode', undefined);
-                  }
-                }}
-              />
-            )}
-          />
-        </FieldItem>
-        <FieldItem label="Tên sản phẩm" required error={errors.name}>
-          <Controller
-            name="name"
-            control={form.control}
-            render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Máy chạy bộ Kingsport X900" />}
-          />
-        </FieldItem>
-      </FormSection>
-
-      <FormSection
-        title="Phân loại"
-        description="Thương hiệu và danh mục quyết định sản phẩm xuất hiện ở đâu ngoài cửa hàng."
-        icon={<TagsOutlined />}
-      >
-        <div className="grid gap-x-4 sm:grid-cols-2">
+        <div className="grid gap-x-4 sm:grid-cols-2 lg:grid-cols-3">
+          <FieldItem label="Tên sản phẩm" required error={errors.name} className="sm:col-span-2">
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field }) => <Input {...field} maxLength={255} placeholder="Ví dụ: Máy chạy bộ Kingsport X900" />}
+            />
+          </FieldItem>
+          <FieldItem
+            label="Loại sản phẩm"
+            required
+            error={errors.productType}
+            tooltip="Sản phẩm thường bán theo từng SKU; combo cố định gồm nhiều SKU thành phần, mỗi SKU combo phải khai báo thành phần trước khi xuất bản."
+          >
+            <Controller
+              name="productType"
+              control={form.control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  disabled={Boolean(product?.variants.length)}
+                  options={PRODUCT_TYPE_OPTIONS}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    if (value === ProductType.BUNDLE) {
+                      // Combo không có tồn vật lý riêng: tồn bán được tính từ SKU thành phần.
+                      form.getValues('variants').forEach((_variant, index) => {
+                        form.setValue(`variants.${index}.openingQuantity`, 0);
+                      });
+                      form.setValue('initialBranchId', undefined);
+                      form.setValue('initialWarehouseCode', undefined);
+                    }
+                  }}
+                />
+              )}
+            />
+          </FieldItem>
           <FieldItem label="Thương hiệu" error={errors.brandId}>
             <Controller
               name="brandId"
@@ -140,6 +134,8 @@ export function ProductBasicInfoTab({
                 <Select
                   {...field}
                   mode="multiple"
+                  // Giữ ô một dòng; phần dư gộp thành "+N" thay vì đẩy lưới cao lên.
+                  maxTagCount="responsive"
                   showSearch
                   filterOption={false}
                   onSearch={onCategorySearch}
@@ -149,16 +145,16 @@ export function ProductBasicInfoTab({
               )}
             />
           </FieldItem>
+          <FieldItem label="Danh mục chính" required error={errors.primaryCategoryId}>
+            <Controller
+              name="primaryCategoryId"
+              control={form.control}
+              render={({ field }) => (
+                <Select {...field} options={primaryCategoryOptions} placeholder="Chọn trong danh mục đã gán" />
+              )}
+            />
+          </FieldItem>
         </div>
-        <FieldItem label="Danh mục chính" required error={errors.primaryCategoryId}>
-          <Controller
-            name="primaryCategoryId"
-            control={form.control}
-            render={({ field }) => (
-              <Select {...field} options={primaryCategoryOptions} placeholder="Chọn trong danh mục đã gán" />
-            )}
-          />
-        </FieldItem>
       </FormSection>
 
       <FormSection
@@ -170,7 +166,7 @@ export function ProductBasicInfoTab({
           <Controller
             name="shortDescription"
             control={form.control}
-            render={({ field }) => <Input.TextArea {...field} rows={2} maxLength={1000} showCount />}
+            render={({ field }) => <Input.TextArea {...field} autoSize={{ minRows: 2, maxRows: 4 }} maxLength={1000} showCount />}
           />
         </FieldItem>
         <FieldItem label="Mô tả chi tiết" error={errors.description}>
@@ -181,6 +177,7 @@ export function ProductBasicInfoTab({
               <RichTextEditor
                 value={field.value}
                 onChange={field.onChange}
+                height={260}
                 placeholder="Nhập mô tả, thông số và hướng dẫn sử dụng sản phẩm..."
               />
             )}

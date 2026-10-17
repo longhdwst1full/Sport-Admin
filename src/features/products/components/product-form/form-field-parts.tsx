@@ -1,4 +1,4 @@
-import { Form, Input, InputNumber, type FormItemProps, type InputProps } from 'antd';
+import { Form, InputNumber, type FormItemProps } from 'antd';
 
 /** `Form.Item` nhận lỗi của react-hook-form; `help` riêng chỉ hiện khi ô không có lỗi. */
 export function FieldItem({ error, help, ...props }: FormItemProps & { error?: { message?: string } }) {
@@ -25,18 +25,6 @@ export function VariantNumberInput({
       value={value}
       onBlur={onBlur}
       onChange={(next) => onChange(next ?? undefined)}
-    />
-  );
-}
-
-/** Ô SKU nhập tay: tự viết hoa như API, bỏ trống để hệ thống sinh mã. */
-export function SkuInput({ onChange, ...props }: Omit<InputProps, 'onChange'> & { onChange: (value: string) => void }) {
-  return (
-    <Input
-      {...props}
-      maxLength={40}
-      placeholder="Bỏ trống để tự sinh"
-      onChange={(event) => onChange(event.target.value.toUpperCase())}
     />
   );
 }

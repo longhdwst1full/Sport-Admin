@@ -1,13 +1,7 @@
-import {
-  CloudUploadOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  MoreOutlined,
-} from '@ant-design/icons';
-import { Avatar, Button, Dropdown, Switch, Tag, Tooltip } from 'antd';
-import type { MenuProps } from 'antd';
+import { CloudUploadOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Avatar, Switch, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { AdminTable, col } from '@/foundation/table';
+import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import type { ProductStatus } from '@/generated/api/catalog/catalog.schemas';
 import { PRODUCT_LIST_PAGE_SIZE_OPTIONS } from '../constants/product-list.constants';
 import { PRODUCT_STATUS_PRESENTATION } from '../constants/product-status.constants';
@@ -140,47 +134,45 @@ export function ProductListTable({
     PRODUCT_VERSION_COLUMN,
     col.actions<ProductListRow>(
       (row) => {
-        // Gom thao tác vào menu ba chấm để cột giữ hẹp khi thêm hành động. Xuất bản và Lưu trữ
-        // vẫn đi qua confirm ở page; mục chỉ hiện khi trạng thái hiện tại cho phép.
-        const items: NonNullable<MenuProps['items']> = [
-          { key: 'open', icon: <EditOutlined />, label: 'Xem / sửa' },
-        ];
-        if (canPublish && row.status === 'DRAFT') {
-          items.push({ key: 'publish', icon: <CloudUploadOutlined />, label: 'Xuất bản' });
-        }
-        if (canPublish && row.status !== 'ARCHIVED') {
-          items.push({ type: 'divider' });
-          items.push({ key: 'archive', icon: <DeleteOutlined />, label: 'Lưu trữ', danger: true });
-        }
-        const busy = publishBusyId === row.id || archiveBusyId === row.id;
+        // Mỗi thao tác một nút icon riêng (không gộp menu). Xuất bản và Lưu trữ vẫn đi qua confirm ở page;
+        // nút chỉ hiện khi quyền và trạng thái hiện tại cho phép.
+        const publishing = publishBusyId === row.id;
+        const archiving = archiveBusyId === row.id;
+        const busy = publishing || archiving;
         return (
-          <Dropdown
-            trigger={['click']}
-            placement="bottomRight"
-            disabled={busy}
-            menu={{
-              items,
-              onClick: ({ key, domEvent }) => {
-                domEvent.stopPropagation();
-                if (key === 'open') onOpen(row.slug);
-                if (key === 'publish') onPublish(row);
-                if (key === 'archive') onArchive(row);
-              },
-            }}
-          >
-            {/* Button trực tiếp (không qua Tooltip) để Dropdown gắn được sự kiện click vào nó. */}
-            <Button
-              type="text"
-              size="small"
-              aria-label={`Thao tác với sản phẩm ${row.name}`}
-              icon={<MoreOutlined />}
-              loading={busy}
-              className="!rounded-lg !text-slate-500 hover:!bg-slate-100"
+          <>
+            <TableActionButton
+              label="Xem chi tiết"
+              icon={<EyeOutlined />}
+              disabled={busy}
+              onClick={() => onOpen(row.slug)}
             />
-          </Dropdown>
+            {canManage && row.status !== 'ARCHIVED' && (
+              <TableActionButton label="Sửa" icon={<EditOutlined />} disabled={busy} onClick={() => onOpen(row.slug)} />
+            )}
+            {canPublish && row.status === 'DRAFT' && (
+              <TableActionButton
+                label="Xuất bản"
+                icon={<CloudUploadOutlined />}
+                loading={publishing}
+                disabled={busy && !publishing}
+                onClick={() => onPublish(row)}
+              />
+            )}
+            {canPublish && row.status !== 'ARCHIVED' && (
+              <TableActionButton
+                label="Lưu trữ"
+                icon={<DeleteOutlined />}
+                danger
+                loading={archiving}
+                disabled={busy && !archiving}
+                onClick={() => onArchive(row)}
+              />
+            )}
+          </>
         );
       },
-      { title: '', width: 56 },
+      { width: 150 },
     ),
   ];
 
@@ -192,7 +184,7 @@ export function ProductListTable({
       dataSource={rows}
       tableLayout="fixed"
       scroll={{
-        x: 1120,
+        x: 1220,
         // Giữ header/pagination trong viewport; phần dữ liệu tự cuộn khi đủ 30 dòng.
         y: 'clamp(280px, calc(100vh - 500px), 640px)',
       }}

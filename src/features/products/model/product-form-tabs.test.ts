@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { UseFormReturn } from 'react-hook-form';
 import type { ProductFormValues } from './product-form.mapper';
-import { PRODUCT_FORM_TABS, PRODUCT_TAB_LABELS, adjacentTab, productTabFields, validateProductTabs } from './product-form-tabs';
+import { PRODUCT_FORM_TABS, PRODUCT_TAB_LABELS, productTabFields, validateProductTabs } from './product-form-tabs';
 
 function formWithFailingFields(failing: string[], variantCount = 1): UseFormReturn<ProductFormValues> {
   return {
@@ -19,7 +19,7 @@ describe('validateProductTabs', () => {
 
   /** Nhảy tới tab lỗi đầu tiên, nếu không người dùng nhìn form hợp lệ mà không tạo được. */
   it('trả về tab lỗi đầu tiên theo thứ tự hiển thị', async () => {
-    await expect(validateProductTabs(formWithFailingFields(['variants.0.sku']))).resolves.toEqual({
+    await expect(validateProductTabs(formWithFailingFields(['variants.0.name']))).resolves.toEqual({
       isValid: false,
       errorTab: 'variants',
     });
@@ -55,7 +55,7 @@ describe('validateProductTabs', () => {
 
   it('ưu tiên tab đứng trước khi nhiều tab cùng lỗi', async () => {
     await expect(
-      validateProductTabs(formWithFailingFields(['variants.0.sku', 'specifications'])),
+      validateProductTabs(formWithFailingFields(['variants.0.name', 'specifications'])),
     ).resolves.toEqual({ isValid: false, errorTab: 'info' });
   });
 
@@ -103,18 +103,5 @@ describe('bộ tab', () => {
     expect(productTabFields('info', 'create', 1)).toEqual(expect.arrayContaining(['name', 'images', 'specifications']));
     expect(productTabFields('info', 'edit', 1)).not.toContain('images');
     expect(productTabFields('info', 'edit', 1)).toContain('specifications');
-  });
-});
-
-describe('adjacentTab', () => {
-  it('đi tới và lùi lại theo thứ tự tab', () => {
-    expect(adjacentTab('info', 1)).toBe('variants');
-    expect(adjacentTab('variants', 1)).toBe('review');
-    expect(adjacentTab('review', -1)).toBe('variants');
-  });
-
-  it('không có tab nào ngoài hai đầu', () => {
-    expect(adjacentTab('info', -1)).toBeUndefined();
-    expect(adjacentTab('review', 1)).toBeUndefined();
   });
 });

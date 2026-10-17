@@ -4,11 +4,12 @@ import { expect, type Locator, type Page } from '@playwright/test';
 export class ProductsPageObject {
   constructor(private readonly page: Page) {}
 
-  readonly createProduct = () => this.page.getByRole('button', { name: 'Thêm sản phẩm' });
-  /** Thao tác của dòng nằm trong menu ba chấm: mở menu rồi chọn "Xem / sửa" → workspace chế độ Sửa. */
+  readonly createProduct = () => this.page.getByRole('button', { name: 'Thêm mới sản phẩm' });
+  /** Dòng sản phẩm trong bảng; mỗi thao tác là một nút icon riêng (aria-label = nhãn tooltip). */
+  readonly row = (name: string) => this.page.getByRole('row').filter({ hasText: name });
+  /** Nút "Sửa" của dòng → workspace chế độ Sửa. */
   readonly openProduct = async (name: string) => {
-    await this.page.getByRole('button', { name: `Thao tác với sản phẩm ${name}` }).click();
-    await this.page.getByRole('menuitem', { name: 'Xem / sửa' }).click();
+    await this.row(name).getByRole('button', { name: 'Sửa', exact: true }).click();
   };
 
   readonly workspace = () => this.page.locator('.ant-drawer-content').last();

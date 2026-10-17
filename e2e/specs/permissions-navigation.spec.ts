@@ -38,6 +38,6 @@ test.describe('RBAC — Menu và route theo quyền', () => {
     await shell.open('/products');
 
     await expect(shell.pageTitle('Sản phẩm')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Thêm sản phẩm' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Thêm mới sản phẩm' })).toHaveCount(0);
   });
 });

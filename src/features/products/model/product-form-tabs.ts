@@ -32,7 +32,7 @@ const BASIC_INFO_FIELDS = [
   'description',
 ] as const satisfies ReadonlyArray<FieldPath<ProductFormValues>>;
 
-const VARIANT_FIELDS = ['name', 'sku', 'barcode', 'weightGrams', 'lengthMm', 'widthMm', 'heightMm', 'price'] as const;
+const VARIANT_FIELDS = ['name', 'weightGrams', 'lengthMm', 'widthMm', 'heightMm', 'price'] as const;
 
 /**
  * Trường của form thuộc tab nào — chỉ để biết lỗi rơi vào tab nào mà nhảy tới.
@@ -91,13 +91,4 @@ export async function validateProductTabs(
     if (!(await form.trigger(fields))) return { isValid: false, errorTab: tab };
   }
   return { isValid: true };
-}
-
-/** Tab kế tiếp/trước đó trong danh sách tab; undefined khi đã ở đầu hoặc cuối. */
-export function adjacentTab(
-  current: ProductFormTab,
-  step: 1 | -1,
-  tabs: readonly ProductFormTab[] = PRODUCT_FORM_TABS,
-): ProductFormTab | undefined {
-  return tabs[tabs.indexOf(current) + step];
 }

@@ -44,8 +44,10 @@ export function ProductsPage() {
               onMouseEnter={prefetchProductForm}
               onFocus={prefetchProductForm}
               onClick={() => openWorkspace()}
+              // Nhãn nhìn thấy ngắn; tên truy cập giữ đủ nghĩa cho trình đọc màn hình và e2e.
+              aria-label="Thêm mới sản phẩm"
             >
-              Thêm sản phẩm
+              Thêm mới
             </Button>
           </PermissionGate>
         }

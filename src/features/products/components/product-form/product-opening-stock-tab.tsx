@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { FormSection } from '@/foundation/layout/form-section';
 import { ProductType } from '@/generated/api/catalog/catalog.schemas';
+import { AUTO_GENERATED_CODE_HINT } from '../../constants/product-list.constants';
 import type { ProductFormValues } from '../../model/product-form.mapper';
 import { toLookupOptions } from '../../model/product-lookup-options';
 import { FieldItem } from './form-field-parts';
@@ -121,7 +122,7 @@ export function ProductOpeningStockTab({
           <div key={index} className="grid items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-[1fr_180px]">
             <div className="pt-1 text-sm">
               <div className="font-medium text-slate-700">{variant.name?.trim() || `Biến thể ${index + 1}`}</div>
-              <div className="text-xs text-slate-500">{variant.sku?.trim() || 'SKU tự sinh'}</div>
+              <div className="text-xs text-slate-500">{`SKU: ${AUTO_GENERATED_CODE_HINT}`}</div>
             </div>
             <FieldItem
               label="Số lượng tồn đầu"

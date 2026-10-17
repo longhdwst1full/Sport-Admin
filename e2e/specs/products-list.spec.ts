@@ -125,8 +125,9 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     await expect(page.getByText('Dài (mm)', { exact: true })).toBeVisible();
     await expect(page.getByText('Rộng (mm)', { exact: true })).toBeVisible();
     await expect(page.getByText('Cao (mm)', { exact: true })).toBeVisible();
-    // Chỉ còn một ô SKU (nhập tay hoặc để trống), không còn ô "Tự động" bị trùng.
-    await expect(page.getByText('SKU (mã hàng)', { exact: true })).toHaveCount(1);
+    // SKU và barcode do API sinh: không có ô nhập, không còn ô "Tự động".
+    await expect(page.getByText('SKU (mã hàng)', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Barcode', { exact: true })).toHaveCount(0);
     await expect(page.locator('input[value="Tự động"]')).toHaveCount(0);
 
     // Tồn kho là khối trong cùng tab với SKU & giá, không còn tab riêng.
@@ -134,8 +135,10 @@ test.describe('CATALOG — Danh sách sản phẩm', () => {
     await expect(page.getByText('Chi nhánh nhập tồn đầu', { exact: true })).toBeVisible();
     await expect(page.getByText('Kho nhập tồn đầu', { exact: true })).toBeVisible();
     await expect(page.getByText('Số lượng tồn đầu', { exact: true })).toBeVisible();
-    // Nút tạo cố ý chỉ xuất hiện ở tab cuối, sau bảng kiểm tra; ở các tab trước là "Tiếp tục".
-    await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
+    // Không còn nút "Tiếp tục"/"Quay lại": đổi tab bằng thanh tab, nút Tạo có ở mọi tab.
+    await expect(page.getByRole('button', { name: 'Tiếp tục' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Quay lại' })).toHaveCount(0);
+    await expect(products.submitCreate()).toBeVisible();
     await products.tab('Kiểm tra xuất bản').click();
     await expect(products.submitCreate()).toBeVisible();
   });
