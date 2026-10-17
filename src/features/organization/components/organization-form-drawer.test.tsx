@@ -26,11 +26,13 @@ window.getComputedStyle = ((element: Element) => getComputedStyle(element)) as t
 const {
   useListShippingProvincesMock,
   useListShippingDistrictsMock,
+  useListShippingWardsMock,
   createMutateMock,
   updateMutateMock,
 } = vi.hoisted(() => ({
   useListShippingProvincesMock: vi.fn(),
   useListShippingDistrictsMock: vi.fn(),
+  useListShippingWardsMock: vi.fn(),
   createMutateMock: vi.fn(),
   updateMutateMock: vi.fn(),
 }));
@@ -38,6 +40,7 @@ const {
 vi.mock('@/generated/api/shipping/shipping', () => ({
   useListShippingProvinces: useListShippingProvincesMock,
   useListShippingDistricts: useListShippingDistrictsMock,
+  useListShippingWards: useListShippingWardsMock,
 }));
 
 vi.mock('@/generated/api/organization/organization', () => ({
@@ -62,11 +65,19 @@ const districtsByProvince: Record<string, { code: string; name: string }[]> = {
     { code: '1483', name: 'Đống Đa' },
   ],
 };
+const wardsByDistrict: Record<string, { code: string; name: string }[]> = {
+  '1482': [{ code: '1A0101', name: 'Dịch Vọng' }],
+  '1483': [{ code: '1B2729', name: 'Láng Hạ' }],
+};
 
 function setup(props: Partial<Parameters<typeof OrganizationFormDrawer>[0]> = {}) {
   useListShippingProvincesMock.mockReturnValue({ data: { items: provinces }, isPending: false });
   useListShippingDistrictsMock.mockImplementation((params: { provinceCode: string }) => ({
     data: { items: districtsByProvince[params.provinceCode] ?? [] },
+    isFetching: false,
+  }));
+  useListShippingWardsMock.mockImplementation((params: { districtCode: string }) => ({
+    data: { items: wardsByDistrict[params.districtCode] ?? [] },
     isFetching: false,
   }));
 
@@ -95,31 +106,26 @@ describe('OrganizationFormDrawer free-delivery districts field', () => {
   it('loads and lets the admin add districts once a province is picked, sending codes on submit', async () => {
     setup();
 
-    // Fill the other required text fields (in DOM order: branchCode, branchName, phone, email,
-    // addressLine, district, province, ..., warehouseCode, warehouseName) so form validation lets
-    // submit through; this test only asserts the free-delivery-districts value shape that reaches
-    // the mutation payload. AntD's Form.Item label isn't associated via htmlFor here (no `name` on
-    // Form.Item, Controller-driven), so fields are targeted positionally rather than by label.
-    const textboxes = screen.getAllByRole('textbox');
-    const [branchCode, branchName, , , addressLine, district, province] = textboxes;
-    const [warehouseCode, warehouseName] = textboxes.slice(-2);
+    // Text inputs theo thứ tự DOM: mã CN, tên CN, điện thoại, email, số nhà/đường, vĩ độ, kinh độ.
+    // Form.Item không gắn htmlFor (Controller) nên chọn theo vị trí.
+    const [branchCode, branchName, , , addressLine] = screen.getAllByRole('textbox');
     fireEvent.change(branchCode, { target: { value: 'HN-01' } });
     fireEvent.change(branchName, { target: { value: 'Chi nhánh Hà Nội' } });
     fireEvent.change(addressLine, { target: { value: '1 Láng Hạ' } });
-    fireEvent.change(district, { target: { value: 'Đống Đa' } });
-    fireEvent.change(province, { target: { value: 'Hà Nội' } });
-    fireEvent.change(warehouseCode, { target: { value: 'WH-01' } });
-    fireEvent.change(warehouseName, { target: { value: 'Kho Hà Nội' } });
 
-    const provinceCodeInput = screen
-      .getByText('Mã tỉnh GHN')
-      .closest('.ant-form-item')
-      ?.querySelector('input');
-    expect(provinceCodeInput).toBeTruthy();
-    fireEvent.change(provinceCodeInput!, { target: { value: '201' } });
+    // Địa chỉ chi nhánh chọn theo danh mục GHN: tỉnh → quận → phường.
+    const pick = async (placeholder: string, title: string) => {
+      fireEvent.mouseDown(await screen.findByText(placeholder));
+      const options = await screen.findAllByTitle(title);
+      fireEvent.click(options[options.length - 1]);
+    };
+    await pick('Chọn tỉnh/thành', 'Hà Nội');
+    await pick('Chọn quận/huyện', 'Đống Đa');
+    await pick('Chọn phường/xã', 'Láng Hạ');
 
     fireEvent.mouseDown(await screen.findByText('Chọn quận/huyện giao miễn phí'));
-    fireEvent.click(await screen.findByTitle('Cầu Giấy'));
+    const freeDeliveryOptions = await screen.findAllByTitle('Cầu Giấy');
+    fireEvent.click(freeDeliveryOptions[freeDeliveryOptions.length - 1]);
 
     expect(screen.getAllByText('Cầu Giấy').length).toBeGreaterThan(0);
 
@@ -127,6 +133,15 @@ describe('OrganizationFormDrawer free-delivery districts field', () => {
     await waitFor(() => expect(createMutateMock).toHaveBeenCalled());
     const payload = createMutateMock.mock.calls[0][0];
     expect(payload.data.freeDeliveryDistrictCodes).toEqual(['1482']);
+    // Chi nhánh là kho: kho lấy mã/tên của chi nhánh.
+    expect(payload.data.warehouse).toEqual({ code: 'HN-01', name: 'Chi nhánh Hà Nội' });
+    expect(payload.data.address).toMatchObject({
+      province: 'Hà Nội',
+      provinceCode: '201',
+      district: 'Đống Đa',
+      districtCode: '1483',
+      wardCode: '1B2729',
+    });
   }, 15_000);
 
   it('keeps a saved district code as an option even if its province filter changes, and removing it clears the value', async () => {
@@ -145,7 +160,7 @@ describe('OrganizationFormDrawer free-delivery districts field', () => {
           province: 'Hà Nội',
           provinceCode: '201',
           districtCode: '1483',
-          wardCode: null,
+          wardCode: '1B2729',
           latitude: null,
           longitude: null,
         },

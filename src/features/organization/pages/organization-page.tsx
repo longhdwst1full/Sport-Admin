@@ -187,7 +187,7 @@ export function OrganizationPage() {
               setDrawerOpen(true);
             }}
           >
-            Thêm chi nhánh & kho
+            Thêm chi nhánh
           </Button>
         </PermissionGate>
       }

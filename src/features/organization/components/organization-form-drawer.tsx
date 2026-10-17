@@ -2,12 +2,13 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Form, Input, Select } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { Controller, useController, useForm, type Control } from 'react-hook-form';
+import { Controller, useController, useForm, type Control, type UseFormReturn } from 'react-hook-form';
 import * as yup from 'yup';
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import {
   useListShippingDistricts,
   useListShippingProvinces,
+  useListShippingWards,
 } from '@/generated/api/shipping/shipping';
 import {
   getListAdminBranchesQueryKey,
@@ -33,8 +34,6 @@ interface OrganizationFormValues {
   latitude?: string;
   longitude?: string;
   freeDeliveryDistrictCodes: string[];
-  warehouseCode: string;
-  warehouseName: string;
 }
 
 const schema: yup.ObjectSchema<OrganizationFormValues> = yup.object({
@@ -43,12 +42,13 @@ const schema: yup.ObjectSchema<OrganizationFormValues> = yup.object({
   phone: yup.string().trim().optional(),
   email: yup.string().trim().email('Email không hợp lệ').optional(),
   addressLine: yup.string().trim().required('Nhập địa chỉ'),
-  district: yup.string().trim().required('Nhập quận/huyện'),
-  province: yup.string().trim().required('Nhập tỉnh/thành phố'),
-  provinceCode: yup.string().trim().optional(),
-  // GHN dùng DistrictID dạng số và WardCode dạng chuỗi (có thể có chữ, ví dụ 1B2729).
-  districtCode: yup.string().trim().matches(/^\d*$/, 'Mã quận GHN là số').optional(),
-  wardCode: yup.string().trim().matches(/^[A-Za-z0-9]*$/, 'Mã phường GHN không hợp lệ').optional(),
+  district: yup.string().trim().required('Chọn quận/huyện'),
+  province: yup.string().trim().required('Chọn tỉnh/thành phố'),
+  // Mã GHN lấy từ danh mục địa giới của hãng (chọn, không gõ tay): phí GHN cần from_district_id và
+  // lấy hàng cần ward code của kho, thiếu là tính phí/tạo vận đơn lỗi.
+  provinceCode: yup.string().trim().required('Chọn tỉnh/thành phố'),
+  districtCode: yup.string().trim().required('Chọn quận/huyện'),
+  wardCode: yup.string().trim().required('Chọn phường/xã'),
   latitude: yup.string().trim().test('lat', 'Vĩ độ từ -90 đến 90', (v) => isCoordinate(v, 90)).optional(),
   longitude: yup.string().trim().test('lng', 'Kinh độ từ -180 đến 180', (v) => isCoordinate(v, 180)).optional(),
   // CONTRACT: server nhận tối đa 100 GHN DistrictID dạng chuỗi số; ràng buộc ở đây phải khớp để
@@ -59,8 +59,6 @@ const schema: yup.ObjectSchema<OrganizationFormValues> = yup.object({
     .max(100, 'Tối đa 100 quận/huyện')
     .default([])
     .required(),
-  warehouseCode: yup.string().trim().matches(/^[A-Z0-9-]+$/, 'Mã kho không hợp lệ').required('Nhập mã kho'),
-  warehouseName: yup.string().trim().required('Nhập tên kho'),
 });
 
 const defaults: OrganizationFormValues = {
@@ -77,8 +75,6 @@ const defaults: OrganizationFormValues = {
   latitude: '',
   longitude: '',
   freeDeliveryDistrictCodes: [],
-  warehouseCode: '',
-  warehouseName: '',
 };
 
 export function OrganizationFormDrawer({
@@ -134,8 +130,6 @@ export function OrganizationFormDrawer({
             latitude: branch.address.latitude?.toString() ?? '',
             longitude: branch.address.longitude?.toString() ?? '',
             freeDeliveryDistrictCodes: branch.freeDeliveryDistrictCodes ?? [],
-            warehouseCode: warehouse.code,
-            warehouseName: warehouse.name,
           }
         : defaults,
     );
@@ -167,7 +161,8 @@ export function OrganizationFormDrawer({
           ...(values.phone ? { phone: values.phone } : {}),
           ...(values.email ? { email: values.email } : {}),
           address,
-          warehouse: { name: values.warehouseName },
+          // CONTRACT: mỗi chi nhánh là một kho (1:1) — kho đi theo tên chi nhánh, không quản lý riêng.
+          warehouse: { name: values.branchName },
           expectedVersion: branch.version,
           warehouseExpectedVersion: warehouse.version,
         },
@@ -182,7 +177,7 @@ export function OrganizationFormDrawer({
         ...(values.phone ? { phone: values.phone } : {}),
         ...(values.email ? { email: values.email } : {}),
         address,
-        warehouse: { code: values.warehouseCode, name: values.warehouseName },
+        warehouse: { code: values.branchCode, name: values.branchName },
       },
     });
   });
@@ -206,7 +201,7 @@ export function OrganizationFormDrawer({
 
   return (
     <FormDrawer
-      title={branch ? 'Cập nhật chi nhánh & kho' : 'Thêm chi nhánh & kho'}
+      title={branch ? 'Cập nhật chi nhánh' : 'Thêm chi nhánh'}
       open={open}
       onClose={onClose}
       onSubmit={() => void submit()}
@@ -220,28 +215,93 @@ export function OrganizationFormDrawer({
           {field('phone', 'Điện thoại')}
           {field('email', 'Email')}
         </div>
-        {field('addressLine', 'Địa chỉ', { required: true })}
+        <GhnAreaFields form={form} />
+        {field('addressLine', 'Số nhà, tên đường', { required: true })}
+        {/* Toạ độ để chọn chi nhánh gần khách nhất và miễn phí giao trong bán kính (checkout). */}
         <div className="grid gap-4 sm:grid-cols-2">
-          {field('district', 'Quận/Huyện', { required: true })}
-          {field('province', 'Tỉnh/Thành phố', { required: true })}
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {field('provinceCode', 'Mã tỉnh GHN')}
-          {field('districtCode', 'Mã quận GHN (DistrictID)')}
-          {field('wardCode', 'Mã phường GHN (WardCode)')}
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {field('latitude', 'Vĩ độ kho')}
-          {field('longitude', 'Kinh độ kho')}
+          {field('latitude', 'Vĩ độ chi nhánh')}
+          {field('longitude', 'Kinh độ chi nhánh')}
         </div>
         <FreeDeliveryDistrictsField control={form.control} branchProvinceCode={branchProvinceCode} />
-        <TypographyTitle />
-        <div className="grid gap-4 sm:grid-cols-2">
-          {field('warehouseCode', 'Mã kho', { disabled: Boolean(branch), required: true })}
-          {field('warehouseName', 'Tên kho', { required: true })}
-        </div>
       </Form>
     </FormDrawer>
+  );
+}
+
+const toAreaOptions = (items: { code: string; name: string }[] | undefined) =>
+  (items ?? []).map((item) => ({ value: item.code, label: item.name }));
+
+/**
+ * Tỉnh → Quận → Phường theo danh mục GHN (cùng endpoint sổ địa chỉ khách/POS). Chọn là điền cả tên
+ * (in trên đơn, hiển thị) lẫn mã GHN (gọi hãng); đổi cấp trên thì xoá cấp dưới để không lệch mã.
+ */
+function GhnAreaFields({ form }: { form: UseFormReturn<OrganizationFormValues> }) {
+  const [provinceCode, districtCode, wardCode] = form.watch(['provinceCode', 'districtCode', 'wardCode']);
+  const { errors } = form.formState;
+  const provinces = useListShippingProvinces({ query: { ...CACHE_POLICY.REFERENCE } });
+  const districts = useListShippingDistricts(
+    { provinceCode: provinceCode ?? '' },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(provinceCode) } },
+  );
+  const wards = useListShippingWards(
+    { districtCode: districtCode ?? '' },
+    { query: { ...CACHE_POLICY.REFERENCE, enabled: Boolean(districtCode) } },
+  );
+  const provinceOptions = useMemo(() => toAreaOptions(provinces.data?.items), [provinces.data?.items]);
+  const districtOptions = useMemo(() => toAreaOptions(districts.data?.items), [districts.data?.items]);
+  const wardOptions = useMemo(() => toAreaOptions(wards.data?.items), [wards.data?.items]);
+  const set = (values: Partial<OrganizationFormValues>) => {
+    for (const [name, value] of Object.entries(values)) {
+      form.setValue(name as keyof OrganizationFormValues, value as string, {
+        shouldDirty: true,
+        shouldValidate: form.formState.isSubmitted,
+      });
+    }
+  };
+  const labelOf = (options: { value: string; label: string }[], code?: string) =>
+    options.find((option) => option.value === code)?.label ?? '';
+  const error = (name: 'provinceCode' | 'districtCode' | 'wardCode') => errors[name]?.message;
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-3">
+      <Form.Item label="Tỉnh/Thành phố" required validateStatus={error('provinceCode') ? 'error' : undefined} help={error('provinceCode')}>
+        <Select
+          showSearch
+          optionFilterProp="label"
+          placeholder="Chọn tỉnh/thành"
+          loading={provinces.isPending}
+          value={provinceCode || undefined}
+          options={provinceOptions}
+          onChange={(code: string) =>
+            set({ provinceCode: code, province: labelOf(provinceOptions, code), districtCode: '', district: '', wardCode: '' })
+          }
+        />
+      </Form.Item>
+      <Form.Item label="Quận/Huyện" required validateStatus={error('districtCode') ? 'error' : undefined} help={error('districtCode')}>
+        <Select
+          showSearch
+          optionFilterProp="label"
+          placeholder={provinceCode ? 'Chọn quận/huyện' : 'Chọn tỉnh trước'}
+          disabled={!provinceCode}
+          loading={districts.isFetching}
+          value={districtCode || undefined}
+          options={districtOptions}
+          onChange={(code: string) => set({ districtCode: code, district: labelOf(districtOptions, code), wardCode: '' })}
+        />
+      </Form.Item>
+      <Form.Item label="Phường/Xã" required validateStatus={error('wardCode') ? 'error' : undefined} help={error('wardCode')}>
+        <Select
+          showSearch
+          optionFilterProp="label"
+          placeholder={districtCode ? 'Chọn phường/xã' : 'Chọn quận trước'}
+          disabled={!districtCode}
+          loading={wards.isFetching}
+          value={wardCode || undefined}
+          options={wardOptions}
+          onChange={(code: string) => set({ wardCode: code })}
+        />
+      </Form.Item>
+    </div>
   );
 }
 
@@ -330,8 +390,4 @@ function isCoordinate(value: string | undefined, limit: number) {
   if (!value?.trim()) return true;
   const number = Number(value);
   return Number.isFinite(number) && Math.abs(number) <= limit;
-}
-
-function TypographyTitle() {
-  return <div className="mb-4 mt-2 border-t border-slate-200 pt-5 text-base font-semibold">Kho duy nhất của chi nhánh</div>;
 }

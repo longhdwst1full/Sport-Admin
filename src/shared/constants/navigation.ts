@@ -10,7 +10,6 @@ export type NavigationGroup =
   | 'catalog'
   | 'operations'
   | 'experience'
-  | 'organization'
   | 'system';
 
 export interface NavigationItemData {
@@ -27,7 +26,6 @@ export const NAVIGATION_GROUP_LABELS: Record<NavigationGroup, string> = {
   catalog: 'Sản phẩm & danh mục',
   operations: 'Kho & vận hành',
   experience: 'Nội dung & trải nghiệm',
-  organization: 'Tổ chức',
   system: 'Quản trị hệ thống',
 };
 
@@ -111,6 +109,13 @@ export const NAVIGATION_ITEMS_DATA: NavigationItemData[] = [
     group: 'operations',
     permission: 'inventory.stock.view',
   },
+  // Mỗi chi nhánh là một kho nên đặt cạnh Kho hàng thay vì nhóm Tổ chức riêng.
+  {
+    path: '/organization',
+    label: 'Chi nhánh & kho',
+    group: 'operations',
+    permission: 'org.branch.view',
+  },
   {
     path: '/procurement',
     label: 'Nhập hàng & NCC',
@@ -153,12 +158,6 @@ export const NAVIGATION_ITEMS_DATA: NavigationItemData[] = [
     label: 'Tri thức trợ lý',
     group: 'experience',
     permission: 'assistant.knowledge.manage',
-  },
-  {
-    path: '/organization',
-    label: 'Chi nhánh & kho',
-    group: 'organization',
-    permission: 'org.branch.view',
   },
   {
     path: '/access',
