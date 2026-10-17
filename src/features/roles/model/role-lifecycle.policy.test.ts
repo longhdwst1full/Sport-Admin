@@ -5,6 +5,8 @@ import {
   describeRoleDeleteImpact,
   describeRoleDeleteResult,
   getRoleDeleteState,
+  toDeleteRolePayload,
+  toRoleFallbackOptions,
   roleDeleteErrorMessage,
   shouldReloadAfterRoleDeleteError,
 } from './role-lifecycle.policy';
@@ -28,9 +30,25 @@ describe('getRoleDeleteState (D98)', () => {
     }
   });
 
-  it('khoá vai trò tự tạo mang quyền quản trị', () => {
-    const state = getRoleDeleteState({ name: 'Bảo mật', system: false, status: 'ACTIVE', canDelete: false });
-    expect(state).toEqual({ allowed: false, label: 'Vai trò mang quyền quản trị không được xoá' });
+  it('người xem không phải Chủ hệ thống', () => {
+    const state = getRoleDeleteState({
+      name: 'Bảo mật', system: false, status: 'ACTIVE', canDelete: false, deleteBlockedReason: 'OWNER_ONLY',
+    });
+    expect(state).toEqual({ allowed: false, label: 'Chỉ Chủ hệ thống được xoá vai trò' });
+  });
+
+  it('khoá vai trò người đang xem đang giữ', () => {
+    const state = getRoleDeleteState({
+      name: 'Trưởng ca', system: false, status: 'ACTIVE', canDelete: false, deleteBlockedReason: 'HELD_BY_ACTOR',
+    });
+    expect(state).toEqual({ allowed: false, label: 'Bạn đang giữ vai trò này nên không thể tự xoá' });
+  });
+
+  it('lý do server trả được ưu tiên hơn suy luận cục bộ', () => {
+    const state = getRoleDeleteState({
+      name: 'Nhân viên', system: true, status: 'ACTIVE', canDelete: false, deleteBlockedReason: 'SYSTEM_ROLE',
+    });
+    expect(state.label).toBe('Vai trò hệ thống không được xoá; dùng Sửa để ngừng hoạt động');
   });
 
   it('khoá vai trò đã ngừng và hết người giữ', () => {
@@ -46,33 +64,96 @@ describe('getRoleDeleteState (D98)', () => {
   });
 });
 
+describe('toRoleFallbackOptions / toDeleteRolePayload', () => {
+  const roles = [
+    { id: '1', name: 'Chủ cửa hàng', code: 'OWNER', status: 'ACTIVE' as const },
+    { id: '3', name: 'Nhân viên', code: 'STAFF', status: 'ACTIVE' as const },
+    { id: '9', name: 'Cũ', code: 'OLD', status: 'INACTIVE' as const },
+    { id: '50', name: 'Trưởng ca', code: 'SHIFT_LEAD', status: 'ACTIVE' as const },
+  ];
+
+  it('chỉ liệt kê vai trò đang hoạt động, bỏ vai trò đang xoá, nhãn "Tên (MÃ)"', () => {
+    expect(toRoleFallbackOptions(roles, '50')).toEqual([
+      { value: '1', label: 'Chủ cửa hàng (OWNER)' },
+      { value: '3', label: 'Nhân viên (STAFF)' },
+    ]);
+  });
+
+  it('có vai trò chuyển sang thì chỉ gửi fallbackRoleId (bỏ orphanAction), lý do đã trim', () => {
+    expect(
+      toDeleteRolePayload({ activeAssignmentCount: 2 }, { fallbackRoleId: '3', orphanAction: 'DELETE_ACCOUNT', reason: '  gộp  ' }),
+    ).toEqual({ reason: 'gộp', fallbackRoleId: '3' });
+  });
+
+  it('không chuyển thì gửi orphanAction khi còn người giữ', () => {
+    expect(
+      toDeleteRolePayload({ activeAssignmentCount: 2 }, { fallbackRoleId: null, orphanAction: 'DELETE_ACCOUNT', reason: 'gộp' }),
+    ).toEqual({ reason: 'gộp', orphanAction: 'DELETE_ACCOUNT' });
+  });
+
+  /** Vai trò chưa ai giữ: không gửi orphanAction để API báo lỗi nếu vừa có người được gán song song. */
+  it('vai trò chưa ai giữ chỉ gửi lý do', () => {
+    expect(
+      toDeleteRolePayload({ activeAssignmentCount: 0 }, { fallbackRoleId: null, orphanAction: 'DEACTIVATE', reason: 'gộp' }),
+    ).toEqual({ reason: 'gộp' });
+  });
+});
+
 describe('describeRoleDeleteImpact / describeRoleDeleteResult', () => {
-  it('nêu số phân quyền sẽ chuyển về Nhân viên', () => {
-    expect(describeRoleDeleteImpact({ activeAssignmentCount: 3 })).toContain(
-      '3 phân quyền đang hoạt động sẽ được chuyển về vai trò Nhân viên',
+  it('chuyển sang vai trò đã chọn', () => {
+    expect(describeRoleDeleteImpact({ activeAssignmentCount: 3 }, { kind: 'move', roleLabel: 'Nhân viên (STAFF)' })).toContain(
+      'Vai trò sẽ bị xoá. 3 phân quyền đang hoạt động sẽ được chuyển sang vai trò Nhân viên (STAFF)',
     );
+  });
+
+  it('không chuyển: vai trò vẫn bị xoá; nêu rõ ngừng hoạt động hay xoá tài khoản mồ côi', () => {
+    const deactivate = describeRoleDeleteImpact({ activeAssignmentCount: 1 }, { kind: 'orphan', orphanAction: 'DEACTIVATE' });
+    expect(deactivate).toContain('Vai trò sẽ bị xoá');
+    expect(deactivate).toContain('Tài khoản còn vai trò khác chỉ bị gỡ vai trò này');
+    expect(deactivate).toContain('chuyển sang Ngừng hoạt động');
+    const remove = describeRoleDeleteImpact({ activeAssignmentCount: 1 }, { kind: 'orphan', orphanAction: 'DELETE_ACCOUNT' });
+    expect(remove).toContain('bị XOÁ');
   });
 
   it('vai trò chưa gán thì không nhắc chuyển', () => {
-    expect(describeRoleDeleteImpact({ activeAssignmentCount: 0 })).not.toContain('chuyển');
+    expect(describeRoleDeleteImpact({ activeAssignmentCount: 0 }, { kind: 'orphan', orphanAction: 'DEACTIVATE' })).not.toContain('chuyển');
   });
 
-  it('toast đếm theo số nhân viên bị ảnh hưởng', () => {
-    expect(describeRoleDeleteResult({ affectedUsers: 2 })).toBe(
-      'Đã chuyển 2 nhân viên về vai trò Nhân viên',
+  it('toast theo kết quả', () => {
+    const base = { movedAssignments: 0, deactivatedUsers: 0, deletedUsers: 0 };
+    expect(describeRoleDeleteResult({ ...base, affectedUsers: 2, movedAssignments: 3 }, 'Nhân viên (STAFF)')).toBe(
+      'Đã xoá vai trò và chuyển 2 nhân viên sang vai trò Nhân viên (STAFF)',
     );
-    expect(describeRoleDeleteResult({ affectedUsers: 0 })).toBe('Đã xoá vai trò');
+    expect(describeRoleDeleteResult({ ...base, affectedUsers: 3, deactivatedUsers: 2 })).toBe(
+      'Đã xoá vai trò, gỡ vai trò khỏi 3 nhân viên, ngừng hoạt động 2 tài khoản',
+    );
+    expect(describeRoleDeleteResult({ ...base, affectedUsers: 1, deletedUsers: 1 })).toBe(
+      'Đã xoá vai trò, gỡ vai trò khỏi 1 nhân viên, xoá 1 tài khoản',
+    );
+    expect(describeRoleDeleteResult({ ...base, affectedUsers: 0 })).toBe('Đã xoá vai trò');
   });
 });
 
 describe('roleDeleteErrorMessage / shouldReloadAfterRoleDeleteError', () => {
   it('map mã lỗi ổn định sang tiếng Việt', () => {
-    expect(roleDeleteErrorMessage(apiError(403, ROLE_DELETE_ERROR_CODE.PROTECTED), 'fallback')).toBe(
-      'Vai trò quản trị hoặc vai trò hệ thống không được xoá.',
+    expect(roleDeleteErrorMessage(apiError(403, ROLE_DELETE_ERROR_CODE.PROTECTED), 'fallback')).toContain(
+      'chỉ Chủ hệ thống được xoá',
+    );
+    expect(roleDeleteErrorMessage(apiError(400, ROLE_DELETE_ERROR_CODE.ORPHAN_ACTION_REQUIRED), 'fallback')).toContain(
+      'Ngừng hoạt động hoặc Xoá tài khoản',
+    );
+    expect(roleDeleteErrorMessage(apiError(400, ROLE_DELETE_ERROR_CODE.FALLBACK_INVALID), 'fallback')).toBe(
+      'Vai trò chuyển sang phải khác vai trò đang xoá.',
     );
     expect(
       roleDeleteErrorMessage(apiError(409, ROLE_DELETE_ERROR_CODE.FALLBACK_UNAVAILABLE), 'fallback'),
-    ).toContain('Vai trò Nhân viên đang ngừng hoạt động');
+    ).toContain('Hãy chọn vai trò khác');
+    expect(roleDeleteErrorMessage(apiError(409, ROLE_DELETE_ERROR_CODE.HELD_BY_ACTOR), 'fallback')).toContain(
+      'Bạn đang giữ vai trò này',
+    );
+    expect(roleDeleteErrorMessage(apiError(409, ROLE_DELETE_ERROR_CODE.LAST_MANAGER), 'fallback')).toContain(
+      'không còn ai quản lý được vai trò',
+    );
   });
 
   it('mã lạ dùng thông báo server', () => {
@@ -85,7 +166,10 @@ describe('roleDeleteErrorMessage / shouldReloadAfterRoleDeleteError', () => {
     expect(shouldReloadAfterRoleDeleteError(apiError(409, ROLE_DELETE_ERROR_CODE.VERSION_CONFLICT))).toBe(true);
     expect(shouldReloadAfterRoleDeleteError(apiError(404, 'NOT_FOUND'))).toBe(true);
     expect(shouldReloadAfterRoleDeleteError(apiError(403, ROLE_DELETE_ERROR_CODE.PROTECTED))).toBe(true);
-    expect(shouldReloadAfterRoleDeleteError(apiError(409, ROLE_DELETE_ERROR_CODE.FALLBACK_UNAVAILABLE))).toBe(false);
+    expect(shouldReloadAfterRoleDeleteError(apiError(409, ROLE_DELETE_ERROR_CODE.HELD_BY_ACTOR))).toBe(true);
+    expect(shouldReloadAfterRoleDeleteError(apiError(409, ROLE_DELETE_ERROR_CODE.FALLBACK_UNAVAILABLE))).toBe(true);
+    expect(shouldReloadAfterRoleDeleteError(apiError(400, ROLE_DELETE_ERROR_CODE.ORPHAN_ACTION_REQUIRED))).toBe(false);
+    expect(shouldReloadAfterRoleDeleteError(apiError(409, ROLE_DELETE_ERROR_CODE.LAST_MANAGER))).toBe(false);
     expect(shouldReloadAfterRoleDeleteError(new Error('network'))).toBe(false);
   });
 });

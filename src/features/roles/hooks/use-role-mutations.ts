@@ -1,4 +1,4 @@
-import type { DeleteRoleResultDto, RoleDto } from '@/generated/api/iam/iam.schemas';
+import type { DeleteRoleDto, DeleteRoleResultDto, RoleDto } from '@/generated/api/iam/iam.schemas';
 import {
   useCreateAdminRole,
   useDeleteAdminRole,
@@ -53,9 +53,10 @@ export function useRoleMutations(callbacks: RoleMutationCallbacks) {
     });
   }
 
-  function deleteRole(row: RoleDto, reason: string) {
-    return remove.mutateAsync({ roleId: row.id, data: { expectedVersion: row.version, reason } });
+  /** CONCURRENCY: gửi version đã load để API trả 409 nếu vai trò vừa bị sửa. */
+  function deleteRole(row: RoleDto, data: Omit<DeleteRoleDto, 'expectedVersion'>) {
+    return remove.mutateAsync({ roleId: row.id, data: { ...data, expectedVersion: row.version } });
   }
 
-  return { save, saving: create.isPending || update.isPending, deleteRole };
+  return { save, saving: create.isPending || update.isPending, deleteRole, deleting: remove.isPending };
 }

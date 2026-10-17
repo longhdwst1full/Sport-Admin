@@ -521,6 +521,7 @@ paths:
           in: query
           schema:
             minimum: 1
+            maximum: 10000
             default: 1
             type: number
         - name: limit
@@ -651,7 +652,7 @@ paths:
       x-required-permissions:
         - iam.role.manage
     delete:
-      description: "Vai trò hệ thống hoặc mang quyền quản trị (iam.user.manage, iam.user.mfa.manage, iam.role.manage, iam.assignment.manage, system.parameter.manage) trả 403 IAM_ROLE_PROTECTED. Mỗi assignment ACTIVE còn hiệu lực được kết thúc (REVOKED) và thay bằng STAFF cùng phạm vi (đã có thì dùng lại); permissionVersion của người bị ảnh hưởng tăng. Còn lịch sử assignment thì vai trò chuyển INACTIVE (outcome DEACTIVATED), không thì xoá hẳn (DELETED). Lặp lại: 404 sau DELETED, no-op sau DEACTIVATED."
+      description: 'Vai trò hệ thống trả 403 IAM_ROLE_PROTECTED. Chỉ actor giữ OWNER ACTIVE phạm vi GLOBAL được xoá vai trò tự tạo; người khác nhận 403 IAM_ROLE_PROTECTED ("Chỉ Chủ hệ thống được xoá vai trò"). Mỗi assignment ACTIVE còn hiệu lực được kết thúc (REVOKED). Có fallbackRoleId (vai trò ACTIVE bất kỳ, khác vai trò đang xoá; sai -> 400 IAM_ROLE_FALLBACK_INVALID / 409 IAM_ROLE_FALLBACK_UNAVAILABLE): thay bằng vai trò đó cùng phạm vi (đã có thì dùng lại). Không có: tài khoản còn vai trò khác chỉ mất vai trò này; tài khoản nhân viên ACTIVE không còn vai trò nào xử lý theo orphanAction — DEACTIVATE (INACTIVE + thu hồi phiên) hoặc DELETE_ACCOUNT (xoá logic như deleteAdminStaffUser: LOCKED + thu hồi phiên); thiếu orphanAction khi có tài khoản như vậy -> 400 IAM_ROLE_ORPHAN_ACTION_REQUIRED. Vai trò luôn bị xoá trong cùng transaction. permissionVersion của người bị ảnh hưởng tăng. Chặn trong transaction: người xoá đang giữ vai trò (409 IAM_ROLE_HELD_BY_ACTOR); xoá xong (sau cả bước xử lý tài khoản) không còn nhân viên ACTIVE nào nắm iam.role.manage GLOBAL (409 IAM_ROLE_LAST_MANAGER). Còn lịch sử assignment thì vai trò chuyển INACTIVE (outcome DEACTIVATED), không thì xoá hẳn (DELETED). Lặp lại: 404 sau DELETED, no-op sau DEACTIVATED.'
       operationId: deleteAdminRole
       parameters:
         - name: roleId
@@ -673,7 +674,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeleteRoleResultDto"
         "400":
-          description: ""
+          description: Validation, IAM_ROLE_FALLBACK_INVALID (fallback = role itself) or IAM_ROLE_ORPHAN_ACTION_REQUIRED
           content:
             application/json:
               schema:
@@ -685,7 +686,7 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "403":
-          description: IAM_ROLE_PROTECTED (system/admin role), non-GLOBAL actor, or actor lacks STAFF permissions
+          description: IAM_ROLE_PROTECTED (system role, or actor is not GLOBAL OWNER), non-GLOBAL actor, or actor lacks the fallback role permissions
           content:
             application/json:
               schema:
@@ -697,14 +698,14 @@ paths:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
         "409":
-          description: IAM_ROLE_VERSION_CONFLICT (stale expectedVersion) or IAM_ROLE_FALLBACK_UNAVAILABLE (STAFF inactive)
+          description: IAM_ROLE_VERSION_CONFLICT (stale expectedVersion), IAM_ROLE_FALLBACK_UNAVAILABLE (fallback role missing/inactive), IAM_ROLE_HELD_BY_ACTOR (actor holds the role) or IAM_ROLE_LAST_MANAGER (nobody would keep iam.role.manage)
           content:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: Delete a custom role and move its active assignments to STAFF with the same scope
+      summary: Delete a custom role (GLOBAL OWNER only), moving holders to a chosen role or handling orphaned accounts
       tags:
         - Admin IAM
       x-required-permissions:
@@ -967,6 +968,15 @@ components:
           example: Vai trò không còn dùng
           minLength: 3
           maxLength: 255
+        fallbackRoleId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: "Vai trò ACTIVE (bất kỳ, khác vai trò đang xoá) nhận người đang giữ, cùng phạm vi. Bỏ trống: chỉ kết thúc assignment; tài khoản còn vai trò khác giữ nguyên, tài khoản không còn vai trò nào xử lý theo orphanAction."
+        orphanAction:
+          description: "Chỉ khi không có fallbackRoleId: DEACTIVATE (INACTIVE + thu hồi phiên) hoặc DELETE_ACCOUNT (xoá logic như deleteAdminStaffUser) cho tài khoản không còn vai trò nào khác. Bắt buộc nếu có tài khoản như vậy (thiếu -> 400 IAM_ROLE_ORPHAN_ACTION_REQUIRED). Bị bỏ qua khi có fallbackRoleId."
+          allOf:
+            - $ref: "#/components/schemas/RoleDeleteOrphanAction"
       required:
         - expectedVersion
         - reason
@@ -977,11 +987,35 @@ components:
           description: "DELETED: xoá hẳn (không còn assignment nào tham chiếu). DEACTIVATED: còn lịch sử nên chuyển INACTIVE."
           allOf:
             - $ref: "#/components/schemas/RoleDeleteOutcome"
+        fallbackRoleId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: Vai trò đã nhận các assignment (echo từ request).
+        orphanAction:
+          description: Cách xử lý tài khoản mồ côi đã áp dụng (echo từ request khi không có fallbackRoleId).
+          allOf:
+            - $ref: "#/components/schemas/RoleDeleteOrphanAction"
         movedAssignments:
           type: number
           example: 2
           minimum: 0
-          description: Số assignment ACTIVE đã kết thúc và chuyển về STAFF cùng phạm vi
+          description: Số assignment kết thúc (REVOKED) và thay bằng fallbackRoleId cùng phạm vi
+        revokedAssignments:
+          type: number
+          example: 0
+          minimum: 0
+          description: Số assignment kết thúc (REVOKED) không có vai trò thay thế
+        deactivatedUsers:
+          type: number
+          example: 0
+          minimum: 0
+          description: Số tài khoản mồ côi chuyển INACTIVE (phiên bị thu hồi)
+        deletedUsers:
+          type: number
+          example: 0
+          minimum: 0
+          description: Số tài khoản mồ côi bị xoá logic như deleteAdminStaffUser (LOCKED, phiên bị thu hồi)
         affectedUsers:
           type: number
           example: 2
@@ -990,6 +1024,9 @@ components:
       required:
         - outcome
         - movedAssignments
+        - revokedAssignments
+        - deactivatedUsers
+        - deletedUsers
         - affectedUsers
     LockStaffUserDto:
       type: object
@@ -1043,6 +1080,20 @@ components:
           maxLength: 255
       required:
         - reason
+    RoleDeleteBlockReason:
+      type: string
+      enum:
+        - SYSTEM_ROLE
+        - OWNER_ONLY
+        - HELD_BY_ACTOR
+        - ALREADY_DELETED
+      description: "Có khi canDelete=false: lý do để UI hiện gợi ý đúng."
+    RoleDeleteOrphanAction:
+      type: string
+      enum:
+        - DEACTIVATE
+        - DELETE_ACCOUNT
+      description: "Chỉ khi không có fallbackRoleId: DEACTIVATE (INACTIVE + thu hồi phiên) hoặc DELETE_ACCOUNT (xoá logic như deleteAdminStaffUser) cho tài khoản không còn vai trò nào khác. Bắt buộc nếu có tài khoản như vậy (thiếu -> 400 IAM_ROLE_ORPHAN_ACTION_REQUIRED). Bị bỏ qua khi có fallbackRoleId."
     RoleDeleteOutcome:
       type: string
       enum:
@@ -1080,11 +1131,15 @@ components:
           type: number
           example: 3
           minimum: 0
-          description: Số assignment ACTIVE còn hiệu lực; xoá vai trò sẽ chuyển chừng đó assignment về STAFF cùng phạm vi
+          description: Số assignment ACTIVE còn hiệu lực; xoá vai trò sẽ kết thúc chừng đó assignment (chuyển sang vai trò đã chọn, hoặc tài khoản bị chuyển INACTIVE)
         canDelete:
           type: boolean
           example: true
-          description: "Server tính: false với vai trò hệ thống, vai trò mang quyền quản trị (IAM_ROLE_PROTECTED) hoặc vai trò đã ngừng không còn gì để xoá. Chỉ là gợi ý UX; DELETE vẫn tự kiểm."
+          description: "Server tính THEO NGƯỜI ĐANG XEM: false với vai trò hệ thống, khi người xem không phải OWNER phạm vi GLOBAL (chỉ OWNER được xoá vai trò), vai trò người xem đang giữ, hoặc vai trò đã ngừng không còn gì để xoá. Chỉ là gợi ý UX; DELETE vẫn tự kiểm (kể cả chốt không để hệ thống mất người nắm iam.role.manage)."
+        deleteBlockedReason:
+          description: "Có khi canDelete=false: lý do để UI hiện gợi ý đúng."
+          allOf:
+            - $ref: "#/components/schemas/RoleDeleteBlockReason"
       required:
         - id
         - code

@@ -73,9 +73,12 @@ describe('useRoleMutations', () => {
     apiFetcherMock.mockResolvedValueOnce(deleted);
     const { result, callbacks, succeededKeys } = setup();
 
-    await act(() => result.current.deleteRole(role, 'không dùng nữa'));
+    await act(() => result.current.deleteRole(role, { reason: 'không dùng nữa', orphanAction: 'DEACTIVATE' }));
 
     expect(callbacks.onDeleted).toHaveBeenCalledWith(deleted, expect.anything(), undefined);
+    expect(apiFetcherMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ data: { expectedVersion: role.version, reason: 'không dùng nữa', orphanAction: 'DEACTIVATE' } }),
+    );
     expect(new Set(succeededKeys)).toEqual(new Set(['deleteAdminRole']));
     expect(PERMISSION_CHANGING_OPERATIONS.has('deleteAdminRole')).toBe(true);
   });

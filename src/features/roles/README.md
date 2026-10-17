@@ -1,10 +1,10 @@
 # Roles — maintenance note
 
-> **Document version:** 1.5.0
+> **Document version:** 1.6.0
 >
 > **Last updated:** 2026-10-17
 >
-> **Change summary:** Bảng vai trò gọn (cột Mã quyền tóm tắt + "Xem thêm", nút "Xem chi tiết"); cây quyền chỉ đọc trong `RolePermissionsDrawer`; nhãn tiếng Việt cho từng mã quyền; gắn `assistant.*`, `iam.user.mfa`, `social.post.*` vào màn thật.
+> **Change summary:** Xoá vai trò chỉ Chủ hệ thống; `RoleDeleteModal` hai bước (chuyển sang vai trò đang hoạt động bất kỳ, hoặc xử lý tài khoản không còn vai trò: Ngừng hoạt động / Xoá); tooltip theo `deleteBlockedReason`; lỗi `IAM_ROLE_*` mới.
 
 ## Phạm vi
 
@@ -18,7 +18,7 @@ Tạo / sửa / xoá vai trò và gán tập quyền cho vai trò. **Không** g�
 | `listAdminPermissions` | cây quyền trong drawer |
 | `createAdminRole` | nút Tạo vai trò |
 | `updateAdminRole` | drawer sửa — đổi tên, mô tả, trạng thái, tập quyền |
-| `deleteAdminRole` | nút Xoá, kèm lý do; trả `{ outcome, movedAssignments, affectedUsers }` |
+| `deleteAdminRole` | nút Xoá → `RoleDeleteModal`, gửi `{ expectedVersion, reason, fallbackRoleId? \| orphanAction? }` (`toDeleteRolePayload`); trả `{ outcome, fallbackRoleId?, orphanAction?, movedAssignments, revokedAssignments, deactivatedUsers, deletedUsers, affectedUsers }` |
 
 `listAdminRoles` (chỉ `ACTIVE`) và `searchActiveAdminRoles` thuộc màn `access`, không dùng ở đây.
 
@@ -39,9 +39,15 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 ## Bất biến nghiệp vụ
 
 - **OWNER không xoá/ngừng được.** Đây là vai trò quản trị gốc duy nhất; khóa nó có thể khiến toàn hệ thống không còn người quản trị.
-- **Vai trò hệ thống và vai trò quản trị không xoá được (D98).** API trả 403 `IAM_ROLE_PROTECTED`; UI khoá nút theo `canDelete` server tính, không tự suy luật. Ngừng vai trò hệ thống làm ở màn Sửa (trạng thái).
-- **Xoá vai trò tự tạo chuyển người đang giữ về Nhân viên.** Mỗi phân quyền đang hoạt động được chuyển về STAFF cùng chi nhánh/phạm vi; hộp xác nhận hiện `activeAssignmentCount`, toast "Đã chuyển n nhân viên về vai trò Nhân viên" đếm theo `affectedUsers` (một người có thể giữ vai trò ở nhiều chi nhánh). Còn lịch sử phân quyền thì API chỉ chuyển vai trò sang INACTIVE.
-- Lỗi xoá map theo mã (`model/role-lifecycle.policy.ts`); 404, `IAM_ROLE_VERSION_CONFLICT`, `IAM_ROLE_PROTECTED` tải lại danh sách.
+- **Vai trò hệ thống không xoá được (D98)**; ngừng vai trò hệ thống làm ở màn Sửa (trạng thái). **Chỉ Chủ hệ thống (OWNER phạm vi toàn hệ thống) xoá được vai trò.** Không ai tự xoá vai trò mình đang giữ. API trả 403 `IAM_ROLE_PROTECTED` / 409 `IAM_ROLE_HELD_BY_ACTOR`; UI khoá nút theo `canDelete` server tính **cho người đang xem**, tooltip theo `deleteBlockedReason` (`ROLE_DELETE_BLOCK_LABELS`), không tự suy luật.
+- **Hộp xoá `components/role-delete-modal.tsx`** (RHF + yup, antd `Steps`), modal chỉ đóng khi xoá thành công:
+  1. **Chuyển vai trò** — Select "Chuyển người đang giữ vai trò sang" (vai trò ACTIVE, bỏ vai trò đang xoá, nhãn "Tên (MÃ)", `toRoleFallbackOptions`, allowClear). "Chuyển & xoá" (bật khi đã chọn) gửi `fallbackRoleId`; "Không chuyển, tiếp tục" sang bước 2.
+  2. **Xử lý tài khoản** — vai trò VẪN bị xoá; Radio cho tài khoản không còn vai trò nào khác: Ngừng hoạt động (mặc định) / Xoá tài khoản (đỏ, Alert lỗi). Tài khoản còn vai trò khác chỉ bị gỡ vai trò này. "Quay lại" / "Xoá vai trò" gửi `orphanAction`.
+  - Vai trò chưa ai giữ (`activeAssignmentCount = 0`): bỏ qua hai bước, chỉ lý do + Xoá, không gửi `orphanAction` (nếu vừa có người được gán song song API trả 400 `IAM_ROLE_ORPHAN_ACTION_REQUIRED` thay vì âm thầm ngừng/xoá tài khoản).
+  - Lý do bắt buộc ≥ 3 ký tự ở bước gửi. Câu hệ quả `describeRoleDeleteImpact`; toast `describeRoleDeleteResult` (chuyển sang X / ngừng N / xoá N tài khoản).
+- "Xoá tài khoản" ở API = xoá logic như `deleteAdminStaffUser` (LOCKED + thu hồi phiên), không xoá cứng dòng `users`.
+- API còn chặn xoá khiến không còn nhân viên ACTIVE nào nắm `iam.role.manage` toàn hệ thống (409 `IAM_ROLE_LAST_MANAGER`) — UI không biết trước, chỉ báo lỗi.
+- Lỗi xoá hiện toast, map theo mã (`model/role-lifecycle.policy.ts`); 404, `IAM_ROLE_VERSION_CONFLICT`, `IAM_ROLE_PROTECTED`, `IAM_ROLE_HELD_BY_ACTOR`, `IAM_ROLE_FALLBACK_UNAVAILABLE` tải lại danh sách.
 - **Mã vai trò không đổi sau khi tạo.** Ô mã bị khoá ở chế độ sửa.
 - **Không cho tự nâng quyền.** Backend từ chối cấp quyền mà chính người thao tác không có; UI khoá sẵn các ô đó kèm tooltip. Quyền vai trò *đang có sẵn* được giữ lại trong tập cấp được, để người sửa không cần toàn quyền chỉ để đổi tên.
 - **Chỉ phạm vi GLOBAL mới quản lý được vai trò.** Quản lý chi nhánh không tạo được vai trò.
@@ -60,6 +66,7 @@ Cây quyền có ba tầng **nhóm menu → màn hình → hành động**. Nhó
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.6.0 | 2026-10-17 | Xoá vai trò chỉ Chủ hệ thống; `RoleDeleteModal` hai bước (`fallbackRoleId` bất kỳ vai trò ACTIVE / `orphanAction` DEACTIVATE·DELETE_ACCOUNT); tooltip theo `deleteBlockedReason`; lỗi `IAM_ROLE_HELD_BY_ACTOR`/`LAST_MANAGER`/`FALLBACK_INVALID`/`ORPHAN_ACTION_REQUIRED`. |
 | 1.5.0 | 2026-10-17 | Bảng gọn + drawer chi tiết quyền theo màn hình; nhãn tiếng Việt cho mã quyền; nhóm "Quyền hệ thống khác" thay "Chưa có màn hình"; cờ Nhạy cảm có tooltip. |
 | 1.4.0 | 2026-10-10 | Ô tìm vai trò (lọc tại chỗ, `q` trên URL); xoá vai trò dùng `useConfirmWithReason`; lỗi tải dùng `QueryErrorAlert`; bỏ `permissionLabel`/`permissionModuleLabels` không dùng. |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý vai trò. |

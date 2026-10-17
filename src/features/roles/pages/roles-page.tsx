@@ -8,17 +8,15 @@ import { useCan, usePermissions } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
-import { useConfirmWithReason } from '@/foundation/overlay';
 import { FilterBar, RefreshButton } from '@/foundation/table';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { invalidateReferenceData } from '@/shared/constants/query-cache-policy';
 import { useUrlSearch } from '@/shared/hooks/use-url-search';
+import { RoleDeleteModal } from '../components/role-delete-modal';
 import { RoleFormDrawer } from '../components/role-form-drawer';
 import { RolePermissionsDrawer } from '../components/role-permissions-drawer';
 import { RoleTable } from '../components/role-table';
-import { ROLE_DELETE_REASON_MIN_LENGTH } from '../constants/role.constants';
 import {
-  describeRoleDeleteImpact,
   describeRoleDeleteResult,
   roleDeleteErrorMessage,
   shouldReloadAfterRoleDeleteError,
@@ -27,7 +25,6 @@ import { useRoleMutations } from '../hooks/use-role-mutations';
 
 export function RolesPage() {
   const { message } = App.useApp();
-  const confirmWithReason = useConfirmWithReason();
   // Danh sách vai trò trả trọn một lần; ô tìm lọc tại chỗ theo tên/mã và nằm trên URL (`q`).
   const search = useUrlSearch(['q']);
   const keyword = (search.url.get('q') ?? '').toLocaleLowerCase('vi');
@@ -38,6 +35,7 @@ export function RolesPage() {
   const [editing, setEditing] = useState<RoleDto>();
   // Lưu id thay vì DTO để drawer luôn đọc bản mới nhất sau khi refetch.
   const [viewingRoleId, setViewingRoleId] = useState<string>();
+  const [deleting, setDeleting] = useState<RoleDto>();
 
   const roles = useListAdminAllRoles();
   const permissions = useListAdminPermissions();
@@ -79,25 +77,18 @@ export function RolesPage() {
     },
     onSaveError: (error) => void message.error(getApiErrorMessage(error)),
     onDeleted: async (result) => {
+      // Tra tên vai trò nhận người giữ TRƯỚC khi tải lại danh sách.
+      const fallbackRole = roles.data?.items.find(({ id }) => id === result.fallbackRoleId);
       await refresh();
-      void message.success(describeRoleDeleteResult(result));
+      void message.success(
+        describeRoleDeleteResult(result, fallbackRole && `${fallbackRole.name} (${fallbackRole.code})`),
+      );
     },
     onDeleteError: async (error) => {
       void message.error(roleDeleteErrorMessage(error, getApiErrorMessage(error)));
       if (shouldReloadAfterRoleDeleteError(error)) await refresh();
     },
   });
-
-  function confirmDelete(row: RoleDto) {
-    confirmWithReason({
-      title: `Xoá vai trò ${row.code}?`,
-      consequence: describeRoleDeleteImpact(row),
-      okText: 'Xoá',
-      placeholder: `Lý do (tối thiểu ${ROLE_DELETE_REASON_MIN_LENGTH} ký tự)`,
-      minLength: ROLE_DELETE_REASON_MIN_LENGTH,
-      onOk: (reason) => roleMutations.deleteRole(row, reason),
-    });
-  }
 
   return (
     <>
@@ -154,7 +145,7 @@ export function RolesPage() {
             setEditing(row);
             setFormOpen(true);
           }}
-          onDelete={confirmDelete}
+          onDelete={setDeleting}
           onShowPermissions={(row) => setViewingRoleId(row.id)}
         />
       </ManagementPage>
@@ -163,6 +154,14 @@ export function RolesPage() {
         role={viewingRole}
         permissions={permissionItems}
         onClose={() => setViewingRoleId(undefined)}
+      />
+
+      <RoleDeleteModal
+        target={deleting}
+        submitting={roleMutations.deleting}
+        onClose={() => setDeleting(undefined)}
+        roles={roles.data?.items ?? []}
+        onSubmit={roleMutations.deleteRole}
       />
 
       <RoleFormDrawer

@@ -1,5 +1,5 @@
 import type { StatusPresentation } from '@/foundation/management/status-tag';
-import { RoleStatus } from '@/generated/api/iam/iam.schemas';
+import { RoleDeleteBlockReason, RoleDeleteOrphanAction, RoleStatus } from '@/generated/api/iam/iam.schemas';
 import { toOptions } from '@/shared/utils/options';
 
 /** OWNER là tài khoản gốc duy nhất và không được ngừng hoạt động qua UI/API. */
@@ -20,16 +20,43 @@ export const ROLE_DELETE_ERROR_CODE = {
   PROTECTED: 'IAM_ROLE_PROTECTED',
   VERSION_CONFLICT: 'IAM_ROLE_VERSION_CONFLICT',
   FALLBACK_UNAVAILABLE: 'IAM_ROLE_FALLBACK_UNAVAILABLE',
+  HELD_BY_ACTOR: 'IAM_ROLE_HELD_BY_ACTOR',
+  LAST_MANAGER: 'IAM_ROLE_LAST_MANAGER',
+  FALLBACK_INVALID: 'IAM_ROLE_FALLBACK_INVALID',
+  ORPHAN_ACTION_REQUIRED: 'IAM_ROLE_ORPHAN_ACTION_REQUIRED',
 } as const;
 
 export const ROLE_DELETE_ERROR_MESSAGES: Record<
   (typeof ROLE_DELETE_ERROR_CODE)[keyof typeof ROLE_DELETE_ERROR_CODE],
   string
 > = {
-  [ROLE_DELETE_ERROR_CODE.PROTECTED]: 'Vai trò quản trị hoặc vai trò hệ thống không được xoá.',
+  [ROLE_DELETE_ERROR_CODE.PROTECTED]: 'Vai trò hệ thống không được xoá; các vai trò khác chỉ Chủ hệ thống được xoá.',
   [ROLE_DELETE_ERROR_CODE.VERSION_CONFLICT]: 'Vai trò vừa thay đổi, đã tải lại danh sách. Hãy thử lại.',
   [ROLE_DELETE_ERROR_CODE.FALLBACK_UNAVAILABLE]:
-    'Vai trò Nhân viên đang ngừng hoạt động nên không thể chuyển nhân viên về. Hãy kích hoạt lại trước khi xoá.',
+    'Vai trò được chọn để chuyển sang không còn hoặc đang ngừng hoạt động. Hãy chọn vai trò khác.',
+  [ROLE_DELETE_ERROR_CODE.FALLBACK_INVALID]: 'Vai trò chuyển sang phải khác vai trò đang xoá.',
+  [ROLE_DELETE_ERROR_CODE.ORPHAN_ACTION_REQUIRED]:
+    'Có tài khoản sẽ không còn vai trò nào. Hãy chọn Ngừng hoạt động hoặc Xoá tài khoản rồi thử lại.',
+  [ROLE_DELETE_ERROR_CODE.HELD_BY_ACTOR]:
+    'Bạn đang giữ vai trò này nên không thể tự xoá. Hãy gỡ vai trò khỏi tài khoản của mình hoặc nhờ quản trị viên khác.',
+  [ROLE_DELETE_ERROR_CODE.LAST_MANAGER]:
+    'Xoá vai trò này sẽ không còn ai quản lý được vai trò. Hãy gán quyền quản lý vai trò cho người khác trước.',
+};
+
+/** Xử lý tài khoản không còn vai trò nào khác khi xoá vai trò mà không chuyển sang vai trò khác. */
+export const DEFAULT_ROLE_DELETE_ORPHAN_ACTION: RoleDeleteOrphanAction = RoleDeleteOrphanAction.DEACTIVATE;
+
+export const ROLE_DELETE_ORPHAN_ACTION_LABELS: Record<RoleDeleteOrphanAction, string> = {
+  [RoleDeleteOrphanAction.DEACTIVATE]: 'Ngừng hoạt động tài khoản',
+  [RoleDeleteOrphanAction.DELETE_ACCOUNT]: 'Xoá tài khoản',
+};
+
+/** Gợi ý (tooltip) khi nút Xoá bị khoá, theo `deleteBlockedReason` server tính cho người đang xem. */
+export const ROLE_DELETE_BLOCK_LABELS: Record<RoleDeleteBlockReason, string> = {
+  [RoleDeleteBlockReason.SYSTEM_ROLE]: 'Vai trò hệ thống không được xoá; dùng Sửa để ngừng hoạt động',
+  [RoleDeleteBlockReason.OWNER_ONLY]: 'Chỉ Chủ hệ thống được xoá vai trò',
+  [RoleDeleteBlockReason.HELD_BY_ACTOR]: 'Bạn đang giữ vai trò này nên không thể tự xoá',
+  [RoleDeleteBlockReason.ALREADY_DELETED]: 'Vai trò đã ngừng và không còn ai được gán',
 };
 
 /** Nhãn tiếng Việt cho hành động của quyền. Mã quyền do API quyết định, nhãn chỉ để hiển thị. */
