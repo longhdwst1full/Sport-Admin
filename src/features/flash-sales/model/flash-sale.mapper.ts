@@ -21,12 +21,11 @@ export interface EditableItem {
   basePrice?: number;
   salePrice: number | null;
   quota: number | null;
-  perCustomerLimit: number | null;
   /** Đã bán + đang giữ: quota mới không được thấp hơn (API chặn oversell ngược). */
   committed: number;
   /** Suất đã gỡ; lưu lại dòng này là mở bán lại. */
   inactive: boolean;
-  original?: Pick<EditableItem, 'salePrice' | 'quota' | 'perCustomerLimit'>;
+  original?: Pick<EditableItem, 'salePrice' | 'quota'>;
 }
 
 export interface CampaignFormValues {
@@ -46,7 +45,6 @@ export function toEditableItem(dto: FlashSaleItemDto): EditableItem {
   const values = {
     salePrice: toNumber(dto.salePrice) ?? null,
     quota: dto.quota,
-    perCustomerLimit: dto.perCustomerLimit ?? null,
   };
   return {
     productVariantId: dto.productVariantId,
@@ -70,7 +68,6 @@ export function newEditableItem(option: ActiveLookupOptionDto, salePrice?: numbe
     basePrice,
     salePrice: salePrice ?? basePrice ?? null,
     quota: null,
-    perCustomerLimit: null,
     committed: 0,
     inactive: false,
   };
@@ -82,19 +79,17 @@ export function isItemChanged(item: EditableItem): boolean {
   return (
     !original ||
     original.salePrice !== item.salePrice ||
-    original.quota !== item.quota ||
-    original.perCustomerLimit !== item.perCustomerLimit
+    original.quota !== item.quota
   );
 }
 
-export type ItemErrors = Partial<Record<'salePrice' | 'quota' | 'perCustomerLimit', string>>;
+export type ItemErrors = Partial<Record<'salePrice' | 'quota', string>>;
 
 export function validateItem(item: EditableItem): ItemErrors {
   const errors: ItemErrors = {};
   if (!item.salePrice || item.salePrice < 1) errors.salePrice = 'Nhập giá flash';
   if (!item.quota || item.quota < 1) errors.quota = 'Nhập số suất';
   else if (item.quota < item.committed) errors.quota = `Tối thiểu ${item.committed} (đã bán/đang giữ)`;
-  if (item.perCustomerLimit != null && item.perCustomerLimit < 1) errors.perCustomerLimit = 'Tối thiểu 1';
   return errors;
 }
 
@@ -132,6 +127,5 @@ export function toUpsertFlashSaleItemPayload(item: EditableItem): UpsertFlashSal
     productVariantId: item.productVariantId,
     salePrice: (item.salePrice ?? 0).toFixed(2),
     quota: item.quota ?? 0,
-    perCustomerLimit: item.perCustomerLimit,
   };
 }

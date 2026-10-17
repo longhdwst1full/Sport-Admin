@@ -21,7 +21,7 @@ import {
   type EditableItem,
 } from '../model/flash-sale.mapper';
 
-type EditableField = 'salePrice' | 'quota' | 'perCustomerLimit';
+type EditableField = 'salePrice' | 'quota';
 
 /**
  * Bảng soạn suất bán dùng chung cho tạo và sửa chiến dịch: chọn nhiều SKU một lượt, sửa giá/suất
@@ -158,21 +158,6 @@ export function FlashSaleItemsEditor({
       },
     },
     {
-      title: 'Giới hạn/khách',
-      key: 'perCustomerLimit',
-      width: 130,
-      render: (_value, item) => (
-        <InputNumber
-          min={1}
-          precision={0}
-          placeholder="Không giới hạn"
-          className="!w-full"
-          value={item.perCustomerLimit}
-          onChange={(value) => update(item.productVariantId, 'perCustomerLimit', value ?? null)}
-        />
-      ),
-    },
-    {
       title: '',
       key: 'actions',
       width: 56,
@@ -250,7 +235,7 @@ export function FlashSaleItemsEditor({
         size="small"
         pagination={false}
         dataSource={items}
-        scroll={{ x: 820 }}
+        scroll={{ x: 690 }}
         locale={{ emptyText: 'Chưa có suất bán nào. Chọn sản phẩm ở trên rồi bấm Thêm.' }}
         columns={columns}
       />

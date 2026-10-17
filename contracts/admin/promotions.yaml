@@ -522,9 +522,6 @@ components:
         availableQuantity:
           type: number
           description: Số suất còn bán được = quota - sold - reserved
-        perCustomerLimit:
-          type: number
-          nullable: true
         status:
           allOf:
             - $ref: "#/components/schemas/FlashSaleItemStatus"
@@ -588,10 +585,6 @@ components:
         quota:
           type: number
           minimum: 1
-        perCustomerLimit:
-          type: number
-          minimum: 1
-          nullable: true
       required:
         - productVariantId
         - salePrice
