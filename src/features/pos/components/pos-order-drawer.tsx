@@ -69,6 +69,8 @@ const POS_FLASH_SALE_REPRICED = 'POS_FLASH_SALE_REPRICED';
  * Mã lỗi chống phát lại của Backend. Gặp một trong hai thì lượt gửi hiện tại không dùng lại được nữa:
  * lần bấm kế tiếp phải là một lượt mới (key + timestamp mới).
  */
+/** Dưới cửa sổ ±5 phút của BE (`POS_IDEMPOTENCY.TIMESTAMP_WINDOW_MS`) để còn dư cho độ trễ mạng. */
+const POS_ATTEMPT_MAX_AGE_MS = 4 * 60_000;
 const POS_ATTEMPT_RESET_CODES = new Set(['REQUEST_TIMESTAMP_OUT_OF_WINDOW', 'IDEMPOTENCY_PAYLOAD_MISMATCH']);
 
 /**
@@ -79,10 +81,6 @@ interface PosSubmitAttempt {
   key: string;
   timestamp: string;
   fingerprint: string;
-}
-
-function isRepriced(error: unknown): boolean {
-  return getApiErrorPayload(error)?.code === POS_FLASH_SALE_REPRICED;
 }
 
 /**
@@ -152,6 +150,19 @@ export function PosOrderDrawer({
        */
       onError: (error) => {
         const payload = getApiErrorPayload(error);
+        // UX: lỗi tạo đơn hiện bằng toast (quy ước lỗi thao tác), không chèn Alert đẩy lệch form.
+        if (payload?.code === POS_FLASH_SALE_REPRICED) {
+          void message.warning(
+            `Giá đã đổi — chưa tạo đơn. ${getApiErrorMessage(error, 'Kiểm tra lại giá rồi tạo lại đơn.')}`,
+          );
+        } else {
+          void message.error(
+            getApiErrorMessage(
+              error,
+              'Không tạo được đơn tại quầy. Kiểm tra lại tồn kho, giá sản phẩm và quyền bán hàng của tài khoản.',
+            ),
+          );
+        }
         if (payload?.code && POS_ATTEMPT_RESET_CODES.has(payload.code)) {
           attemptRef.current = null;
           return;
@@ -199,7 +210,11 @@ export function PosOrderDrawer({
     }
     const data = buildOrderData();
     const fingerprint = JSON.stringify(data);
-    if (attemptRef.current?.fingerprint !== fingerprint) {
+    // CONTRACT: BE chỉ nhận timestamp lệch ≤5 phút và key cũ quá hạn không phát lại được nữa, nên
+    // lượt gửi đã cũ (vd. lỗi rồi để lâu mới bấm lại) phải lấy key + timestamp mới thay vì chắc chắn bị 400.
+    const attempt = attemptRef.current;
+    const stale = attempt && Date.now() - Date.parse(attempt.timestamp) > POS_ATTEMPT_MAX_AGE_MS;
+    if (!attempt || stale || attempt.fingerprint !== fingerprint) {
       attemptRef.current = { key: crypto.randomUUID(), timestamp: new Date().toISOString(), fingerprint };
     }
     mutation.mutate({ data });
@@ -299,23 +314,6 @@ export function PosOrderDrawer({
             setCheckout((current) => ({ ...current, branchId }));
           }}
         />
-
-        {mutation.isError && (
-          <Alert
-            className="mb-4"
-            type={isRepriced(mutation.error) ? 'warning' : 'error'}
-            showIcon
-            message={
-              isRepriced(mutation.error)
-                ? 'Giá đã đổi — chưa tạo đơn'
-                : 'Không tạo được đơn tại quầy'
-            }
-            description={getApiErrorMessage(
-              mutation.error,
-              'Kiểm tra lại tồn kho, giá sản phẩm và quyền bán hàng của tài khoản.',
-            )}
-          />
-        )}
 
         <Card size="small" title="Khách hàng" className="mb-4">
           <PosCustomerPanel

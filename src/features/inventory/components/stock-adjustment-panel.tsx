@@ -15,7 +15,7 @@ import { useWarehouseOptions } from '../hooks/use-warehouse-options';
 import { StockAdjustmentDetailDrawer } from './stock-adjustment-detail-drawer';
 
 const ADJUSTMENT_COLUMNS: ColumnsType<StockAdjustmentSummaryDto> = [
-  { title: 'Số phiếu', dataIndex: 'adjustmentNo', width: 250, render: (value) => <Typography.Text code>{value}</Typography.Text> },
+  { title: 'Số phiếu', dataIndex: 'adjustmentNo', width: 150, render: (value) => <Typography.Text code>{value}</Typography.Text> },
   col.text<StockAdjustmentSummaryDto>('warehouseCode', 'Kho', { width: 150 }),
   { title: 'Loại phiếu', dataIndex: 'adjustmentType', width: 140, render: (value: string) => adjustmentTypeText(value) },
   col.text<StockAdjustmentSummaryDto>('externalReference', 'Chứng từ nguồn', { width: 170 }),
