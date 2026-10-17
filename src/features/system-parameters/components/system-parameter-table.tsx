@@ -1,7 +1,8 @@
-import { DeleteOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Space, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton, col } from '@/foundation/table';
 import {
   SystemParameterStatus,
@@ -12,6 +13,7 @@ import {
   parameterStatusPresentation,
   parameterValueTypeLabels,
 } from '../constants/system-parameter.constants';
+import { EMAIL_TEMPLATES_PATH, isEmailTemplateParameter } from '../model/system-parameter-email-template.policy';
 
 const PARAMETER_DATA_COLUMNS: ColumnsType<SystemParameterDto> = [
   {
@@ -42,12 +44,16 @@ const PARAMETER_DATA_COLUMNS: ColumnsType<SystemParameterDto> = [
     key: 'value',
     width: 160,
     align: 'right',
-    render: (_, row) => (
+    render: (_, row) =>
+      // UX: mẫu email là HTML dài — chỉ báo trạng thái, nội dung xem/sửa ở màn "Mẫu email".
+      isEmailTemplateParameter(row.code) ? (
+        <Link to={EMAIL_TEMPLATES_PATH}>{row.value.trim() ? 'Đã tuỳ chỉnh' : 'Mặc định'}</Link>
+      ) : (
       <Space size={4}>
         <Typography.Text strong>{row.value}</Typography.Text>
         {row.unit ? <span className="text-xs text-slate-400">{row.unit}</span> : null}
       </Space>
-    ),
+      ),
   },
   {
     title: 'Khoảng hợp lệ',
@@ -103,7 +109,13 @@ export function SystemParameterTable({
       ...PARAMETER_DATA_COLUMNS,
       col.actions<SystemParameterDto>(
         (row) =>
-          canManage ? (
+          isEmailTemplateParameter(row.code) ? (
+            <Link to={EMAIL_TEMPLATES_PATH} aria-label="Sửa ở màn Mẫu email">
+              <Tooltip title="Sửa ở màn Mẫu email (soạn thảo, xem trước, gửi thử)">
+                <MailOutlined /> <span className="text-xs">Mẫu email</span>
+              </Tooltip>
+            </Link>
+          ) : canManage ? (
             <>
               <TableActionButton label={`Sửa tham số ${row.code}`} icon={<EditOutlined />} onClick={() => onEdit(row)} />
               <TableActionButton

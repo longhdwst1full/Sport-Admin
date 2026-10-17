@@ -1,8 +1,8 @@
 # System parameters — maintenance note
 
-> **Document version:** 1.2.0
+> **Document version:** 1.3.0
 >
-> **Last updated:** 2026-10-10
+> **Last updated:** 2026-10-17
 >
 > **Change summary:** Ô tìm, nhóm, trạng thái và trang nằm trên URL; modal dùng `FormModal`; ngừng dùng qua `useConfirmWithReason` (lý do tuỳ chọn, nếu nhập tối thiểu 5 ký tự — sửa lỗi chặn mọi lý do đã nhập); page size chuẩn 30.
 
@@ -22,6 +22,12 @@
 | Nút ngừng dùng | disabled | bật |
 
 Lý do: code đọc tham số hệ thống theo mã. Cho sửa mã hoặc xoá thì service âm thầm rơi về mặc định — lỗi khó phát hiện nhất. Backend cũng chặn bằng 409, giao diện chỉ làm rõ trước.
+
+## Mẫu email (EMAIL_SUBJECT_* / EMAIL_INTRO_*)
+
+Không sửa ở màn này: cột Giá trị chỉ hiện "Đã tuỳ chỉnh"/"Mặc định" và thao tác là link sang
+`/notifications?tab=templates` (`model/system-parameter-email-template.policy.ts`); lọc nhóm "Mẫu email" có banner
+trỏ sang đó. Lý do: một giá trị chỉ có một trình soạn (CKEditor + xem trước + gửi thử), tránh sửa HTML thô ở đây.
 
 ## Generated operation
 
@@ -51,6 +57,7 @@ Sửa xong là có hiệu lực ngay ở lần đọc kế tiếp (backend xoá 
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.3.0 | 2026-10-17 | Tham số `EMAIL_*` chuyển sang màn "Mẫu email" (link thay nút sửa, banner khi lọc nhóm). |
 | 1.2.0 | 2026-10-10 | Ô tìm, nhóm, trạng thái và trang nằm trên URL; modal dùng `FormModal`; ngừng dùng qua `useConfirmWithReason` (lý do tuỳ chọn, nếu nhập tối thiểu 5 ký tự — sửa lỗi chặn mọi lý do đã nhập); page size chuẩn 30. |
 | 1.1.0 | 2026-10-02 | Nhóm `NOTIFICATION` (mẫu email NOT-02): giá trị được để trống (= nội dung mặc định), nhập nhiều dòng, hiện mô tả biến được phép. |
 | 1.0.0 | 2026-09-14 | Tạo màn hình quản lý tham số. |

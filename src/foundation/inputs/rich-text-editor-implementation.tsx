@@ -1,5 +1,5 @@
 import { CKEditor, type CKEditorEventPayload } from 'ckeditor4-react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import type { RichTextEditorProps } from './rich-text-editor';
 
 const DEFAULT_EDITOR_URL = 'https://cdn.ckeditor.com/4.25.1-lts/full-all/ckeditor.js';
@@ -13,9 +13,33 @@ const PLAIN_TEXT_CONFIG = {
   resize_enabled: false,
 };
 
+/**
+ * Đoạn văn email giao dịch. CONTRACT: `allowedContent`/`pasteFilter` khớp allowlist `email-template.rich-text`
+ * của API (p, br, strong, em, u, ul/ol/li, a[href]) để thứ người soạn thấy là thứ được lưu và gửi.
+ */
+const EMAIL_ALLOWED_CONTENT = 'p br strong em u ul ol li; a[!href]';
+const EMAIL_CONFIG = {
+  toolbar: [
+    ['Bold', 'Italic', 'Underline', 'RemoveFormat'],
+    ['NumberedList', 'BulletedList'],
+    ['Link', 'Unlink'],
+    ['Undo', 'Redo'],
+  ],
+  removePlugins: ['ExportPdf', 'elementspath'],
+  resize_enabled: false,
+  allowedContent: EMAIL_ALLOWED_CONTENT,
+  pasteFilter: EMAIL_ALLOWED_CONTENT,
+  enterMode: 1,
+  shiftEnterMode: 2,
+  linkShowAdvancedTab: false,
+  linkShowTargetTab: false,
+};
+
 interface CKEditorInstanceLike {
   getData: () => string;
   setData: (html: string) => void;
+  insertText: (text: string) => void;
+  focus: () => void;
 }
 
 export function RichTextEditorImplementation({
@@ -26,6 +50,8 @@ export function RichTextEditorImplementation({
   editorUrl = DEFAULT_EDITOR_URL,
   variant = 'full',
   height,
+  handleRef,
+  onFocus,
 }: RichTextEditorProps) {
   const editorRef = useRef<CKEditorInstanceLike | null>(null);
   const lastValueRef = useRef('');
@@ -34,6 +60,16 @@ export function RichTextEditorImplementation({
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  useImperativeHandle(
+    handleRef,
+    () => ({
+      // `insertText` chèn tại con trỏ (hoặc thay vùng chọn) và tự phát `change` → form nhận giá trị mới.
+      insertText: (text: string) => editorRef.current?.insertText(text),
+      focus: () => editorRef.current?.focus(),
+    }),
+    [],
+  );
 
   useEffect(() => {
     const nextValue = value ?? '';
@@ -61,6 +97,7 @@ export function RichTextEditorImplementation({
       fillEmptyBlocks: false,
       pasteFilter: null,
       editorplaceholder: placeholder,
+      ...(variant === 'email' ? EMAIL_CONFIG : {}),
       font_names:
         'Arial/Arial, Helvetica, sans-serif;' +
         'Comic Sans MS/Comic Sans MS, cursive;' +
@@ -86,6 +123,7 @@ export function RichTextEditorImplementation({
         data={value ?? ''}
         readOnly={disabled}
         config={config}
+        onFocus={onFocus}
         onInstanceReady={(event: CKEditorEventPayload<'instanceReady'>) => {
           const editor = event.editor as unknown as CKEditorInstanceLike | null;
           const nextValue = value ?? '';

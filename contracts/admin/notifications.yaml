@@ -18,6 +18,7 @@ paths:
           in: query
           schema:
             minimum: 1
+            maximum: 10000
             default: 1
             type: number
         - name: limit
@@ -120,6 +121,195 @@ paths:
         - Admin Notifications
       x-required-permissions:
         - system.parameter.manage
+  /api/v1/admin/notifications/email-templates:
+    get:
+      operationId: listAdminEmailTemplates
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTemplateListDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: "Danh sách mẫu email theo sự kiện: biến được dùng, nội dung tuỳ chỉnh, version"
+      tags:
+        - Admin Notifications
+      x-required-permissions:
+        - system.parameter.view
+  /api/v1/admin/notifications/email-templates/{eventType}:
+    put:
+      operationId: updateAdminEmailTemplate
+      parameters:
+        - name: eventType
+          required: true
+          in: path
+          schema:
+            $ref: "#/components/schemas/EmailTemplateEventType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEmailTemplateDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTemplateDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: "Version lệch: mẫu vừa được người khác sửa"
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Lưu tiêu đề + đoạn mở đầu của một mẫu (một transaction); để rỗng cả hai = khôi phục mặc định
+      tags:
+        - Admin Notifications
+      x-required-permissions:
+        - system.parameter.manage
+  /api/v1/admin/notifications/email-templates/{eventType}/preview:
+    post:
+      operationId: previewAdminEmailTemplate
+      parameters:
+        - name: eventType
+          required: true
+          in: path
+          schema:
+            $ref: "#/components/schemas/EmailTemplateEventType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailTemplateContentDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTemplatePreviewDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Xem trước email với dữ liệu mẫu; không ghi gì
+      tags:
+        - Admin Notifications
+      x-required-permissions:
+        - system.parameter.view
+  /api/v1/admin/notifications/email-templates/{eventType}/test-send:
+    post:
+      operationId: sendAdminEmailTemplateTest
+      parameters:
+        - name: eventType
+          required: true
+          in: path
+          schema:
+            $ref: "#/components/schemas/EmailTemplateEventType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendEmailTemplateTestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTemplateTestResultDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Gửi thử mẫu đang soạn (dữ liệu mẫu, tiêu đề có tiền tố "[Thử]") tới email của bạn hoặc địa chỉ chỉ định
+      tags:
+        - Admin Notifications
+      x-required-permissions:
+        - system.parameter.manage
 components:
   schemas:
     AdminNotificationDto:
@@ -205,6 +395,161 @@ components:
         - page
         - limit
         - total
+    EmailTemplateContentDto:
+      type: object
+      properties:
+        subject:
+          type: string
+          maxLength: 200
+          description: Rỗng = tiêu đề mặc định
+        intro:
+          type: string
+          maxLength: 20000
+          description: HTML giới hạn (p, br, strong/b, em/i, u, a[href http/https/mailto], ul/ol/li) hoặc chữ thuần. Thẻ/thuộc tính khác bị bỏ. Rỗng = không chèn đoạn mở đầu.
+      required:
+        - subject
+        - intro
+    EmailTemplateDto:
+      type: object
+      properties:
+        eventType:
+          allOf:
+            - $ref: "#/components/schemas/EmailTemplateEventType"
+        label:
+          type: string
+          example: Đã nhận đơn hàng
+        sendWhen:
+          type: string
+          description: Hệ thống gửi email này khi nào
+        variables:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmailTemplateVariableDto"
+        subject:
+          type: string
+          description: Tiêu đề tuỳ chỉnh; rỗng = tiêu đề mặc định
+        intro:
+          type: string
+          description: Đoạn mở đầu (HTML giới hạn hoặc chữ thuần cũ); rỗng = không chèn
+        defaultSubjectExample:
+          type: string
+          description: Tiêu đề mặc định dựng từ dữ liệu mẫu (tham khảo)
+        isCustomized:
+          type: boolean
+          description: Có ít nhất tiêu đề hoặc đoạn mở đầu đã tuỳ chỉnh
+        subjectParameterCode:
+          type: string
+          example: EMAIL_SUBJECT_ORDER_PLACED
+        introParameterCode:
+          type: string
+          example: EMAIL_INTRO_ORDER_PLACED
+        subjectVersion:
+          type: string
+          nullable: true
+          pattern: ^\d+$
+          description: Null khi tham số chưa được đồng bộ vào DB
+        introVersion:
+          type: string
+          nullable: true
+          pattern: ^\d+$
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - eventType
+        - label
+        - sendWhen
+        - variables
+        - subject
+        - intro
+        - defaultSubjectExample
+        - isCustomized
+        - subjectParameterCode
+        - introParameterCode
+    EmailTemplateEventType:
+      type: string
+      enum:
+        - order.placed
+        - order.status_updated
+        - order.fulfillment_updated
+        - payment.succeeded
+        - payment.failed
+        - auth.password_reset_requested
+        - auth.password_changed
+        - return.requested
+        - return.decided
+        - return.received
+        - return.refund_succeeded
+        - return.refund_failed
+        - order.lookup_otp_requested
+    EmailTemplateListDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmailTemplateDto"
+      required:
+        - items
+    EmailTemplatePreviewDto:
+      type: object
+      properties:
+        subject:
+          type: string
+        html:
+          type: string
+          description: HTML đầy đủ của email (render trong iframe sandbox)
+        text:
+          type: string
+          description: Bản text/plain
+        unknownVariables:
+          description: Biến có trong mẫu nhưng không thuộc sự kiện này (sẽ thành rỗng)
+          type: array
+          items:
+            type: string
+        sanitizedIntro:
+          type: string
+          description: Đoạn mở đầu sau khi làm sạch, đúng như sẽ được lưu
+      required:
+        - subject
+        - html
+        - text
+        - unknownVariables
+        - sanitizedIntro
+    EmailTemplateTestResultDto:
+      type: object
+      properties:
+        recipientMasked:
+          type: string
+          example: a***@example.com
+        subject:
+          type: string
+      required:
+        - recipientMasked
+        - subject
+    EmailTemplateVariableDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: orderNo
+          description: Tên biến, dùng trong mẫu dạng {{orderNo}}
+        label:
+          type: string
+          example: Mã đơn hàng
+        example:
+          type: string
+          example: DH2610-0012
+          description: Giá trị mẫu (đã định dạng như khi gửi)
+        isMoney:
+          type: boolean
+          description: "Số tiền: chèn dạng tiền Việt (vd 1.250.000 ₫)"
+      required:
+        - name
+        - label
+        - example
+        - isMoney
     RequeueAdminNotificationDto:
       type: object
       properties:
@@ -218,6 +563,52 @@ components:
       required:
         - id
         - requeued
+    SendEmailTemplateTestDto:
+      type: object
+      properties:
+        subject:
+          type: string
+          maxLength: 200
+          description: Rỗng = tiêu đề mặc định
+        intro:
+          type: string
+          maxLength: 20000
+          description: HTML giới hạn (p, br, strong/b, em/i, u, a[href http/https/mailto], ul/ol/li) hoặc chữ thuần. Thẻ/thuộc tính khác bị bỏ. Rỗng = không chèn đoạn mở đầu.
+        toEmail:
+          type: string
+          format: email
+          description: Bỏ trống = gửi tới email của tài khoản đang đăng nhập
+      required:
+        - subject
+        - intro
+    UpdateEmailTemplateDto:
+      type: object
+      properties:
+        subject:
+          type: string
+          maxLength: 200
+          description: Rỗng = tiêu đề mặc định
+        intro:
+          type: string
+          maxLength: 20000
+          description: HTML giới hạn (p, br, strong/b, em/i, u, a[href http/https/mailto], ul/ol/li) hoặc chữ thuần. Thẻ/thuộc tính khác bị bỏ. Rỗng = không chèn đoạn mở đầu.
+        subjectVersion:
+          type: string
+          pattern: ^\d+$
+          description: Version đang xem của tham số tiêu đề
+        introVersion:
+          type: string
+          pattern: ^\d+$
+          description: Version đang xem của tham số đoạn mở đầu
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 500
+      required:
+        - subject
+        - intro
+        - subjectVersion
+        - introVersion
   securitySchemes:
     bearer:
       scheme: bearer

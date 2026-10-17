@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ControlOutlined, GlobalOutlined, PlusOutlined } from '@ant-design/icons';
-import { App, Button, Select } from 'antd';
+import { Alert, App, Button, Select } from 'antd';
+import { Link } from 'react-router-dom';
 import { useListAdminSystemParameters } from '@/generated/api/system/system';
 import {
   SystemParameterGroup,
@@ -23,6 +24,7 @@ import {
   PARAMETER_STATUS_OPTIONS,
 } from '../constants/system-parameter.constants';
 import { useSystemParameterCommands } from '../hooks/use-system-parameter-commands';
+import { EMAIL_TEMPLATES_PATH } from '../model/system-parameter-email-template.policy';
 import { requiresMfaCode } from '../model/system-parameter-mfa.policy';
 
 export function SystemParametersPage() {
@@ -148,6 +150,19 @@ export function SystemParametersPage() {
         }
       >
         {parameters.isError && <QueryErrorAlert error={parameters.error} retry={() => void parameters.refetch()} />}
+        {groupCode === SystemParameterGroup.NOTIFICATION && (
+          <Alert
+            className="m-4 !mb-0"
+            type="info"
+            showIcon
+            message={
+              <span>
+                Tiêu đề/đoạn mở đầu email (EMAIL_SUBJECT_*, EMAIL_INTRO_*) được soạn ở màn{' '}
+                <Link to={EMAIL_TEMPLATES_PATH}>Mẫu email</Link> — có trình soạn thảo, chèn biến, xem trước và gửi thử.
+              </span>
+            }
+          />
+        )}
         <SystemParameterTable
           rows={rows}
           loading={parameters.isLoading || parameters.isFetching}

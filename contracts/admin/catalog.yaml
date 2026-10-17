@@ -90,6 +90,7 @@ paths:
           in: query
           schema:
             minimum: 1
+            maximum: 10000
             default: 1
             type: number
         - name: limit
@@ -420,6 +421,7 @@ paths:
           in: query
           schema:
             minimum: 1
+            maximum: 10000
             default: 1
             type: number
         - name: limit
@@ -836,6 +838,7 @@ paths:
           in: query
           schema:
             minimum: 1
+            maximum: 10000
             default: 1
             type: number
         - name: limit
@@ -1004,6 +1007,7 @@ paths:
           in: query
           schema:
             minimum: 1
+            maximum: 10000
             default: 1
             type: number
         - name: limit

@@ -62,3 +62,12 @@ export const ExistingProductContent: Story = {
 export const ReadOnly: Story = {
   args: { value: SAMPLE_DESCRIPTION, disabled: true },
 };
+
+/** `variant="email"`: toolbar gọn và bộ lọc nội dung khớp allowlist email của API (màn Mẫu email). */
+export const EmailVariant: Story = {
+  args: {
+    variant: 'email',
+    height: 200,
+    value: '<p>Cảm ơn <strong>{{recipientName}}</strong> đã đặt đơn {{orderNo}}.</p>',
+  },
+};
