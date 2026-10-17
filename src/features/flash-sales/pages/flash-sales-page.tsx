@@ -9,11 +9,11 @@ import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
 import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, FilterBar, RefreshButton } from '@/foundation/table';
-import { FlashSaleCreateDrawer } from '../components/flash-sale-create-drawer';
+import { FlashSaleFormDrawer } from '../components/flash-sale-form-drawer';
 import { FlashSaleDetailDrawer } from '../components/flash-sale-detail-drawer';
 import { FlashSaleTable } from '../components/flash-sale-table';
 import { flashSaleStatusOptions } from '../constants/flash-sale.constants';
-import { useCreateFlashSale } from '../hooks/use-create-flash-sale';
+import { useSaveFlashSale } from '../hooks/use-save-flash-sale';
 
 /** Ô tìm, trạng thái và trang nằm trên URL (`search`, `status`, `page`) để F5/Back/gửi link giữ nguyên lọc. */
 export function FlashSalesPage() {
@@ -34,7 +34,7 @@ export function FlashSalesPage() {
   const rows = campaigns.data?.items ?? [];
 
   // UX: tạo xong đóng drawer, về trang 1 của danh sách (đã invalidate) để thấy chiến dịch mới.
-  const createMutation = useCreateFlashSale(() => {
+  const createMutation = useSaveFlashSale(() => {
     setCreateOpen(false);
     url.set('page', undefined);
   });
@@ -109,12 +109,15 @@ export function FlashSalesPage() {
 
       <FlashSaleDetailDrawer campaignId={selectedId} onClose={() => setSelectedId(undefined)} />
 
-      <FlashSaleCreateDrawer
-        open={createOpen}
-        submitting={createMutation.isPending}
-        onCancel={() => setCreateOpen(false)}
-        onSubmit={(campaign, items) => createMutation.mutate({ campaign, items })}
-      />
+      {/* Mount theo lượt mở để form và bảng suất luôn bắt đầu sạch. */}
+      {createOpen && (
+        <FlashSaleFormDrawer
+          open
+          submitting={createMutation.isPending}
+          onCancel={() => setCreateOpen(false)}
+          onSubmit={(submit) => createMutation.mutate({ submit })}
+        />
+      )}
     </>
   );
 }

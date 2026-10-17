@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { MoneyInput } from '@/foundation/inputs/money-input';
 import { formatDateTime } from '@/lib/format/datetime';
 import {
   CalendarOutlined,
@@ -7,36 +6,17 @@ import {
   DeleteOutlined,
   EditOutlined,
   FireOutlined,
-  PlusOutlined,
-  ThunderboltOutlined,
 } from '@ant-design/icons';
-import {
-  Alert,
-  App,
-  Button,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Popconfirm,
-  Radio,
-  Select,
-  Tag,
-} from 'antd';
+import { App, Button, Popconfirm, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { StatusTag } from '@/foundation/management';
 import { AdminTable, TableActionButton, col } from '@/foundation/table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchState } from '@/shared/hooks/use-search-state';
-import dayjs, { type Dayjs } from 'dayjs';
-import { useSearchActiveAdminProductVariants } from '@/generated/api/catalog/catalog';
 import {
   changeAdminFlashSaleStatus,
   getGetAdminFlashSaleQueryKey,
   getListAdminFlashSalesQueryKey,
   removeAdminFlashSaleItem,
-  updateAdminFlashSale,
-  upsertAdminFlashSaleItem,
   useGetAdminFlashSale,
 } from '@/generated/api/promotions/promotions';
 import type {
@@ -46,29 +26,10 @@ import type {
 } from '@/generated/api/promotions/promotions.schemas';
 import { useCan } from '@/core/auth/permissions';
 import { getApiErrorMessage } from '@/lib/api/error';
-import {
-  FLASH_SALE_TRANSITIONS,
-  applyPercent,
-  flashSaleStatusPresentation,
-  moneyFormatter,
-  pricingModeOptions,
-  variantOptionLabel,
-  type PricingMode,
-} from '../constants/flash-sale.constants';
-import { DetailDrawer, FormModal } from '@/foundation/overlay';
-
-interface CampaignFormValues {
-  name: string;
-  description?: string;
-  window: [Dayjs, Dayjs];
-}
-
-interface ItemFormValues {
-  productVariantId: string;
-  salePrice: number;
-  quota: number;
-  perCustomerLimit?: number;
-}
+import { FLASH_SALE_TRANSITIONS, flashSaleStatusPresentation } from '../constants/flash-sale.constants';
+import { DetailDrawer } from '@/foundation/overlay';
+import { useSaveFlashSale } from '../hooks/use-save-flash-sale';
+import { FlashSaleFormDrawer } from './flash-sale-form-drawer';
 
 const ITEM_COLUMNS: ColumnsType<FlashSaleItemDto> = [
   col.text<FlashSaleItemDto>('sku', 'SKU', {
@@ -79,8 +40,11 @@ const ITEM_COLUMNS: ColumnsType<FlashSaleItemDto> = [
   }),
   col.text<FlashSaleItemDto>('productName', 'Sản phẩm', {
     width: undefined,
-    render: (name: string) => (
-      <span className="line-clamp-1 text-xs font-bold text-slate-800 sm:text-sm">{name}</span>
+    render: (name: string, row) => (
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="line-clamp-1 text-xs font-bold text-slate-800 sm:text-sm">{name}</span>
+        {row.status !== 'ACTIVE' && <Tag className="!m-0">Đã gỡ</Tag>}
+      </span>
     ),
   }),
   col.money<FlashSaleItemDto>('salePrice', 'Giá flash', { className: 'font-black text-amber-600' }),
@@ -107,28 +71,14 @@ export function FlashSaleDetailDrawer({
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('catalog.flash_sale.manage');
-  const [form] = Form.useForm<ItemFormValues>();
-  const [campaignForm] = Form.useForm<CampaignFormValues>();
   const [editOpen, setEditOpen] = useState(false);
-  const variantSearch = useSearchState();
-  const [pricingMode, setPricingMode] = useState<PricingMode>('PER_ITEM');
-  const [discountPercent, setDiscountPercent] = useState(10);
-  const [basePrice, setBasePrice] = useState<number>();
 
   const detail = useGetAdminFlashSale(campaignId ?? '', {
     query: { enabled: Boolean(campaignId) },
   });
   const campaign = detail.data;
-
-  const variantsQuery = useSearchActiveAdminProductVariants(
-    { search: variantSearch.debounced, page: 1, limit: 50 },
-    { query: { enabled: Boolean(campaignId) && canManage } },
-  );
-
-  const variantOptions = useMemo(
-    () => (variantsQuery.data?.items ?? []).map((item) => ({ value: item.id, label: variantOptionLabel(item) })),
-    [variantsQuery.data?.items],
-  );
+  // UX: API từ chối sửa chiến dịch đã ENDED/CANCELLED nên không mở form cho trạng thái kết thúc.
+  const editable = Boolean(campaign && canManage && FLASH_SALE_TRANSITIONS[campaign.status].length > 0);
 
   const allowedTransitions = useMemo(
     () => (campaign ? (FLASH_SALE_TRANSITIONS[campaign.status] ?? []) : []),
@@ -140,24 +90,7 @@ export function FlashSaleDetailDrawer({
     await queryClient.invalidateQueries({ queryKey: getListAdminFlashSalesQueryKey() });
   }
 
-  const campaignMutation = useMutation({
-    mutationFn: (values: CampaignFormValues) => {
-      if (!campaign) throw new Error('Chưa tải được chiến dịch');
-      return updateAdminFlashSale(campaign.id, {
-        expectedVersion: campaign.version,
-        name: values.name.trim(),
-        description: values.description?.trim() || undefined,
-        startsAt: values.window[0].toISOString(),
-        endsAt: values.window[1].toISOString(),
-      });
-    },
-    onSuccess: async (updated) => {
-      await refresh(updated);
-      setEditOpen(false);
-      void message.success('Đã cập nhật chiến dịch');
-    },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
-  });
+  const saveMutation = useSaveFlashSale(() => setEditOpen(false));
 
   const statusMutation = useMutation({
     mutationFn: (status: FlashSaleCampaignStatus) => {
@@ -170,25 +103,6 @@ export function FlashSaleDetailDrawer({
     onSuccess: async (updated) => {
       await refresh(updated);
       void message.success('Đã cập nhật trạng thái chiến dịch');
-    },
-    onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
-  });
-
-  const itemMutation = useMutation({
-    mutationFn: (values: ItemFormValues) => {
-      if (!campaign) throw new Error('Chưa tải được chiến dịch');
-      return upsertAdminFlashSaleItem(campaign.id, {
-        productVariantId: values.productVariantId,
-        // Decimal gửi dạng chuỗi: gửi number sẽ mất chính xác ở tiền tệ.
-        salePrice: Number(values.salePrice).toFixed(2),
-        quota: values.quota,
-        perCustomerLimit: values.perCustomerLimit,
-      });
-    },
-    onSuccess: async (updated) => {
-      await refresh(updated);
-      form.resetFields();
-      void message.success('Đã lưu suất bán');
     },
     onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
   });
@@ -255,23 +169,14 @@ export function FlashSaleDetailDrawer({
         )
       }
       actions={
-        // UX: API từ chối sửa chiến dịch đã ENDED/CANCELLED nên không mở form cho trạng thái kết thúc.
-        campaign && canManage && FLASH_SALE_TRANSITIONS[campaign.status].length > 0 ? (
+        editable ? (
           <Button
             type="primary"
-            ghost
             icon={<EditOutlined />}
             className="!rounded-xl !font-semibold"
-            onClick={() => {
-              campaignForm.setFieldsValue({
-                name: campaign.name,
-                description: campaign.description ?? undefined,
-                window: [dayjs(campaign.startsAt), dayjs(campaign.endsAt)],
-              });
-              setEditOpen(true);
-            }}
+            onClick={() => setEditOpen(true)}
           >
-            Sửa chiến dịch
+            Sửa chiến dịch & suất bán
           </Button>
         ) : undefined
       }
@@ -372,192 +277,17 @@ export function FlashSaleDetailDrawer({
             </div>
           </div>
 
-          {/* Add Item & Pricing Panel */}
-          {canManage && campaign.status !== 'ENDED' && campaign.status !== 'CANCELLED' && (
-            <div className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/40 via-white to-amber-50/10 p-5 shadow-xs space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-amber-100/80">
-                <div className="flex items-center gap-2">
-                  <ThunderboltOutlined className="text-amber-600 text-base" />
-                  <span className="text-sm font-bold text-slate-800">Thêm suất bán mới</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-xs font-bold text-slate-500">Cách đặt giá:</span>
-                  <Radio.Group
-                    value={pricingMode}
-                    onChange={(event) => {
-                      const next = event.target.value as PricingMode;
-                      setPricingMode(next);
-                      if (basePrice === undefined) return;
-                      form.setFieldsValue({
-                        salePrice:
-                          next === 'PERCENT_LIST' ? applyPercent(basePrice, discountPercent) : basePrice,
-                      });
-                    }}
-                    optionType="button"
-                    buttonStyle="solid"
-                    className="!text-xs"
-                    options={pricingModeOptions}
-                  />
-                  {pricingMode === 'PERCENT_LIST' && (
-                    <InputNumber
-                      min={1}
-                      max={99}
-                      value={discountPercent}
-                      onChange={(value) => {
-                        const percent = Number(value ?? 0);
-                        setDiscountPercent(percent);
-                        if (basePrice !== undefined) {
-                          form.setFieldsValue({ salePrice: applyPercent(basePrice, percent) });
-                        }
-                      }}
-                      addonAfter="%"
-                      className="!w-28"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-500 m-0">
-                {pricingMode === 'PERCENT_LIST'
-                  ? '💡 Giá từng suất tính theo phần trăm và bị khoá để không lệch mức đã công bố.'
-                  : '💡 Giá điền sẵn bằng giá đang bán, có thể sửa riêng cho từng sản phẩm.'}
-              </p>
-
-              <Form
-                form={form}
-                layout="vertical"
-                className="mt-2"
-                onFinish={(values) => itemMutation.mutate(values)}
-              >
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12 items-end">
-                  <div className="lg:col-span-4">
-                    <Form.Item
-                      label={<span className="text-xs font-bold text-slate-700">Chọn biến thể / SKU</span>}
-                      name="productVariantId"
-                      rules={[{ required: true, message: 'Chọn biến thể' }]}
-                      className="!mb-0"
-                    >
-                      <Select
-                        showSearch
-                        filterOption={false}
-                        placeholder="Tìm theo SKU hoặc tên..."
-                        onSearch={variantSearch.setValue}
-                        loading={variantsQuery.isFetching}
-                        className="!w-full"
-                        onChange={(variantId: string) => {
-                          const picked = (variantsQuery.data?.items ?? []).find(
-                            (item) => item.id === variantId,
-                          );
-                          const current = picked?.priceAmount ? Number(picked.priceAmount) : undefined;
-                          setBasePrice(current);
-                          if (current === undefined) return;
-                          form.setFieldsValue({
-                            salePrice:
-                              pricingMode === 'PERCENT_LIST'
-                                ? applyPercent(current, discountPercent)
-                                : current,
-                          });
-                        }}
-                        options={variantOptions}
-                      />
-                    </Form.Item>
-                  </div>
-
-                  <div className="lg:col-span-3">
-                    <Form.Item
-                      label={
-                        <span className="text-xs font-bold text-slate-700">
-                          Giá flash {basePrice ? `(Gốc: ${moneyFormatter.format(basePrice)})` : ''}
-                        </span>
-                      }
-                      name="salePrice"
-                      rules={[{ required: true, message: 'Nhập giá flash' }]}
-                      className="!mb-0"
-                    >
-                      <MoneyInput
-                        min={1}
-                        step={1000}
-                        placeholder="Giá flash"
-                        className="!w-full"
-                        disabled={pricingMode === 'PERCENT_LIST'}
-                      />
-                    </Form.Item>
-                  </div>
-
-                  <div className="lg:col-span-2">
-                    <Form.Item
-                      label={<span className="text-xs font-bold text-slate-700">Số suất</span>}
-                      name="quota"
-                      rules={[{ required: true, message: 'Nhập số suất' }]}
-                      className="!mb-0"
-                    >
-                      <InputNumber min={1} placeholder="Số suất" className="!w-full" />
-                    </Form.Item>
-                  </div>
-
-                  <div className="lg:col-span-2">
-                    <Form.Item
-                      label={<span className="text-xs font-bold text-slate-700">Giới hạn/khách</span>}
-                      name="perCustomerLimit"
-                      className="!mb-0"
-                    >
-                      <InputNumber min={1} placeholder="Không giới hạn" className="!w-full" />
-                    </Form.Item>
-                  </div>
-
-                  <div className="lg:col-span-1">
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      icon={<PlusOutlined />}
-                      loading={itemMutation.isPending}
-                      className="!w-full !rounded-xl !font-bold !bg-amber-500 hover:!bg-amber-600 !border-amber-500"
-                    >
-                      Lưu
-                    </Button>
-                  </div>
-                </div>
-              </Form>
-            </div>
-          )}
         </div>
       )}
-      <FormModal
-        open={editOpen}
-        title="Sửa chiến dịch"
-        okText="Lưu"
-        submitting={campaignMutation.isPending}
-        onClose={() => setEditOpen(false)}
-        onSubmit={() => campaignForm.submit()}
-        isDirty={() => campaignForm.isFieldsTouched()}
-      >
-        <Alert
-          className="mb-4"
-          type="warning"
-          showIcon
-          message="Đổi khung giờ ảnh hưởng tới giá đang hiển thị"
-          description="Rút ngắn khung giờ của chiến dịch đang chạy sẽ khiến giá flash biến mất khỏi trang bán ngay khi qua thời điểm kết thúc mới."
+      {editOpen && campaign && (
+        <FlashSaleFormDrawer
+          open
+          campaign={campaign}
+          submitting={saveMutation.isPending}
+          onCancel={() => setEditOpen(false)}
+          onSubmit={(submit) => saveMutation.mutate({ submit, existing: campaign })}
         />
-        <Form
-          form={campaignForm}
-          layout="vertical"
-          onFinish={(values) => campaignMutation.mutate(values)}
-        >
-          <Form.Item name="name" label="Tên hiển thị" rules={[{ required: true, message: 'Nhập tên chiến dịch' }]}>
-            <Input maxLength={255} />
-          </Form.Item>
-          <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item
-            name="window"
-            label="Khung giờ chạy"
-            rules={[{ required: true, message: 'Chọn thời gian bắt đầu và kết thúc' }]}
-          >
-            <DatePicker.RangePicker showTime className="w-full" />
-          </Form.Item>
-        </Form>
-      </FormModal>
+      )}
     </DetailDrawer>
   );
 }
