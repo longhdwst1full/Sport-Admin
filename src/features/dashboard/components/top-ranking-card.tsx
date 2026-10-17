@@ -11,6 +11,7 @@ import {
 import type { ReportQueryState, ReportRange } from '../model/dashboard.mapper';
 import { CardStateBody, DashboardCard } from './dashboard-card';
 import { ReportExportButton } from './report-export-button';
+import { fillTableWidth } from './report-table-columns';
 
 const RANK_CLASS = [
   'bg-amber-100 text-amber-800 ring-amber-200',
@@ -103,6 +104,7 @@ export function TopRankingCard<TRow extends object>({
           size="small"
           pagination={false}
           dataSource={rows}
+          scroll={{ x: fillTableWidth(rankedColumns) }}
           columns={rankedColumns}
         />
       </CardStateBody>

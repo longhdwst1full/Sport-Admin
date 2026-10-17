@@ -4,7 +4,6 @@ import {
   EditOutlined,
   EnvironmentOutlined,
   InboxOutlined,
-  LinkOutlined,
   PlusOutlined,
   PoweroffOutlined,
 } from '@ant-design/icons';
@@ -200,14 +199,6 @@ export function OrganizationPage() {
           value: warehouses.length,
           icon: <InboxOutlined />,
           tone: 'orange',
-        },
-        {
-          key: 'mapping',
-          label: 'Quan hệ V1',
-          value: '1 : 1',
-          icon: <LinkOutlined />,
-          tone: 'green',
-          hint: 'Một chi nhánh — một kho',
         },
         {
           key: 'regions',

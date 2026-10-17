@@ -25,16 +25,25 @@ function moneyColumn<T>(
   };
 }
 
+/**
+ * Bề rộng bảng trong thẻ dashboard: lấp đầy thẻ khi thẻ rộng, cuộn ngang khi thẻ hẹp hơn tổng cột.
+ * AdminTable gán width cố định cho mọi cột nên `max-content` để lại khoảng trống bên phải thẻ rộng.
+ */
+export function fillTableWidth<T>(columns: ColumnsType<T>, extra = 0): string {
+  const total = columns.reduce((sum, column) => sum + (Number(column.width) || 160), extra);
+  return `max(100%, ${total}px)`;
+}
+
 /** Cột bảng doanh thu theo chi nhánh trên dashboard. */
 export const BRANCH_REVENUE_COLUMNS: ColumnsType<BranchRevenueDto> = [
-  col.text<BranchRevenueDto>('branchName', 'Chi nhánh'),
-  moneyColumn<BranchRevenueDto>('completedRevenue', 'Đã hoàn tất'),
-  col.number<BranchRevenueDto>('completedOrderCount', 'Số đơn', { width: 90 }),
-  moneyColumn<BranchRevenueDto>('expectedRevenue', 'Dự thu', () => 'text-slate-500'),
-  moneyColumn<BranchRevenueDto>('refundedAmount', 'Đã hoàn tiền', (value) =>
+  { title: 'Chi nhánh', dataIndex: 'branchName', width: 150, ellipsis: true },
+  moneyColumn<BranchRevenueDto>('completedRevenue', 'Đã hoàn tất', undefined, 130),
+  col.number<BranchRevenueDto>('completedOrderCount', 'Số đơn', { width: 72 }),
+  moneyColumn<BranchRevenueDto>('expectedRevenue', 'Dự thu', () => 'text-slate-500', 130),
+  moneyColumn<BranchRevenueDto>('refundedAmount', 'Hoàn tiền', (value) =>
     Number(value) > 0 ? 'text-rose-600' : 'text-slate-400',
-  ),
-  moneyColumn<BranchRevenueDto>('netRevenue', 'Thuần', () => 'font-semibold text-slate-900'),
+  130),
+  moneyColumn<BranchRevenueDto>('netRevenue', 'Thuần', () => 'font-semibold text-slate-900', 130),
 ];
 
 /** Cột bảng khách mua nhiều nhất. */
@@ -42,6 +51,7 @@ export const TOP_CUSTOMER_COLUMNS: ColumnsType<TopCustomerDto> = [
   {
     title: 'Khách hàng',
     dataIndex: 'name',
+    width: 180,
     ellipsis: true,
     render: (value: string, row) => (
       <div className="min-w-0">
@@ -57,7 +67,7 @@ export const TOP_CUSTOMER_COLUMNS: ColumnsType<TopCustomerDto> = [
 /** Cột bảng sản phẩm bán chạy. */
 export const TOP_PRODUCT_COLUMNS: ColumnsType<TopProductDto> = [
   col.text<TopProductDto>('sku', 'SKU', { width: 130 }),
-  { title: 'Sản phẩm', dataIndex: 'productName', ellipsis: true },
+  { title: 'Sản phẩm', dataIndex: 'productName', width: 220, ellipsis: true },
   col.number<TopProductDto>('quantitySold', 'SL bán', { width: 80 }),
   moneyColumn<TopProductDto>('revenue', 'Doanh thu', () => 'font-semibold text-slate-900', 140),
 ];

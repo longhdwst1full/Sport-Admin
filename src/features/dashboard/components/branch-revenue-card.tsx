@@ -10,7 +10,9 @@ import {
 import type { ReportQueryState, ReportRange } from '../model/dashboard.mapper';
 import { CardStateBody, DashboardCard } from './dashboard-card';
 import { ReportExportButton } from './report-export-button';
-import { BRANCH_REVENUE_COLUMNS } from './report-table-columns';
+import { BRANCH_REVENUE_COLUMNS, fillTableWidth } from './report-table-columns';
+
+const BRANCH_TABLE_WIDTH = fillTableWidth(BRANCH_REVENUE_COLUMNS);
 
 interface BranchRevenueCardProps {
   granularity: Granularity;
@@ -49,7 +51,8 @@ export function BranchRevenueCard({ granularity, range, state, rows }: BranchRev
           size="small"
           pagination={false}
           dataSource={rows}
-          scroll={{ x: 720 }}
+          // UX: nhiều chi nhánh thì thân bảng cuộn trong ~6 dòng thay vì kéo dài thẻ.
+          scroll={{ x: BRANCH_TABLE_WIDTH, y: 260 }}
           columns={BRANCH_REVENUE_COLUMNS}
         />
       </CardStateBody>
