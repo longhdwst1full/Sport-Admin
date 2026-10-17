@@ -159,7 +159,7 @@ paths:
         - name: statusGroup
           required: false
           in: query
-          description: Nhóm trạng thái dùng trực tiếp cho các tab màn quản lý đơn hàng
+          description: Nhóm trạng thái cho các tab màn quản lý đơn hàng. AWAITING_SHIPMENT = CONFIRMED|PICKING|PACKED (đơn chờ giao, khớp KPI ordersAwaitingFulfillment của báo cáo tổng quan).
           schema:
             $ref: "#/components/schemas/OrderStatusGroup"
         - name: search
@@ -768,6 +768,20 @@ components:
           example: "1"
         lineNo:
           type: number
+        productVariantId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          description: 'Biến thể đã mua (dùng cho "mua lại"). Một biến thể có thể nằm ở hai dòng khi mua vượt suất flash: dòng giá flash + dòng giá thường.'
+        productId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+          nullable: true
+        productSlug:
+          type: string
+          nullable: true
+          description: Slug sản phẩm hiện tại, để mở trang sản phẩm.
         itemType:
           type: string
         sku:
@@ -792,6 +806,7 @@ components:
       required:
         - id
         - lineNo
+        - productVariantId
         - itemType
         - sku
         - productName
@@ -871,6 +886,7 @@ components:
         - CONFIRMED
         - IN_TRANSIT
         - DELIVERED
+        - AWAITING_SHIPMENT
     OrderStatusHistoryDto:
       type: object
       properties:

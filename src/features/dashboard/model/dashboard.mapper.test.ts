@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RevenuePointDto } from '@/generated/api/reporting/reporting.schemas';
 import {
+  KPI_LINKS,
   formatCompactMoney,
   toKpiCards,
   toPeriodKeys,
@@ -143,7 +144,7 @@ describe('dashboard.mapper', () => {
     ]);
     expect(cards[4]).toMatchObject({
       value: '7',
-      hint: 'Gồm 4 dòng tồn (SKU × kho) đã hết hàng bán',
+      hint: 'Chưa gồm 4 dòng tồn (SKU × kho) đã hết hàng',
     });
     expect(cards[0]).toMatchObject({ label: 'Doanh thu thuần', period: '12 tháng gần nhất' });
   });
@@ -161,5 +162,13 @@ describe('dashboard.mapper', () => {
       hint: 'Không tải được số liệu',
       retry,
     });
+  });
+});
+
+describe('KPI_LINKS', () => {
+  // Con số do API đếm theo đúng bộ lọc này (`AWAITING_SHIPMENT`, `LOW_STOCK`); đổi link phải đổi cả câu đếm.
+  it('trỏ tới đúng bộ lọc tạo nên con số', () => {
+    expect(KPI_LINKS.awaitingFulfillment).toBe('/orders?status=AWAITING_SHIPMENT');
+    expect(KPI_LINKS.lowStock).toBe('/inventory?tab=balances&balance.status=LOW_STOCK');
   });
 });

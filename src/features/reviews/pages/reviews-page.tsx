@@ -105,7 +105,7 @@ export function ReviewsPage() {
   const statusFilter = url.getEnum('status', ReviewModerationStatus);
   const page = url.getNumber('page', 1);
   const query = useListAdminReviews();
-  const columnVisibility = useColumnVisibility(REVIEW_COLUMN_ITEMS);
+  const columnVisibility = useColumnVisibility(REVIEW_COLUMN_ITEMS, 'reviews');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detail, setDetail] = useState<ProductReviewDto>();
 

@@ -49,7 +49,7 @@ export function CustomersPage() {
   const [selectedId, setSelectedId] = useState<string>();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CustomerRowView>();
-  const columnsState = useColumnVisibility(CUSTOMER_COLUMN_ITEMS);
+  const columnsState = useColumnVisibility(CUSTOMER_COLUMN_ITEMS, 'customers');
 
 
   const customers = useListAdminCustomers({

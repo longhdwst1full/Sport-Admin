@@ -4,15 +4,17 @@ import { useCan } from '@/core/auth/permissions';
 import { useGetAdminOrder } from '@/generated/api/orders/orders';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { DRAWER_WIDTH, useConfirmWithReason } from '@/foundation/overlay';
 import { OrderReturnPanel } from '@/features/returns';
 import { PrintableOrderReceipt } from '@/features/receipt';
+import { orderActionCopy } from '../constants/order.constants';
 import { useOrderAction } from '../hooks/use-order-action';
-import { getOrderActionAvailability } from '../model/order-actions.policy';
+import { getOrderActionAvailability, type OrderAction } from '../model/order-actions.policy';
 import { toOrderDetailView } from '../model/order.mapper';
 import { OrderActionConfirmation } from './order-action-confirmation';
 import { OrderActionFooter } from './order-action-footer';
 import { OrderDetailHeader } from './order-detail-header';
+import { OrderFailedDeliveryCancelSummary } from './order-failed-delivery-cancel-summary';
 import { OrderItemsCard } from './order-items-card';
 import { OrderPaymentCard } from './order-payment-card';
 import { OrderRecipientCard } from './order-recipient-card';
@@ -43,6 +45,25 @@ export function OrderDetailDrawer({
   const view = useMemo(() => (order ? toOrderDetailView(order) : undefined), [order]);
   const orderAction = useOrderAction(order);
   const availability = getOrderActionAvailability(order, canManage);
+  const confirmWithReason = useConfirmWithReason();
+
+  // UX: huỷ sau giao thất bại cần hiện trạng thái hiện tại + hệ quả hoàn tiền nên dùng hộp riêng;
+  // các lệnh khác giữ `OrderActionConfirmation`.
+  const openAction = (kind: OrderAction) => {
+    if (kind !== 'cancelAfterFailedDelivery' || !view) {
+      orderAction.open(kind);
+      return;
+    }
+    const copy = orderActionCopy.cancelAfterFailedDelivery;
+    confirmWithReason({
+      title: copy.title,
+      consequence: <OrderFailedDeliveryCancelSummary order={view} />,
+      okText: copy.okText,
+      placeholder: 'Lý do huỷ (ví dụ: khách từ chối nhận, không liên lạc được)...',
+      minLength: copy.minReasonLength,
+      onOk: (reason) => orderAction.run(kind, reason),
+    });
+  };
 
   const closeDrawer = () => {
     if (orderAction.pending) return;
@@ -92,7 +113,7 @@ export function OrderDetailDrawer({
           </div>
 
           {canManage && (
-            <OrderActionFooter availability={availability} onAction={orderAction.open} onClose={closeDrawer} />
+            <OrderActionFooter availability={availability} onAction={openAction} onClose={closeDrawer} />
           )}
         </div>
       )}

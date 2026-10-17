@@ -134,12 +134,15 @@ export function AccessPage() {
         </div>
       )}
       <Tabs
+        // UX: thanh tab đứng yên, bảng của tab đang mở lấp phần còn lại (`.dctd-fill-tabs--stretch` trong styles.css).
+        className="dctd-fill-tabs dctd-fill-tabs--stretch"
         activeKey={activeTab}
         onChange={(key) => url.set('tab', key === 'users' ? undefined : key)}
         items={[
           {
             key: 'users',
             label: 'Người dùng',
+            className: 'dctd-fill',
             children: (
               <AdminTable
                 rowKey="id"
@@ -156,6 +159,7 @@ export function AccessPage() {
                 {
                   key: 'roles',
                   label: 'Vai trò & quyền',
+                  className: 'dctd-fill',
                   children: (
                     <AdminTable
                       rowKey="id"

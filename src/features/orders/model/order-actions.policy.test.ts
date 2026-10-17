@@ -4,6 +4,7 @@ import {
   getOrderActionAvailability,
   getOrderProgress,
   getProgressStepStatus,
+  requiresManualRefund,
 } from './order-actions.policy';
 
 type Gate = Pick<OrderDetailDto, 'status' | 'paymentStatus' | 'paymentMethod' | 'fulfillmentStatus'>;
@@ -17,13 +18,18 @@ const pending: Gate = {
 
 describe('getOrderActionAvailability', () => {
   it('không có quyền hoặc chưa tải đơn thì tắt hết', () => {
-    const none = { cancel: false, confirm: false, complete: false };
+    const none = { cancel: false, confirm: false, complete: false, cancelAfterFailedDelivery: false };
     expect(getOrderActionAvailability(pending, false)).toEqual(none);
     expect(getOrderActionAvailability(undefined, true)).toEqual(none);
   });
 
   it('COD chờ xác nhận: huỷ và xác nhận được, chưa hoàn tất', () => {
-    expect(getOrderActionAvailability(pending, true)).toEqual({ cancel: true, confirm: true, complete: false });
+    expect(getOrderActionAvailability(pending, true)).toEqual({
+      cancel: true,
+      confirm: true,
+      complete: false,
+      cancelAfterFailedDelivery: false,
+    });
   });
 
   it('đơn trả trước chỉ xác nhận khi đã thu tiền; đã thu thì không huỷ', () => {
@@ -54,6 +60,30 @@ describe('getOrderActionAvailability', () => {
     expect(getOrderActionAvailability(delivered, true).complete).toBe(true);
     expect(getOrderActionAvailability({ ...delivered, paymentStatus: 'PENDING' }, true).complete).toBe(false);
     expect(getOrderActionAvailability({ ...delivered, fulfillmentStatus: 'SHIPPED' }, true).complete).toBe(false);
+  });
+
+  it('huỷ sau giao thất bại chỉ khi SHIPPED + hàng hoàn đã về kho (RETURNED)', () => {
+    const returned: Gate = {
+      status: 'SHIPPED',
+      paymentStatus: 'PENDING',
+      paymentMethod: 'COD',
+      fulfillmentStatus: 'RETURNED',
+    };
+    expect(getOrderActionAvailability(returned, true)).toEqual({
+      cancel: false,
+      confirm: false,
+      complete: false,
+      cancelAfterFailedDelivery: true,
+    });
+    // Trả trước đã thu vẫn huỷ được (API gắn cờ hoàn tay), nhưng phải báo hoàn tiền thủ công.
+    const prepaid: Gate = { ...returned, paymentMethod: 'BANK_TRANSFER', paymentStatus: 'SUCCESS' };
+    expect(getOrderActionAvailability(prepaid, true).cancelAfterFailedDelivery).toBe(true);
+    expect(requiresManualRefund(prepaid)).toBe(true);
+    expect(requiresManualRefund(returned)).toBe(false);
+    // Giao thất bại nhưng hàng chưa về kho, hoặc thiếu quyền: chưa huỷ được.
+    expect(getOrderActionAvailability({ ...returned, fulfillmentStatus: 'FAILED' }, true).cancelAfterFailedDelivery)
+      .toBe(false);
+    expect(getOrderActionAvailability(returned, false).cancelAfterFailedDelivery).toBe(false);
   });
 });
 

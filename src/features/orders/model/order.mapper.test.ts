@@ -42,6 +42,7 @@ const detail: OrderDetailDto = {
     {
       id: '1',
       lineNo: 1,
+      productVariantId: '1',
       itemType: 'VARIANT',
       sku: 'SKU-1',
       productName: 'áo',

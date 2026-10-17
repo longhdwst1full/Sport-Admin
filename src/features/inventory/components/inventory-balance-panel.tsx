@@ -93,7 +93,7 @@ export function InventoryBalancePanel({ onAdjust }: { onAdjust: (balance: Invent
   const warehouseCode = filters.get('warehouse');
   // `balance.status` trên URL: thẻ "Tồn dưới ngưỡng" ở bảng điều khiển mở thẳng danh sách SKU sắp hết.
   const status = filters.getEnum('status', ListInventoryBalancesStatus);
-  const columnsState = useColumnVisibility(BALANCE_COLUMN_ITEMS);
+  const columnsState = useColumnVisibility(BALANCE_COLUMN_ITEMS, 'inventory-balance');
 
   const warehouses = useWarehouseOptions();
   const query = useListInventoryBalances({

@@ -999,6 +999,22 @@ a,
   overflow-y: auto;
   padding-top: 16px;
 }
+/*
+ * Tab có bảng chính (opt-in `dctd-fill-tabs--stretch` + pane `className: 'dctd-fill'`): nội dung tab đang
+ * mở kéo hết phần còn lại để bảng trong pane lấp màn như màn danh sách thường. Chỉ pane đang mở bị kéo;
+ * tab không opt-in giữ cuộn nội dung như cũ.
+ */
+.dctd-fill-tabs--stretch > .ant-tabs-content-holder {
+  display: flex;
+  flex-direction: column;
+}
+.dctd-fill-tabs--stretch > .ant-tabs-content-holder > .ant-tabs-content,
+.dctd-fill-tabs--stretch > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane-active.dctd-fill {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
 .dctd-fill > .admin-table-fill .ant-table-body {
   flex: 1 1 auto;
   min-height: 0;

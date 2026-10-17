@@ -1,5 +1,6 @@
 import { Skeleton } from 'antd';
-import { lazy, Suspense, type Ref } from 'react';
+import DisabledContext from 'antd/es/config-provider/DisabledContext';
+import { lazy, Suspense, useContext, type Ref } from 'react';
 
 /** Điều khiển editor từ ngoài (vd. chèn biến `{{orderNo}}` tại con trỏ). */
 export interface RichTextEditorHandle {
@@ -34,10 +35,15 @@ const RichTextEditorImplementation = lazy(() =>
   })),
 );
 
-export function RichTextEditor(props: RichTextEditorProps) {
+/**
+ * `disabled` không truyền thì theo `<Form disabled>` / `ConfigProvider componentDisabled` của antd như
+ * mọi ô antd khác — editor nằm trong form đang khoá (vd. sản phẩm đã lưu trữ) tự chuyển read-only.
+ */
+export function RichTextEditor({ disabled, ...props }: RichTextEditorProps) {
+  const inheritedDisabled = useContext(DisabledContext);
   return (
     <Suspense fallback={<Skeleton active paragraph={{ rows: 6 }} />}>
-      <RichTextEditorImplementation {...props} />
+      <RichTextEditorImplementation {...props} disabled={disabled ?? inheritedDisabled} />
     </Suspense>
   );
 }

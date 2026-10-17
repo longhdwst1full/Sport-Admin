@@ -64,6 +64,8 @@ export function ProductBasicInfoTab({
     [categories.data?.items, categoryIds, product?.categories],
   );
   const errors = form.formState.errors;
+  // UX: loại sản phẩm chỉ đổi được khi chưa có SKU (giữ điều kiện khoá sẵn có).
+  const productTypeLocked = Boolean(product?.variants.length);
   return (
     <div className="space-y-4">
       {/* Định danh + phân loại gộp một khối, lưới 3 cột trên màn rộng để ô ngắn không chiếm cả dòng. */}
@@ -83,6 +85,8 @@ export function ProductBasicInfoTab({
           <FieldItem
             label="Loại sản phẩm"
             required
+            // UX: khoá khi đã có SKU nhưng vẫn phải đọc rõ giá trị — kiểu chữ thường thay vì ô xám disabled.
+            className={productTypeLocked ? 'dctd-readonly-view' : undefined}
             error={errors.productType}
             tooltip="Sản phẩm thường bán theo từng SKU; combo cố định gồm nhiều SKU thành phần, mỗi SKU combo phải khai báo thành phần trước khi xuất bản."
           >
@@ -92,7 +96,7 @@ export function ProductBasicInfoTab({
               render={({ field }) => (
                 <Select
                   {...field}
-                  disabled={Boolean(product?.variants.length)}
+                  disabled={productTypeLocked}
                   options={PRODUCT_TYPE_OPTIONS}
                   onChange={(value) => {
                     field.onChange(value);

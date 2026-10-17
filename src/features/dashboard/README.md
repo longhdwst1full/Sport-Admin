@@ -1,10 +1,10 @@
 # Dashboard — maintenance note
 
-> **Document version:** 2.4.0
+> **Document version:** 2.5.0
 >
-> **Last updated:** 2026-10-13
+> **Last updated:** 2026-10-17
 >
-> **Change summary:** Vỏ thẻ + chuỗi trạng thái dùng chung (`DashboardCard`/`CardStateBody`); KPI hiện lỗi thay vì 0; chuỗi kỳ điền kỳ trống theo giờ VN; bộ chọn kỳ chuyển lên hero.
+> **Change summary:** Link KPI khớp con số: "Đơn đang chờ giao" = `statusGroup=AWAITING_SHIPMENT` (CONFIRMED|PICKING|PACKED), "Tồn dưới ngưỡng" = `LOW_STOCK` (không gồm hết hàng). Trước đó: Vỏ thẻ + chuỗi trạng thái dùng chung (`DashboardCard`/`CardStateBody`); KPI hiện lỗi thay vì 0; chuỗi kỳ điền kỳ trống theo giờ VN; bộ chọn kỳ chuyển lên hero.
 
 ## Trình bày
 
@@ -16,6 +16,11 @@
   kỳ riêng vì Backend cố định 30 ngày/hiện tại.
 - `toRevenueSeries` điền kỳ trống bằng 0 (khoá kỳ theo giờ Việt Nam như `vietnam-time.ts`), trả
   rỗng khi Backend không có điểm nào để thẻ hiện empty state.
+- `KPI_LINKS` phải trỏ tới đúng bộ lọc mà API dùng để đếm (cùng phạm vi chi nhánh):
+  `awaitingFulfillment` → `/orders?status=AWAITING_SHIPMENT` (API đếm `ORDER_STATUS_BY_GROUP.AWAITING_SHIPMENT`),
+  `lowStock` → `balance.status=LOW_STOCK` (API đếm bằng `classifyInventoryBalance`, dòng hết hàng nằm ở `outOfStock`).
+  Quyết định 2026-10-17: "chờ giao" = đã xác nhận/đang soạn-đóng gói, chưa bàn giao vận chuyển; đơn SHIPPED,
+  giao thất bại hay chờ xác nhận không tính.
 - Donut trạng thái tối đa `CHART_COLORS.length` lát; phần đuôi gộp "Khác". Chú giải là HTML (số + %).
 
 ## Biểu đồ và bảng màu
@@ -82,6 +87,7 @@ thông tin dành cho người phát triển, không thuộc màn hình vận hà
 
 | Version | Date       | Change summary                                                             |
 | ------- | ---------- | -------------------------------------------------------------------------- |
+| 2.5.0   | 2026-10-17 | KPI chờ giao/tồn dưới ngưỡng đếm đúng bộ lọc của link; hint tồn ghi rõ chưa gồm hết hàng. |
 | 2.4.0   | 2026-10-13 | Card shell chung, KPI lỗi ≠ 0, điền kỳ trống, donut gộp "Khác", bộ chọn kỳ ở hero. |
 | 2.3.0   | 2026-10-10 | `TopRankingCard` dùng chung; `REPORT_EXPORT_PATH` thay đường dẫn viết tay. |
 | 2.1.0   | 2026-09-18 | Làm mới hierarchy, KPI, biểu đồ và thẻ đơn chờ; loading theo từng API.     |

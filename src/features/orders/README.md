@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.6.0
+> **Document version:** 1.7.0
 >
-> **Last updated:** 2026-10-13
+> **Last updated:** 2026-10-17
 >
-> **Change summary:** Tách drawer chi tiết theo trách nhiệm; mapper `model/order.mapper.ts`, policy `model/order-actions.policy.ts`, hook `hooks/use-order-action.ts`.
+> **Change summary:** Thêm thao tác "Huỷ sau giao thất bại" (`cancelAdminOrderAfterFailedDelivery`) và bộ lọc link `AWAITING_SHIPMENT`. Trước đó: Tách drawer chi tiết theo trách nhiệm; mapper `model/order.mapper.ts`, policy `model/order-actions.policy.ts`, hook `hooks/use-order-action.ts`.
 
 ## Phạm vi
 
@@ -20,10 +20,12 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 - Mọi request dùng `src/generated/api/orders`; không hard-code URL và không sửa file generated.
 - Backend bắt buộc kiểm tra `order.view` và branch scope. Permission route phía FE chỉ cải thiện UX.
 - Tab `Vận chuyển` map server-side sang `PICKING|PACKED|SHIPPED`; `Đã giao` map sang `DELIVERED|COMPLETED`.
+- `AWAITING_SHIPMENT` (`CONFIRMED|PICKING|PACKED`) là nhóm chỉ-lọc cho link KPI "Đơn đang chờ giao" ở Dashboard; chỉ hiện thành tab khi URL `status=AWAITING_SHIPMENT` (`orderFilterOnlyTabs`).
 - Search chạy server-side, mỗi ô một điều kiện AND: `orderNo`, `recipientName`, `recipientPhone`.
 - `order.manage` mới hiển thị action. Hủy chỉ hợp lệ khi đơn chưa thanh toán/xử lý; manual complete chỉ hợp lệ sau khi giao đủ và thu đủ tiền, không giới hạn trong ngày.
 - Fulfillment transition dùng permission riêng (`pick/pack/ship/delivery_update`), expected version và Idempotency-Key; Backend vẫn kiểm tra state/payment/stock/scope.
 - Transition gửi `expectedVersion`, `Idempotency-Key` và lý do bắt buộc; Backend vẫn là nguồn quyết định cuối cùng.
+- "Huỷ sau giao thất bại" (`cancelAdminOrderAfterFailedDelivery`, `order.manage`): nút chỉ hiện khi `SHIPPED` + fulfillment `RETURNED`. Hộp xác nhận (`useConfirmWithReason` + `OrderFailedDeliveryCancelSummary`) hiện trạng thái đơn/thanh toán, tổng đơn và hệ quả; lý do ≥ 3 ký tự. Đơn đã thu (payment `SUCCESS`) → API giữ `SUCCESS` + cờ hoàn tay, UI cảnh báo kế toán hoàn ngoài hệ thống rồi ghi nhận ở màn Thanh toán (`recordManualRefundAdmin`). `OrderDetailDto` không có số tiền đã thu nên chỉ hiện tổng đơn làm tham chiếu.
 - Sau mutation, detail cache được cập nhật và toàn bộ list/tab Order được invalidate vì bản ghi có thể đổi tab.
 
 ## Checklist khi sửa
@@ -38,6 +40,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.7.0 | 2026-10-17 | Huỷ sau giao thất bại (policy/hook/footer/hộp xác nhận + cảnh báo hoàn tay); tab chỉ-lọc `AWAITING_SHIPMENT`. | Dashboard KPI + failed-delivery review |
 | 1.6.0 | 2026-10-13 | Tách drawer chi tiết thành thẻ con, mapper/policy có unit test; hiện giảm giá/thuế/ghi chú khách khi có; refetch chi tiết khi 409; báo lỗi khi sao chép mã thất bại. | Orders review |
 | 1.5.0 | 2026-10-10 | `useUrlSearch`, page size 30 (`ADMIN_TABLE_DEFAULT_PAGE_SIZE`), `StatusTag`/tone, skeleton + `QueryErrorAlert`, `FormModal` cho xác nhận thao tác, nhãn người thao tác tiếng Việt. |
 | 1.4.0 | 2026-09-19 | Pagination mặc định 20, chọn 20/50/100; refresh chuyển xuống dưới bảng và metric responsive đều cột. | Admin list UI review |

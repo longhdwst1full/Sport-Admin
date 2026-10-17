@@ -42,7 +42,15 @@ export function OrderActionConfirmation({
       <Typography.Paragraph type="secondary">
         {copy.description}
       </Typography.Paragraph>
-      <label className="mb-2 block font-medium" htmlFor="order-action-reason">Lý do <span className="text-red-500">*</span></label>
+      <label className="mb-2 block font-medium" htmlFor="order-action-reason">
+        {minimumReasonLength > 0 ? (
+          <>
+            Lý do <span className="text-red-500">*</span>
+          </>
+        ) : (
+          'Ghi chú (không bắt buộc)'
+        )}
+      </label>
       <Input.TextArea
         id="order-action-reason"
         value={reason}

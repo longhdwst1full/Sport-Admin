@@ -3,12 +3,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
 import {
   cancelAdminOrder,
+  cancelAdminOrderAfterFailedDelivery,
   completeAdminOrder,
   confirmAdminOrder,
   getGetAdminOrderQueryKey,
   getListAdminOrdersQueryKey,
 } from '@/generated/api/orders/orders';
-import type { OrderDetailDto } from '@/generated/api/orders/orders.schemas';
+import { PaymentStatus, type OrderDetailDto } from '@/generated/api/orders/orders.schemas';
 import {
   getGetAdminFulfillmentByOrderQueryKey,
   getListAdminFulfillmentsQueryKey,
@@ -16,7 +17,7 @@ import {
 import { getListAdminPaymentsQueryKey } from '@/generated/api/payments/payments';
 import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
-import { orderActionCopy } from '../constants/order.constants';
+import { MANUAL_REFUND_SUCCESS_MESSAGE, orderActionCopy } from '../constants/order.constants';
 import type { OrderAction } from '../model/order-actions.policy';
 
 interface OrderActionCommand {
@@ -51,7 +52,11 @@ export function useOrderAction(order: OrderDetailDto | undefined) {
       const request = { headers: { 'Idempotency-Key': idempotencyRef.current.key } };
       const expectedVersion = target.version;
       if (kind === 'cancel') return cancelAdminOrder(target.id, { expectedVersion, reason: normalizedReason }, request);
-      if (kind === 'confirm') return confirmAdminOrder(target.id, { expectedVersion, note: normalizedReason }, request);
+      if (kind === 'cancelAfterFailedDelivery') {
+        return cancelAdminOrderAfterFailedDelivery(target.id, { expectedVersion, reason: normalizedReason }, request);
+      }
+      // CONTRACT: `note` của confirm là tuỳ chọn; để trống thì không gửi field.
+      if (kind === 'confirm') return confirmAdminOrder(target.id, { expectedVersion, note: normalizedReason || undefined }, request);
       return completeAdminOrder(target.id, { expectedVersion, reason: normalizedReason }, request);
     },
     retry: false,
@@ -66,6 +71,11 @@ export function useOrderAction(order: OrderDetailDto | undefined) {
         queryClient.invalidateQueries({ queryKey: getListAdminPaymentsQueryKey() }),
       ]);
       resetState();
+      // CONTRACT: huỷ sau giao thất bại mà payment vẫn SUCCESS nghĩa là API đã gắn cờ hoàn tiền thủ công.
+      if (kind === 'cancelAfterFailedDelivery' && updated.paymentStatus === PaymentStatus.SUCCESS) {
+        void message.warning(MANUAL_REFUND_SUCCESS_MESSAGE, 8);
+        return;
+      }
       void message.success(orderActionCopy[kind].successMessage);
     },
     onError: (error, { order: target }) => {
@@ -91,6 +101,14 @@ export function useOrderAction(order: OrderDetailDto | undefined) {
     },
     submit: () => {
       if (order && action) mutation.mutate({ order, action, reason });
+    },
+    /**
+     * Cho hộp xác nhận tự giữ lý do (`useConfirmWithReason`): reject thì hộp giữ nguyên để sửa/gửi lại,
+     * dùng chung Idempotency-Key/invalidation/xử lý 409 với các lệnh khác.
+     */
+    run: (kind: OrderAction, reasonText: string): Promise<OrderDetailDto> => {
+      if (!order) return Promise.reject(new Error('order-not-loaded'));
+      return mutation.mutateAsync({ order, action: kind, reason: reasonText });
     },
   };
 }

@@ -14,6 +14,7 @@ import {
 import { OrderStatusGroup, type OrderSummaryDto } from '@/generated/api/orders/orders.schemas';
 import { getGetAdminReportOverviewQueryKey } from '@/generated/api/reporting/reporting';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { ApiError } from '@/lib/api/fetcher';
 import { useQueryState } from '../hooks/use-dashboard-report';
 import { CardStateBody, DashboardCard } from './dashboard-card';
 
@@ -79,7 +80,12 @@ export function PendingOrdersCard() {
       ]);
       void message.success(`Đã xác nhận đơn ${order.orderNo}.`);
     },
-    onError: (error) => {
+    onError: (error, { id }) => {
+      // UX: 4xx là kết luận cuối của server (sai version, sai trạng thái…): bỏ khoá để lần bấm sau
+      // (với version mới) là một yêu cầu mới. Mất mạng/5xx giữ khoá để bấm lại vẫn idempotent.
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        delete idempotencyKeys.current[id];
+      }
       // CONCURRENCY: lỗi thường do đơn đã đổi version (người khác vừa duyệt/huỷ); tải lại danh sách để
       // lần bấm sau gửi version mới thay vì lặp lại cùng một lỗi.
       void queryClient.invalidateQueries({ queryKey: getListAdminOrdersQueryKey() });

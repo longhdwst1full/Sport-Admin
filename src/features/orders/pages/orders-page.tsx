@@ -29,7 +29,7 @@ import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
 import { moneyFormatter } from '@/lib/format/money';
-import { ORDER_COLUMN_ITEMS, orderTabs } from '../constants/order.constants';
+import { ORDER_COLUMN_ITEMS, orderFilterOnlyTabs, orderTabs } from '../constants/order.constants';
 import { toOrderRow } from '../model/order.mapper';
 
 // Nạp lười để phá vòng chunk tĩnh orders ↔ fulfillments (FulfillmentsPage lại import OrderDetailDrawer
@@ -54,13 +54,18 @@ export function OrdersPage() {
   const search = useUrlSearch(['orderNo', 'name', 'phone']);
   const { url } = search;
   const tab: OrderTab = url.getEnum('status', OrderStatusGroup) ?? 'ALL';
+  const filterOnlyLabel = tab === 'ALL' ? undefined : orderFilterOnlyTabs[tab];
+  const tabItems = useMemo(
+    () => (filterOnlyLabel ? [...orderTabs, { key: tab, label: filterOnlyLabel }] : orderTabs),
+    [tab, filterOnlyLabel],
+  );
   const page = url.getNumber('page', 1);
   const [createOpen, setCreateOpen] = useState(false);
   const [pageSize, setPageSize] = useState(ADMIN_TABLE_DEFAULT_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
   // Đơn đang mở ở drawer chi tiết là ngữ cảnh gợi ý cho Copilot.
   useCopilotPageHints(selectedId ? { orderId: selectedId } : undefined);
-  const columnsState = useColumnVisibility(ORDER_COLUMN_ITEMS);
+  const columnsState = useColumnVisibility(ORDER_COLUMN_ITEMS, 'orders');
 
   const orders = useListAdminOrders({
     page,
@@ -156,7 +161,7 @@ export function OrdersPage() {
       >
         <Tabs
           activeKey={tab}
-          items={orderTabs}
+          items={tabItems}
           onChange={(key) => url.patch({ status: key === 'ALL' ? undefined : key, page: undefined })}
           className="mb-3"
         />

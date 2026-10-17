@@ -1,5 +1,5 @@
 import { orderStatusPresentation } from '@/features/order-status';
-import type { OrderStatus } from '@/generated/api/orders/orders.schemas';
+import { OrderStatusGroup, type OrderStatus } from '@/generated/api/orders/orders.schemas';
 import type {
   InventoryReportDto,
   OrderStatusCountDto,
@@ -80,12 +80,17 @@ export interface KpiCard {
   retry?: () => void;
 }
 
-/** Thẻ KPI → màn danh sách đã lọc sẵn gần nhất với tập bản ghi tạo nên con số. */
+/**
+ * Thẻ KPI → màn danh sách đã lọc sẵn gần nhất với tập bản ghi tạo nên con số.
+ * CONTRACT: `awaitingFulfillment` đếm đúng nhóm `AWAITING_SHIPMENT` (CONFIRMED|PICKING|PACKED) và `lowStock`
+ * đếm đúng phân loại `LOW_STOCK` của Inventory (không gồm hết hàng), nên hai link này khớp con số tuyệt đối
+ * (cùng phạm vi chi nhánh).
+ */
 export const KPI_LINKS: Record<KpiKey, string> = {
   netRevenue: '/payments',
-  expectedRevenue: '/orders?status=DELIVERED',
+  expectedRevenue: `/orders?status=${OrderStatusGroup.DELIVERED}`,
   ordersToday: '/orders',
-  awaitingFulfillment: '/orders?status=CONFIRMED',
+  awaitingFulfillment: `/orders?status=${OrderStatusGroup.AWAITING_SHIPMENT}`,
   lowStock: '/inventory?tab=balances&balance.status=LOW_STOCK',
 };
 
@@ -304,14 +309,14 @@ export function toKpiCards({ granularity, revenue, overview, inventory }: KpiInp
         hint: `${data?.ordersCancelledLast30Days ?? 0} đơn huỷ trong ${OVERVIEW_PERIOD}`,
       }),
     ),
-    // Backend đếm theo dòng tồn (SKU × kho) và `lowStock` đã gồm cả dòng hết hàng.
+    // Backend đếm theo dòng tồn (SKU × kho); `lowStock` chỉ gồm dòng còn bán chạm/dưới ngưỡng, hết hàng tách riêng.
     kpi(
       inventory,
       DENIED_HINT.inventory,
       { key: 'lowStock', label: 'Tồn dưới ngưỡng', period: 'Hiện tại', tone: 'rose' },
       (data) => ({
         value: String(data?.lowStock ?? 0),
-        hint: `Gồm ${data?.outOfStock ?? 0} dòng tồn (SKU × kho) đã hết hàng bán`,
+        hint: `Chưa gồm ${data?.outOfStock ?? 0} dòng tồn (SKU × kho) đã hết hàng`,
       }),
     ),
   ];

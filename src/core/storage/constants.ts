@@ -14,6 +14,8 @@ export const LocalStorageKey = {
   PREFERENCES: 'baoan_admin_preferences',
   /** Tên đăng nhập đã ghi nhớ (chỉ định danh, không bao giờ mật khẩu). */
   REMEMBERED_IDENTIFIER: 'dctd.admin.remembered-identifier',
+  /** Tiền tố key cột ẩn/hiện theo từng bảng: `<prefix><storageKey>` (`foundation/table`). */
+  TABLE_COLUMNS_PREFIX: 'dctd.admin.table-columns.',
 } as const;
 
 export const SessionStorageKey = {

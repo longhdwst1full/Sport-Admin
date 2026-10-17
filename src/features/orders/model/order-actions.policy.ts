@@ -5,7 +5,7 @@ import {
   type OrderDetailDto,
 } from '@/generated/api/orders/orders.schemas';
 
-export type OrderAction = 'confirm' | 'cancel' | 'complete';
+export type OrderAction = 'confirm' | 'cancel' | 'complete' | 'cancelAfterFailedDelivery';
 
 type OrderGateFields = Pick<OrderDetailDto, 'status' | 'paymentStatus' | 'paymentMethod' | 'fulfillmentStatus'>;
 
@@ -21,12 +21,16 @@ const CANCELLABLE_PAYMENT_STATUSES: ReadonlySet<PaymentStatus> = new Set([
  * - cancel: PENDING_CONFIRMATION + payment PENDING|FAILED + fulfillment PENDING.
  * - confirm: PENDING_CONFIRMATION + fulfillment PENDING + (không trả trước hoặc payment SUCCESS).
  * - complete: DELIVERED + fulfillment DELIVERED + payment SUCCESS.
+ * - cancelAfterFailedDelivery: SHIPPED + fulfillment RETURNED (hàng giao thất bại đã nhận về kho,
+ *   `cancelAfterFailedDeliveryAdmin`). Payment SUCCESS vẫn huỷ được nhưng phát sinh hoàn tiền thủ công.
  */
 export function getOrderActionAvailability(
   order: OrderGateFields | undefined,
   canManage: boolean,
 ): Record<OrderAction, boolean> {
-  if (!order || !canManage) return { cancel: false, confirm: false, complete: false };
+  if (!order || !canManage) {
+    return { cancel: false, confirm: false, complete: false, cancelAfterFailedDelivery: false };
+  }
   const awaitingConfirmation =
     order.status === OrderStatus.PENDING_CONFIRMATION &&
     order.fulfillmentStatus === OrderFulfillmentStatus.PENDING;
@@ -39,7 +43,17 @@ export function getOrderActionAvailability(
       order.status === OrderStatus.DELIVERED &&
       order.fulfillmentStatus === OrderFulfillmentStatus.DELIVERED &&
       order.paymentStatus === PaymentStatus.SUCCESS,
+    cancelAfterFailedDelivery:
+      order.status === OrderStatus.SHIPPED && order.fulfillmentStatus === OrderFulfillmentStatus.RETURNED,
   };
+}
+
+/**
+ * Huỷ sau giao thất bại với đơn đã thu tiền (payment SUCCESS): API giữ payment SUCCESS và gắn cờ
+ * `MANUAL_REFUND_REQUIRED`; kế toán hoàn ngoài hệ thống rồi ghi nhận ở màn Thanh toán.
+ */
+export function requiresManualRefund(order: Pick<OrderDetailDto, 'paymentStatus'>): boolean {
+  return order.paymentStatus === PaymentStatus.SUCCESS;
 }
 
 export interface OrderProgress {

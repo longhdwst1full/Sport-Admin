@@ -543,10 +543,10 @@ components:
           description: Số dòng tồn đang theo dõi
         outOfStock:
           type: number
-          description: Số dòng hết hàng bán (available <= 0)
+          description: Số dòng OUT_OF_STOCK theo phân loại tồn kho (available = 0)
         lowStock:
           type: number
-          description: Số dòng chạm hoặc dưới ngưỡng đặt lại
+          description: Số dòng LOW_STOCK theo phân loại tồn kho (còn bán, chạm/dưới ngưỡng đặt lại; KHÔNG gồm OUT_OF_STOCK)
         items:
           description: Danh sách cần nhập thêm, ưu tiên thiếu nhất
           type: array
@@ -609,7 +609,7 @@ components:
           description: Đơn đặt trong 30 ngày gần nhất
         ordersAwaitingFulfillment:
           type: number
-          description: Đơn chưa giao xong
+          description: "Đơn chờ giao: CONFIRMED|PICKING|PACKED, khớp statusGroup AWAITING_SHIPMENT của danh sách đơn Admin"
         ordersCancelledLast30Days:
           type: number
           description: Đơn đã huỷ trong 30 ngày

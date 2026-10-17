@@ -25,6 +25,14 @@ export const orderTabs: Array<{
   { key: 'DELIVERED', label: 'Đã giao' },
 ];
 
+/**
+ * Nhóm chỉ dùng làm bộ lọc qua link (KPI "Đơn đang chờ giao" ở tổng quan), chồng lên tab
+ * `Đã xác nhận`/`Vận chuyển` nên không hiện thường trực; chỉ thêm tab khi URL đang lọc theo nó.
+ */
+export const orderFilterOnlyTabs: Partial<Record<OrderStatusGroup, string>> = {
+  AWAITING_SHIPMENT: 'Chờ giao (đã xác nhận, chưa xuất kho)',
+};
+
 // Nhãn/tone trạng thái đơn nằm ở `order-status` để payments dùng chung mà không tạo vòng orders ⇄ payments.
 export { orderStatusPresentation } from '@/features/order-status';
 
@@ -64,7 +72,10 @@ interface OrderActionCopy {
   okText: string;
   description: string;
   successMessage: string;
-  /** Khớp `MinLength` của command DTO phía API (cancel 3, complete 5); confirm là chính sách FE. */
+  /**
+   * Khớp `MinLength` của command DTO phía API (cancel 3, complete 5). `0` = ô không bắt buộc: confirm chỉ
+   * có `note` tuỳ chọn (`ConfirmOrderCommandDto`: `@IsOptional`, `@MaxLength(500)`).
+   */
   minReasonLength: number;
 }
 
@@ -83,7 +94,7 @@ export const orderActionCopy: Record<OrderAction, OrderActionCopy> = {
     description:
       'Xác nhận đơn đã đủ điều kiện xử lý: chuyển khoản đã thành công hoặc đơn COD đã được tiếp nhận.',
     successMessage: 'Đã xác nhận đơn hàng thành công',
-    minReasonLength: 5,
+    minReasonLength: 0,
   },
   complete: {
     title: 'Xác nhận hoàn tất đơn',
@@ -93,4 +104,17 @@ export const orderActionCopy: Record<OrderAction, OrderActionCopy> = {
     successMessage: 'Đã hoàn tất đơn hàng thành công',
     minReasonLength: 5,
   },
+  // Dùng `OrderCancelCommandDto` như huỷ thường nên lý do tối thiểu 3 ký tự.
+  cancelAfterFailedDelivery: {
+    title: 'Huỷ đơn sau giao thất bại',
+    okText: 'Huỷ đơn',
+    description:
+      'Đơn và phiếu giao chuyển sang Đã huỷ, suất flash sale đã chốt được trả lại. Tồn kho không đổi vì hàng hoàn đã nhập lại khi nhận về kho. Thao tác không hoàn tác được.',
+    successMessage: 'Đã huỷ đơn sau giao thất bại',
+    minReasonLength: 3,
+  },
 };
+
+/** Đơn trả trước đã thu tiền bị huỷ sau giao thất bại: API chỉ gắn cờ, kế toán hoàn ngoài hệ thống. */
+export const MANUAL_REFUND_SUCCESS_MESSAGE =
+  'Đã huỷ đơn. Khoản đã thu cần hoàn thủ công cho khách; ghi nhận tại màn Thanh toán sau khi chuyển trả.';

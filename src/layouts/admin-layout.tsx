@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import {
   Avatar,
   Button,
+  Dropdown,
   Layout,
   Menu,
   Tag,
@@ -43,6 +44,7 @@ import { CommandPalette } from '@/layouts/components/command-palette';
 import { getInitials } from '@/shared/utils';
 
 const { Content, Header, Sider } = Layout;
+const NOTIFICATIONS_PATH = '/notifications';
 
 // Modal cài đặt (Tabs/Card/Descriptions) chỉ mở theo thao tác: tải lần đầu khi bấm, không nằm trong bundle khởi động.
 const SettingsModal = lazy(() =>
@@ -135,6 +137,13 @@ export function AdminLayout() {
   const displayName = user?.displayName ?? 'Tài khoản quản trị';
   const employeeCode = user?.userId ? `NV${String(user.userId).padStart(6, '0')}` : undefined;
   const initials = getInitials(displayName);
+  const signOut = () => void auth.signOut();
+  const userMenu: MenuProps = {
+    items: [{ key: 'sign-out', icon: <LogoutOutlined />, label: 'Đăng xuất', danger: true }],
+    onClick: signOut,
+  };
+  // PERMISSION: chuông chỉ là lối tắt tới màn Thông báo email; ẩn khi route đó không được phép xem.
+  const canOpenNotifications = visibleItems.some((item) => item.path === NOTIFICATIONS_PATH);
 
   return (
     <CopilotPageContextProvider>
@@ -234,7 +243,7 @@ export function AdminLayout() {
 
             {/* ── Sidebar footer: user + logout (JARVIS Style) ── */}
             <div className="shrink-0 border-t border-slate-800/80 p-2">
-              <div className="dctd-sidebar-user">
+              <div className={`dctd-sidebar-user ${collapsed ? '!flex-col !gap-1 !px-0' : ''}`}>
                 <Avatar
                   size={collapsed ? 30 : 32}
                   className="!flex !items-center !justify-center !text-xs !font-bold shrink-0"
@@ -246,30 +255,28 @@ export function AdminLayout() {
                   {initials}
                 </Avatar>
                 {!collapsed && (
-                  <>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-xs font-semibold text-slate-200">
-                        {displayName}
-                      </div>
-                      {employeeCode && (
-                        <div className="truncate text-[10.5px] text-slate-400 font-mono">
-                          {employeeCode}
-                        </div>
-                      )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-xs font-semibold text-slate-200">
+                      {displayName}
                     </div>
-                    {/* Direct Logout Button `[->` */}
-                    <Tooltip title="Đăng xuất" placement="top">
-                      <button
-                        type="button"
-                        onClick={() => void auth.signOut()}
-                        className="flex size-7 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-800 hover:text-red-400 shrink-0"
-                        aria-label="Đăng xuất"
-                      >
-                        <LogoutOutlined className="text-sm" />
-                      </button>
-                    </Tooltip>
-                  </>
+                    {employeeCode && (
+                      <div className="truncate text-[10.5px] text-slate-400 font-mono">
+                        {employeeCode}
+                      </div>
+                    )}
+                  </div>
                 )}
+                {/* UX: thu gọn vẫn giữ nút đăng xuất (xuống dòng dưới avatar) để không mất lối thoát. */}
+                <Tooltip title="Đăng xuất" placement={collapsed ? 'right' : 'top'}>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="flex size-7 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-800 hover:text-red-400 shrink-0"
+                    aria-label="Đăng xuất"
+                  >
+                    <LogoutOutlined className="text-sm" />
+                  </button>
+                </Tooltip>
               </div>
 
               {/* Unfold button when collapsed */}
@@ -336,17 +343,20 @@ export function AdminLayout() {
                   />
                 </Tooltip>
 
-                {/* Chưa có nguồn đếm thông báo trong hệ thống: không hiện số giả trên chuông. */}
-                <Tooltip title="Thông báo">
-                  <Button
-                    type="text"
-                    shape="circle"
-                    size="small"
-                    aria-label="Thông báo"
-                    icon={<BellOutlined />}
-                    className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
-                  />
-                </Tooltip>
+                {/* Chưa có nguồn đếm thông báo cho người dùng: chuông chỉ dẫn tới màn email outbox, không hiện số giả. */}
+                {canOpenNotifications && (
+                  <Tooltip title="Thông báo email">
+                    <Button
+                      type="text"
+                      shape="circle"
+                      size="small"
+                      aria-label="Thông báo email"
+                      icon={<BellOutlined />}
+                      onClick={() => navigate(NOTIFICATIONS_PATH)}
+                      className="!text-slate-500 hover:!bg-slate-200/70 hover:!text-slate-800"
+                    />
+                  </Tooltip>
+                )}
 
                 {/* Settings gear icon */}
                 <Tooltip title="Cài đặt hệ thống">
@@ -366,22 +376,28 @@ export function AdminLayout() {
 
                 <MfaSelfEnrollmentEntry />
 
-                {/* User avatar & info in Header (satisfies UI-SHELL-05 & provides sleek header identity) */}
-                <div className="flex items-center gap-2 pl-2 border-l border-slate-300/80">
-                  <Avatar
-                    size={28}
-                    className="!flex !items-center !justify-center !text-[11px] !font-bold shrink-0 cursor-pointer"
-                    style={{
-                      background: 'var(--ba-action-gradient)',
-                      boxShadow: '0 1px 4px rgba(245, 158, 11, 0.3)',
-                    }}
+                {/* Menu tài khoản ở header: lối đăng xuất khi sidebar ẩn hẳn (mobile, collapsedWidth = 0). */}
+                <Dropdown menu={userMenu} trigger={['click']} placement="bottomRight">
+                  <button
+                    type="button"
+                    aria-label="Tài khoản"
+                    className="flex items-center gap-2 pl-2 border-l border-slate-300/80"
                   >
-                    {initials}
-                  </Avatar>
-                  <span className="hidden xl:inline text-xs font-semibold text-slate-700 max-w-28 truncate">
-                    {displayName}
-                  </span>
-                </div>
+                    <Avatar
+                      size={28}
+                      className="!flex !items-center !justify-center !text-[11px] !font-bold shrink-0 cursor-pointer"
+                      style={{
+                        background: 'var(--ba-action-gradient)',
+                        boxShadow: '0 1px 4px rgba(245, 158, 11, 0.3)',
+                      }}
+                    >
+                      {initials}
+                    </Avatar>
+                    <span className="hidden xl:inline text-xs font-semibold text-slate-700 max-w-28 truncate">
+                      {displayName}
+                    </span>
+                  </button>
+                </Dropdown>
               </div>
             </div>
           </Header>

@@ -28,6 +28,7 @@ function operationOverrides(domain: string): Record<string, OperationOverride> {
       createPosOrder: withOptions,
       confirmAdminOrder: withOptions,
       cancelAdminOrder: withOptions,
+      cancelAdminOrderAfterFailedDelivery: withOptions,
       completeAdminOrder: withOptions,
     };
   }
