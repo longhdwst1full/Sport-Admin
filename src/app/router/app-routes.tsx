@@ -4,6 +4,15 @@ import { PermissionRoute } from '@/core/auth/permission-route';
 import { AuthenticatedRoute } from '@/core/auth/authenticated-route';
 import { usePermissions } from '@/core/auth/permissions';
 import { canSeeNavigationItem, NAVIGATION_ITEMS_DATA } from '@/shared/constants/navigation';
+// Các barrel nhiều trang tự export từng trang dạng React.lazy (một chunk mỗi trang) — không bọc lazy lần nữa.
+import { ChangePasswordPage, LoginPage } from '@/features/auth';
+import { AttributesPage, BrandsPage, CategoriesPage } from '@/features/catalog-masters';
+import {
+  BannersPage,
+  ContentPage,
+  SocialDashboardPage,
+  TikTokCallbackPage,
+} from '@/features/content';
 
 // Khung admin (menu, tab, command palette, copilot) chỉ tải sau đăng nhập; /login không kéo theo.
 const AdminLayout = lazy(async () => {
@@ -19,14 +28,6 @@ const AdminLayout = lazy(async () => {
     ),
   };
 });
-const LoginPage = lazy(() =>
-  import('@/features/auth').then((module) => ({ default: module.LoginPage })),
-);
-const ChangePasswordPage = lazy(() =>
-  import('@/features/auth').then((module) => ({
-    default: module.ChangePasswordPage,
-  })),
-);
 
 const DashboardPage = lazy(() =>
   import('@/features/dashboard').then((module) => ({
@@ -38,21 +39,6 @@ const ProductsPage = lazy(() =>
     default: module.ProductsPage,
   })),
 );
-const BrandsPage = lazy(() =>
-  import('@/features/catalog-masters').then((module) => ({
-    default: module.BrandsPage,
-  })),
-);
-const AttributesPage = lazy(() =>
-  import('@/features/catalog-masters').then((module) => ({
-    default: module.AttributesPage,
-  })),
-);
-const CategoriesPage = lazy(() =>
-  import('@/features/catalog-masters').then((module) => ({
-    default: module.CategoriesPage,
-  })),
-);
 const InventoryPage = lazy(() =>
   import('@/features/inventory').then((module) => ({
     default: module.InventoryPage,
@@ -60,20 +46,6 @@ const InventoryPage = lazy(() =>
 );
 const ProcurementPage = lazy(() =>
   import('@/features/procurement').then((module) => ({ default: module.ProcurementPage })),
-);
-const ContentPage = lazy(() =>
-  import('@/features/content').then((module) => ({
-    default: module.ContentPage,
-  })),
-);
-const BannersPage = lazy(() =>
-  import('@/features/content').then((module) => ({ default: module.BannersPage })),
-);
-const SocialDashboardPage = lazy(() =>
-  import('@/features/content').then((module) => ({ default: module.SocialDashboardPage })),
-);
-const TikTokCallbackPage = lazy(() =>
-  import('@/features/content').then((module) => ({ default: module.TikTokCallbackPage })),
 );
 const ReviewsPage = lazy(() =>
   import('@/features/reviews').then((module) => ({
