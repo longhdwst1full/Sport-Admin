@@ -46,15 +46,21 @@ export function BranchRevenueCard({ granularity, range, state, rows }: BranchRev
         emptyText={`Chưa có chi nhánh nào phát sinh doanh thu trong ${PERIOD_DESCRIPTION[granularity]}`}
         skeleton={<TableSkeleton rows={3} />}
       >
-        <AdminTable
-          rowKey="branchName"
-          size="small"
-          pagination={false}
-          dataSource={rows}
-          // UX: nhiều chi nhánh thì thân bảng cuộn trong ~6 dòng thay vì kéo dài thẻ.
-          scroll={{ x: BRANCH_TABLE_WIDTH, y: 260 }}
-          columns={BRANCH_REVENUE_COLUMNS}
-        />
+        {/*
+          Bảng lấp hết thẻ: dùng chuỗi `.dctd-fill` → `admin-table-fill` của AdminTable (thân bảng flex,
+          header dính, chỉ thân cuộn). `scroll.y` chỉ để bật chế độ thân cuộn; CSS bỏ max-height của nó.
+        */}
+        <div className="dctd-fill flex min-h-0 flex-1 flex-col">
+          <AdminTable
+            rowKey="branchName"
+            size="small"
+            surface="page"
+            pagination={false}
+            dataSource={rows}
+            scroll={{ x: BRANCH_TABLE_WIDTH, y: 1 }}
+            columns={BRANCH_REVENUE_COLUMNS}
+          />
+        </div>
       </CardStateBody>
     </DashboardCard>
   );

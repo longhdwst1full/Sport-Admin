@@ -59,7 +59,8 @@ export function DashboardCard({
         </div>
         {extra && <div className="flex shrink-0 flex-wrap items-center gap-2">{extra}</div>}
       </header>
-      <div className="flex-1 p-4 sm:p-5">{children}</div>
+      {/* flex + min-h-0: nội dung (bảng) co giãn theo chiều cao còn lại của thẻ. */}
+      <div className="flex min-h-0 flex-1 flex-col p-4 sm:p-5">{children}</div>
     </section>
   );
 }
@@ -91,7 +92,7 @@ export function CardStateBody({
   children,
 }: CardStateBodyProps) {
   const placeholder = skeleton ?? <Skeleton active paragraph={{ rows: 5 }} />;
-  const center = (node: ReactNode) => <div className="grid h-full place-items-center">{node}</div>;
+  const center = (node: ReactNode) => <div className="grid flex-1 place-items-center">{node}</div>;
   let content: ReactNode;
   if (deniedText)
     content = center(<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={deniedText} />);
@@ -101,7 +102,7 @@ export function CardStateBody({
     content = center(<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={emptyText} />);
   else content = <Suspense fallback={placeholder}>{children}</Suspense>;
   return (
-    <div className="h-full" style={minHeight ? { minHeight } : undefined}>
+    <div className="flex min-h-0 flex-1 flex-col" style={minHeight ? { minHeight } : undefined}>
       {content}
     </div>
   );

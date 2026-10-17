@@ -69,10 +69,13 @@ export function DashboardPage() {
       </div>
 
       {/* UX: bảng chi nhánh đứng cạnh top khách thay vì trải hết chiều ngang; không có thì top khách giãn đủ hàng. */}
-      {/* Thẻ cùng hàng cao bằng nhau (grid stretch + DashboardCard h-full); bảng chi nhánh tự cuộn khi nhiều dòng. */}
-      <div className="grid grid-cols-1 gap-4 xl:auto-rows-[minmax(360px,auto)] xl:grid-cols-12">
+      {/*
+        Hàng cao cố định trên màn rộng: thẻ cùng hàng bằng nhau, bảng chi nhánh lấp hết thẻ và chỉ thân
+        bảng cuộn khi nhiều chi nhánh. Màn hẹp (1 cột) thẻ chi nhánh tự đặt chiều cao riêng.
+      */}
+      <div className="grid grid-cols-1 gap-4 xl:auto-rows-[440px] xl:grid-cols-12">
         {showBranchRevenue && (
-          <div className="min-w-0 xl:col-span-7">
+          <div className="h-[420px] min-w-0 xl:col-span-7 xl:h-auto">
             <BranchRevenueCard
               granularity={granularity}
               range={range}
