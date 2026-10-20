@@ -326,7 +326,7 @@ export function AdminLayout() {
                 )}
 
                 {/* Copilot: tự ẩn khi thiếu assistant.use hoặc assistant.tool.execute */}
-                <CopilotLauncher className="!mr-1" />
+                <CopilotLauncher />
 
                 {/* Search icon button */}
                 <Tooltip title="Tìm kiếm nhanh (Ctrl+K)">

@@ -8,7 +8,7 @@ import { COPILOT_LAUNCH_PERMISSIONS } from '../constants/copilot.constants';
 const CopilotDrawer = lazy(() => import('./copilot-drawer').then((module) => ({ default: module.CopilotDrawer })));
 
 /**
- * Nút "Trợ lý Copilot" trên header. PERMISSION: chỉ hiện khi có ĐỦ `assistant.use` và
+ * Nút "Trợ lý Copilot" nổi góc dưới phải (giống storefront). PERMISSION: chỉ hiện khi có ĐỦ `assistant.use` và
  * `assistant.tool.execute`; API vẫn là nơi quyết định cuối.
  */
 export function CopilotLauncher({ className }: { className?: string }) {
@@ -20,18 +20,17 @@ export function CopilotLauncher({ className }: { className?: string }) {
 
   return (
     <>
-      <Tooltip title="Trợ lý Copilot">
-        {/* Có chữ + màu nhấn: icon xám 28px trước đây trông như icon tài liệu, người dùng không nhận ra. */}
+      <Tooltip title="Trợ lý Copilot" placement="left">
+        {/* Nút tròn nổi góc dưới phải, cùng kiểu trợ lý mua sắm của storefront: đỏ thương hiệu (#D42A27, chữ
+            trắng 5:1) + viền trắng để không chìm trên nền tối. Vị trí cố định nên chỗ đặt trong header không ảnh hưởng. */}
         <Button
-          size="small"
-          shape="round"
-          aria-label="Trợ lý Copilot"
-          icon={<RobotOutlined />}
+          shape="circle"
+          type="primary"
+          aria-label="Mở trợ lý Copilot"
+          icon={<RobotOutlined className="text-lg" />}
           onClick={() => { setMounted(true); setOpen(true); }}
-          className={`!border-emerald-200 !bg-emerald-50 !font-medium !text-emerald-700 hover:!border-emerald-300 hover:!bg-emerald-100 ${className ?? ''}`}
-        >
-          <span className="hidden sm:inline">Trợ lý AI</span>
-        </Button>
+          className={`!fixed !bottom-6 !right-5 !z-[1000] !h-11 !w-11 !border-0 !bg-[#D42A27] !text-white !shadow-lg ring-2 ring-white hover:!bg-[#B2221F] ${className ?? ''}`}
+        />
       </Tooltip>
       {mounted && (
         <Suspense fallback={null}>
