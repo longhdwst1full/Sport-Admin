@@ -43,7 +43,8 @@ export const MFA_ERROR_MESSAGES: Record<MfaErrorCode, string> = {
   // Không tính là lần nhập sai: mã TOTP dùng một lần, chờ ứng dụng sinh mã mới.
   MFA_CODE_ALREADY_USED: 'Mã này vừa được dùng, chờ mã mới (30 giây).',
   MFA_EXEMPT_ACCOUNT: 'Tài khoản quản trị khẩn cấp không dùng xác thực 2 lớp.',
-  ACCOUNT_LOCKED: 'Tài khoản đã bị khóa do nhập sai 5 lần. Vui lòng liên hệ Admin để mở khóa.',
+  // Khoá do nhập sai là khoá tạm, tự mở sau vài phút (thời gian tăng dần); khoá hẳn chỉ do IAM.
+  ACCOUNT_LOCKED: 'Tài khoản đang bị khóa do nhập sai nhiều lần. Vui lòng thử lại sau ít phút hoặc liên hệ Admin.',
 };
 
 /** MFA_NOT_ENROLLED khi nhân viên được thao tác (không phải người thao tác) chưa có 2FA. */
