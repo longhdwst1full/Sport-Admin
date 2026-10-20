@@ -799,6 +799,9 @@ components:
           type: string
         lineTotal:
           type: string
+        flashSale:
+          type: boolean
+          description: Dòng tính theo giá flash sale. Mua vượt suất thì cùng biến thể có thêm một dòng giá thường (`flashSale = false`).
         components:
           type: array
           items:
@@ -814,6 +817,7 @@ components:
         - quantity
         - unitPrice
         - lineTotal
+        - flashSale
         - components
     OrderRecipientDto:
       type: object

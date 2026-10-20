@@ -43,6 +43,7 @@ const detail: OrderDetailDto = {
       id: '1',
       lineNo: 1,
       productVariantId: '1',
+      flashSale: false,
       itemType: 'VARIANT',
       sku: 'SKU-1',
       productName: 'áo',

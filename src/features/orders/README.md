@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.7.0
+> **Document version:** 1.8.0
 >
-> **Last updated:** 2026-10-17
+> **Last updated:** 2026-10-20
 >
-> **Change summary:** Thêm thao tác "Huỷ sau giao thất bại" (`cancelAdminOrderAfterFailedDelivery`) và bộ lọc link `AWAITING_SHIPMENT`. Trước đó: Tách drawer chi tiết theo trách nhiệm; mapper `model/order.mapper.ts`, policy `model/order-actions.policy.ts`, hook `hooks/use-order-action.ts`.
+> **Change summary:** Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm.
 
 ## Phạm vi
 
@@ -40,6 +40,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.8.0 | 2026-10-20 | Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm. |  |
 | 1.7.0 | 2026-10-17 | Huỷ sau giao thất bại (policy/hook/footer/hộp xác nhận + cảnh báo hoàn tay); tab chỉ-lọc `AWAITING_SHIPMENT`. | Dashboard KPI + failed-delivery review |
 | 1.6.0 | 2026-10-13 | Tách drawer chi tiết thành thẻ con, mapper/policy có unit test; hiện giảm giá/thuế/ghi chú khách khi có; refetch chi tiết khi 409; báo lỗi khi sao chép mã thất bại. | Orders review |
 | 1.5.0 | 2026-10-10 | `useUrlSearch`, page size 30 (`ADMIN_TABLE_DEFAULT_PAGE_SIZE`), `StatusTag`/tone, skeleton + `QueryErrorAlert`, `FormModal` cho xác nhận thao tác, nhãn người thao tác tiếng Việt. |

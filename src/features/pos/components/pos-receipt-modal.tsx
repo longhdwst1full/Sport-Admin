@@ -15,6 +15,7 @@ const RECEIPT_ITEM_COLUMNS: ColumnsType<OrderItemDto> = [
       <div>
         <div className="font-semibold">{item.productName}</div>
         <div className="font-mono text-xs text-slate-500">{item.sku}</div>
+        {item.flashSale && <Tag color="volcano" className="mt-1">Giá flash sale</Tag>}
       </div>
     ),
   }),

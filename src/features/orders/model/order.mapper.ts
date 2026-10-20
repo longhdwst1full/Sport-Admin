@@ -38,6 +38,8 @@ export interface OrderItemView {
   quantity: number;
   unitPrice: string;
   lineTotal: string;
+  /** Dòng giá flash sale; mua vượt suất thì cùng sản phẩm có thêm một dòng giá thường. */
+  flashSale: boolean;
 }
 
 export interface OrderHistoryView {
@@ -175,6 +177,7 @@ export function toOrderDetailView(dto: OrderDetailDto): OrderDetailView {
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       lineTotal: item.lineTotal,
+      flashSale: item.flashSale,
     })),
     totals: {
       subtotal: dto.subtotal,

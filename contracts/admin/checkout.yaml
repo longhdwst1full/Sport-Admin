@@ -341,6 +341,9 @@ components:
           type: string
         lineTotal:
           type: string
+        flashSale:
+          type: boolean
+          description: "Dòng tính theo giá flash sale. Mua vượt số suất còn lại thì một biến thể có hai dòng: dòng flash (trong suất) và dòng giá thường (phần dư)."
       required:
         - productVariantId
         - sku
@@ -348,6 +351,7 @@ components:
         - quantity
         - unitPrice
         - lineTotal
+        - flashSale
     CheckoutQuotePaymentMethod:
       type: string
       enum:

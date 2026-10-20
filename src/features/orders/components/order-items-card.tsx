@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { ShoppingOutlined } from '@ant-design/icons';
-import { Avatar } from 'antd';
+import { Avatar, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminTable, col } from '@/foundation/table';
 import { CurrencyAmount } from '@/foundation/typography/currency-amount';
@@ -24,6 +24,11 @@ const ORDER_ITEM_COLUMNS: ColumnsType<OrderItemView> = [
         <div className="min-w-0">
           <span className="font-medium text-slate-800 text-xs block truncate">{item.productName}</span>
           <div className="text-[11px] text-slate-400 font-mono">{item.variantLabel}</div>
+          {item.flashSale && (
+            <Tag color="volcano" className="mt-1">
+              Giá flash sale
+            </Tag>
+          )}
         </div>
       </div>
     ),
