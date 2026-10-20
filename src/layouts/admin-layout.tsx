@@ -1,14 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import {
-  Avatar,
-  Button,
-  Dropdown,
-  Layout,
-  Menu,
-  Tag,
-  Tooltip,
-  type MenuProps,
-} from 'antd';
+import { Avatar, Button, Dropdown, Layout, Menu, Tag, Tooltip, type MenuProps, Spin } from 'antd';
 import {
   AppstoreOutlined,
   BankOutlined,
@@ -26,6 +17,7 @@ import {
   ShoppingCartOutlined,
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { PageErrorBoundary } from '@/app/boundary/app-error-boundary';
 import {
   canSeeNavigationItem,
   NAVIGATION_GROUP_LABELS,
@@ -406,7 +398,12 @@ export function AdminLayout() {
           <Content className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[var(--ba-shell-content-bg)] p-3.5 sm:p-5 lg:p-6">
             <PageContainer>
               <div className="dctd-page-enter flex min-h-0 flex-1 flex-col" key={location.pathname}>
-                <Outlet />
+                {/* Lỗi/tải lười của một trang chỉ ảnh hưởng vùng nội dung, shell (menu, header) vẫn dùng được. */}
+                <PageErrorBoundary resetKey={location.pathname}>
+                  <Suspense fallback={<div className="grid flex-1 place-items-center py-16"><Spin /></div>}>
+                    <Outlet />
+                  </Suspense>
+                </PageErrorBoundary>
               </div>
             </PageContainer>
           </Content>

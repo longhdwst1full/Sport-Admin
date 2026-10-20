@@ -114,3 +114,49 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, AppErro
     return this.props.children;
   }
 }
+
+interface PageErrorBoundaryState {
+  error?: Error;
+  resetKey?: string;
+}
+
+/**
+ * Lỗi của MỘT trang chỉ thay vùng nội dung, giữ nguyên sidebar/header để người dùng chuyển trang khác
+ * (trước đây lỗi render của trang làm root boundary thay cả shell). Đổi `resetKey` (đường dẫn) là tự xoá lỗi.
+ */
+export class PageErrorBoundary extends Component<{ resetKey: string; children: ReactNode }, PageErrorBoundaryState> {
+  state: PageErrorBoundaryState = { resetKey: this.props.resetKey };
+
+  static getDerivedStateFromError(error: Error): Partial<PageErrorBoundaryState> {
+    return { error };
+  }
+
+  static getDerivedStateFromProps(props: { resetKey: string }, state: PageErrorBoundaryState): Partial<PageErrorBoundaryState> | null {
+    return props.resetKey !== state.resetKey ? { error: undefined, resetKey: props.resetKey } : null;
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[AdminPageErrorBoundary]', error, info);
+  }
+
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="grid flex-1 place-items-center p-6">
+        <ResultPanel
+          title={<span className="text-lg font-bold text-slate-800">Trang này gặp lỗi khi hiển thị</span>}
+          subTitle={
+            <span className="text-sm text-slate-500">
+              {import.meta.env.DEV ? this.state.error.message : 'Hãy thử tải lại trang hoặc chuyển sang mục khác ở menu.'}
+            </span>
+          }
+          extra={
+            <Button type="primary" className="!rounded-xl !font-semibold" onClick={() => window.location.reload()}>
+              Tải lại trang
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+}
