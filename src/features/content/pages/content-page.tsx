@@ -1,6 +1,15 @@
-import { FacebookOutlined, FileTextOutlined, GlobalOutlined, PlusOutlined, ShareAltOutlined, WarningOutlined } from '@ant-design/icons';
+import {
+  BarChartOutlined,
+  FacebookOutlined,
+  FileTextOutlined,
+  GlobalOutlined,
+  PlusOutlined,
+  ShareAltOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 import { Button, Dropdown, Segmented, Tabs, Tooltip } from 'antd';
 import { lazy, Suspense, useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
@@ -66,6 +75,7 @@ const CREATE_MENU = {
  * (kèm modal xác nhận đăng/hẹn giờ).
  */
 export function ContentPage() {
+  const navigate = useNavigate();
   const posts = useContentPosts();
   const { filters, updateParams, search, list, visibility, archive } = posts;
   const [websiteEditor, setWebsiteEditor] = useState<{ open: boolean; post?: SocialPostSummaryDto }>({ open: false });
@@ -118,6 +128,11 @@ export function ContentPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <RefreshButton onRefresh={list.refetch} loading={list.isFetching} />
+            {socialTab && (
+              <Button icon={<BarChartOutlined />} onClick={() => navigate('/social-dashboard')}>
+                Xem thông số
+              </Button>
+            )}
             {socialTab && <SocialSyncButton />}
             {createItems.length > 0 && (
               <Dropdown

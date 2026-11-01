@@ -5,7 +5,6 @@ import {
   type TikTokOptionsInputDto,
   type TikTokPublicationDto,
 } from '@/generated/api/content/content.schemas';
-import { SOCIAL_CHANNEL, type SocialChannel } from '../constants/social.constants';
 import type { SocialMediaKind } from './social-post-form.mapper';
 
 /**
@@ -110,11 +109,6 @@ export function tiktokMediaViolation(kinds: readonly SocialMediaKind[]): string 
   const videos = kinds.filter((kind) => kind === 'VIDEO').length;
   if (videos !== 1 || kinds.length !== 1) return 'TikTok cần đúng 1 video, không kèm ảnh.';
   return undefined;
-}
-
-/** Form luôn còn ít nhất một kênh; bỏ chọn kênh cuối cùng thì giữ nguyên lựa chọn cũ. */
-export function nextSelectedChannels(previous: SocialChannel[], next: SocialChannel[]): SocialChannel[] {
-  return next.length ? next : previous.length ? previous : [SOCIAL_CHANNEL.FACEBOOK];
 }
 
 /**

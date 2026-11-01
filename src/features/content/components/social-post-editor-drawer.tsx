@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, App, Checkbox, Form, Input, Radio, Tooltip, Typography } from 'antd';
+import { FacebookFilled, FileTextOutlined, PictureOutlined, SendOutlined, TikTokOutlined } from '@ant-design/icons';
+import { Alert, App, Form, Input, Radio, Select } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { htmlToPlainText } from '@/shared/utils';
@@ -21,11 +22,15 @@ import {
   socialChannelLabels,
   SOCIAL_LIMITS,
   SOCIAL_STALE_ERROR_CODES,
-  TIKTOK_DISABLED_HINT,
   TIKTOK_LIMITS,
 } from '../constants/social.constants';
 import { useSaveSocialPost, type SocialSaveTarget } from '../hooks/use-social-commands';
 import { isFacebookNotConfigured, socialCommandErrorMessage } from '../model/social-command-error';
+import {
+  channelsOfSelection,
+  SOCIAL_CHANNEL_SELECTION,
+  type SocialChannelSelection,
+} from '../model/social-channel-selection';
 import {
   captionRules,
   EMPTY_SOCIAL_FORM,
@@ -38,7 +43,6 @@ import {
   applyCreatorConstraints,
   DEFAULT_TIKTOK_SETTINGS,
   TIKTOK_COMMERCIAL_TEXT,
-  nextSelectedChannels,
   tiktokMediaViolation,
   toTikTokOptionsDto,
   toTikTokSettingsForm,
@@ -87,23 +91,44 @@ const API_FIELD_TO_FORM: Record<string, keyof SocialPostFormValues> = {
 
 const HTTPS_URL = /^https?:\/\/\S+$/;
 
-/** Checkbox "Kênh đăng"; kênh chưa nối API bị khoá kèm tooltip. Chỉ còn một kênh bật thì khoá luôn kênh đó. */
-const channelOptions = (selected: SocialChannel[]) =>
-  Object.values(SOCIAL_CHANNEL).map((channel) => {
-    const enabled = isSocialChannelEnabled(channel);
-    const onlyChoice = selected.length === 1 && selected[0] === channel;
-    return {
-      value: channel,
-      disabled: !enabled || onlyChoice,
-      label: enabled ? (
-        socialChannelLabels[channel]
-      ) : (
-        <Tooltip title={TIKTOK_DISABLED_HINT}>
-          <span>{socialChannelLabels[channel]}</span>
-        </Tooltip>
-      ),
-    };
-  });
+/**
+ * Kênh đăng dùng lựa chọn đơn có mục "cả hai" rõ ràng. Checkbox trước đây mặc định giữ Facebook nên khi người dùng
+ * bấm TikTok, UI bật cả hai kênh dù ý định chỉ là đổi kênh.
+ */
+const channelOptions = () => [
+  {
+    value: SOCIAL_CHANNEL.FACEBOOK,
+    label: (
+      <span className="flex items-center gap-2">
+        <FacebookFilled className="text-[#1877f2]" aria-hidden />
+        {socialChannelLabels[SOCIAL_CHANNEL.FACEBOOK]}
+      </span>
+    ),
+  },
+  {
+    value: SOCIAL_CHANNEL.TIKTOK,
+    label: (
+      <span className="flex items-center gap-2">
+        <TikTokOutlined aria-hidden />
+        {socialChannelLabels[SOCIAL_CHANNEL.TIKTOK]}
+      </span>
+    ),
+    disabled: !isSocialChannelEnabled(SOCIAL_CHANNEL.TIKTOK),
+  },
+  {
+    value: SOCIAL_CHANNEL_SELECTION.BOTH,
+    label: (
+      <span className="flex items-center gap-2">
+        <span className="flex -space-x-1" aria-hidden>
+          <FacebookFilled className="text-[#1877f2]" />
+          <TikTokOutlined className="rounded-full bg-white" />
+        </span>
+        Facebook + TikTok
+      </span>
+    ),
+    disabled: !isSocialChannelEnabled(SOCIAL_CHANNEL.TIKTOK),
+  },
+];
 
 /**
  * Soạn bài mạng xã hội ở trạng thái Nháp:
@@ -150,8 +175,8 @@ export function SocialPostEditorDrawer({
             captionLocked,
           };
   const save = useSaveSocialPost(saveTarget);
-  const [selectedChannels, setSelectedChannels] = useState<SocialChannel[]>([SOCIAL_CHANNEL.FACEBOOK]);
-  const channels = targetChannel ? [targetChannel] : selectedChannels;
+  const [channelSelection, setChannelSelection] = useState<SocialChannelSelection>(SOCIAL_CHANNEL.FACEBOOK);
+  const channels = targetChannel ? [targetChannel] : channelsOfSelection(channelSelection);
   const [tiktokSettings, setTiktokSettings] = useState<TikTokPostSettingsForm>(DEFAULT_TIKTOK_SETTINGS);
   const [privacyTouched, setPrivacyTouched] = useState(false);
   const facebookSelected = channels.includes(SOCIAL_CHANNEL.FACEBOOK);
@@ -179,13 +204,13 @@ export function SocialPostEditorDrawer({
     if (targetChannel === SOCIAL_CHANNEL.TIKTOK) setTiktokSettings(toTikTokSettingsForm(editing.tiktok));
   }
 
-  const changeChannels = (next: SocialChannel[]) => {
-    const resolved = nextSelectedChannels(selectedChannels, next);
+  const changeChannels = (next: SocialChannelSelection) => {
+    const resolved = channelsOfSelection(next);
     // TikTok cần đúng một video: chọn thêm TikTok khi Facebook đang là bài chữ/ảnh thì chuyển sang Video.
     if (resolved.includes(SOCIAL_CHANNEL.TIKTOK) && !VIDEO_PUBLISH_TYPES.includes(form.getFieldValue('publishType'))) {
       form.setFieldsValue({ publishType: FacebookPublishType.VIDEO, media: [] });
     }
-    setSelectedChannels(resolved);
+    setChannelSelection(next);
   };
 
   const submit = (values: SocialPostFormValues) => {
@@ -242,6 +267,7 @@ export function SocialPostEditorDrawer({
   return (
     <FormDrawer
       title={title}
+      size="lg"
       open
       onClose={onClose}
       onSubmit={() => form.submit()}
@@ -264,144 +290,217 @@ export function SocialPostEditorDrawer({
         <>
           {isFacebookNotConfigured(save.error) && <FacebookSettingsHint />}
           {target.mode === 'createSocial' && (
-            <fieldset className="mb-4">
-              <legend className="mb-2 text-sm font-medium text-slate-800">Kênh đăng</legend>
-              <Checkbox.Group<SocialChannel>
-                value={selectedChannels}
+            <fieldset className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50/50 p-4 shadow-xs sm:p-5">
+              <legend className="sr-only">Kênh đăng</legend>
+              <div className="mb-4 flex items-start gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-900 text-white shadow-sm">
+                  <SendOutlined aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-slate-900">Chọn nơi đăng bài</div>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                    Chọn một kênh, hoặc chọn rõ Facebook + TikTok nếu muốn tạo đồng thời hai bản nháp.
+                  </p>
+                </div>
+              </div>
+              <Select<SocialChannelSelection>
+                className="w-full [&_.ant-select-selector]:!rounded-xl"
+                size="large"
+                value={channelSelection}
                 disabled={save.isPending}
-                options={channelOptions(selectedChannels)}
+                options={channelOptions()}
                 onChange={changeChannels}
+                aria-label="Kênh đăng bài"
               />
+              <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Kênh đang chọn">
+                <span className="text-xs font-medium text-slate-500">Đang tạo nháp cho:</span>
+                {facebookSelected && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                    <FacebookFilled aria-hidden /> Facebook
+                  </span>
+                )}
+                {tiktokSelected && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">
+                    <TikTokOutlined aria-hidden /> TikTok
+                  </span>
+                )}
+              </div>
             </fieldset>
           )}
-          <Typography.Paragraph type="secondary" className="text-xs">
-            Bài được lưu ở trạng thái Nháp. Người có quyền đăng bấm "Đăng ngay" (Facebook có thể hẹn giờ, TikTok
-            không); người chỉ có quyền soạn bấm "Gửi duyệt" để người có quyền đăng duyệt.
-          </Typography.Paragraph>
-          <Form form={form} layout="vertical" onFinish={submit} disabled={save.isPending} initialValues={EMPTY_SOCIAL_FORM}>
-            {/* Loại đăng là thiết lập riêng của Facebook; ẩn (vẫn giữ giá trị) khi bỏ chọn kênh Facebook. */}
-            <Form.Item
-              name="publishType"
-              hidden={!facebookSelected}
-              label="Loại đăng"
-              extra={
-                publishType === FacebookPublishType.REEL
-                  ? 'Reel dùng đúng một video; chọn "Đăng dạng Reel" khi duyệt. Sau khi đăng, Reel hiển thị là Video.'
-                  : undefined
-              }
+          <div className="mb-5 flex items-start gap-2 rounded-xl border border-amber-200/80 bg-amber-50/70 px-3.5 py-3 text-xs leading-5 text-amber-900">
+            <span className="mt-0.5 size-2 shrink-0 rounded-full bg-amber-500" aria-hidden />
+            <span>
+              Bài được lưu ở trạng thái <strong>Nháp</strong>. Facebook có thể hẹn giờ; TikTok đăng ngay sau khi duyệt và
+              có thể cần vài phút để xử lý video.
+            </span>
+          </div>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={submit}
+            disabled={save.isPending}
+            initialValues={EMPTY_SOCIAL_FORM}
+            className="[&_.ant-form-item-label>label]:!font-medium"
+          >
+            <section
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5"
+              aria-labelledby="social-content-title"
             >
-              <Radio.Group
-                optionType="button"
-                options={composablePublishTypeOptions(editing?.facebook?.publishType).filter(
-                  (option) => !tiktokSelected || VIDEO_PUBLISH_TYPES.includes(option.value),
-                )}
-                onChange={() => form.setFieldValue('media', [])}
-              />
-            </Form.Item>
-            {editableCaption ? (
-              <>
-                {captionLocked && (
-                  <Alert
-                    className="mb-4"
-                    type="info"
-                    showIcon
-                    message="Nội dung đang khoá"
-                    description={`Nội dung là caption dùng chung các kênh và kênh ${
-                      targetChannel === SOCIAL_CHANNEL.TIKTOK ? 'Facebook' : 'TikTok'
-                    } đã rời nháp, nên không sửa được nữa.`}
-                  />
-                )}
-                <Form.Item
-                  name="title"
-                  label="Tiêu đề nội bộ"
-                  extra="Bỏ trống = lấy dòng đầu của nội dung."
-                  rules={[
-                    {
-                      max: SOCIAL_LIMITS.TITLE_MAX,
-                      message: `Tiêu đề tối đa ${SOCIAL_LIMITS.TITLE_MAX} ký tự`,
-                    },
-                  ]}
-                >
-                  <Input
-                    maxLength={SOCIAL_LIMITS.TITLE_MAX}
-                    disabled={captionLocked && targetChannel === SOCIAL_CHANNEL.TIKTOK}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="body"
-                  label={tiktokSelected ? 'Nội dung (caption chung các kênh)' : 'Nội dung'}
-                  // UX: bài Facebook dạng chữ bắt buộc có nội dung khi chưa nhập link (khớp validator bên dưới).
-                  required={
-                    !captionLocked &&
-                    facebookSelected &&
-                    publishType === FacebookPublishType.FEED &&
-                    !String(linkValue ?? '').trim()
-                  }
-                  rules={
-                    captionLocked
-                      ? []
-                      : [
-                          ...captionRules({
-                            max: captionMax,
-                            maxMessage: tiktokSelected
-                              ? `Caption TikTok tối đa ${captionMax.toLocaleString('vi-VN')} ký tự.`
-                              : undefined,
-                          }),
-                          ({ getFieldValue }) => ({
-                            validator: (_: unknown, value?: string) =>
-                              facebookSelected &&
-                              getFieldValue('publishType') === FacebookPublishType.FEED &&
-                              !htmlToPlainText(value) &&
-                              !String(getFieldValue('link') ?? '').trim()
-                                ? Promise.reject(new Error('Bài viết dạng chữ cần nội dung hoặc link.'))
-                                : Promise.resolve(),
-                          }),
-                        ]
-                  }
-                >
-                  <SocialCaptionInput max={captionMax} disabled={captionLocked || save.isPending} />
-                </Form.Item>
-                {!captionLocked && (
-                  <Form.Item
-                    name="link"
-                    label="Link (tuỳ chọn)"
-                    extra="Link được thêm vào cuối nội dung; Facebook tự tạo bản xem trước. Có thể dán link sản phẩm trên website."
-                    rules={[{ pattern: HTTPS_URL, message: 'Nhập URL bắt đầu bằng http:// hoặc https://' }]}
-                  >
-                    <Input placeholder="https://..." />
-                  </Form.Item>
-                )}
-              </>
-            ) : (
-              <Alert
-                className="mb-4"
-                type="info"
-                showIcon
-                message={isSocial ? `Caption ${channelLabel} là nội dung hiện tại của bài` : `Nội dung ${channelLabel} là nội dung bài website`}
-                description={
-                  isSocial
-                    ? 'Sau khi tạo nháp có thể sửa nội dung ở "Sửa nháp" (khi các kênh còn ở Nháp); ở đây chỉ chọn media.'
-                    : 'Sửa tiêu đề/nội dung ở màn soạn bài viết; ở đây chỉ chọn ảnh/video đăng kèm.'
+              <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="grid size-9 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <FileTextOutlined aria-hidden />
+                </div>
+                <div>
+                  <h3 id="social-content-title" className="text-sm font-semibold text-slate-900">
+                    Nội dung bài đăng
+                  </h3>
+                  <p className="text-xs text-slate-500">Tiêu đề nội bộ, caption và liên kết đính kèm.</p>
+                </div>
+              </div>
+              {/* Loại đăng là thiết lập riêng của Facebook; ẩn (vẫn giữ giá trị) khi bỏ chọn kênh Facebook. */}
+              <Form.Item
+                name="publishType"
+                hidden={!facebookSelected}
+                label="Loại đăng"
+                extra={
+                  publishType === FacebookPublishType.REEL
+                    ? 'Reel dùng đúng một video; chọn "Đăng dạng Reel" khi duyệt. Sau khi đăng, Reel hiển thị là Video.'
+                    : undefined
                 }
-              />
-            )}
-            <Form.Item
-              name="media"
-              label="Ảnh / video"
-              rules={[
-                ({ getFieldValue }) => ({
-                  validator: (_: unknown, value?: SocialMediaValue[]) => {
-                    const kinds = (value ?? []).map((item) => item.kind);
-                    const violation =
-                      (facebookSelected ? socialMediaRuleViolation(getFieldValue('publishType'), kinds) : undefined) ??
-                      (tiktokSelected ? tiktokMediaViolation(kinds) : undefined);
-                    return violation ? Promise.reject(new Error(violation)) : Promise.resolve();
-                  },
-                }),
-              ]}
+              >
+                <Radio.Group
+                  optionType="button"
+                  buttonStyle="solid"
+                  options={composablePublishTypeOptions(editing?.facebook?.publishType).filter(
+                    (option) => !tiktokSelected || VIDEO_PUBLISH_TYPES.includes(option.value),
+                  )}
+                  onChange={() => form.setFieldValue('media', [])}
+                />
+              </Form.Item>
+              {editableCaption ? (
+                <>
+                  {captionLocked && (
+                    <Alert
+                      className="mb-4"
+                      type="info"
+                      showIcon
+                      message="Nội dung đang khoá"
+                      description={`Nội dung là caption dùng chung các kênh và kênh ${
+                        targetChannel === SOCIAL_CHANNEL.TIKTOK ? 'Facebook' : 'TikTok'
+                      } đã rời nháp, nên không sửa được nữa.`}
+                    />
+                  )}
+                  <Form.Item
+                    name="title"
+                    label="Tiêu đề nội bộ"
+                    extra="Bỏ trống = lấy dòng đầu của nội dung."
+                    rules={[
+                      {
+                        max: SOCIAL_LIMITS.TITLE_MAX,
+                        message: `Tiêu đề tối đa ${SOCIAL_LIMITS.TITLE_MAX} ký tự`,
+                      },
+                    ]}
+                  >
+                    <Input
+                      maxLength={SOCIAL_LIMITS.TITLE_MAX}
+                      disabled={captionLocked && targetChannel === SOCIAL_CHANNEL.TIKTOK}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="body"
+                    label={tiktokSelected ? 'Nội dung (caption chung các kênh)' : 'Nội dung'}
+                    // UX: bài Facebook dạng chữ bắt buộc có nội dung khi chưa nhập link (khớp validator bên dưới).
+                    required={
+                      !captionLocked &&
+                      facebookSelected &&
+                      publishType === FacebookPublishType.FEED &&
+                      !String(linkValue ?? '').trim()
+                    }
+                    rules={
+                      captionLocked
+                        ? []
+                        : [
+                            ...captionRules({
+                              max: captionMax,
+                              maxMessage: tiktokSelected
+                                ? `Caption TikTok tối đa ${captionMax.toLocaleString('vi-VN')} ký tự.`
+                                : undefined,
+                            }),
+                            ({ getFieldValue }) => ({
+                              validator: (_: unknown, value?: string) =>
+                                facebookSelected &&
+                                getFieldValue('publishType') === FacebookPublishType.FEED &&
+                                !htmlToPlainText(value) &&
+                                !String(getFieldValue('link') ?? '').trim()
+                                  ? Promise.reject(new Error('Bài viết dạng chữ cần nội dung hoặc link.'))
+                                  : Promise.resolve(),
+                            }),
+                          ]
+                    }
+                  >
+                    <SocialCaptionInput max={captionMax} disabled={captionLocked || save.isPending} />
+                  </Form.Item>
+                  {!captionLocked && (
+                    <Form.Item
+                      name="link"
+                      label="Link (tuỳ chọn)"
+                      extra="Link được thêm vào cuối nội dung; Facebook tự tạo bản xem trước. Có thể dán link sản phẩm trên website."
+                      rules={[{ pattern: HTTPS_URL, message: 'Nhập URL bắt đầu bằng http:// hoặc https://' }]}
+                    >
+                      <Input placeholder="https://..." />
+                    </Form.Item>
+                  )}
+                </>
+              ) : (
+                <Alert
+                  className="mb-4"
+                  type="info"
+                  showIcon
+                  message={isSocial ? `Caption ${channelLabel} là nội dung hiện tại của bài` : `Nội dung ${channelLabel} là nội dung bài website`}
+                  description={
+                    isSocial
+                      ? 'Sau khi tạo nháp có thể sửa nội dung ở "Sửa nháp" (khi các kênh còn ở Nháp); ở đây chỉ chọn media.'
+                      : 'Sửa tiêu đề/nội dung ở màn soạn bài viết; ở đây chỉ chọn ảnh/video đăng kèm.'
+                  }
+                />
+              )}
+            </section>
+            <section
+              className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5"
+              aria-labelledby="social-media-title"
             >
-              <SocialMediaField publishType={mediaPublishType} disabled={save.isPending} />
-            </Form.Item>
+              <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="grid size-9 place-items-center rounded-xl bg-blue-50 text-blue-700">
+                  <PictureOutlined aria-hidden />
+                </div>
+                <div>
+                  <h3 id="social-media-title" className="text-sm font-semibold text-slate-900">
+                    Ảnh và video
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {tiktokSelected ? 'TikTok yêu cầu đúng một video.' : 'Chọn media phù hợp với loại bài Facebook.'}
+                  </p>
+                </div>
+              </div>
+              <Form.Item
+                name="media"
+                label="Tệp đính kèm"
+                className="!mb-0"
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator: (_: unknown, value?: SocialMediaValue[]) => {
+                      const kinds = (value ?? []).map((item) => item.kind);
+                      const violation =
+                        (facebookSelected ? socialMediaRuleViolation(getFieldValue('publishType'), kinds) : undefined) ??
+                        (tiktokSelected ? tiktokMediaViolation(kinds) : undefined);
+                      return violation ? Promise.reject(new Error(violation)) : Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
+                <SocialMediaField publishType={mediaPublishType} disabled={save.isPending} />
+              </Form.Item>
+            </section>
           </Form>
           {tiktokSelected && (
             <TikTokSettingsPanel

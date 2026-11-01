@@ -1,10 +1,14 @@
 # Content — maintenance note
 
-> **Document version:** 3.8.0
+> **Document version:** 3.11.0
 >
-> **Last updated:** 2026-10-10
+> **Last updated:** 2026-11-01
 >
-> **Change summary:** Caption mạng xã hội soạn bằng CKEditor `variant="plain"` (form giữ HTML, mapper gửi văn bản
+> **Change summary:** Tab Mạng xã hội có nút Xem thông số dẫn tới dashboard Facebook/TikTok; video có thể preview khi
+> soạn và xem lại trong chi tiết Facebook/TikTok, URL gốc chỉ tải lazy khi mở preview. Trước đó: Drawer soạn bài mạng xã hội được chia thành các khối Kênh đăng, Nội dung và Media; select kênh có
+> icon/trạng thái đang chọn, không gian soạn rộng hơn và hướng dẫn vòng đời nháp rõ hơn. Trước đó: Kênh đăng bài mới dùng select đơn với ba lựa chọn Facebook, TikTok, Facebook + TikTok; chọn TikTok
+> không còn vô tình giữ Facebook. Màn chi tiết giải thích rõ TikTok không cho sửa video/caption sau khi bắt đầu đăng.
+> Trước đó: Caption mạng xã hội soạn bằng CKEditor `variant="plain"` (form giữ HTML, mapper gửi văn bản
 > thuần qua `htmlToPlainText`; giới hạn/bộ đếm tính trên văn bản thuần); màn bài viết tách `useContentPosts`/
 > `useContentPostColumns`/`ContentPostFilters`; modal lệnh dùng `FormModal`; trạng thái theo `StatusTone`; phân trang
 > `ADMIN_TABLE_DEFAULT_PAGE_SIZE`; trang quay về TikTok lưu qua `createBrowserStore`. Trước đó: TikTok theo Content Sharing Guidelines: mục "Công bố nội dung thương mại" (Your brand / Branded content,
@@ -86,7 +90,8 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
   lượt xem, link) đọc `row.tiktok`; `lastError` TikTok chỉ hiện khi FAILED (khi PUBLISHING là lỗi tạm, job tự thử lại).
 - `TIKTOK_ENABLED = true` (`constants/social.constants.ts`) — công tắc tắt nhanh UI TikTok. Quyền riêng tư dùng enum sinh
   `TikTokPrivacyLevel` (`tiktokPrivacyLabels`).
-- Soạn bài (`social-post-editor-drawer.tsx`): bài mới chọn "Kênh đăng" → `createAdminSocialPost` với `channels` + `tiktok`;
+- Soạn bài (`social-post-editor-drawer.tsx`): bài mới chọn chính xác Facebook, TikTok hoặc Facebook + TikTok trong một
+  select → `createAdminSocialPost` với `channels` + `tiktok`; chọn TikTok không tự giữ Facebook;
   bài đã có mở/sửa nháp MỘT kênh (`SocialEditorTarget.channel`) → `createAdminTikTokDraft`/`updateAdminTikTokDraft` (hoặc
   lệnh Facebook cũ). TikTok: đúng 1 video (`tiktokMediaViolation`), caption ≤ 2.200, chọn TikTok thì loại đăng Facebook
   chuyển sang Video. `TikTokSettingsPanel` gọi `getAdminTikTokCreatorInfo`: hiện tên tài khoản, chỉ các quyền riêng tư
@@ -143,6 +148,9 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.11.0 | 2026-11-01 | Thêm lối tắt dashboard thông số và preview video dùng chung ở form soạn/chi tiết Facebook/TikTok. |
+| 3.10.0 | 2026-11-01 | Làm mới UI drawer soạn bài: phân vùng rõ Kênh/Nội dung/Media, icon và trạng thái kênh, drawer rộng và responsive hơn. |
+| 3.9.0 | 2026-11-01 | Sửa lựa chọn kênh khi soạn: TikTok không tự bật Facebook; thêm lựa chọn cả hai rõ ràng và giải thích giới hạn sửa bài TikTok đã đăng. |
 | 3.7.0 | 2026-10-06 | TikTok: công bố nội dung thương mại, AIGC, xác nhận Music Usage/Branded Content Policy trước khi đăng. |
 | 3.8.0 | 2026-10-10 | Caption CKEditor plain, tách màn bài viết/modal lệnh, StatusTone, page size chung, browser store cho TikTok. |
 | 3.6.0 | 2026-10-06 | "Đồng bộ ngay", % so kỳ trước, "Đồng bộ lần cuối", chỉ số Bài/video trên biểu đồ, ảnh nhỏ top bài. |

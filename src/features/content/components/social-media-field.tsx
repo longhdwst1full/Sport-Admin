@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeftOutlined, DeleteOutlined, PictureOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DeleteOutlined, PictureOutlined } from '@ant-design/icons';
 import { Button, Image } from 'antd';
 import { IMAGE_FALLBACK_SRC, MediaLibraryPickerModal, type PickedMediaKind } from '@/features/media';
 import { FacebookPublishType } from '@/generated/api/content/content.schemas';
 import { maxMediaFor, type SocialMediaValue } from '../model/social-post-form.mapper';
+import { SocialVideoPreview } from './social-video-preview';
 
 const allowedKindsFor = (publishType: FacebookPublishType): PickedMediaKind[] =>
   publishType === FacebookPublishType.PHOTOS ? ['IMAGE'] : publishType === FacebookPublishType.FEED ? [] : ['VIDEO'];
@@ -34,9 +35,10 @@ export function SocialMediaField({
       <div className="mb-3 flex flex-wrap gap-3">
         {value.map((item, index) => (
           <div key={item.id} className="relative overflow-hidden rounded-xl border border-slate-200">
-            <Image fallback={IMAGE_FALLBACK_SRC} width={92} height={92} src={item.url} className="object-cover" />
-            {item.kind === 'VIDEO' && (
-              <PlayCircleOutlined className="absolute left-1 top-1 rounded-full bg-black/50 p-1 text-white" />
+            {item.kind === 'VIDEO' ? (
+              <SocialVideoPreview assetId={item.id} posterUrl={item.url} title={`Xem trước video ${index + 1}`} />
+            ) : (
+              <Image fallback={IMAGE_FALLBACK_SRC} width={92} height={92} src={item.url} className="object-cover" />
             )}
             <div className="flex justify-between gap-1 bg-slate-50 px-1 py-1">
               {index > 0 ? (

@@ -1,6 +1,5 @@
-import { ExportOutlined, PlayCircleOutlined, TikTokOutlined } from '@ant-design/icons';
-import { Alert, Button, Descriptions, Image, Progress, Statistic, Tag, Typography } from 'antd';
-import { IMAGE_FALLBACK_SRC } from '@/features/media';
+import { ExportOutlined, TikTokOutlined } from '@ant-design/icons';
+import { Alert, Button, Descriptions, Progress, Statistic, Tag, Typography } from 'antd';
 import { StatusTag } from '@/foundation/management';
 import {
   FacebookPublicationStatus,
@@ -16,6 +15,7 @@ import {
 } from '../constants/social.constants';
 import { TIKTOK_ACTION_BUTTON } from '../constants/social-action-buttons';
 import type { TikTokAction } from '../model/social-actions.policy';
+import { SocialVideoPreview } from './social-video-preview';
 
 const metricValue = (value: number | null | undefined) => (value == null ? '—' : value);
 
@@ -90,7 +90,8 @@ export function TikTokPublicationSection({
               message="Đang đăng video lên TikTok"
               description={
                 <>
-                  Hệ thống tải video lên theo từng phần rồi chờ TikTok xử lý; tải lại sau ít phút để xem kết quả.
+                  Hệ thống tải video lên theo từng phần rồi chờ TikTok xử lý; tải lại sau ít phút để xem kết quả. Trong
+                  giai đoạn này không thể sửa bản đăng để tránh tải trùng video.
                   <TikTokUploadProgress tiktok={tiktok} />
                   {tiktok.lastError && (
                     <div className="mt-1 text-xs text-slate-500">Đang thử lại sau lỗi tạm thời: {tiktok.lastError}</div>
@@ -120,6 +121,15 @@ export function TikTokPublicationSection({
               showIcon
               message="TikTok chưa trả id video công khai"
               description="Video riêng tư hoặc còn đang kiểm duyệt: link và chỉ số sẽ có khi TikTok công khai video (hệ thống tự hỏi lại trong 7 ngày)."
+            />
+          )}
+          {tiktok.status === FacebookPublicationStatus.PUBLISHED && (
+            <Alert
+              className="mb-3"
+              type="info"
+              showIcon
+              message="Video đã đăng không thể sửa trong hệ thống"
+              description="TikTok không cung cấp API sửa caption hoặc video đã đăng. Nếu nội dung sai, hãy xoá video trong ứng dụng TikTok rồi tạo một bài mới; thao tác Xoá tại đây chỉ ngừng theo dõi video trong hệ thống."
             />
           )}
 
@@ -170,19 +180,15 @@ export function TikTokPublicationSection({
               {tiktok.media.map((item) => (
                 <div key={item.id} className="relative overflow-hidden rounded-xl border border-slate-200">
                   {item.url ? (
-                    <Image
-                      fallback={IMAGE_FALLBACK_SRC}
-                      width={92}
-                      height={92}
-                      loading="lazy"
-                      src={item.thumbnailUrl ?? item.url}
-                      alt=""
-                      className="object-cover"
+                    <SocialVideoPreview
+                      assetId={item.id}
+                      videoUrl={item.url}
+                      posterUrl={item.thumbnailUrl}
+                      title="Xem lại video TikTok"
                     />
                   ) : (
                     <div className="flex h-[92px] w-[92px] items-center justify-center text-[11px] text-slate-400">Đã gỡ</div>
                   )}
-                  <PlayCircleOutlined className="absolute left-1 top-1 rounded-full bg-black/50 p-1 text-white" />
                   {!item.active && (
                     <Tag color="red" className="absolute bottom-1 left-1 !m-0">
                       Không dùng được

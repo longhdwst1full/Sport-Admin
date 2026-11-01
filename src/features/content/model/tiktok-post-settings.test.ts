@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { SOCIAL_CHANNEL } from '../constants/social.constants';
 import {
   commercialContentBlocker,
   DEFAULT_TIKTOK_SETTINGS,
-  nextSelectedChannels,
   TIKTOK_COMMERCIAL_TEXT,
   TIKTOK_LEGAL_LINK,
   tiktokConsentDeclaration,
@@ -21,19 +19,6 @@ describe('tiktokMediaViolation', () => {
     expect(tiktokMediaViolation(['IMAGE'])).toBeDefined();
     expect(tiktokMediaViolation(['VIDEO', 'VIDEO'])).toBeDefined();
     expect(tiktokMediaViolation(['VIDEO', 'IMAGE'])).toBeDefined();
-  });
-});
-
-describe('nextSelectedChannels', () => {
-  it('keeps the previous selection when the last channel is unchecked', () => {
-    expect(nextSelectedChannels([SOCIAL_CHANNEL.FACEBOOK], [])).toEqual([SOCIAL_CHANNEL.FACEBOOK]);
-  });
-
-  it('applies a non-empty selection', () => {
-    expect(nextSelectedChannels([SOCIAL_CHANNEL.FACEBOOK], [SOCIAL_CHANNEL.FACEBOOK, SOCIAL_CHANNEL.TIKTOK])).toEqual([
-      SOCIAL_CHANNEL.FACEBOOK,
-      SOCIAL_CHANNEL.TIKTOK,
-    ]);
   });
 });
 

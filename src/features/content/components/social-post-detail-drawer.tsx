@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { PlayCircleOutlined } from '@ant-design/icons';
 import { Alert, Button, Descriptions, Empty, Image, Statistic, Tag, Typography } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
@@ -33,6 +32,7 @@ import { FacebookPermalink, FacebookVideoProcessingTag } from './facebook-public
 import { SocialActionModal, type SocialModalAction } from './social-action-modal';
 import { SocialPostEditorDrawer, type SocialEditorTarget } from './social-post-editor-drawer';
 import { TikTokPublicationSection } from './tiktok-publication-section';
+import { SocialVideoPreview } from './social-video-preview';
 import { IMAGE_FALLBACK_SRC } from '@/features/media';
 
 const metricValue = (value: number | null | undefined) => (value == null ? '—' : value);
@@ -225,7 +225,14 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
                 <div className="mb-4 flex flex-wrap gap-3">
                   {facebook.media.map((item) => (
                     <div key={item.id} className="relative overflow-hidden rounded-xl border border-slate-200">
-                      {item.url ? (
+                      {item.url && item.kind === SocialMediaDtoKind.VIDEO ? (
+                        <SocialVideoPreview
+                          assetId={item.id}
+                          videoUrl={item.url}
+                          posterUrl={item.thumbnailUrl}
+                          title="Xem lại video Facebook"
+                        />
+                      ) : item.url ? (
                         <Image
                           fallback={IMAGE_FALLBACK_SRC}
                           width={92}
@@ -237,9 +244,6 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
                         />
                       ) : (
                         <div className="flex h-[92px] w-[92px] items-center justify-center text-[11px] text-slate-400">Đã gỡ</div>
-                      )}
-                      {item.kind === SocialMediaDtoKind.VIDEO && (
-                        <PlayCircleOutlined className="absolute left-1 top-1 rounded-full bg-black/50 p-1 text-white" />
                       )}
                       {!item.active && (
                         <Tag color="red" className="absolute bottom-1 left-1 !m-0">
