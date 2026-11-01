@@ -1,10 +1,12 @@
 # Content — maintenance note
 
-> **Document version:** 3.11.0
+> **Document version:** 3.13.0
 >
 > **Last updated:** 2026-11-01
 >
-> **Change summary:** Tab Mạng xã hội có nút Xem thông số dẫn tới dashboard Facebook/TikTok; video có thể preview khi
+> **Change summary:** Chi tiết bài mạng xã hội tự cập nhật mỗi 10s khi Facebook/TikTok đang đăng hoặc chưa rõ kết quả; dừng khi kết thúc hoặc tab bị ẩn. Không tự gọi lệnh đăng lại/đồng bộ.
+> Trước đó: Thêm thẻ tài khoản Facebook qua `useGetAdminFacebookAccount`: tên/Page ID, liên kết Page, trạng thái token và quyền đã xác minh; quyền xem `social.post.manage`, không trả secret.
+> Trước đó: Tab Mạng xã hội có nút Xem thông số dẫn tới dashboard Facebook/TikTok; video có thể preview khi
 > soạn và xem lại trong chi tiết Facebook/TikTok, URL gốc chỉ tải lazy khi mở preview. Trước đó: Drawer soạn bài mạng xã hội được chia thành các khối Kênh đăng, Nội dung và Media; select kênh có
 > icon/trạng thái đang chọn, không gian soạn rộng hơn và hướng dẫn vòng đời nháp rõ hơn. Trước đó: Kênh đăng bài mới dùng select đơn với ba lựa chọn Facebook, TikTok, Facebook + TikTok; chọn TikTok
 > không còn vô tình giữ Facebook. Màn chi tiết giải thích rõ TikTok không cho sửa video/caption sau khi bắt đầu đăng.
@@ -81,6 +83,14 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 ## Mạng xã hội, TikTok và Dashboard
 
+- `SocialPostDetailDrawer`: query `getAdminSocialPost` refetch mỗi 10s khi ít nhất một kênh PUBLISHING/UNCERTAIN;
+  không refetch nền và tự dừng khi cả hai kênh đã kết thúc. Chỉ đọc tiến độ, không kick worker/publish từ polling.
+
+- `FacebookAccountCard` dùng `useGetAdminFacebookAccount` từ SDK Content, cạnh `TikTokAccountCard`, chỉ mount khi có
+  `social.post.manage`. Query stale 60 giây, không retry/tự refetch khi focus; nút làm mới kiểm tra lại Meta.
+  `connected` chỉ xác minh đọc được Page, `permissionsVerified` xác minh riêng danh sách scope; không mặc định coi quyền
+  đăng đã được cấp khi Meta không hỗ trợ đọc quyền. Nút Cấu hình cần `system.parameter.view`; API không trả token.
+
 - Contract: API D99 phase 2b (`api/src/modules/cms/social/README.md`), tag Admin Content. SDK sinh bằng `yarn contracts:sync`
   + `yarn generate:api`; `orval.config.ts` bật `requestOptions` cho `approve/retry/deleteAdminTikTokPost` (header
   `Idempotency-Key`, như Facebook).
@@ -148,6 +158,8 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.13.0 | 2026-11-01 | Theo dõi tiến độ đăng video Facebook/TikTok tự động mỗi 10s khi còn đang xử lý; dừng khi kết thúc/tab ẩn. |
+| 3.12.0 | 2026-11-01 | Thẻ tài khoản Facebook: tên/Page ID/link, trạng thái xác minh và quyền Meta; generated operation getAdminFacebookAccount. |
 | 3.11.0 | 2026-11-01 | Thêm lối tắt dashboard thông số và preview video dùng chung ở form soạn/chi tiết Facebook/TikTok. |
 | 3.10.0 | 2026-11-01 | Làm mới UI drawer soạn bài: phân vùng rõ Kênh/Nội dung/Media, icon và trạng thái kênh, drawer rộng và responsive hơn. |
 | 3.9.0 | 2026-11-01 | Sửa lựa chọn kênh khi soạn: TikTok không tự bật Facebook; thêm lựa chọn cả hai rõ ràng và giải thích giới hạn sửa bài TikTok đã đăng. |

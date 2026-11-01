@@ -24,6 +24,7 @@ import { SocialPostDetailDrawer } from '../components/social-post-detail-drawer'
 import { SocialPostEditorDrawer, type SocialEditorTarget } from '../components/social-post-editor-drawer';
 import { SocialSyncButton } from '../components/social-sync-button';
 import { TikTokAccountCard } from '../components/tiktok-account-card';
+import { FacebookAccountCard } from '../components/facebook-account-card';
 import {
   CONTENT_TAB,
   contentTabs,
@@ -202,6 +203,7 @@ export function ContentPage() {
             </div>
           )}
         </div>
+        {socialTab && canManageSocial && <FacebookAccountCard />}
         {socialTab && TIKTOK_ENABLED && canManageSocial && <TikTokAccountCard />}
         {isFacebookNotConfigured(list.error) && <FacebookSettingsHint />}
         {list.isError && !isFacebookNotConfigured(list.error) && (

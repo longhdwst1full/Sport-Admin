@@ -2,7 +2,7 @@ import { ExportOutlined, SyncOutlined } from '@ant-design/icons';
 import { Tag, Tooltip } from 'antd';
 
 export const VIDEO_PROCESSING_HINT =
-  'Hệ thống tự kiểm tra mỗi 5 phút và cập nhật khi Facebook xử lý xong; video gốc trên Cloudinary sẽ được xoá sau khi đăng thành công.';
+  'Hệ thống tự kiểm tra và cập nhật khi Facebook xử lý xong; video gốc trên Cloudinary sẽ được xoá sau khi đăng thành công.';
 
 export function FacebookVideoProcessingTag() {
   return (

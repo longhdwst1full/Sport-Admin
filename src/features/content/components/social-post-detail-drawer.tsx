@@ -45,7 +45,19 @@ const metricValue = (value: number | null | undefined) => (value == null ? '—'
 export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; onClose: () => void }) {
   const canManage = useCan(SOCIAL_PERMISSION.MANAGE);
   const canPublish = useCan(SOCIAL_PERMISSION.PUBLISH);
-  const detail = useGetAdminSocialPost(postId, { query: { retry: false } });
+  const detail = useGetAdminSocialPost(postId, {
+    query: {
+      retry: false,
+      // Chỉ theo dõi khi có việc đang chạy; dừng polling khi thành công/thất bại. Refetch không kích hoạt đăng lại.
+      refetchInterval: (query) => {
+        const post = query.state.data;
+        return [post?.facebook?.status, post?.tiktok?.status].some(
+          (status) => status === FacebookPublicationStatus.PUBLISHING || status === FacebookPublicationStatus.UNCERTAIN,
+        ) ? 10_000 : false;
+      },
+      refetchIntervalInBackground: false,
+    },
+  });
   const post = detail.data;
   const facebook = post?.facebook;
   const permalinkUrl = facebook?.permalinkUrl;
@@ -138,7 +150,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
               type="info"
               showIcon
               message="Facebook đang xử lý video"
-              description="Hệ thống tự kiểm tra mỗi 5 phút và cập nhật khi Facebook xử lý xong. Có thể bấm Đối soát nếu cần kiểm tra ngay; không đăng lại để tránh bài trùng."
+              description="Hệ thống tự kiểm tra và cập nhật khi Facebook xử lý xong. Có thể bấm Đối soát nếu cần kiểm tra ngay; không đăng lại để tránh bài trùng."
             />
           )}
           {facebook?.status === FacebookPublicationStatus.UNCERTAIN && !videoProcessing && (

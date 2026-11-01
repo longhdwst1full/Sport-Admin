@@ -2350,6 +2350,36 @@ paths:
         - Admin Content
       x-required-permissions:
         - social.post.manage
+  /api/v1/admin/content/social/facebook/account:
+    get:
+      operationId: getAdminFacebookAccount
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FacebookAccountDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Kiểm tra Page Facebook, trạng thái token và quyền Meta trả về; không trả secret
+      tags:
+        - Admin Content
+      x-required-permissions:
+        - social.post.manage
   /api/v1/admin/content/social/dashboard:
     get:
       description: Số theo ngày là mức tăng tính từ metrics_daily (giờ VN); ngày không có dữ liệu = 0. 400 SOCIAL_DASHBOARD_RANGE_INVALID.
@@ -3049,6 +3079,49 @@ components:
           description: "Bài SOCIAL: caption mới (ghi vào body). Bỏ trống = đẩy nội dung bài hiện tại lên Facebook."
       required:
         - expectedVersion
+    FacebookAccountDto:
+      type: object
+      properties:
+        configured:
+          type: boolean
+        connected:
+          type: boolean
+          description: Đã đọc thành công Page bằng token đang cấu hình; không bảo đảm mọi thao tác đăng đều được cấp quyền.
+        pageId:
+          type: string
+          nullable: true
+        accountName:
+          type: string
+          nullable: true
+        pageUrl:
+          type: string
+          nullable: true
+        scopes:
+          description: Chỉ các quyền Meta trả về với status=granted.
+          type: array
+          items:
+            type: string
+        permissionsVerified:
+          type: boolean
+          description: false khi Meta không cho đọc quyền của loại token này; không suy quyền từ cấu hình.
+        reconnectRequired:
+          type: boolean
+        message:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
+      required:
+        - configured
+        - connected
+        - pageId
+        - accountName
+        - pageUrl
+        - scopes
+        - permissionsVerified
+        - reconnectRequired
+        - message
+        - checkedAt
     FacebookMetricsDto:
       type: object
       properties:
