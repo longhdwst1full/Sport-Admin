@@ -243,6 +243,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
                           videoUrl={item.url}
                           posterUrl={item.thumbnailUrl}
                           title="Xem lại video Facebook"
+                          publishedUrl={permalinkUrl}
                         />
                       ) : item.url ? (
                         <Image

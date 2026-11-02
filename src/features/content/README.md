@@ -1,10 +1,11 @@
 # Content — maintenance note
 
-> **Document version:** 3.13.0
+> **Document version:** 3.14.0
 >
 > **Last updated:** 2026-11-01
 >
-> **Change summary:** Chi tiết bài mạng xã hội tự cập nhật mỗi 10s khi Facebook/TikTok đang đăng hoặc chưa rõ kết quả; dừng khi kết thúc hoặc tab bị ẩn. Không tự gọi lệnh đăng lại/đồng bộ.
+> **Change summary:** Giữ chính sách dọn nguồn video Facebook; preview bài đã đăng mở liên kết Facebook và không tải nguồn Cloudinary đã dọn. CSP chỉ cho phép media từ self/blob/Cloudinary; nguồn lỗi có cảnh báo thay vì player trống.
+> Trước đó: Chi tiết bài mạng xã hội tự cập nhật mỗi 10s khi Facebook/TikTok đang đăng hoặc chưa rõ kết quả; dừng khi kết thúc hoặc tab bị ẩn. Không tự gọi lệnh đăng lại/đồng bộ.
 > Trước đó: Thêm thẻ tài khoản Facebook qua `useGetAdminFacebookAccount`: tên/Page ID, liên kết Page, trạng thái token và quyền đã xác minh; quyền xem `social.post.manage`, không trả secret.
 > Trước đó: Tab Mạng xã hội có nút Xem thông số dẫn tới dashboard Facebook/TikTok; video có thể preview khi
 > soạn và xem lại trong chi tiết Facebook/TikTok, URL gốc chỉ tải lazy khi mở preview. Trước đó: Drawer soạn bài mạng xã hội được chia thành các khối Kênh đăng, Nội dung và Media; select kênh có

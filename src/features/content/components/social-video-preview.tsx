@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PlayCircleFilled } from '@ant-design/icons';
-import { Image, Modal, Skeleton } from 'antd';
+import { Alert, Button, Image, Modal, Skeleton } from 'antd';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { MODAL_WIDTH } from '@/foundation/overlay';
 import { useGetAdminMediaAsset } from '@/generated/api/media/media';
@@ -14,16 +14,21 @@ export function SocialVideoPreview({
   assetId,
   videoUrl,
   posterUrl,
+  publishedUrl,
   title = 'Xem trước video',
 }: {
   assetId: string;
   videoUrl?: string | null;
   posterUrl?: string | null;
+  publishedUrl?: string | null;
   title?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+  // Published Facebook videos outlive their cleaned source. Never fetch that source just to replay it.
+  const facebookUrl = safeFacebookUrl(publishedUrl);
   const detail = useGetAdminMediaAsset(assetId, {
-    query: { enabled: open && !videoUrl, retry: false, staleTime: 60_000 },
+    query: { enabled: open && !videoUrl && !facebookUrl, retry: false, staleTime: 60_000 },
   });
   const source = videoUrl ?? detail.data?.secureUrl;
 
@@ -33,7 +38,7 @@ export function SocialVideoPreview({
         type="button"
         className="group relative block h-[92px] w-[92px] overflow-hidden bg-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-admin-500 focus-visible:ring-offset-2"
         aria-label={title}
-        onClick={() => setOpen(true)}
+        onClick={() => { setFailedSource(null); setOpen(true); }}
       >
         {posterUrl ? (
           <Image
@@ -61,7 +66,15 @@ export function SocialVideoPreview({
         destroyOnHidden
         onCancel={() => setOpen(false)}
       >
-        {detail.isError && !videoUrl ? (
+        {facebookUrl ? (
+          <Alert
+            type="info"
+            showIcon
+            message="Xem video đã đăng trên Facebook"
+            description="Hệ thống tiếp tục dọn video nguồn sau khi đăng. Vui lòng mở Facebook để xem lại video; khả năng truy cập phụ thuộc trạng thái bài và quyền trên Facebook."
+            action={<Button href={facebookUrl} target="_blank" rel="noopener noreferrer">Xem trên Facebook</Button>}
+          />
+        ) : detail.isError && !videoUrl ? (
           <QueryErrorAlert
             error={detail.error}
             message="Không tải được video"
@@ -69,6 +82,13 @@ export function SocialVideoPreview({
           />
         ) : !source ? (
           <Skeleton active paragraph={{ rows: 6 }} />
+        ) : failedSource === source ? (
+          <Alert
+            type="warning"
+            showIcon
+            message="Không phát được video nguồn"
+            description="Video có thể đã được dọn khỏi kho lưu trữ, bị chặn hoặc không còn truy cập được. Nếu nguồn đã bị xóa, cần tải lại video hoặc xem bài trên nền tảng đã đăng."
+          />
         ) : (
           <div className="overflow-hidden rounded-xl bg-black shadow-inner">
             <video
@@ -80,6 +100,7 @@ export function SocialVideoPreview({
               autoPlay
               playsInline
               preload="metadata"
+              onError={() => setFailedSource(source)}
             >
               Trình duyệt không hỗ trợ phát video.
             </video>
@@ -88,4 +109,16 @@ export function SocialVideoPreview({
       </Modal>
     </>
   );
+}
+
+function safeFacebookUrl(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password) return undefined;
+    return ['facebook.com', 'www.facebook.com', 'm.facebook.com'].includes(url.hostname)
+      ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
 }
