@@ -70,8 +70,17 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
   const [reasonCode, setReasonCode] = useState('CUSTOMER_UNAVAILABLE');
   const [condition, setCondition] = useState<'SELLABLE' | 'DAMAGED' | 'MISSING'>('SELLABLE');
   const idempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
-  const fulfillmentQuery = useGetAdminFulfillmentByOrder(orderId, { query: { enabled: Boolean(orderId), retry: false } });
+  const fulfillmentQuery = useGetAdminFulfillmentByOrder(orderId, { query: {
+    enabled: Boolean(orderId), retry: false,
+    // Only read our webhook projection; never ask GHN to mutate/sync from a browser polling loop.
+    refetchInterval: (query) => query.state.data?.status === 'SHIPPED' && query.state.data.carrierCode === 'GHN' ? 15_000 : false,
+    refetchIntervalInBackground: false,
+  } });
   const fulfillment = fulfillmentQuery.data;
+  const automaticGhn = fulfillment?.shippingProvider === 'GHN' || fulfillment?.carrierCode === 'GHN'
+    || fulfillment?.shippingMethod === 'STANDARD_DELIVERY' || fulfillment?.shippingMethod === 'THIRD_PARTY';
+  // GHN owns delivery outcome after handover; do not offer manual success/failure that can contradict its webhook.
+  const waitingForCarrier = fulfillment?.status === 'SHIPPED' && fulfillment?.carrierCode === 'GHN';
 
   const availableActions = useMemo(() => {
     if (!fulfillment) return [] as FulfillmentAction[];
@@ -150,8 +159,10 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
       if (action === 'ship') {
         return shipAdminFulfillment(fulfillment.id, {
           ...transition,
-          carrierCode: carrierCode.trim() || undefined,
-          trackingNo: trackingNo.trim() || undefined,
+          ...(automaticGhn ? {} : {
+            carrierCode: carrierCode.trim() || undefined,
+            trackingNo: trackingNo.trim() || undefined,
+          }),
         }, request);
       }
       if (action === 'deliver') return deliverAdminFulfillment(fulfillment.id, transition, request);
@@ -278,13 +289,14 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
           ),
         }))}
       />
+      {waitingForCarrier && <Alert type="info" showIcon message="GHN đang vận chuyển" description="Kết quả giao hàng được cập nhật tự động qua webhook GHN. Không đổi tay sang Đã giao hoặc Giao thất bại." />}
       {availableActions.length > 0 && (
         <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
           {availableActions.includes('pick') && <Button icon={<InboxOutlined />} onClick={() => setAction('pick')}>Lấy hàng</Button>}
           {availableActions.includes('pack') && <Button icon={<CheckCircleOutlined />} onClick={() => setAction('pack')}>Đóng gói</Button>}
           {availableActions.includes('ship') && <Button type="primary" icon={<RocketOutlined />} onClick={() => setAction('ship')}>Bàn giao vận chuyển</Button>}
-          {availableActions.includes('deliver') && <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setAction('deliver')}>Đã giao hàng</Button>}
-          {availableActions.includes('fail') && <Button danger icon={<RollbackOutlined />} onClick={() => setAction('fail')}>Giao thất bại</Button>}
+          {availableActions.includes('deliver') && <Button disabled={waitingForCarrier} type="primary" icon={<CheckCircleOutlined />} onClick={() => setAction('deliver')}>Đã giao hàng</Button>}
+          {availableActions.includes('fail') && <Button disabled={waitingForCarrier} danger icon={<RollbackOutlined />} onClick={() => setAction('fail')}>Giao thất bại</Button>}
           {availableActions.includes('receive') && <Button type="primary" icon={<InboxOutlined />} onClick={() => setAction('receive')}>Kho nhận hàng hoàn</Button>}
           {availableActions.includes('reship') && <Button type="primary" icon={<RedoOutlined />} onClick={() => setAction('reship')}>Giao lại</Button>}
         </div>
@@ -305,7 +317,10 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
           {action === 'ship' && fulfillment.carrierShipmentStatus === 'CREATED' && (
             <Alert type="info" showIcon message={`Đã có vận đơn GHN ${fulfillment.trackingNo ?? ''}`.trim()} description="Bàn giao chỉ ghi nhận xuất kho, không tạo vận đơn thứ hai." />
           )}
-          {action === 'ship' && fulfillment.carrierShipmentStatus !== 'CREATED' && (
+          {action === 'ship' && automaticGhn && fulfillment.carrierShipmentStatus !== 'CREATED' && (
+            <Alert type="info" showIcon message="Tự động tạo vận đơn GHN" description="Hệ thống lấy người nhận, SĐT, địa chỉ, hàng hóa, khối lượng/kích thước và COD từ đơn đã lưu. Chỉ cần xác nhận bàn giao; mã vận đơn do GHN cấp, không nhập tay." />
+          )}
+          {action === 'ship' && !automaticGhn && fulfillment.carrierShipmentStatus !== 'CREATED' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block font-medium" htmlFor="carrier-code">Đơn vị vận chuyển</label>

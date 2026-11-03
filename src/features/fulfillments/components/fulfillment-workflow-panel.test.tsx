@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { App } from 'antd';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pickAdminFulfillment } from '@/generated/api/fulfillments/fulfillments';
+import { pickAdminFulfillment, shipAdminFulfillment } from '@/generated/api/fulfillments/fulfillments';
 import { FulfillmentWorkflowPanel } from './fulfillment-workflow-panel';
 
 // AntD's Grid.useBreakpoint subscribes via matchMedia; jsdom doesn't implement it.
@@ -140,6 +140,34 @@ describe('FulfillmentWorkflowPanel retry carrier shipment button', () => {
 });
 
 describe('FulfillmentWorkflowPanel transition modal', () => {
+  it('disables manual delivery outcome for a GHN shipment', () => {
+    useGetAdminFulfillmentByOrderMock.mockReturnValue({ data: baseFulfillment(), isLoading: false, isError: false });
+    renderPanel();
+    expect((screen.getByRole('button', { name: /Đã giao hàng/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: /Giao thất bại/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('GHN đang vận chuyển')).toBeTruthy();
+  });
+
+  it('keeps manual delivery outcome available for external delivery', () => {
+    useGetAdminFulfillmentByOrderMock.mockReturnValue({ data: baseFulfillment({ carrierCode: 'MANUAL' }), isLoading: false, isError: false });
+    renderPanel();
+    expect((screen.getByRole('button', { name: /Đã giao hàng/ }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('ships an automatically managed order without requesting carrier/tracking input', async () => {
+    const data = baseFulfillment({ status: 'PACKED', shippingMethod: 'STANDARD_DELIVERY', carrierCode: null, carrierShipmentStatus: null });
+    useGetAdminFulfillmentByOrderMock.mockReturnValue({ data, isLoading: false, isError: false });
+    vi.mocked(shipAdminFulfillment).mockResolvedValue(baseFulfillment() as never);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={queryClient}><App><FulfillmentWorkflowPanel orderId="order-1" /></App></QueryClientProvider>);
+    fireEvent.click(screen.getByRole('button', { name: /Bàn giao vận chuyển/ }));
+    await screen.findByRole('dialog');
+    expect(screen.queryByLabelText('Mã vận đơn')).toBeNull();
+    expect(screen.queryByLabelText('Đơn vị vận chuyển')).toBeNull();
+    expect(screen.getByText('Tự động tạo vận đơn GHN')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Bàn giao' }));
+    await waitFor(() => expect(shipAdminFulfillment).toHaveBeenCalledWith('f-1', { expectedVersion: 1, note: undefined }, expect.any(Object)));
+  });
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();

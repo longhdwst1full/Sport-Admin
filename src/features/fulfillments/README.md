@@ -1,10 +1,10 @@
 # Fulfillments — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-10-10
+> **Last updated:** 2026-11-03
 >
-> **Change summary:** Lọc/trang trên URL, `fulfillmentStatusPresentation` chuyển từ `shared` về feature, trạng thái vận đơn của đơn inject qua `FulfillmentStatusTag`.
+> **Change summary:** GHN tự động: bàn giao không nhập mã vận đơn; disable đổi tay kết quả khi SHIPPED/GHN, đọc trạng thái nội bộ mỗi 15s khi tab hoạt động. Field shippingMethod/shippingProvider đến từ OpenAPI regenerate. Giao ngoài giữ nhập mã/tác vụ thủ công.
 
 ## Phạm vi
 
@@ -47,6 +47,7 @@ Route gác bằng `fulfillment.view` (scope `GLOBAL;BRANCH;WAREHOUSE;OWN`). Back
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.2.0 | 2026-11-03 | GHN auto handover, webhook-owned delivery outcome, detail polling và tests; API-20261103-GHN-HANDOVER. |
 | 1.1.0 | 2026-10-10 | URL filters, `StatusTag`/tone, modal thao tác dùng `FormModal`, bỏ `shared/constants/fulfillment-status-presentation`. |
 | 1.0.0 | 2026-09-13 | Tạo feature, lấp khoảng trống `listAdminFulfillments` chưa được dùng. |
 
@@ -55,3 +56,6 @@ Route gác bằng `fulfillment.view` (scope `GLOBAL;BRANCH;WAREHOUSE;OWN`). Back
 - `carrierShipmentStatus` (`PENDING`/`CREATING`/`CREATED`/`CREATE_FAILED`, `null` = không áp dụng) hiện bằng `CarrierShipmentStatusTag` ở danh sách và panel giao vận của đơn; lỗi gần nhất lấy từ `carrierShipmentError`; mã lạ hiện "Không xác định".
 - Nút "Tạo lại vận đơn" chỉ hiện khi `CREATE_FAILED` và có quyền `fulfillment.ship`; gọi `retryAdminFulfillmentCarrierShipment`, API trả 409 nếu không còn ở trạng thái lỗi.
 - Khi vận đơn đã `CREATED`, bước bàn giao không hỏi mã vận đơn và không tạo vận đơn thứ hai.
+- Khi detail có GHN provider/carrier hoặc phương thức STANDARD_DELIVERY/THIRD_PARTY, modal giải thích lấy snapshot từ đơn; request không gửi carrierCode/trackingNo tự nhập. Mã vận đơn do GHN cấp và API lưu.
+- SHIPPED/GHN: các nút Đã giao/Giao thất bại bị disable và có hướng dẫn chờ webhook. API cũng chặn; UI không phải ranh giới bảo mật. Giao ngoài giữ thao tác cũ.
+- Poll mỗi 15s chỉ GET backend projection khi SHIPPED/GHN, dừng khi kết thúc hoặc tab ở background; không polling hãng hoặc phát lệnh từ browser. Bảng/order parent vẫn có thể cần refresh theo policy màn cha.

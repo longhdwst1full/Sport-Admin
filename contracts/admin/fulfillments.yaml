@@ -262,6 +262,12 @@ paths:
             application/json:
               schema:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "422":
+          description: Số điện thoại người nhận không hợp lệ để tạo vận đơn GHN.
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
       summary: Bàn giao vận chuyển và commit tồn kho atomically
@@ -631,6 +637,14 @@ components:
           format: date-time
         version:
           type: string
+        shippingMethod:
+          type: string
+          nullable: true
+          description: Phương thức giao đã snapshot ở checkout; giao ngoài/shop tự giao không bắt nhập vận đơn GHN.
+        shippingProvider:
+          type: string
+          nullable: true
+          description: Nhà cung cấp báo giá vận chuyển, có thể null khi dùng biểu phí dự phòng.
         orderStatus:
           type: string
         paymentStatus:
