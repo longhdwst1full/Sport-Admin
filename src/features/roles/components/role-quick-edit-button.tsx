@@ -15,7 +15,16 @@ import { RoleFormDrawer } from './role-form-drawer';
  * lưu ở đây đổi quyền của mọi nhân viên đang giữ vai trò đó; ngăn sửa hiện rõ số phân quyền bị ảnh hưởng.
  * Chỉ hiện với người có `iam.role.manage`; API vẫn là nơi quyết định.
  */
-export function RoleQuickEditButton({ roleCode }: { roleCode?: string }) {
+export function RoleQuickEditButton({
+  roleCode,
+  label = 'Sửa quyền vai trò này',
+  variant = 'link',
+}: {
+  roleCode?: string;
+  label?: string;
+  /** `link` trong form nhân viên; `primary` ở thanh hành động của drawer xem quyền. */
+  variant?: 'link' | 'primary';
+}) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const canManage = useCan('iam.role.manage');
@@ -54,9 +63,9 @@ export function RoleQuickEditButton({ roleCode }: { roleCode?: string }) {
   return (
     <>
       <Button
-        type="link"
+        type={variant}
         size="small"
-        className="!text-xs"
+        className={variant === 'link' ? '!text-xs' : undefined}
         icon={<EditOutlined />}
         loading={open && (roles.isPending || permissions.isPending)}
         onClick={(event) => {
@@ -64,7 +73,7 @@ export function RoleQuickEditButton({ roleCode }: { roleCode?: string }) {
           setOpen(true);
         }}
       >
-        Sửa quyền vai trò này
+        {label}
       </Button>
       <RoleFormDrawer
         open={open && Boolean(role) && permissions.isSuccess}

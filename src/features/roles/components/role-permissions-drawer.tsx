@@ -9,6 +9,7 @@ import {
   countGroupPermissions,
   filterPermissionTree,
 } from '../model/role-permission-view';
+import { RoleQuickEditButton } from './role-quick-edit-button';
 import { PermissionGroupTitle, PermissionLeafTitle, PermissionScreenTitle } from './permission-tree-titles';
 
 export interface RolePermissionsDrawerProps {
@@ -150,6 +151,7 @@ export function RolePermissionsDrawer({ role, permissions, onClose }: RolePermis
       open={Boolean(role)}
       onClose={onClose}
       size="md"
+      actions={role ? <RoleQuickEditButton roleCode={role.code} label="Sửa" variant="primary" /> : undefined}
       title={
         role ? (
           <span>
