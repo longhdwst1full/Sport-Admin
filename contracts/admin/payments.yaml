@@ -369,6 +369,78 @@ paths:
         - Admin Payments
       x-required-permissions:
         - payment.refund.approve
+  /api/v1/admin/payments/{id}/resend-instruction:
+    post:
+      description: Chỉ đơn chuyển khoản/VNPay đang chờ thanh toán (payment PENDING/FAILED, đơn PENDING_CONFIRMATION) và còn hạn. Email được xếp hàng qua outbox; link VNPay ký mới lúc gửi, hết hiệu lực tại expiresAt. Tối đa một lần mỗi 5 phút cho cùng payment. 404 ngoài phạm vi; 409 PAYMENT_INSTRUCTION_RESEND_NOT_ALLOWED, PAYMENT_INSTRUCTION_RESEND_METHOD_UNSUPPORTED (COD), PAYMENT_INSTRUCTION_RESEND_EXPIRED; 422 PAYMENT_INSTRUCTION_RESEND_EMAIL_MISSING; 429 PAYMENT_INSTRUCTION_RESEND_TOO_SOON; 503 PAYMENT_INSTRUCTION_RESEND_VNPAY_UNAVAILABLE.
+      operationId: resendAdminPaymentInstruction
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInstructionResendResultDto"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "422":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "429":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "503":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Gửi lại email thông tin thanh toán (đơn, số tiền, hạn, hướng dẫn chuyển khoản hoặc link VNPay) cho khách
+      tags:
+        - Admin Payments
+      x-required-permissions:
+        - order.manage
 components:
   schemas:
     AdminPaymentListDto:
@@ -592,6 +664,42 @@ components:
         - provider
         - reference
         - customerMessage
+    PaymentInstructionResendResultDto:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        orderNo:
+          type: string
+        method:
+          allOf:
+            - $ref: "#/components/schemas/PaymentMethod"
+        recipientMasked:
+          type: string
+          example: k***@example.com
+          description: Email người nhận đã che
+        queuedAt:
+          type: string
+          format: date-time
+          description: Thời điểm xếp hàng gửi email
+        nextAllowedAt:
+          type: string
+          format: date-time
+          description: Sớm nhất được gửi lại lần nữa (chống spam)
+        expiresAt:
+          type: string
+          format: date-time
+          description: Hạn thanh toán; link VNPay trong email hết hiệu lực từ mốc này
+      required:
+        - paymentId
+        - orderNo
+        - method
+        - recipientMasked
+        - queuedAt
+        - nextAllowedAt
+        - expiresAt
     PaymentLateReceiptDto:
       type: object
       properties:

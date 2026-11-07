@@ -10,12 +10,13 @@ import {
   recordLatePaymentReceipt,
   recordManualRefundAdmin,
   rejectAdminPayment,
+  resendAdminPaymentInstruction,
 } from '@/generated/api/payments/payments';
 import { getGetAdminFulfillmentByOrderQueryKey } from '@/generated/api/fulfillments/fulfillments';
 import { getGetAdminOrderQueryKey, getListAdminOrdersQueryKey } from '@/generated/api/orders/orders';
 import { OrderStatus } from '@/generated/api/orders/orders.schemas';
 import { useCan } from '@/core/auth/permissions';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { formatDateTime } from '@/lib/format/datetime';
 import { MoneyInput } from '@/foundation/inputs/money-input';
 import { StatusTag } from '@/foundation/management';
@@ -28,6 +29,11 @@ import {
   paymentMethodLabels,
   paymentStatusPresentation,
 } from '../constants/payment.constants';
+import {
+  canResendPaymentInstruction,
+  resendInstructionErrorMessage,
+  shouldReloadAfterResendError,
+} from '../model/payment-instruction-resend.policy';
 import { orderStatusPresentation } from '@/features/order-status';
 
 /**
@@ -58,7 +64,7 @@ type SettleRequest = { action: 'confirm'; values: ConfirmValues } | { action: 'r
 
 export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string; onClose: () => void }) {
   const queryClient = useQueryClient();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const confirmWithReason = useConfirmWithReason();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [form] = Form.useForm<ConfirmValues>();
@@ -168,6 +174,19 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       void message.error(getApiErrorMessage(error, 'Không ghi nhận được hoàn tiền thủ công.'));
     },
   });
+  // Gửi lại email thông tin thanh toán: không đổi trạng thái payment, chỉ xếp hàng email (API chống spam 5 phút).
+  const resendInstruction = useMutation({
+    retry: false,
+    mutationFn: (id: string) => resendAdminPaymentInstruction(id),
+    onSuccess: (result) => {
+      void message.success(`Đã xếp hàng gửi thông tin thanh toán tới ${result.recipientMasked}`);
+    },
+    onError: (error) => {
+      const code = getApiErrorPayload(error)?.code;
+      void message.error(resendInstructionErrorMessage(code, getApiErrorMessage(error, 'Không gửi lại được thông tin thanh toán.')));
+      if (shouldReloadAfterResendError(code)) void detail.refetch();
+    },
+  });
   const resetManualRefund = () => {
     manualRefund.reset();
     manualRefundIdempotencyRef.current = undefined;
@@ -221,6 +240,28 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
   const canRefundManually = useCan('payment.refund.approve');
   const canRecordManualRefund = canRefundManually && payment?.status === 'SUCCESS' && payment.orderStatus === 'CANCELLED'
     && Boolean(payment.manualRefund) && !payment.manualRefund?.refundedAt;
+  // SECURITY: API dùng quyền order.manage (cùng phạm vi chi nhánh); ẩn nút khi không có quyền thay vì để nhận 403.
+  const canManageOrder = useCan('order.manage');
+  const canResendInstruction = canManageOrder && payment ? canResendPaymentInstruction(payment) : false;
+  const confirmResendInstruction = () => {
+    if (!payment) return;
+    modal.confirm({
+      title: `Gửi lại thông tin thanh toán đơn ${payment.orderNo}?`,
+      okText: 'Gửi email',
+      cancelText: 'Huỷ',
+      content: (
+        <div className="space-y-2">
+          <p>
+            Khách sẽ nhận email gồm sản phẩm, số tiền {moneyFormatter.format(Number(payment.expectedAmount))}
+            {payment.expiresAt ? `, hạn thanh toán ${formatDateTime(payment.expiresAt)}` : ''}
+            {payment.method === 'VNPAY' ? ' và link thanh toán VNPay mới (dùng được tới hạn thanh toán).' : ' và hướng dẫn chuyển khoản.'}
+          </p>
+          <p className="text-slate-500">Mỗi thanh toán chỉ gửi lại được một lần trong 5 phút.</p>
+        </div>
+      ),
+      onOk: () => resendInstruction.mutateAsync(payment.id).then(() => undefined, () => undefined),
+    });
+  };
   const orderStatus = payment ? parseEnum(OrderStatus, payment.orderStatus) : undefined;
 
   const reject = () => {
@@ -348,6 +389,11 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
                   }}
                 >
                   Ghi nhận đã hoàn tiền
+                </Button>
+              )}
+              {canResendInstruction && (
+                <Button loading={resendInstruction.isPending} onClick={confirmResendInstruction}>
+                  Gửi lại thông tin thanh toán
                 </Button>
               )}
             </Space>

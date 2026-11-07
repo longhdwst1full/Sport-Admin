@@ -1,14 +1,15 @@
 # Payment management
 
-> **Version:** 1.2.0  
-> **Updated:** 2026-10-10  
-> **Summary:** Lọc/trang trên URL, drawer chuẩn `DetailDrawer`, từ chối bằng chứng qua `useConfirmWithReason`.
+> **Version:** 1.3.0  
+> **Updated:** 2026-11-07  
+> **Summary:** Nút "Gửi lại thông tin thanh toán" (`resendAdminPaymentInstruction`). Trước đó: Lọc/trang trên URL, drawer chuẩn `DetailDrawer`, từ chối bằng chứng qua `useConfirmWithReason`.
 
 ## Scope
 
 - Route `/payments`, menu `Thanh toán`; server state thuộc TanStack Query.
 - Dùng generated operations `listAdminPayments`, `getAdminPayment`, `confirmAdminPayment`, `rejectAdminPayment`.
 - Permission hiển thị là `payment.view`; thao tác duyệt cần `payment.confirm`. Backend vẫn là nguồn kiểm tra quyền và branch scope.
+- "Gửi lại thông tin thanh toán" (`resendAdminPaymentInstruction`, quyền `order.manage`): chỉ hiện cho chuyển khoản/VNPay `PENDING`/`FAILED`, đơn `PENDING_CONFIRMATION`, còn hạn (`model/payment-instruction-resend.policy.ts`); xác nhận trước khi gửi, báo lỗi theo mã `PAYMENT_INSTRUCTION_RESEND_*`, tải lại chi tiết khi trạng thái đã đổi/hết hạn.
 - Chuyển khoản chỉ được xác nhận khi có bằng chứng chờ duyệt. COD chỉ được ghi nhận sau khi Order ở `DELIVERED`.
 - Mutation gửi `expectedVersion` và `Idempotency-Key`; key chỉ được giữ khi retry đúng cùng payload, còn payload đổi sẽ sinh key mới.
 - Sau mutation, Payment detail được cập nhật từ response; Payment list, Order detail và mọi trang Order list đều bị invalidate vì summary status đã thay đổi.
@@ -26,6 +27,7 @@
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.3.0 | 2026-11-07 | Nút gửi lại email thông tin thanh toán cho đơn chờ thanh toán. |
 | 1.2.0 | 2026-10-10 | URL filters, `StatusTag`/tone cho thanh toán và bằng chứng, `DetailDrawer`, `FormModal`, `useConfirmWithReason`. |
 | 1.1.0 | 2026-09-12 | Đồng bộ cache Order sau review Payment và khóa idempotency theo payload signature. |
 | 1.0.0 | 2026-09-12 | Tạo feature note cho Payment Admin V1. |
