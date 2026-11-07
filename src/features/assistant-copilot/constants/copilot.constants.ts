@@ -26,6 +26,22 @@ export const COPILOT_LIMITS = {
 } as const;
 
 /**
+ * Gợi ý câu hỏi ở màn chào; bấm chỉ điền vào ô nhập, không tự gửi. Mỗi câu khớp một tool chỉ đọc của Copilot
+ * (`api/src/modules/assistant/admin/admin-copilot.tools.ts`): đơn theo nhóm trạng thái + `placedPeriod`, tổng tồn,
+ * hàng tồn thấp, sổ kho, chuyển kho, kiểm kê. Không gợi ý thứ tool không làm được.
+ */
+export const COPILOT_SUGGESTED_PROMPTS = [
+  { key: 'orders-pending', label: 'Đơn chờ xác nhận hôm nay', prompt: 'Hôm nay có bao nhiêu đơn đang chờ xác nhận?' },
+  { key: 'low-stock', label: 'Sản phẩm sắp hết hàng', prompt: 'Những sản phẩm nào đang sắp hết hàng?' },
+  { key: 'inventory', label: 'Tổng quan tồn kho', prompt: 'Cho tôi tổng quan tồn kho các kho tôi phụ trách.' },
+  { key: 'movements', label: 'Biến động sổ kho gần đây', prompt: 'Các biến động sổ kho gần nhất là gì?' },
+  { key: 'transfers', label: 'Phiếu chuyển kho đang chờ', prompt: 'Có phiếu chuyển kho nào đang chờ xử lý không?' },
+  { key: 'stocktakes', label: 'Phiên kiểm kê đang mở', prompt: 'Có phiên kiểm kê nào đang mở không?' },
+] as const;
+
+export type CopilotSuggestionKey = (typeof COPILOT_SUGGESTED_PROMPTS)[number]['key'];
+
+/**
  * IDEMPOTENCY: `ASSISTANT_TURN_IN_PROGRESS` = lượt cùng khoá đang chạy ở API. Giữ khoá, hỏi lại lịch sử định kỳ tới
  * trần chờ rồi gửi lại CÙNG khoá (API replay lượt gốc, hoặc chạy lại lượt kẹt sau `TURN_REDRIVE_AFTER_MS` = 120 giây).
  */

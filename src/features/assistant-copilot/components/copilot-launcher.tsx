@@ -29,7 +29,7 @@ export function CopilotLauncher({ className }: { className?: string }) {
           aria-label="Mở trợ lý Copilot"
           icon={<RobotOutlined className="text-lg" />}
           onClick={() => { setMounted(true); setOpen(true); }}
-          className={`!fixed !bottom-6 !right-5 !z-[1000] !h-11 !w-11 !border-0 !bg-[#D42A27] !text-white !shadow-lg ring-2 ring-white hover:!bg-[#B2221F] ${className ?? ''}`}
+          className={`!fixed !bottom-6 !right-5 !z-[1000] !h-11 !w-11 !border-0 !bg-[#D42A27] !text-white !shadow-lg ring-2 ring-white hover:!scale-105 hover:!bg-[#B2221F] hover:!shadow-xl focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-[#D42A27] motion-reduce:transition-none motion-reduce:hover:!scale-100 ${className ?? ''}`}
         />
       </Tooltip>
       {mounted && (
