@@ -19,6 +19,7 @@ import { COPILOT_ERROR_CODE, COPILOT_LIMITS, COPILOT_TURN_POLL } from '../consta
 import { copilotErrorKind } from '../model/copilot-error';
 import { appendChatMessages, toCopilotMessagePage, toSendAdminChatMessageBody } from '../model/copilot.mapper';
 import type { CopilotPageHints } from '../model/copilot.types';
+import { COPILOT_REQUEST_TIMEOUT_MS, withCopilotDeadline } from '../model/copilot-request';
 
 export interface SendCopilotMessageInput {
   content: string;
@@ -52,6 +53,7 @@ export function useCopilotChat() {
   const queryClient = useQueryClient();
   const [conversationId, setConversationId] = useState<string>();
   const idempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
+  const inFlight = useRef<Promise<SendAdminChatMessageResponseDto> | undefined>(undefined);
 
   const messages = useListAdminChatMessages(conversationId ?? '', MESSAGE_PARAMS, {
     query: { enabled: Boolean(conversationId), select: toCopilotMessagePage, retry: false },
@@ -59,30 +61,42 @@ export function useCopilotChat() {
 
   const send = useMutation<SendAdminChatMessageResponseDto, unknown, SendCopilotMessageInput>({
     retry: false,
-    mutationFn: async ({ content, hints }) => {
-      const id = conversationId ?? (await createAdminChatConversation()).id;
-      if (id !== conversationId) setConversationId(id);
-      const body = toSendAdminChatMessageBody(content, hints);
-      idempotencyRef.current = nextIdempotencyKey(idempotencyRef.current, JSON.stringify({ conversationId: id, body }));
-      const headers = { 'Idempotency-Key': idempotencyRef.current.key };
-      const submit = () => sendAdminChatMessage(id, body, { headers });
-      try {
-        return await submit();
-      } catch (error) {
-        if (getApiErrorPayload(error)?.code !== COPILOT_ERROR_CODE.TURN_IN_PROGRESS) throw error;
-      }
-      const deadline = Date.now() + COPILOT_TURN_POLL.MAX_WAIT_MS;
-      while (Date.now() < deadline) {
-        await wait(COPILOT_TURN_POLL.INTERVAL_MS);
+    mutationFn: ({ content, hints }) => {
+      // isPending updates after React renders: two submissions in the same tick must share one request.
+      if (inFlight.current) return inFlight.current;
+      const request = withCopilotDeadline(async (signal) => {
+        const id = conversationId ?? (await createAdminChatConversation(signal)).id;
+        // A transport that resolves late after timeout must not create/send a fresh turn.
+        if (signal.aborted) throw new Error('Đã hết thời gian chờ trợ lý. Vui lòng gửi lại cùng câu hỏi.');
+        if (id !== conversationId) setConversationId(id);
+        const body = toSendAdminChatMessageBody(content, hints);
+        idempotencyRef.current = nextIdempotencyKey(idempotencyRef.current, JSON.stringify({ conversationId: id, body }));
+        const headers = { 'Idempotency-Key': idempotencyRef.current.key };
+        const submit = () => sendAdminChatMessage(id, body, { headers, timeout: COPILOT_REQUEST_TIMEOUT_MS }, signal);
         try {
-          if (lastUserMessageAnswered(await listAdminChatMessages(id, MESSAGE_PARAMS))) break;
-        } catch {
-          // Lỗi tạm thời khi hỏi lịch sử: thử lại ở vòng sau, trần chờ giữ nguyên.
+          return await submit();
+        } catch (error) {
+          if (getApiErrorPayload(error)?.code !== COPILOT_ERROR_CODE.TURN_IN_PROGRESS) throw error;
         }
-      }
-      return submit();
+        const deadline = Date.now() + COPILOT_TURN_POLL.MAX_WAIT_MS;
+        while (Date.now() < deadline) {
+          await wait(COPILOT_TURN_POLL.INTERVAL_MS);
+          if (signal.aborted) throw new Error('Đã hết thời gian chờ trợ lý. Vui lòng gửi lại cùng câu hỏi.');
+          try {
+            if (lastUserMessageAnswered(await listAdminChatMessages(id, MESSAGE_PARAMS, signal))) break;
+          } catch {
+            // Lỗi tạm thời khi hỏi lịch sử: thử lại ở vòng sau, trần chờ giữ nguyên.
+          }
+        }
+        if (signal.aborted) throw new Error('Đã hết thời gian chờ trợ lý. Vui lòng gửi lại cùng câu hỏi.');
+        return submit();
+      }).finally(() => { inFlight.current = undefined; });
+      inFlight.current = request;
+      return request;
     },
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
+      // An initial/refocus GET started before POST completed must not overwrite the accepted answer.
+      await queryClient.cancelQueries({ queryKey: getListAdminChatMessagesQueryKey(response.conversation.id, MESSAGE_PARAMS) });
       idempotencyRef.current = undefined;
       for (const draft of response.actionDrafts) {
         queryClient.setQueryData(getGetAdminActionDraftQueryKey(draft.id), draft);
@@ -94,6 +108,7 @@ export function useCopilotChat() {
     },
     onError: (error) => {
       const code = getApiErrorPayload(error)?.code;
+      if (conversationId) void queryClient.invalidateQueries({ queryKey: getListAdminChatMessagesQueryKey(conversationId, MESSAGE_PARAMS) });
       if (code === COPILOT_ERROR_CODE.IDEMPOTENCY_KEY_REUSED) idempotencyRef.current = undefined;
       // Hội thoại đã đóng/mất: bỏ id để lần gửi sau tạo hội thoại mới thay vì lặp lại lỗi.
       if (copilotErrorKind(error) === 'conversation-gone') {

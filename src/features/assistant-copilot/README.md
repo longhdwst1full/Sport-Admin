@@ -1,10 +1,10 @@
 # Assistant copilot — Trợ lý Copilot — maintenance note
 
-> **Document version:** 1.1.0
+> **Document version:** 1.2.0
 >
-> **Last updated:** 2026-09-30
+> **Last updated:** 2026-11-07
 >
-> **Change summary:** Nối SDK Orval `assistant` (6 operation Copilot/bản nháp), mã lỗi thật; bỏ adapter WORKAROUND và thẻ dữ liệu chỉ đọc (contract không trả thẻ).
+> **Change summary:** Sửa tin USER bị vẽ lặp với pending bubble, khóa gửi cùng tick, deadline/abort cho request chat và hủy history GET cũ trước khi ghi cache câu trả lời.
 
 ## Phạm vi
 
@@ -42,6 +42,9 @@ hội thoại cũ, loại bản nháp khác `STOCK_ADJUSTMENT`, gợi ý ngữ c
 - Gửi tin thành công: nối `userMessage`/`assistantMessage` vào key `getListAdminChatMessagesQueryKey(id, params)`
   (bỏ trùng theo id) và ghi từng `actionDrafts[]` vào `getGetAdminActionDraftQueryKey(draftId)`.
 - Nội dung tin hiển thị văn bản thuần (không render HTML/markdown từ LLM).
+- Pending USER chỉ là optimistic bubble: khi đuôi lịch sử đã có USER cùng nội dung thì không vẽ lại; vẫn giữ typing indicator đến khi mutation kết thúc. Câu hỏi giống nhau ở lượt trước đã được trả lời không bị loại. Đối chiếu bằng nội dung chỉ áp cho đuôi USER chưa có ASSISTANT, không phải dedup toàn lịch sử; nội dung bị backend che PII có thể không khớp bản gốc.
+- Ref `inFlight` gom hai lần gửi trong cùng tick thành một promise (React chưa kịp cập nhật isPending); không tạo hai hội thoại/request. POST có timeout 90s; toàn lượt (tạo hội thoại, POST, polling 409 và replay) có deadline 180s và AbortSignal dùng chung. Hết hạn thoát pending + hiện lỗi, giữ key cho retry cùng câu hỏi, không tự retry POST sau lỗi mạng. Abort phía trình duyệt không bảo đảm backend dừng xử lý; idempotency phía API vẫn bắt buộc.
+- Hủy query history đang bay trước khi nối response vào cache để GET cũ không ghi đè mất tin ASSISTANT. Sau lỗi, invalidate lịch sử hội thoại hiện tại để có thể thấy kết quả backend đã lưu. Không đổi HTTP contract, generated SDK, quyền hoặc thuật toán xử lý LLM phía API.
 
 ## Bản nháp điều chỉnh tồn
 
@@ -79,7 +82,7 @@ hội thoại cũ, loại bản nháp khác `STOCK_ADJUSTMENT`, gợi ý ngữ c
 
 ## Kiểm thử / checklist khi sửa
 
-- Test: `model/copilot.mapper.test.ts`, `action-draft.policy.test.ts`, `copilot-error.test.ts`.
+- Test: `model/copilot.mapper.test.ts`, `action-draft.policy.test.ts`, `copilot-error.test.ts`, `copilot-request.test.ts`, `hooks/use-copilot-chat.test.tsx`, `components/copilot-message-list.test.tsx` (pending đã có trên history, gửi kép, retry cùng key, timeout/abort, cache).
 - Đổi contract: `yarn contracts:sync && yarn generate:api`, sửa mapper/constants; không sửa `src/generated`.
 - Thêm trạng thái bản nháp: `Record<AssistantActionDraftStatus, …>` trong constants báo lỗi compile.
 
@@ -87,5 +90,6 @@ hội thoại cũ, loại bản nháp khác `STOCK_ADJUSTMENT`, gợi ý ngữ c
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-11-07 | Pending bubble không nhân đôi USER; request deadline/abort, gom gửi kép và chặn GET lịch sử cũ ghi đè câu trả lời. | Copilot pending regression |
 | 1.1.0 | 2026-09-30 | Nối SDK thật, mã lỗi thật; bỏ adapter và thẻ dữ liệu chỉ đọc. | API 5773c18 |
 | 1.0.0 | 2026-09-29 | Tạo feature, adapter chưa nối. | feat/assistant-v1 |

@@ -20,6 +20,7 @@ import {
   validateItem,
   type EditableItem,
 } from '../model/flash-sale.mapper';
+import { applyBulkQuota, bulkQuotaError } from '../model/flash-sale-quota';
 
 type EditableField = 'salePrice' | 'quota';
 
@@ -44,6 +45,8 @@ export function FlashSaleItemsEditor({
   const [pricingMode, setPricingMode] = useState<PricingMode>('PER_ITEM');
   const [discountPercent, setDiscountPercent] = useState(10);
   const [pending, setPending] = useState<string[]>([]);
+  const [bulkQuota, setBulkQuota] = useState<number | null>(null);
+  const quotaError = bulkQuotaError(items, bulkQuota);
   const variantSearch = useSearchState();
   // Giữ option đã thấy qua các lượt tìm để chọn nhiều SKU ở nhiều từ khoá khác nhau rồi thêm một lần.
   const seen = useRef(new Map<string, ActiveLookupOptionDto>());
@@ -70,7 +73,10 @@ export function FlashSaleItemsEditor({
   function addPending() {
     const added = pending.flatMap((id) => {
       const option = seen.current.get(id);
-      return option && !inTable.has(id) ? [newEditableItem(option, priceFor(Number(option.priceAmount ?? NaN) || undefined))] : [];
+      if (!option || inTable.has(id)) return [];
+      const item = newEditableItem(option, priceFor(Number(option.priceAmount ?? NaN) || undefined));
+      // Use the entered quota for newly added SKUs too; existing rows only change on explicit Apply.
+      return [{ ...item, quota: bulkQuotaError([], bulkQuota) ? item.quota : bulkQuota }];
     });
     onChange([...items, ...added]);
     setPending([]);
@@ -228,6 +234,34 @@ export function FlashSaleItemsEditor({
         <Button type="primary" ghost icon={<PlusOutlined />} disabled={pending.length === 0} onClick={addPending}>
           Thêm {pending.length > 0 ? `${pending.length} sản phẩm` : 'sản phẩm'}
         </Button>
+      </div>
+
+      <div className="space-y-1 rounded-xl bg-slate-50 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="flash-sale-bulk-quota" className="text-sm font-semibold">Số suất cho tất cả</label>
+          <InputNumber
+            id="flash-sale-bulk-quota"
+            min={1}
+            precision={0}
+            placeholder="Ví dụ: 5"
+            value={bulkQuota}
+            onChange={(value) => setBulkQuota(value)}
+            status={bulkQuota !== null && quotaError ? 'error' : undefined}
+            aria-describedby="flash-sale-bulk-quota-note"
+            className="!w-36"
+          />
+          <Button
+            disabled={items.length === 0 || Boolean(quotaError)}
+            onClick={() => onChange(applyBulkQuota(items, bulkQuota))}
+          >
+            Áp dụng cho tất cả{items.length > 0 ? ` (${items.length} SKU)` : ''}
+          </Button>
+        </div>
+        <p id="flash-sale-bulk-quota-note" className="text-xs text-slate-500">
+          Mỗi SKU có số suất riêng: 10 SKU × 5 suất = tối đa 50 sản phẩm bán giá flash.
+          {' '}Sản phẩm thêm mới dùng số này; vẫn có thể sửa từng dòng. Bấm Lưu để xác nhận.
+        </p>
+        {bulkQuota !== null && quotaError && <p role="alert" className="text-xs text-red-600">{quotaError}</p>}
       </div>
 
       <AdminTable<EditableItem>

@@ -1,10 +1,10 @@
 # Flash Sales — maintenance note
 
-> **Document version:** 1.0.0
+> **Document version:** 1.1.0
 >
-> **Last updated:** 2026-09-13
+> **Last updated:** 2026-11-07
 >
-> **Change summary:** Tạo màn hình quản lý chiến dịch flash sale (wave S6.4).
+> **Change summary:** Thêm nhập số suất chung và áp dụng cho tất cả SKU trong form tạo/sửa, đồng thời làm mặc định cho SKU thêm mới; chặn quota thấp hơn số đã bán/giữ.
 
 ## Phạm vi
 
@@ -28,6 +28,7 @@
 3. **Không hạ quota xuống dưới `sold + reserved`** — backend trả 409, FE không được bỏ qua lỗi này.
 4. **Gỡ suất đã phát sinh giao dịch** chỉ chuyển `INACTIVE`, không xóa. Popconfirm đã nói rõ điều đó.
 5. **Giá gửi dạng chuỗi Decimal** (`toFixed(2)`), không gửi number.
+6. **Điền số suất hàng loạt là quota tổng cho từng SKU**, không phải tổng cả chiến dịch hay giới hạn từng khách. Ví dụ 10 SKU, nhập 5 → mỗi SKU tối đa 5 suất (tổng 50). Nút Áp dụng cập nhật toàn bộ dòng đang soạn; SKU thêm sau nhận giá trị chung hợp lệ. Không tự cộng số đã bán, không tự nâng từng dòng lên minimum. Nếu có dòng đã bán/giữ vượt giá trị nhập thì chặn áp dụng cả lô và báo minimum; backend vẫn kiểm tra cạnh tranh khi Lưu. Không gọi API khi chỉ nhập/áp dụng; vẫn sửa được từng dòng trước khi lưu. Policy và regression test ở `model/flash-sale-quota.ts` / `.test.ts`.
 
 ## Quyền
 
@@ -43,4 +44,5 @@
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.1.0 | 2026-11-07 | Điền quota cho tất cả SKU, áp mặc định SKU thêm mới, kiểm minimum đã bán/giữ và giữ nguyên cơ chế lưu/API. |
 | 1.0.0 | 2026-09-13 | Tạo feature quản lý flash sale. |

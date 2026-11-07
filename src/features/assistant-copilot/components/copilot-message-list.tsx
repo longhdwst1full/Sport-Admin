@@ -110,6 +110,11 @@ export function CopilotMessageList({
   pendingContent?: string;
   onAskAgain: (prompt: string) => void;
 }) {
+  const lastMessage = messages.at(-1);
+  // A history fetch can already contain the accepted USER while POST is still waiting for the LLM.
+  // Only hide the optimistic bubble for the unresolved tail, not an older identical question.
+  const pendingAlreadyStored = pendingContent !== undefined && lastMessage?.role === 'USER'
+    && lastMessage.content.trim() === pendingContent.trim();
   return (
     <ol aria-label="Hội thoại với trợ lý" aria-live="polite" className="m-0 flex list-none flex-col gap-4 p-0">
       {messages.map((message) =>
@@ -138,7 +143,7 @@ export function CopilotMessageList({
       )}
       {pendingContent !== undefined && (
         <>
-          <UserBubble pending>{pendingContent}</UserBubble>
+          {!pendingAlreadyStored && <UserBubble pending>{pendingContent}</UserBubble>}
           <li className="flex items-start gap-2">
             <CopilotAvatar />
             <div className="inline-flex items-center gap-2 rounded-2xl rounded-tl-md border border-solid border-slate-200 bg-white px-3.5 py-3 text-xs text-slate-500 shadow-sm">
