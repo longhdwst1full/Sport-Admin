@@ -8,6 +8,7 @@ import { useCan } from '@/core/auth/permissions';
 import {
   getListAdminUsersQueryKey,
   useAssignAdminUserRole,
+  useListAdminPermissions,
   useListAdminRoles,
   useRevokeAdminUserRoleAssignment,
 } from '@/generated/api/iam/iam';
@@ -28,6 +29,7 @@ import {
   toAssignUserRoleDto,
   toAssignmentFormValues,
 } from '../model/role-assignment.mapper';
+import { groupPermissionsByModule } from '../model/permission-groups';
 
 export interface AssignmentEditorValues extends AssignmentFormValues {
   /** Lý do thu hồi assignment cũ; chỉ bắt buộc khi sửa. */
@@ -77,6 +79,7 @@ export function useRoleAssignmentEditor({
   const selectedRole = useWatch({ control, name: 'roleCode' });
 
   const rolesQuery = useListAdminRoles({ query: { enabled: open } });
+  const permissionsQuery = useListAdminPermissions({ query: { enabled: open } });
   // Assignment chỉ trả branchId; tra nhãn chi nhánh khi có quyền xem, không có thì hiện mã.
   const branchesQuery = useListAdminBranches({
     query: { ...CACHE_POLICY.REFERENCE, enabled: open && canViewBranches },
@@ -85,6 +88,11 @@ export function useRoleAssignmentEditor({
   const roles = useMemo(() => rolesQuery.data?.items ?? [], [rolesQuery.data]);
   const assignableRoles = useMemo(() => pickAssignableRoles(roles), [roles]);
   const selectedRoleDto = useMemo(() => roles.find((r) => r.code === selectedRole), [roles, selectedRole]);
+  const permissionGroups = useMemo(
+    () => groupPermissionsByModule(permissionsQuery.data?.items ?? []),
+    [permissionsQuery.data],
+  );
+  const grantedCodes = useMemo(() => new Set(selectedRoleDto?.permissionCodes ?? []), [selectedRoleDto]);
   const branchLabels = useMemo(
     () => new Map((branchesQuery.data?.items ?? []).map((b) => [b.id, `${b.code} — ${b.name}`])),
     [branchesQuery.data],
@@ -187,6 +195,9 @@ export function useRoleAssignmentEditor({
     selectedRole,
     selectedRoleDto,
     rolesQuery,
+    permissionsQuery,
+    permissionGroups,
+    grantedCodes,
     assignableRoles,
     assignments,
     editing,

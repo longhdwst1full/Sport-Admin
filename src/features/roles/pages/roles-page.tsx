@@ -22,6 +22,7 @@ import {
   shouldReloadAfterRoleDeleteError,
 } from '../model/role-lifecycle.policy';
 import { useRoleMutations } from '../hooks/use-role-mutations';
+import { grantableRoleCodes } from '../model/role-grantable';
 
 export function RolesPage() {
   const { message } = App.useApp();
@@ -49,18 +50,10 @@ export function RolesPage() {
   const permissionItems = useMemo(() => permissions.data?.items ?? [], [permissions.data]);
   const viewingRole = roles.data?.items.find((role) => role.id === viewingRoleId);
 
-  /**
-   * API chặn cấp quyền vượt quá quyền của chính người thao tác. Khi sửa một vai trò,
-   * quyền vai trò đã có vẫn giữ được, nên cộng vào tập cấp được để không buộc
-   * người sửa phải có toàn quyền mới đổi được tên.
-   */
-  const grantableCodes = useMemo(() => {
-    const codes = new Set(
-      permissionItems.filter(({ code }) => actorPermissions.has(code)).map(({ code }) => code),
-    );
-    for (const code of editing?.permissionCodes ?? []) codes.add(code);
-    return codes;
-  }, [permissionItems, actorPermissions, editing]);
+  const grantableCodes = useMemo(
+    () => grantableRoleCodes(permissionItems, actorPermissions, editing),
+    [permissionItems, actorPermissions, editing],
+  );
 
   async function refresh() {
     // Mọi danh sách vai trò (cache dài), không chỉ bảng của trang này. Quyền của chính người thao

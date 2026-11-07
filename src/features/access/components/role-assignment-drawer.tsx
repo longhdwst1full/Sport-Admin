@@ -1,5 +1,5 @@
-import { CheckOutlined, SafetyCertificateOutlined, ShopOutlined } from '@ant-design/icons';
-import { Alert, Avatar, Button, Form, Input, Tag } from 'antd';
+import { SafetyCertificateOutlined, ShopOutlined } from '@ant-design/icons';
+import { Alert, Avatar, Button, Form, Input } from 'antd';
 import { Controller } from 'react-hook-form';
 import type { UserDto, UserRoleAssignmentDto } from '@/generated/api/iam/iam.schemas';
 import { BranchSelect } from '@/features/organization';
@@ -9,6 +9,8 @@ import { roleCodeLabel, USER_STATUS_PRESENTATION } from '../constants/access.con
 import { useRoleAssignmentEditor } from '../hooks/use-role-assignment-editor';
 import { AssignableRoleCards } from './assignable-role-cards';
 import { CurrentAssignmentList } from './current-assignment-list';
+import { StaffPermissionMatrix } from './staff-permission-matrix';
+import { RoleQuickEditButton } from '@/features/roles';
 
 interface RoleAssignmentDrawerProps {
   user?: UserDto;
@@ -176,28 +178,17 @@ export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssi
         )}
 
         {/* ── Xem trước quyền của vai trò ────────────── */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <SafetyCertificateOutlined className="text-emerald-600" />
-              Quyền hạn theo vai trò ({editor.selectedRoleDto?.permissionCodes?.length ?? 0})
-            </span>
-            <span className="text-[11px] text-emerald-700 font-medium">Theo vai trò API</span>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
-            {(editor.selectedRoleDto?.permissionCodes ?? []).map((perm) => (
-              <Tag
-                key={perm}
-                color="default"
-                className="!mr-0 !rounded-md !border-slate-200 !bg-white !px-2 !py-0.5 !text-[11px] !font-mono !text-slate-700 flex items-center gap-1 shadow-2xs"
-              >
-                <CheckOutlined className="text-emerald-600 text-[10px]" />
-                {perm}
-              </Tag>
-            ))}
-          </div>
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-semibold text-slate-700">Quyền hạn theo vai trò</span>
+          <RoleQuickEditButton roleCode={editor.selectedRole} />
         </div>
+        <StaffPermissionMatrix
+          groups={editor.permissionGroups}
+          granted={editor.grantedCodes}
+          totalPossible={editor.permissionsQuery.data?.items.length ?? 0}
+          scopeSummary={editor.selectedRoleDto?.name ?? 'Chưa chọn vai trò'}
+          loading={editor.permissionsQuery.isLoading}
+        />
       </Form>
     </FormDrawer>
   );

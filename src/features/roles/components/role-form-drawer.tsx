@@ -75,6 +75,15 @@ export function RoleFormDrawer({
           }
         />
       )}
+      {isEdit && (editing?.activeAssignmentCount ?? 0) > 0 && (
+        <Alert
+          className="mb-4"
+          type="error"
+          showIcon
+          message={`Áp dụng cho ${editing?.activeAssignmentCount} phân quyền đang hiệu lực`}
+          description="Quyền gắn với vai trò, không gắn riêng từng người: lưu ở đây đổi quyền của mọi nhân viên đang giữ vai trò này."
+        />
+      )}
       <Alert
         className="mb-4"
         type="warning"

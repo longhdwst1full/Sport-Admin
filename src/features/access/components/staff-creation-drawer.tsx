@@ -3,6 +3,7 @@ import { Alert, Form, Input, Select } from 'antd';
 import { Controller } from 'react-hook-form';
 import { CreateStaffUserDtoRoleCode, type MfaProvisioningDto } from '@/generated/api/iam/iam.schemas';
 import { FormDrawer } from '@/foundation/overlay';
+import { RoleQuickEditButton } from '@/features/roles';
 import { useStaffCreationForm } from '../hooks/use-staff-creation-form';
 import { AssignableRoleCards } from './assignable-role-cards';
 import { ExtraAssignmentRows } from './extra-assignment-rows';
@@ -158,7 +159,11 @@ export function StaffCreationDrawer({
             <label className="text-xs font-semibold text-slate-700">
               Chọn vai trò phân quyền <span className="text-red-500">*</span>
             </label>
-            <span className="text-[11px] text-slate-400">Dạng thẻ Checkbox lựa chọn</span>
+            {staff.selectedRole ? (
+              <RoleQuickEditButton roleCode={staff.selectedRole} />
+            ) : (
+              <span className="text-[11px] text-slate-400">Dạng thẻ Checkbox lựa chọn</span>
+            )}
           </div>
 
           <AssignableRoleCards
