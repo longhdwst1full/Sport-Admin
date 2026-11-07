@@ -66,7 +66,7 @@ export function RoleAssignmentDrawer({ user, open, onClose, onRevoke }: RoleAssi
               <span className="text-sm font-bold text-slate-900">{user.displayName}</span>
               <StatusTag status={user.status} presentations={USER_STATUS_PRESENTATION} />
             </div>
-            <div className="text-xs text-slate-500 truncate mt-0.5">{user.maskedEmail}</div>
+            <div className="text-xs text-slate-500 truncate mt-0.5">{user.email ?? user.maskedEmail}</div>
           </div>
         </div>
       )}

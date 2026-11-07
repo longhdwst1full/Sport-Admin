@@ -911,6 +911,11 @@ components:
         maskedEmail:
           type: string
           example: lo***@dctd.vn
+        email:
+          type: string
+          format: email
+          example: long.hoang@dctd.vn
+          description: Email đầy đủ. Chỉ có khi người xem giữ quyền iam.user.manage phủ nhân viên này (GLOBAL, ví dụ OWNER, thấy mọi người; phạm vi chi nhánh chỉ thấy nhân viên có assignment ở chi nhánh đó). Người khác chỉ nhận maskedEmail.
         userType:
           type: string
           enum:
@@ -1261,6 +1266,11 @@ components:
         maskedEmail:
           type: string
           example: lo***@dctd.vn
+        email:
+          type: string
+          format: email
+          example: long.hoang@dctd.vn
+          description: Email đầy đủ. Chỉ có khi người xem giữ quyền iam.user.manage phủ nhân viên này (GLOBAL, ví dụ OWNER, thấy mọi người; phạm vi chi nhánh chỉ thấy nhân viên có assignment ở chi nhánh đó). Người khác chỉ nhận maskedEmail.
         userType:
           type: string
           enum:

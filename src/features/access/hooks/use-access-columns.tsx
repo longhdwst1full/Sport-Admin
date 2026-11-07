@@ -61,7 +61,7 @@ const USER_IDENTITY_COLUMN: ColumnsType<UserDto>[number] = {
       <Avatar>{value.slice(0, 1)}</Avatar>
       <div>
         <Typography.Text strong>{value}</Typography.Text>
-        <div className="text-xs text-slate-500">{row.maskedEmail}</div>
+        <div className="text-xs text-slate-500">{row.email ?? row.maskedEmail}</div>
       </div>
     </Space>
   ),
