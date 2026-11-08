@@ -65,6 +65,16 @@ const IDEMPOTENT_ACTIONS: ReadonlySet<SocialCommand['action']> = new Set(['appro
 function useSocialCacheSync() {
   const queryClient = useQueryClient();
   return {
+    removed: async (id: string) => {
+      // No response body after hard delete: never cache an obsolete detail DTO or refetch its missing row.
+      await queryClient.cancelQueries({ queryKey: getGetAdminSocialPostQueryKey(id) });
+      queryClient.removeQueries({ queryKey: getGetAdminSocialPostQueryKey(id) });
+      queryClient.removeQueries({ queryKey: getGetAdminPostQueryKey(id) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListAdminSocialPostsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListAdminPostsQueryKey() }),
+      ]);
+    },
     saved: async (saved: SocialPostDetailDto) => {
       // CACHE: ghi thẳng chi tiết mới; danh sách lọc theo trạng thái nên invalidate (cả list bài website).
       queryClient.setQueryData(getGetAdminSocialPostQueryKey(saved.id), saved);
@@ -103,7 +113,7 @@ export function useSocialPostCommand(
   const sync = useSocialCacheSync();
   const idempotencyRef = useRef<{ signature: string; key: string } | undefined>(undefined);
 
-  return useMutation<SocialPostDetailDto, unknown, SocialCommand>({
+  return useMutation<SocialPostDetailDto | void, unknown, SocialCommand>({
     retry: false,
     mutationFn: (command) => {
       if (!post) throw new Error('Chưa tải được bài viết');
@@ -139,7 +149,8 @@ export function useSocialPostCommand(
     },
     onSuccess: async (saved) => {
       idempotencyRef.current = undefined;
-      await sync.saved(saved);
+      if (saved) await sync.saved(saved);
+      else if (post) await sync.removed(post.id);
     },
     onError: async (error) => {
       const code = getApiErrorPayload(error)?.code;

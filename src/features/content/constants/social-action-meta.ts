@@ -51,7 +51,7 @@ export const FACEBOOK_ACTION_META: Record<SocialModalAction, ActionMeta> = {
   delete: {
     title: 'Xoá bài trên Facebook',
     okText: 'Xoá trên Facebook',
-    consequence: 'Bài bị xoá khỏi Facebook Page và không khôi phục được. Bài website (nếu có) không bị ảnh hưởng.',
+    consequence: 'Xóa vĩnh viễn bài trên Facebook và bản đăng trong DB, không thể khôi phục. Bài chỉ có Facebook bị xóa hẳn khỏi hệ thống. Bản website/TikTok dùng chung được giữ; chỉ giữ audit thao tác, không giữ nội dung bài đã xóa.',
     danger: true,
   },
   editCaption: {
@@ -134,7 +134,7 @@ export const FACEBOOK_DELETE_META: Record<Exclude<SocialDeleteMode, 'FACEBOOK' |
     title: 'Xoá bài (chưa đăng lên Facebook)',
     okText: 'Xoá bài',
     consequence:
-      'Bài chưa lên Facebook Page nên chỉ bị xoá trong hệ thống. Bài chỉ đăng Facebook sẽ biến khỏi danh sách và nhả ảnh/video; bài website giữ nguyên, chỉ bỏ bản đăng Facebook.',
+      'Bản Facebook chưa đăng sẽ bị xóa vĩnh viễn khỏi DB, không thể khôi phục. Bài chỉ có Facebook bị xóa hẳn; bản website/TikTok dùng chung được giữ. Không xóa file media dùng chung.',
     danger: true,
   },
   RECONCILE_FIRST: {

@@ -287,6 +287,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
           </Typography.Paragraph>
           <SocialActionModal
             post={post}
+            onDeleted={onClose}
             action={pending?.action}
             channel={pending?.channel}
             onClose={() => setPending(undefined)}

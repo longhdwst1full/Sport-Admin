@@ -1358,7 +1358,7 @@ paths:
         - social.post.manage
   /api/v1/admin/content/social/posts/{id}/facebook/delete:
     post:
-      description: "PUBLISHED/SCHEDULED: xoá trên Facebook rồi DELETED; cần thêm social.post.publish (403 SOCIAL_PUBLISH_PERMISSION_REQUIRED) và lý do (400 SOCIAL_DELETE_REASON_REQUIRED); 409 SOCIAL_PAGE_MISMATCH, 502 SOCIAL_FACEBOOK_ERROR, 503 chưa cấu hình Page. DRAFT/PENDING_APPROVAL/FAILED: không gọi Facebook, lý do tuỳ chọn. Bài SOCIAL → lưu trữ (status ARCHIVED, fb_status DELETED, ẩn khỏi danh sách, nhả media); bài website → bỏ bản Facebook (fb_status NULL), bài website giữ nguyên. DELETED/không có bản Facebook: không đổi gì, trả bài hiện tại. PUBLISHING/UNCERTAIN: 409 SOCIAL_DELETE_NEEDS_RECONCILE (đối soát trước)."
+      description: "PUBLISHED/SCHEDULED: Facebook xác nhận xóa trước khi xóa bản đăng trong DB; cần social.post.publish (403 SOCIAL_PUBLISH_PERMISSION_REQUIRED) và lý do (400 SOCIAL_DELETE_REASON_REQUIRED); 409 SOCIAL_PAGE_MISMATCH, 502 SOCIAL_FACEBOOK_ERROR, 503 chưa cấu hình Page. DRAFT/PENDING_APPROVAL/FAILED: chỉ xóa cục bộ, lý do tùy chọn. Xóa posts SOCIAL nếu không còn bản đăng kênh khác; giữ bài website/TikTok dùng chung. Giữ audit metadata cho replay, không giữ nội dung bài. PUBLISHING/UNCERTAIN: 409 SOCIAL_DELETE_NEEDS_RECONCILE. Thành công/replay trả 204 không body, thay thế response 200 cũ. Graph 100/33 không được coi là xác nhận xóa."
       operationId: deleteAdminFacebookPost
       parameters:
         - name: id
@@ -1379,12 +1379,8 @@ paths:
             schema:
               $ref: "#/components/schemas/DeleteFacebookDto"
       responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SocialPostDetailDto"
+        "204":
+          description: Đã xóa bản Facebook; giữ bài website/kênh khác nếu có.
         "400":
           description: ""
           content:
@@ -1429,7 +1425,7 @@ paths:
                 $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
       security:
         - bearer: []
-      summary: "Xoá bài Facebook ở mọi trạng thái (đã đăng: xoá trên Page; chưa đăng: chỉ xoá trong hệ thống)"
+      summary: Xóa vĩnh viễn bản Facebook trên Page và dữ liệu quản lý tương ứng
       tags:
         - Admin Content
       x-required-permissions:

@@ -1,10 +1,11 @@
 # Content — maintenance note
 
-> **Document version:** 3.14.0
+> **Document version:** 3.15.0
 >
-> **Last updated:** 2026-11-01
+> **Last updated:** 2026-11-07
 >
-> **Change summary:** Giữ chính sách dọn nguồn video Facebook; preview bài đã đăng mở liên kết Facebook và không tải nguồn Cloudinary đã dọn. CSP chỉ cho phép media từ self/blob/Cloudinary; nguồn lỗi có cảnh báo thay vì player trống.
+> **Change summary:** API-20261107-FACEBOOK-HARD-DELETE: Facebook delete trả 204, xóa cache detail và làm mới hai danh sách, đóng drawer đã xóa; cảnh báo xóa vĩnh viễn và giữ website/TikTok dùng chung.
+> Trước đó: Giữ chính sách dọn nguồn video Facebook; preview bài đã đăng mở liên kết Facebook và không tải nguồn Cloudinary đã dọn. CSP chỉ cho phép media từ self/blob/Cloudinary; nguồn lỗi có cảnh báo thay vì player trống.
 > Trước đó: Chi tiết bài mạng xã hội tự cập nhật mỗi 10s khi Facebook/TikTok đang đăng hoặc chưa rõ kết quả; dừng khi kết thúc hoặc tab bị ẩn. Không tự gọi lệnh đăng lại/đồng bộ.
 > Trước đó: Thêm thẻ tài khoản Facebook qua `useGetAdminFacebookAccount`: tên/Page ID, liên kết Page, trạng thái token và quyền đã xác minh; quyền xem `social.post.manage`, không trả secret.
 > Trước đó: Tab Mạng xã hội có nút Xem thông số dẫn tới dashboard Facebook/TikTok; video có thể preview khi
@@ -21,6 +22,8 @@
 > "Đồng bộ lần cuối", chỉ số "Bài/video" trên biểu đồ, ảnh nhỏ top bài. Trước đó: Nối API TikTok + Dashboard mạng xã hội (D99 phase 2b): lọc kênh ALL/FACEBOOK/TIKTOK + `tiktokStatus`, soạn đa kênh, khối TikTok ở chi tiết, thẻ Tài khoản TikTok + trang callback OAuth `/content/social/tiktok/callback`, dashboard dùng query Orval. Trước đó: Chuẩn bị TikTok + Dashboard mạng xã hội (chưa nối API): tab "Mạng xã hội" (`?tab=social`, link cũ `?tab=facebook` tự chuyển), cột Kênh, lọc kênh; mục "Kênh đăng" + panel TikTok trong drawer soạn bài (khoá bởi `TIKTOK_ENABLED`); màn `/social-dashboard` dùng hook placeholder `useSocialDashboard`. Trước đó: Lỗi thao tác banner/social chuyển sang toast AntD; danh sách/chi tiết bài social ẩn "lỗi gần nhất" khi Facebook đang xử lý video. Trước đó: Ảnh bìa bài viết gửi `coverAssetId` khi là asset thư viện (`model/content-post-cover.ts`), ảnh lỗi/rỗng hiện `IMAGE_FALLBACK_SRC`, ẩn loại đăng Video/Reel khi soạn bài Facebook. Trước đó: Thêm màn Banner `/banners` (CMS-02): danh sách lọc vị trí/trạng thái, drawer tạo/sửa (ảnh desktop/mobile, lịch hiển thị, CTA, danh mục cho CATEGORY_TOP), xuất bản/gỡ/lưu trữ theo expectedVersion. Trước đó: `listAdminPosts` chuyển sang phân trang server-side (`page`/`limit`/`meta`) và item trong list không còn `body`/`relatedProductSlugs`; form sửa bài phải tải bản đầy đủ qua `getAdminPost`.
 
 ## Phạm vi
+
+Thay đổi 3.15.0 (2026-11-07): xóa Facebook là xóa vĩnh viễn trên Page + DB theo xác nhận owner. `deleteAdminFacebookPost` trả 204 không body; hook hỗ trợ kết quả void, bỏ cache detail và invalidate danh sách; detail drawer đóng sau xóa. Modal cảnh báo không thể khôi phục, giữ bản website/TikTok nếu dùng chung. Không tự retry mutation, giữ key qua lỗi mạng. Generated SDK lấy từ producer, không sửa tay. Đây không phải lệnh dọn hàng loạt các bản DELETED cũ.
 
 Tạo/liệt kê/xoá bài viết nội dung (`Admin Content`).
 
@@ -159,6 +162,7 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.15.0 | 2026-11-07 | API-20261107-FACEBOOK-HARD-DELETE: response 204, xóa cache detail, invalidate list, đóng drawer và cảnh báo purge DB. |
 | 3.13.0 | 2026-11-01 | Theo dõi tiến độ đăng video Facebook/TikTok tự động mỗi 10s khi còn đang xử lý; dừng khi kết thúc/tab ẩn. |
 | 3.12.0 | 2026-11-01 | Thẻ tài khoản Facebook: tên/Page ID/link, trạng thái xác minh và quyền Meta; generated operation getAdminFacebookAccount. |
 | 3.11.0 | 2026-11-01 | Thêm lối tắt dashboard thông số và preview video dùng chung ở form soạn/chi tiết Facebook/TikTok. |

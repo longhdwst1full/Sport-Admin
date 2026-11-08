@@ -83,12 +83,14 @@ export function SocialActionModal({
   action,
   channel = SOCIAL_CHANNEL.FACEBOOK,
   onClose,
+  onDeleted,
 }: {
   post?: SocialActionModalPost;
   action?: SocialModalAction;
   /** Kênh của bản đăng nhận lệnh (mặc định Facebook). */
   channel?: SocialChannel;
   onClose: () => void;
+  onDeleted?: () => void;
 }) {
   const command = useSocialPostCommand(post, channel);
   if (!post || !action) return null;
@@ -105,7 +107,7 @@ export function SocialActionModal({
     ) : null;
   }
   return post.facebook ? (
-    <FacebookActionContent key={key} post={post} facebook={post.facebook} action={action} command={command} onClose={close} />
+    <FacebookActionContent key={key} post={post} facebook={post.facebook} action={action} command={command} onClose={close} onDeleted={onDeleted} />
   ) : null;
 }
 
@@ -115,12 +117,14 @@ function FacebookActionContent({
   action,
   command,
   onClose,
+  onDeleted,
 }: {
   post: SocialActionModalPost;
   facebook: NonNullable<SocialActionModalPost['facebook']>;
   action: SocialModalAction;
   command: SocialPostCommand;
   onClose: () => void;
+  onDeleted?: () => void;
 }) {
   const { message } = App.useApp();
   const [form] = Form.useForm<ActionFormValues>();
@@ -139,15 +143,16 @@ function FacebookActionContent({
     if (blocked) return;
     command.mutate(toSocialCommand(action, values, isSocial), {
       onSuccess: (saved) => {
-        const status = saved.facebook?.status;
+        const status = saved?.facebook?.status;
         if (status === FacebookPublicationStatus.FAILED) {
-          void message.error(`Facebook chưa nhận bài: ${saved.facebook?.lastError ?? 'lỗi không rõ'}`);
+          void message.error(`Facebook chưa nhận bài: ${saved?.facebook?.lastError ?? 'lỗi không rõ'}`);
         } else if (status === FacebookPublicationStatus.UNCERTAIN) {
           void message.warning('Chưa rõ bài đã lên Page hay chưa. Đối soát trước khi đăng lại.');
         } else {
           void message.success(`${meta.okText} thành công`);
         }
         onClose();
+        if (action === 'delete') onDeleted?.();
       },
       onError: (error) => {
         if (!isFacebookNotConfigured(error)) void message.error(socialCommandErrorMessage(error));

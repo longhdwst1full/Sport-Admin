@@ -3322,7 +3322,13 @@ components:
             - $ref: "#/components/schemas/ProductBundleDto"
         inStock:
           type: boolean
-          description: Còn hàng ở ít nhất một kho chi nhánh đang hoạt động (tồn thực − đang giữ ≥ 1; combo tính theo thành phần thiếu nhất). Chỉ có ở getCatalogProduct/getAdminProduct; response của lệnh ghi không tính.
+          description: Còn hàng ở ít nhất một kho chi nhánh đang hoạt động (tồn thực − đang giữ ≥ 1; combo tính theo thành phần thiếu nhất). Chỉ có ở getCatalogProduct/getAdminProduct; response của lệnh ghi không tính. Luôn bằng `availableQuantity ≥ 1`.
+        availableQuantity:
+          type: integer
+          minimum: 0
+          maximum: 999
+          example: 12
+          description: "Số lượng đặt được tối đa của SKU trong MỘT đơn = lớn nhất trên các kho chi nhánh đang hoạt động của (tồn thực − đang giữ); combo = số bộ của thành phần thiếu nhất tại cùng một kho. Không cộng dồn giữa các kho vì một đơn lấy từ một kho. Cắt trần 999 (= trần một dòng giỏ) nên không lộ tồn thật trên mức đó. Chỉ là gợi ý cho UI: backend vẫn kiểm tồn khi giữ hàng lúc đặt đơn. Chỉ có ở getCatalogProduct/getAdminProduct; response của lệnh ghi không tính."
       required:
         - id
         - sku

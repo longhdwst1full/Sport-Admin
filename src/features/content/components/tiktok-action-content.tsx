@@ -84,9 +84,9 @@ export function TikTokActionContent({
       }),
       {
         onSuccess: (saved) => {
-          const status = saved.tiktok?.status;
+          const status = saved?.tiktok?.status;
           if (status === FacebookPublicationStatus.FAILED) {
-            void message.error(`TikTok chưa nhận video: ${saved.tiktok?.lastError ?? 'lỗi không rõ'}`);
+            void message.error(`TikTok chưa nhận video: ${saved?.tiktok?.lastError ?? 'lỗi không rõ'}`);
           } else if (status === FacebookPublicationStatus.UNCERTAIN) {
             void message.warning('Chưa rõ video đã lên TikTok hay chưa. Đối soát trước khi đăng lại.');
           } else if (status === FacebookPublicationStatus.PUBLISHING) {
