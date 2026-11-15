@@ -8,6 +8,7 @@ import {
   SwapOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 import { formatDateTime } from '@/lib/format/datetime';
 import { COPILOT_SUGGESTED_PROMPTS, type CopilotSuggestionKey } from '../constants/copilot.constants';
 import type { CopilotMessage } from '../model/copilot.types';
@@ -35,7 +36,30 @@ export function CopilotAvatar({ size = 'sm' }: { size?: 'sm' | 'md' | 'lg' }) {
   );
 }
 
-/** Màn chào khi chưa có tin: lời chào + gợi ý câu hỏi (bấm để điền vào ô nhập). */
+/** Mã đơn dạng `ORD-YYYYMMDD-NNNNNNNN` (khớp order_no do API sinh). */
+const ORDER_NO_SPLIT = /(ORD-\d{8}-\d{8})/;
+
+/**
+ * Biến mã đơn trong câu trả lời thành link mở chi tiết đơn (`/orders?orderNo=…&open=1`).
+ * SECURITY: chỉ tách chuỗi và dựng `Link` nội bộ từ mã khớp regex; vẫn không render HTML/markdown từ LLM.
+ */
+function withOrderLinks(text: string): ReactNode[] {
+  return text.split(ORDER_NO_SPLIT).map((part, index) =>
+    index % 2 === 1 ? (
+      <Link
+        key={`${part}-${index}`}
+        to={`/orders?${new URLSearchParams({ orderNo: part, open: '1' }).toString()}`}
+        className="font-medium text-amber-700 underline underline-offset-2 hover:text-amber-800"
+      >
+        {part}
+      </Link>
+    ) : (
+      part
+    ),
+  );
+}
+
+/** Màn chào khi chưa có tin: lời chào + gợi ý câu hỏi (bấm là gửi luôn). */
 export function CopilotWelcome({ onPick }: { onPick: (prompt: string) => void }) {
   return (
     <div className="flex flex-col items-center px-2 pb-4 pt-6 text-center">
@@ -130,7 +154,9 @@ export function CopilotMessageList({
               <div className="rounded-2xl rounded-tl-md border border-solid border-slate-200 bg-white px-3.5 py-2.5 shadow-sm">
                 <span className="sr-only">Trợ lý: </span>
                 {message.content && (
-                  <div className="whitespace-pre-line break-words text-sm leading-relaxed text-slate-800">{message.content}</div>
+                  <div className="whitespace-pre-line break-words text-sm leading-relaxed text-slate-800">
+                    {withOrderLinks(message.content)}
+                  </div>
                 )}
                 {message.actionDraftIds.map((draftId) => (
                   <ActionDraftCard key={draftId} draftId={draftId} onAskAgain={onAskAgain} />

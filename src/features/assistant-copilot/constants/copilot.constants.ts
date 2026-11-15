@@ -26,7 +26,7 @@ export const COPILOT_LIMITS = {
 } as const;
 
 /**
- * Gợi ý câu hỏi ở màn chào; bấm chỉ điền vào ô nhập, không tự gửi. Mỗi câu khớp một tool chỉ đọc của Copilot
+ * Gợi ý câu hỏi ở màn chào; bấm là gửi luôn, nên mỗi câu phải hoàn chỉnh (không chừa chỗ điền). Mỗi câu khớp một tool chỉ đọc của Copilot
  * (`api/src/modules/assistant/admin/admin-copilot.tools.ts`): đơn theo nhóm trạng thái + `placedPeriod`, tổng tồn,
  * hàng tồn thấp, sổ kho, chuyển kho, kiểm kê. Không gợi ý thứ tool không làm được.
  */

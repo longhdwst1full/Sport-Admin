@@ -49,20 +49,21 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
     bottomRef.current?.scrollIntoView?.({ block: 'end' });
   }, [items.length, pendingContent]);
 
-  const pickSuggestion = (prompt: string) => {
-    setDraft(prompt);
-    // Chờ ô nhập nhận giá trị mới rồi mới đặt con trỏ cuối dòng.
-    requestAnimationFrame(() => inputRef.current?.focus({ cursor: 'end' }));
-  };
-
   const submit = (content: string) => {
     const text = content.trim();
     if (!text || send.isPending) return;
+    // Xoá ô nhập ngay khi gửi: tin đang gửi đã hiện ở bong bóng chờ. Gửi lỗi thì trả lại nội dung
+    // (chỉ khi người dùng chưa gõ gì mới) để không mất câu hỏi.
+    setDraft('');
     send.mutate(
       { content: text, hints: includeHints ? pageHints : undefined },
-      { onSuccess: () => setDraft((current) => (current.trim() === text ? '' : current)) },
+      { onError: () => setDraft((current) => (current === '' ? text : current)) },
     );
+    inputRef.current?.focus();
   };
+
+  // Gợi ý ở màn chào là câu hỏi hoàn chỉnh: bấm là gửi luôn.
+  const pickSuggestion = (prompt: string) => submit(prompt);
 
   const errorKind = send.error ? copilotErrorKind(send.error) : undefined;
   const showCount = draft.length >= COPILOT_LIMITS.MESSAGE_MAX * COUNT_VISIBLE_RATIO;

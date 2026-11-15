@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
 import { PosOrderDrawer } from '@/features/pos';
@@ -76,6 +76,18 @@ export function OrdersPage() {
     recipientPhone: url.get('phone'),
   });
   const rows = useMemo(() => (orders.data?.items ?? []).map(toOrderRow), [orders.data]);
+
+  // Link từ Copilot (`?orderNo=…&open=1`): danh sách đã lọc đúng mã đơn thì mở luôn drawer chi tiết,
+  // rồi xoá `open` để đóng drawer xong không bị mở lại. Không thấy đơn (ngoài phạm vi chi nhánh) thì chỉ lọc.
+  const requestedOrderNo = url.get('open') === '1' ? url.get('orderNo') : undefined;
+  const autoOpenId = requestedOrderNo ? rows.find((row) => row.orderNo === requestedOrderNo)?.id : undefined;
+  const { patch: patchUrl } = url;
+  useEffect(() => {
+    if (!autoOpenId) return;
+    setSelectedId(autoOpenId);
+    patchUrl({ open: undefined });
+  }, [autoOpenId, patchUrl]);
+
   const totalValue = rows.reduce((sum, order) => sum + Number(order.grandTotal), 0);
 
   return (
