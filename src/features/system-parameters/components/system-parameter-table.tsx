@@ -111,9 +111,7 @@ export function SystemParameterTable({
         (row) =>
           isEmailTemplateParameter(row.code) ? (
             <Link to={EMAIL_TEMPLATES_PATH} aria-label="Sửa ở màn Mẫu email">
-              <Tooltip title="Sửa ở màn Mẫu email (soạn thảo, xem trước, gửi thử)">
-                <MailOutlined /> <span className="text-xs">Mẫu email</span>
-              </Tooltip>
+              <MailOutlined /> <span className="text-xs">Mẫu email</span>
             </Link>
           ) : canManage ? (
             <>

@@ -1,10 +1,10 @@
 # Customers — maintenance note
 
-> **Document version:** 3.1.0
+> **Document version:** 3.1.1
 >
-> **Last updated:** 2026-10-10
+> **Last updated:** 2026-11-15
 >
-> **Change summary:** Tìm kiếm qua `useUrlSearch`; drawer chi tiết dùng `DetailDrawer`, trạng thái đơn/thanh toán gần đây hiển thị nhãn tiếng Việt; form sửa khoá lưu khi chưa tải được chi tiết; page size chuẩn 30.
+> **Change summary:** Bỏ tooltip bao ngoài các nút thao tác, giữ aria-label và xác nhận. Không đổi quyền/ràng buộc xóa: khách có đơn hoặc tài khoản vẫn không được xóa. Chưa xóa dữ liệu khách thật trong lần thay đổi này.
 
 ## Phạm vi
 
@@ -89,6 +89,7 @@ NEEDS_VERIFICATION hay BLOCKED như fixture từng hiển thị.
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.1.1 | 2026-11-15 | Bỏ tooltip lồng trên nút thao tác, giữ xác nhận/aria-label và chính sách chặn xóa. |
 | 3.1.0 | 2026-10-10 | Tìm kiếm qua `useUrlSearch`; drawer chi tiết dùng `DetailDrawer`, trạng thái đơn/thanh toán gần đây hiển thị nhãn tiếng Việt; form sửa khoá lưu khi chưa tải được chi tiết; page size chuẩn 30. |
 | 2.1.1 | 2026-09-18 | Accessible name cho Drawer và Playwright luồng khách hàng. |
 | 2.1.0 | 2026-09-18 | Hoàn thiện CRUD, GLOBAL-only standalone create, contact invariant và cache invalidation. |

@@ -1,12 +1,13 @@
 import type { StatusPresentation } from '@/foundation/management';
-import { AttributeDataType, AttributeStatus } from '@/generated/api/catalog/catalog.schemas';
+import { AttributeDataType, AttributeStatus, type CatalogMasterStatus } from '@/generated/api/catalog/catalog.schemas';
 import { toOptions } from '@/shared/utils/options';
 
 /** Brand và Category dùng chung một họ trạng thái ACTIVE/INACTIVE ở backend. */
-export const MASTER_STATUSES: Record<'ACTIVE' | 'INACTIVE', StatusPresentation> = {
+export const MASTER_STATUSES: Record<CatalogMasterStatus, StatusPresentation> = {
   ACTIVE: { color: 'success', label: 'Hoạt động' },
   INACTIVE: { color: 'neutral', label: 'Đã ngừng' },
 };
+export const MASTER_STATUS_OPTIONS = toOptions(MASTER_STATUSES);
 
 export const ATTRIBUTE_STATUSES: Record<AttributeStatus, StatusPresentation> = {
   [AttributeStatus.ACTIVE]: { color: 'success', label: 'Đang dùng' },

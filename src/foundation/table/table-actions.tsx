@@ -1,5 +1,5 @@
-import { Button, Space, Tooltip } from 'antd';
-import type { ButtonProps, SpaceProps, TooltipProps } from 'antd';
+import { Button, Space } from 'antd';
+import type { ButtonProps, SpaceProps } from 'antd';
 import type { ReactNode } from 'react';
 
 export interface TableActionsProps {
@@ -23,33 +23,29 @@ export interface TableActionButtonProps
   extends Omit<ButtonProps, 'aria-label' | 'children' | 'icon'> {
   label: string;
   icon: ReactNode;
-  tooltipProps?: Omit<TooltipProps, 'title' | 'children'>;
 }
 
 /**
- * Action trong table bắt buộc có tooltip và aria-label; phần nhìn chỉ hiển thị icon
- * để cột action giữ width nhỏ, ổn định trên mọi màn hình.
+ * Action icon có aria-label nhưng không tooltip để không nổi/chồng lên Popconfirm khi click.
+ * Phần nhìn chỉ có icon để cột action giữ width nhỏ, ổn định trên mọi màn hình.
  */
 export function TableActionButton({
   label,
   icon,
-  tooltipProps,
   type = 'text',
   size = 'small',
   ...buttonProps
 }: TableActionButtonProps) {
   return (
-    <Tooltip title={label} {...tooltipProps}>
-      <span className="inline-flex">
-        <Button
-          {...buttonProps}
-          type={type}
-          size={size}
-          aria-label={label}
-          icon={icon}
-          className={`!rounded-lg ${buttonProps.className ?? ''}`.trim()}
-        />
-      </span>
-    </Tooltip>
+    <span className="inline-flex">
+      <Button
+        {...buttonProps}
+        type={type}
+        size={size}
+        aria-label={label}
+        icon={icon}
+        className={`!rounded-lg ${buttonProps.className ?? ''}`.trim()}
+      />
+    </span>
   );
 }

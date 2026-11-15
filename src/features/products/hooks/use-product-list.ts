@@ -4,6 +4,7 @@ import {
   useListAdminProducts,
 } from '@/generated/api/catalog/catalog';
 import { useUrlSearch } from '@/shared/hooks/use-url-search';
+import { ProductStatus } from '@/generated/api/catalog/catalog.schemas';
 import { PRODUCT_LIST_DEFAULT_PAGE_SIZE } from '../constants/product-list.constants';
 import { toProductListRow } from '../model/product-list.mapper';
 
@@ -13,7 +14,7 @@ const SEARCH_KEYS = ['name', 'sku', 'code'] as const;
  * Sở hữu toàn bộ query/filter/pagination của danh sách sản phẩm.
  * TanStack Query vẫn là nguồn server state; hook chỉ giữ state điều khiển của màn hình.
  *
- * Bộ lọc và trang nằm trên URL (`name`, `sku`, `code`, `category`, `page`) để F5/Back/gửi link giữ
+ * Bộ lọc và trang nằm trên URL (`name`, `sku`, `code`, `category`, `status`, `page`) để F5/Back/gửi link giữ
  * nguyên. Ô tìm kiếm giữ chữ đang gõ ở state cục bộ, ghi giá trị đã debounce lên URL; query đọc URL.
  * Đổi bộ lọc thì xoá `page` (về trang 1). Kích thước trang chỉ sống trong màn.
  */
@@ -21,6 +22,7 @@ export function useProductList() {
   const search = useUrlSearch(SEARCH_KEYS);
   const { url } = search;
   const category = url.get('category');
+  const status = url.getEnum('status', ProductStatus);
   const page = url.getNumber('page', 1);
   const [pageSize, setPageSize] = useState(PRODUCT_LIST_DEFAULT_PAGE_SIZE);
 
@@ -31,6 +33,7 @@ export function useProductList() {
     sku: url.get('sku'),
     productNo: url.get('code'),
     category,
+    status,
   });
   const categories = useListAdminCategories();
 
@@ -58,6 +61,8 @@ export function useProductList() {
     setProductNo: search.setter('code'),
     category,
     setCategory: (value?: string) => url.patch({ category: value, page: undefined }),
+    status,
+    setStatus: (value?: ProductStatus) => url.patch({ status: value, page: undefined }),
     page,
     pageSize,
     onPageChange: (nextPage: number, nextPageSize: number) => {

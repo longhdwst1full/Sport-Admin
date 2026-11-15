@@ -1,4 +1,5 @@
 import type { ProductType } from '@/generated/api/catalog/catalog.schemas';
+import { PRODUCT_STATUS_PRESENTATION } from './product-status.constants';
 import { toOptions } from '@/shared/utils/options';
 import {
   ADMIN_TABLE_DEFAULT_PAGE_SIZE,
@@ -7,6 +8,7 @@ import {
 
 export const PRODUCT_LIST_DEFAULT_PAGE_SIZE = ADMIN_TABLE_DEFAULT_PAGE_SIZE;
 export const PRODUCT_LIST_PAGE_SIZE_OPTIONS = ADMIN_TABLE_PAGE_SIZE_OPTIONS;
+export const PRODUCT_STATUS_OPTIONS = toOptions(PRODUCT_STATUS_PRESENTATION);
 
 /** SKU/barcode của biến thể chưa lưu: API sinh khi tạo (admin không có ô nhập). */
 export const AUTO_GENERATED_CODE_HINT = 'Tự sinh khi lưu';

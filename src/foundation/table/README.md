@@ -1,19 +1,19 @@
 # Admin table foundation
 
-> **Document version:** 1.3.0
+> **Document version:** 1.4.0
 >
-> **Last updated:** 2026-10-06
+> **Last updated:** 2026-11-15
 >
-> **Change summary:** Bảng chính của `ManagementPage` lấp phần còn lại của màn hình (chỉ thân bảng cuộn, pager luôn hiện); thêm preset cột `col.*`, `useColumnVisibility`, `RefreshButton`, `FilterBar`. Trước đó: Mọi ô của `AdminTable` giới hạn 3 dòng, dài hơn cắt bằng "…" (rê chuột xem đủ với ô chữ thuần; double-click vẫn copy toàn văn). Cột tự khai `ellipsis` giữ hành vi antd. Trước đó: Đổi pagination mặc định thành 30 dòng và mở lựa chọn 10/20/30/50/100.
+> **Change summary:** TableActionButton không render Tooltip/tooltipProps; giữ icon, aria-label, loading/disabled và event props cho Popconfirm. Tooltip thông tin/status/làm mới không thay đổi. Số dòng hiện hỗ trợ 20/30/50/100.
 
 ## Trách nhiệm
 
 - `AdminTable` là wrapper duy nhất quanh Ant Design `Table` cho bảng nghiệp vụ.
 - Cột không khai báo `width` nhận mặc định `160px`; width do feature khai báo luôn được giữ nguyên.
 - Horizontal scroll luôn bật; feature có thể truyền `scroll.x` cụ thể khi đã biết tổng width.
-- Pagination mặc định 30 dòng và có lựa chọn 10/20/30/50/100; server pagination của feature vẫn là nguồn dữ liệu chính.
+- Pagination mặc định 30 dòng và có lựa chọn 20/30/50/100; server pagination của feature vẫn là nguồn dữ liệu chính.
 - Double-click một ô dữ liệu sẽ copy nội dung text của ô. Không render icon copy trong table.
-- `TableActionButton` và `TableActions` chuẩn hóa action icon-only, tooltip và `aria-label`.
+- `TableActionButton` và `TableActions` chuẩn hóa action icon-only và `aria-label`, không có tooltip nổi.
 
 ## Preset và hook
 
@@ -32,7 +32,7 @@
 
 - [ ] Không import trực tiếp Ant Design `Table` ở feature mới; dùng `AdminTable`.
 - [ ] Cột action ghim phải, có width cố định và chỉ hiển thị icon.
-- [ ] Action icon có label tiếng Việt để tạo tooltip và `aria-label`.
+- [ ] Action icon có label tiếng Việt cho `aria-label`, không bọc thêm tooltip vào nút sửa/xóa.
 - [ ] Destructive action vẫn phải có confirm ở feature.
 - [ ] Test `withFixedColumnWidths`, build production và build Storybook.
 
@@ -40,6 +40,7 @@
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.4.0 | 2026-11-15 | Bỏ tooltip trên nút action chung, giữ tên truy cập và xác nhận; regression test hover/edit/delete confirm. |
 | 1.3.0 | 2026-10-06 | Bảng chính lấp chiều cao màn (chỉ thân bảng cuộn); preset cột `col.*`, `useColumnVisibility`, `RefreshButton`, `FilterBar`; sửa khe trống do padding ép vào hàng đo ẩn. |
 | 1.2.0 | 2026-10-02 | Mọi ô của `AdminTable` giới hạn 3 dòng, dài hơn cắt bằng "…" (rê chuột xem đủ với ô chữ thuần; double-click vẫn copy toàn văn). Cột tự khai `ellipsis` giữ hành vi antd. |
 | 1.1.0 | 2026-09-19 | Mặc định 30 dòng, bổ sung lựa chọn số dòng/trang 10/20/30/50/100. |

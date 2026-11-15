@@ -5,7 +5,7 @@ import {
   PlusOutlined,
   PoweroffOutlined,
 } from '@ant-design/icons';
-import { Button, Popconfirm } from 'antd';
+import { Button, Popconfirm, Select } from 'antd';
 import type { ColumnsType, ColumnType } from 'antd/es/table';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { PermissionGate, useCan } from '@/core/auth/permissions';
@@ -21,7 +21,7 @@ import {
   col,
 } from '@/foundation/table';
 import { filterCatalogMasters, type SearchableCatalogMaster } from '../model/catalog-masters.mapper';
-import { MASTER_STATUSES } from '../constants/catalog-masters.constants';
+import { MASTER_STATUSES, MASTER_STATUS_OPTIONS } from '../constants/catalog-masters.constants';
 import { useMasterListUrl } from '../hooks/use-master-list-url';
 
 /** Cột mã dạng chip, chung cho Thương hiệu và Danh mục. */
@@ -102,8 +102,8 @@ export function MasterDataListPage<T extends MasterDataRow>({
 
   const items = query.data?.items;
   const rows = useMemo(
-    () => filterCatalogMasters(items ?? [], list.keyword),
-    [items, list.keyword],
+    () => filterCatalogMasters(items ?? [], list.keyword).filter((row) => !list.status || row.status === list.status),
+    [items, list.keyword, list.status],
   );
   const activeCount = (items ?? []).filter((row) => row.status === 'ACTIVE').length;
 
@@ -186,6 +186,15 @@ export function MasterDataListPage<T extends MasterDataRow>({
               value={list.searchValue}
               onChange={list.onSearch}
               placeholder="Tìm theo mã, tên hoặc slug..."
+            />
+            <Select
+              aria-label="Lọc trạng thái"
+              placeholder="Tất cả trạng thái"
+              allowClear
+              className="min-w-44"
+              value={list.status}
+              onChange={list.onStatusChange}
+              options={MASTER_STATUS_OPTIONS}
             />
           </FilterBar>
         }

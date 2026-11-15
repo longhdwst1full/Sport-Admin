@@ -1,11 +1,19 @@
-import { Avatar, Popconfirm, Tooltip } from 'antd';
+import { Avatar, Popconfirm } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
-import { ADMIN_TABLE_DEFAULT_PAGE_SIZE, AdminTable, TableActionButton, col } from '@/foundation/table';
+import {
+  ADMIN_TABLE_DEFAULT_PAGE_SIZE,
+  AdminTable,
+  TableActionButton,
+  col,
+} from '@/foundation/table';
 import { DeleteOutlined, EditOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import { useCan } from '@/core/auth/permissions';
 import { CustomerStatus, type CustomerKind } from '@/generated/api/customers/customers.schemas';
-import { customerKindPresentation, customerStatusPresentation } from '../constants/customer.constants';
+import {
+  customerKindPresentation,
+  customerStatusPresentation,
+} from '../constants/customer.constants';
 import type { CustomerRowView } from '../model/customer.mapper';
 import { getCustomerDeleteBlockReason } from '../model/customer.policy';
 
@@ -47,7 +55,9 @@ function useCustomerColumns({ onEdit, onToggleStatus, onDelete, busyId }: Custom
           </div>
         ),
       },
-      col.status<CustomerRowView, CustomerKind>('kind', 'Loại', customerKindPresentation, { width: 120 }),
+      col.status<CustomerRowView, CustomerKind>('kind', 'Loại', customerKindPresentation, {
+        width: 120,
+      }),
       col.number<CustomerRowView>('orderCount', 'Số đơn', { width: 90, align: 'center' }),
       {
         key: 'lifetimeValue',
@@ -59,9 +69,14 @@ function useCustomerColumns({ onEdit, onToggleStatus, onDelete, busyId }: Custom
         ),
       },
       col.text<CustomerRowView>('lastOrderLabel', 'Mua gần nhất', { key: 'lastOrder', width: 130 }),
-      col.status<CustomerRowView, CustomerStatus>('status', 'Trạng thái', customerStatusPresentation, {
-        width: 150,
-      }),
+      col.status<CustomerRowView, CustomerStatus>(
+        'status',
+        'Trạng thái',
+        customerStatusPresentation,
+        {
+          width: 150,
+        },
+      ),
       col.actions<CustomerRowView>(
         (row) => {
           // PERMISSION: chỉ ẩn nút; backend vẫn chặn khi thiếu customer.manage.
@@ -75,36 +90,36 @@ function useCustomerColumns({ onEdit, onToggleStatus, onDelete, busyId }: Custom
                 disabled={busyId === row.id}
                 onClick={() => onEdit(row)}
               />
-              <Tooltip title={row.status === CustomerStatus.ACTIVE ? 'Ngừng hoạt động' : 'Mở lại'}>
-                <Popconfirm
-                  title={row.status === CustomerStatus.ACTIVE ? 'Ngừng hoạt động khách này?' : 'Mở lại hồ sơ khách này?'}
-                  description="Lịch sử mua hàng vẫn được giữ nguyên."
-                  onConfirm={() => onToggleStatus(row)}
-                >
-                  <TableActionButton
-                    label={row.status === CustomerStatus.ACTIVE ? 'Ngừng hoạt động' : 'Mở lại'}
-                    disabled={busyId === row.id}
-                    icon={row.status === CustomerStatus.ACTIVE ? <StopOutlined /> : <UndoOutlined />}
-                  />
-                </Popconfirm>
-              </Tooltip>
-              <Tooltip title={deleteBlockReason ?? 'Xoá hồ sơ'}>
-                <Popconfirm
-                  title="Xoá hồ sơ khách này?"
-                  description="Không khôi phục lại được."
-                  okButtonProps={{ danger: true }}
-                  disabled={Boolean(deleteBlockReason)}
-                  onConfirm={() => onDelete(row)}
-                >
-                  <TableActionButton
-                    label={deleteBlockReason ?? `Xoá khách hàng ${row.name}`}
-                    danger
-                    icon={<DeleteOutlined />}
-                    // Khách đã mua hàng là một phần của lịch sử đơn; Backend cũng từ chối xoá.
-                    disabled={Boolean(deleteBlockReason) || busyId === row.id}
-                  />
-                </Popconfirm>
-              </Tooltip>
+              <Popconfirm
+                title={
+                  row.status === CustomerStatus.ACTIVE
+                    ? 'Ngừng hoạt động khách này?'
+                    : 'Mở lại hồ sơ khách này?'
+                }
+                description="Lịch sử mua hàng vẫn được giữ nguyên."
+                onConfirm={() => onToggleStatus(row)}
+              >
+                <TableActionButton
+                  label={row.status === CustomerStatus.ACTIVE ? 'Ngừng hoạt động' : 'Mở lại'}
+                  disabled={busyId === row.id}
+                  icon={row.status === CustomerStatus.ACTIVE ? <StopOutlined /> : <UndoOutlined />}
+                />
+              </Popconfirm>
+              <Popconfirm
+                title="Xoá hồ sơ khách này?"
+                description="Không khôi phục lại được."
+                okButtonProps={{ danger: true }}
+                disabled={Boolean(deleteBlockReason)}
+                onConfirm={() => onDelete(row)}
+              >
+                <TableActionButton
+                  label={deleteBlockReason ?? `Xoá khách hàng ${row.name}`}
+                  danger
+                  icon={<DeleteOutlined />}
+                  // Khách đã mua hàng là một phần của lịch sử đơn; Backend cũng từ chối xoá.
+                  disabled={Boolean(deleteBlockReason) || busyId === row.id}
+                />
+              </Popconfirm>
             </>
           );
         },

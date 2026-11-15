@@ -1,10 +1,10 @@
 # System parameters — maintenance note
 
-> **Document version:** 1.3.0
+> **Document version:** 1.3.1
 >
-> **Last updated:** 2026-10-17
+> **Last updated:** 2026-11-15
 >
-> **Change summary:** Ô tìm, nhóm, trạng thái và trang nằm trên URL; modal dùng `FormModal`; ngừng dùng qua `useConfirmWithReason` (lý do tuỳ chọn, nếu nhập tối thiểu 5 ký tự — sửa lỗi chặn mọi lý do đã nhập); page size chuẩn 30.
+> **Change summary:** Bỏ tooltip trên thao tác sửa, bao gồm link sang màn Mẫu email; giữ nhãn truy cập và tooltip thông tin ở cột mã. Không thay đổi quyền hoặc luồng cập nhật tham số.
 
 ## Phạm vi
 
@@ -17,6 +17,7 @@
 
 | | `isSystem = true` | `isSystem = false` |
 | --- | --- | --- |
+| 1.3.1 | 2026-11-15 | Bỏ tooltip trên thao tác sửa; giữ tooltip thông tin và luồng Mẫu email. |
 | Biểu tượng | 🔒 ổ khoá cạnh mã | không |
 | Sửa được | **Giá trị**, có thể thêm **Lý do** | toàn bộ |
 | Nút ngừng dùng | disabled | bật |

@@ -1,10 +1,10 @@
 # Products — maintenance note
 
-> **Document version:** 2.3.0
+> **Document version:** 2.4.0
 >
-> **Last updated:** 2026-10-17
+> **Last updated:** 2026-11-15
 >
-> **Change summary:** Tách `use-product-workspace` thành `use-product-create` + `use-product-lifecycle` (dùng chung với menu danh sách); menu danh sách gate Xuất bản/Lưu trữ theo `catalog.product.publish` và lưu trữ qua `archiveAdminProduct`; cache invalidation gom ở `hooks/product-query-cache.ts`; khối ảnh khoá khi thiếu `catalog.product.manage` hoặc sản phẩm đã lưu trữ.
+> **Change summary:** Thêm lọc trạng thái DRAFT/PUBLISHED/ARCHIVED vào toolbar, lấy enum từ generated; lưu status trên URL, đổi filter về trang 1, gửi status cho listAdminProducts cùng các điều kiện tên/mã/SKU/danh mục. Không sửa DTO/API hay lifecycle.
 
 ## Workspace Tạo/Sửa
 
@@ -137,6 +137,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.4.0 | 2026-11-15 | Lọc status bằng enum/API hiện có, đồng bộ URL và reset trang khi đổi/xóa filter; regression hook/browser. |
 | 2.3.0 | 2026-10-17 | SKU/barcode do API sinh (bỏ ô nhập), nút "Thêm mới"; bỏ menu ba chấm ở danh sách (nút icon riêng), bỏ Tiếp tục/Quay lại ở footer (Tạo có ở mọi tab), chế độ chỉ xem đọc rõ cho sản phẩm lưu trữ, bố cục tab Thông tin lưới 3 cột. |
 | 2.2.0 | 2026-10-13 | Tách hook Tạo/vòng đời, gate lệnh vòng đời ở danh sách theo `catalog.product.publish`, cache helper chung, khoá khối ảnh khi lưu trữ/thiếu quyền. |
 | 2.1.0 | 2026-09-26 | Gộp 7 tab thành 3 tab (Thông tin · SKU, giá & tồn kho · Kiểm tra xuất bản); Combo là khối trong tab SKU chỉ với BUNDLE; validate map lỗi về tab gộp. |

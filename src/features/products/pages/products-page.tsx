@@ -86,12 +86,14 @@ export function ProductsPage() {
             sku={list.sku}
             productNo={list.productNo}
             category={list.category}
+            status={list.status}
             categoryOptions={list.categoryOptions}
             categoriesLoading={list.categoriesLoading}
             onNameChange={list.setName}
             onSkuChange={list.setSku}
             onProductNoChange={list.setProductNo}
             onCategoryChange={list.setCategory}
+            onStatusChange={list.setStatus}
             refreshing={list.query.isFetching}
             onRefresh={() => void list.query.refetch()}
           />

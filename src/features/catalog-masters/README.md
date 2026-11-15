@@ -1,10 +1,10 @@
 # Catalog masters — maintenance note
 
-> **Document version:** 2.2.0
+> **Document version:** 2.3.0
 >
-> **Last updated:** 2026-10-10
+> **Last updated:** 2026-11-15
 >
-> **Change summary:** Ô tìm và trang (lọc client-side) nằm trên URL qua `useMasterListUrl`; cột Brand/Category khai ở mức module; trạng thái dùng tone chuẩn.
+> **Change summary:** Sửa chọn số dòng: pageSize thực sự cập nhật, giữ trên URL và F5; đổi số dòng về trang 1, giữ ô chọn khi chỉ có một trang. Thêm filter ACTIVE/INACTIVE cho Danh mục/Thương hiệu, kết hợp ô tìm, đổi filter về trang 1. Hook pagination dùng chung với Thuộc tính. Bỏ tooltip action, giữ aria-label/Popconfirm. Không đổi API.
 
 ## Phạm vi
 
@@ -60,19 +60,17 @@ Storefront cache ISR 5 phút, nên thay đổi không xuất hiện tức thì.
 - [ ] Đổi field form phải cập nhật mapper + test.
 
 
-## Operation generated nhưng không gọi (RULE-CTR-06)
+## Lọc, phân trang và thao tác
 
-| Operation | Lý do |
-| --- | --- |
-| `deleteAdminBrand` | Alias của `deactivateAdminBrand` — cùng gọi `changeBrandStatus(id, 'INACTIVE')` ở `api/src/modules/catalog/master-data/catalog-master.controller.ts`. Nút **Ngừng** đã dùng bản `deactivate`. Thêm nút thứ hai chỉ tạo hai lối vào cho cùng một hành vi. |
-| `deleteAdminCategory` | Như trên, alias của `deactivateAdminCategory`. |
-
-**Điều kiện gỡ ghi chú:** nếu BE tách `DELETE` thành xoá cứng thật (khác `changeStatus`), phải nối lại và phân biệt rõ hai hành vi trên giao diện.
+- API danh mục/thương hiệu trả toàn bộ danh sách; `MasterDataListPage` kết hợp tìm q và trạng thái trước khi Ant Design phân trang tại chỗ. Không lọc một trang server rồi coi đó là toàn bộ dữ liệu.
+- URL giữ `q`, `status`, `page`, `pageSize`; số dòng hỗ trợ 20/30/50/100, mặc định 30. URL có size lạ rơi về 30. Thay filter/size về trang 1 và giữ các điều kiện còn lại.
+- Source hiện đã gọi `deleteAdminBrand`/`deleteAdminCategory`, độc lập nút Ngừng/Kích hoạt. Ghi chú cũ nói hai operation chưa dùng đã lỗi thời. Xóa vẫn cần xác nhận và backend kiểm ràng buộc dữ liệu.
 
 ## Revision history
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.3.0 | 2026-11-15 | Sửa page size controlled, thêm status filter, giữ URL, bỏ tooltip action và bổ sung regression tests. |
 | 2.2.0 | 2026-10-10 | Ô tìm và trang (lọc client-side) nằm trên URL qua `useMasterListUrl`; cột Brand/Category khai ở mức module; trạng thái dùng tone chuẩn. |
 | 2.1.0 | 2026-09-25 | Thêm màn Thuộc tính sản phẩm (D61). |
 | 2.0.0 | 2026-09-21 | Tách hai màn Thương hiệu / Danh mục, thêm redirect đường dẫn cũ. |
