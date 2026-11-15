@@ -51,35 +51,6 @@ export function ProductsPage() {
             </Button>
           </PermissionGate>
         }
-        metrics={[
-          {
-            key: 'total',
-            label: 'Tổng sản phẩm',
-            value: total,
-            icon: <span className="text-base">📦</span>,
-            tone: 'blue',
-          },
-          {
-            key: 'page',
-            label: 'Hiển thị trên trang',
-            value: list.rows.length,
-            icon: <span className="text-base">📋</span>,
-            tone: 'green',
-          },
-          {
-            key: 'pageSize',
-            label: 'Kích thước trang',
-            value: list.pageSize,
-            icon: <span className="text-base">⚙️</span>,
-          },
-          {
-            key: 'currentPage',
-            label: 'Trang hiện tại',
-            value: `${list.page} / ${Math.ceil(total / list.pageSize) || 1}`,
-            icon: <span className="text-base">📄</span>,
-            tone: 'orange',
-          },
-        ]}
         filters={
           <ProductListToolbar
             name={list.name}

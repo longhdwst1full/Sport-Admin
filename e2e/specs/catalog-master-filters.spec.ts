@@ -59,6 +59,8 @@ test('products: status filter reaches server, resets page and retains name/categ
   });
   await page.goto('/products?page=3&name=giay&category=danh-muc-1');
   await expect(page.getByText('Giày chạy bộ E2E')).toBeVisible();
+  await expect(page.locator('.dctd-metric-card')).toHaveCount(0);
+  await expect(page.locator('.ant-pagination')).toBeVisible();
   await page.getByRole('combobox', { name: 'Lọc trạng thái sản phẩm' }).click();
   const requested = page.waitForRequest((request) => {
     const url = new URL(request.url());
