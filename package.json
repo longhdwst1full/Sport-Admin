@@ -37,6 +37,7 @@
     "@hookform/resolvers": "5.9.1",
     "@reduxjs/toolkit": "2.12.0",
     "@tanstack/react-query": "5.87.1",
+    "@vercel/speed-insights": "^2.1.0",
     "antd": "5.27.3",
     "axios": "1.20.0",
     "ckeditor4-react": "4.3.0",

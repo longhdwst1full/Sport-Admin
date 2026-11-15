@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 // Thân chữ: Be Vietnam Pro 400-700, subset latin + vietnamese, chỉ woff2 (xem fonts.css).
 import './fonts.css';
 import { App } from './app/app';
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Providers>
       <App />
+      {import.meta.env.PROD ? <SpeedInsights /> : null}
     </Providers>
   </React.StrictMode>,
 );
