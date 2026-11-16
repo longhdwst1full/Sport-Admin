@@ -1,10 +1,10 @@
 # POS — Bán tại quầy — maintenance note
 
-> **Document version:** 2.1.0
+> **Document version:** 2.2.0
 >
-> **Last updated:** 2026-10-17
+> **Last updated:** 2026-11-16
 >
-> **Change summary:** Giỏ quầy: vượt số suất flash còn lại → phần trong suất giá flash, phần dư giá gốc (`flashQuantity`, `lineTotal`), khớp Backend tách hai dòng như checkout web.
+> **Change summary:** `PosOrderDrawer` được `orders-page` nạp lười; Drawer và `PosReceiptModal` khai `TableSurfaceProvider value="embedded"` quanh nội dung. Trước đó: Giỏ quầy: vượt số suất flash còn lại → phần trong suất giá flash, phần dư giá gốc (`flashQuantity`, `lineTotal`), khớp Backend tách hai dòng như checkout web.
 
 ## Bố cục màn hình
 
@@ -82,6 +82,7 @@ Ngoài phạm vi: sửa/huỷ đơn đã bán (dùng màn Đơn hàng), trả h�
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 2.2.0 | 2026-11-16 | `PosOrderDrawer`/`PosReceiptModal` bọc `TableSurfaceProvider value="embedded"` (bảng không phải dò DOM); `orders-page` nạp lười drawer. | perf/admin-quickwins |
 | 2.1.0 | 2026-10-17 | Giỏ quầy: vượt số suất flash → phần trong suất giá flash + phần dư giá gốc (`flashQuantity`, `lineTotal`), khớp `PosOrderService` tách hai dòng; ô đơn giá hiện "N × flash / M × gốc". |  |
 | 1.1.0 | 2026-09-15 | Dùng `searchPosCatalog`: combo và tồn khả dụng theo chi nhánh, chặn bán vượt tồn ngay trên UI. | POS-20260915-CATALOG |
 | 1.0.0 | 2026-09-15 | Tạo màn bán tại quầy từ generated contract `createPosOrder`. | POS-20260915-COUNTER-SALES |

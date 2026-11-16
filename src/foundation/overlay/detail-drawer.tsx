@@ -2,6 +2,7 @@ import { Drawer, type DrawerProps } from 'antd';
 import type { ReactNode } from 'react';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
+import { TableSurfaceProvider } from '@/foundation/table/table-surface';
 import { DRAWER_WIDTH } from './drawer-width';
 
 export interface DetailDrawerProps extends Omit<DrawerProps, 'width' | 'size' | 'extra' | 'loading'> {
@@ -52,7 +53,8 @@ export function DetailDrawer({
       ) : loading ? (
         <DetailSkeleton />
       ) : (
-        children
+        // Portal giữ context của trang: khai `embedded` để bảng trong drawer không thừa hưởng `page`.
+        <TableSurfaceProvider value="embedded">{children}</TableSurfaceProvider>
       )}
     </Drawer>
   );

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Avatar, Button, Dropdown, Layout, Menu, Tag, Tooltip, type MenuProps, Spin } from 'antd';
 import {
   AppstoreOutlined,
@@ -43,6 +43,17 @@ const SettingsModal = lazy(() =>
   import('@/layouts/components/settings-modal').then((module) => ({ default: module.SettingsModal })),
 );
 
+// Icon nhóm là hằng: dựng một lần để menuItems memo ổn định.
+const GROUP_ICONS: Record<string, React.ReactNode> = {
+  overview: <DashboardOutlined />,
+  sales: <ShoppingCartOutlined />,
+  catalog: <AppstoreOutlined />,
+  operations: <InboxOutlined />,
+  experience: <CommentOutlined />,
+  organization: <BankOutlined />,
+  system: <ControlOutlined />,
+};
+
 export function AdminLayout() {
   const collapsed = useAppSelector((state) => state.layout.sidebarCollapsed);
   const dispatch = useAppDispatch();
@@ -70,8 +81,10 @@ export function AdminLayout() {
     return () => window.removeEventListener('resize', handleResize);
   }, [dispatch]);
 
-  const visibleItems = NAVIGATION_ITEMS.filter(
-    (item) => canSeeNavigationItem(item, permissions),
+  // Tham chiếu ổn định theo tập quyền: NavigationTabs (effect) và antd Menu không bị tính lại mỗi render.
+  const visibleItems = useMemo(
+    () => NAVIGATION_ITEMS.filter((item) => canSeeNavigationItem(item, permissions)),
+    [permissions],
   );
 
   const activeGroup = visibleItems.find((item) => item.path === location.pathname)?.group;
@@ -89,40 +102,34 @@ export function AdminLayout() {
     }
   }
 
-  const GROUP_ICONS: Record<string, React.ReactNode> = {
-    overview: <DashboardOutlined />,
-    sales: <ShoppingCartOutlined />,
-    catalog: <AppstoreOutlined />,
-    operations: <InboxOutlined />,
-    experience: <CommentOutlined />,
-    organization: <BankOutlined />,
-    system: <ControlOutlined />,
-  };
+  const menuItems = useMemo<MenuProps['items']>(
+    () =>
+      Object.entries(NAVIGATION_GROUP_LABELS)
+      .map(([group, label]) => {
+        const children = visibleItems
+          .filter((item) => item.group === group)
+          .map((item) => ({
+            key: item.path,
+            icon: item.icon,
+            label: item.label,
+          }));
 
-  const menuItems: MenuProps['items'] = Object.entries(NAVIGATION_GROUP_LABELS)
-    .map(([group, label]) => {
-      const children = visibleItems
-        .filter((item) => item.group === group)
-        .map((item) => ({
-          key: item.path,
-          icon: item.icon,
-          label: item.label,
-        }));
+        if (children.length === 0) return null;
 
-      if (children.length === 0) return null;
+        if (group === 'overview' && children.length === 1) {
+          return children[0];
+        }
 
-      if (group === 'overview' && children.length === 1) {
-        return children[0];
-      }
-
-      return {
-        key: `sub-${group}`,
-        icon: GROUP_ICONS[group] ?? <ControlOutlined />,
-        label,
-        children,
-      };
-    })
-    .filter(Boolean) as MenuProps['items'];
+        return {
+          key: `sub-${group}`,
+          icon: GROUP_ICONS[group] ?? <ControlOutlined />,
+          label,
+          children,
+        };
+      })
+      .filter(Boolean) as MenuProps['items'],
+    [visibleItems],
+  );
 
   const user = auth.currentUser;
   // Chưa có hồ sơ (đang tải hoặc dev bypass) thì hiện nhãn trung tính, không mượn tên người thật.

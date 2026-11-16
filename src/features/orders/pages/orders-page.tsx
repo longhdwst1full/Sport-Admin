@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
-import { PosOrderDrawer } from '@/features/pos';
 import {
   DollarOutlined,
   InboxOutlined,
@@ -41,6 +40,11 @@ const FulfillmentStatusTag = lazy(() =>
   import('@/features/fulfillments').then((module) => ({ default: module.FulfillmentStatusTag })),
 );
 
+// Drawer POS nặng (cả module pos): chỉ tải khi người dùng bấm "Tạo đơn" lần đầu.
+const PosOrderDrawer = lazy(() =>
+  import('@/features/pos').then((module) => ({ default: module.PosOrderDrawer })),
+);
+
 type OrderTab = 'ALL' | OrderStatusGroup;
 
 /**
@@ -61,6 +65,12 @@ export function OrdersPage() {
   );
   const page = url.getNumber('page', 1);
   const [createOpen, setCreateOpen] = useState(false);
+  // Đã mở POS ít nhất một lần: giữ drawer mounted sau đó để animation đóng và state nội bộ không bị mất.
+  const [posMounted, setPosMounted] = useState(false);
+  const openCreate = () => {
+    setPosMounted(true);
+    setCreateOpen(true);
+  };
   const [pageSize, setPageSize] = useState(ADMIN_TABLE_DEFAULT_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string>();
   // Đơn đang mở ở drawer chi tiết là ngữ cảnh gợi ý cho Copilot.
@@ -143,7 +153,7 @@ export function OrdersPage() {
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
-                    onClick={() => setCreateOpen(true)}
+                    onClick={openCreate}
                   >
                     Tạo đơn
                   </Button>
@@ -217,13 +227,17 @@ export function OrdersPage() {
           </Suspense>
         )}
       />
-      <PosOrderDrawer
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        // Đơn vừa bán có thể không thuộc tab trạng thái đang lọc: về tab "Tất cả", trang 1 để thấy ngay.
-        onCreated={() => url.patch({ status: undefined, page: undefined })}
-        onNewOrder={() => setCreateOpen(true)}
-      />
+      {posMounted && (
+        <Suspense fallback={null}>
+          <PosOrderDrawer
+            open={createOpen}
+            onClose={() => setCreateOpen(false)}
+            // Đơn vừa bán có thể không thuộc tab trạng thái đang lọc: về tab "Tất cả", trang 1 để thấy ngay.
+            onCreated={() => url.patch({ status: undefined, page: undefined })}
+            onNewOrder={openCreate}
+          />
+        </Suspense>
+      )}
     </PageTransition>
   );
 }

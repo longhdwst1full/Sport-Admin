@@ -88,4 +88,52 @@ describe('auth token store — COOKIE transport giữa nhiều tab', () => {
       accessToken: 'access-from-peer',
     });
   });
+
+  async function twoCookieTabs() {
+    vi.stubEnv('VITE_AUTH_TOKEN_TRANSPORT', 'COOKIE');
+    vi.stubEnv('MODE', 'development');
+    vi.stubGlobal('BroadcastChannel', FakeBroadcastChannel);
+    const tabA = await importCookieTab();
+    const tabB = await importCookieTab();
+    tabA.saveAuthTokens(tokenPair('access-a'));
+    tabB.saveAuthTokens(tokenPair('access-b'));
+    return { tabA, tabB };
+  }
+
+  it('đăng xuất ở tab A xoá phiên trong memory của tab B và báo cho subscriber', async () => {
+    const { tabA, tabB } = await twoCookieTabs();
+    const listener = vi.fn();
+    tabB.subscribeAuthTokens(listener);
+    const versionBefore = tabB.getAuthTokenVersion();
+
+    tabA.clearAuthTokens({ broadcast: true });
+
+    expect(tabA.readAuthTokens()).toBeUndefined();
+    expect(tabB.readAuthTokens()).toBeUndefined();
+    expect(tabB.getAccessTokenExpiresAt()).toBeUndefined();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(tabB.getAuthTokenVersion()).toBe(versionBefore + 1);
+  });
+
+  it('tab nhận TOKENS_CLEARED không phát lại (không vòng lặp)', async () => {
+    const { tabA, tabB } = await twoCookieTabs();
+    const posted = vi.spyOn(FakeBroadcastChannel.prototype, 'postMessage');
+
+    tabA.clearAuthTokens({ broadcast: true });
+
+    // Đúng một message: từ tab A. Tab B chỉ xoá cục bộ.
+    expect(posted).toHaveBeenCalledTimes(1);
+    expect(tabB.readAuthTokens()).toBeUndefined();
+  });
+
+  it('xoá token nội bộ (refresh thất bại) không đăng xuất tab khác', async () => {
+    const { tabA, tabB } = await twoCookieTabs();
+    const posted = vi.spyOn(FakeBroadcastChannel.prototype, 'postMessage');
+
+    tabA.clearAuthTokens();
+
+    expect(tabA.readAuthTokens()).toBeUndefined();
+    expect(posted).not.toHaveBeenCalled();
+    expect(tabB.readAuthTokens()).toMatchObject({ accessToken: 'access-b' });
+  });
 });

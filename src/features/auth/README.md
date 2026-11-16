@@ -1,10 +1,10 @@
 # Auth — maintenance note
 
-> **Document version:** 1.5.0
+> **Document version:** 1.6.0
 >
-> **Last updated:** 2026-10-06
+> **Last updated:** 2026-11-16
 >
-> **Change summary:** Trang quay về sau đăng nhập giữ pathname + query + hash (`core/auth/return-path.ts`, chỉ đường dẫn
+> **Change summary:** Đăng xuất chủ động ở COOKIE mode phát `TOKENS_CLEARED` qua BroadcastChannel để mọi tab xoá access token trong memory (`clearAuthTokens({ broadcast: true })`, chỉ từ `signOut`). Trước đó: Trang quay về sau đăng nhập giữ pathname + query + hash (`core/auth/return-path.ts`, chỉ đường dẫn
 > nội bộ), kể cả khi hết phiên giữa chừng (sessionStorage) — callback OAuth TikTok không mất `code`/`state`. Trước đó: Dùng same-origin API proxy để refresh cookie không bị chặn và đồng bộ access token trực tiếp giữa các tab COOKIE mode.
 
 ## Phạm vi
@@ -37,6 +37,7 @@ Login gửi `LoginDto.rememberMe`: `false` tạo refresh cookie theo phiên trì
 - Request thử lại sau khi có token mới trả lỗi khác 401 ⇒ trả đúng lỗi đó. Vẫn 401 sau khi vừa xoay thành công ⇒ coi là phiên bị từ chối và đăng xuất.
 - Mã lỗi và tên lock/channel nằm ở `src/core/auth/auth-refresh.constants.ts`.
 - Hẹn giờ xoay chủ động (`auth-context.tsx`) phụ thuộc `tokenVersion` của `auth-token.store`, nên được đặt lại sau mỗi lần lưu token. Token BODY dựng lại từ cookie sau reload có `expiresIn = 0` ⇒ lấy mốc từ claim `exp` của JWT (chỉ để hẹn giờ, không xác minh).
+- Đăng xuất chủ động (`signOut` trong `auth-context.tsx`) gọi `clearAuthTokens({ broadcast: true })`: ở COOKIE mode phát `TOKENS_CLEARED` để tab khác xoá access token/hết hạn và `notify()`, rồi luồng auth hiện có chuyển về login. Tab nhận không phát lại (tránh vòng lặp). Các lần xoá nội bộ (refresh thất bại ở `lib/api/fetcher.ts`, `establishSession` lỗi, nút "Đăng nhập lại" của error boundary) KHÔNG broadcast để không đăng xuất nhầm tab khỏe.
 
 `sessionStorage` chỉ giữ cờ flash một lần và trang quay về (`dctd.admin.return-path`), không giữ token.
 
@@ -60,6 +61,7 @@ bằng một `/`, không `//`, `\`, ký tự điều khiển, cùng origin; khô
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.6.0 | 2026-11-16 | Thêm `AuthBroadcastMessage.TOKENS_CLEARED`: đăng xuất ở một tab đăng xuất các tab COOKIE khác; tab nhận chỉ xoá cục bộ, không phát lại. Refresh thất bại/`establishSession` lỗi/error boundary vẫn `clearAuthTokens()` không broadcast. BODY mode không đổi (storage event). |
 | 1.5.0 | 2026-10-06 | Giữ query khi quay về sau đăng nhập (callback OAuth TikTok), chỉ nhận đường dẫn nội bộ. |
 | 1.4.0 | 2026-09-30 | Proxy API cùng origin ở Vercel; BroadcastChannel truyền access token giữa các tab COOKIE mode và chống message cũ ghi đè. |
 | 1.3.0 | 2026-09-26 | Web Lock + BroadcastChannel giữa các tab, retry với token mới hơn, phân loại lỗi refresh (401 đăng xuất, 409 thử lại, mạng/5xx giữ phiên), hẹn giờ xoay luôn đặt lại. |

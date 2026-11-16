@@ -43,6 +43,8 @@ export const AUTH_BROADCAST_CHANNEL = 'dctd-admin-auth';
 export const AuthBroadcastMessage = {
   TOKENS_ROTATED: 'tokens-rotated',
   TOKENS_REQUESTED: 'tokens-requested',
+  /** Người dùng chủ động đăng xuất ở một tab: tab khác (COOKIE mode) xoá phiên trong memory. */
+  TOKENS_CLEARED: 'tokens-cleared',
 } as const;
 
 /** Chờ tab đang giữ access token trả lời trước khi tự xoay refresh cookie thêm lần nữa. */

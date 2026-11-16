@@ -1,4 +1,5 @@
 import { Modal, type ModalProps } from 'antd';
+import { TableSurfaceProvider } from '@/foundation/table/table-surface';
 import { MODAL_WIDTH } from './modal-width';
 import { useConfirmDiscard } from './use-confirm-discard';
 
@@ -44,7 +45,7 @@ export function FormModal({
         if (!submitting) requestClose();
       }}
     >
-      {children}
+      <TableSurfaceProvider value="embedded">{children}</TableSurfaceProvider>
     </Modal>
   );
 }

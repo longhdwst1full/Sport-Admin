@@ -1,5 +1,6 @@
 import { Button, Drawer, type DrawerProps } from 'antd';
 import type { ReactNode } from 'react';
+import { TableSurfaceProvider } from '@/foundation/table/table-surface';
 import { DRAWER_WIDTH } from './drawer-width';
 import { useConfirmDiscard } from './use-confirm-discard';
 
@@ -63,7 +64,7 @@ export function FormDrawer({
         </div>
       }
     >
-      {children}
+      <TableSurfaceProvider value="embedded">{children}</TableSurfaceProvider>
     </Drawer>
   );
 }

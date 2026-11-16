@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.8.0
+> **Document version:** 1.9.0
 >
-> **Last updated:** 2026-10-20
+> **Last updated:** 2026-11-16
 >
-> **Change summary:** Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm.
+> **Change summary:** `PosOrderDrawer` nạp lười (`lazy` + `Suspense`, chỉ mount sau lần bấm "Tạo đơn" đầu) nên module POS không nằm trong chunk `/orders`. Trước đó: Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm.
 
 ## Phạm vi
 
@@ -13,6 +13,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 ## Ranh giới và contract
 
 - `pages/orders-page.tsx` sở hữu tab/search/page/pageSize và gọi `useListAdminOrders`.
+- Drawer POS (`PosOrderDrawer`) nạp lười (`lazy` + `Suspense fallback={null}`) và chỉ mount sau lần bấm "Tạo đơn" đầu tiên; không import tĩnh `@/features/pos` ở trang này.
 - `components/order-table.tsx` chỉ trình bày `OrderRow` (map bằng `toOrderRow`) và phát action chọn order.
 - `components/order-detail-drawer.tsx` tự tải detail qua `useGetAdminOrder`, map một lần bằng `toOrderDetailView` rồi ghép các thẻ `order-detail-header`, `order-recipient-card`, `order-payment-card`, `order-items-card`, `order-status-history-card`, `order-action-footer` (khung chung `order-info-card`).
 - Điều kiện bật nút huỷ/xác nhận/hoàn tất ở `model/order-actions.policy.ts` (gương `order-transition.service.ts`); mutation + idempotency + invalidation ở `hooks/use-order-action.ts`. 409 thì tải lại chi tiết.
@@ -40,6 +41,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.9.0 | 2026-11-16 | `PosOrderDrawer` nạp lười qua barrel `@/features/pos`, giữ mounted sau lần mở đầu để giữ animation đóng và state. Props/open state không đổi. | perf/admin-quickwins |
 | 1.8.0 | 2026-10-20 | Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm. |  |
 | 1.7.0 | 2026-10-17 | Huỷ sau giao thất bại (policy/hook/footer/hộp xác nhận + cảnh báo hoàn tay); tab chỉ-lọc `AWAITING_SHIPMENT`. | Dashboard KPI + failed-delivery review |
 | 1.6.0 | 2026-10-13 | Tách drawer chi tiết thành thẻ con, mapper/policy có unit test; hiện giảm giá/thuế/ghi chú khách khi có; refetch chi tiết khi 409; báo lỗi khi sao chép mã thất bại. | Orders review |

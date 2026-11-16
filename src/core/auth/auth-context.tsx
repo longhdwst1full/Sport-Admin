@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await logoutAdmin(refreshToken ? { refreshToken } : {});
       }
     } finally {
-      clearAuthTokens();
+      clearAuthTokens({ broadcast: true });
       queryClient.clear();
     }
   }, [queryClient]);

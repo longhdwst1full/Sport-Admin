@@ -75,7 +75,7 @@ function withCellLineClamp<RecordType extends object>(
         const content: ReactNode = isCellObject(rendered) ? rendered.children : (rendered as ReactNode);
         const plain = typeof content === 'string' || typeof content === 'number' ? String(content) : undefined;
         const clamped = (
-          <div className="break-words" style={{ ...CELL_CLAMP_STYLE }} title={plain}>
+          <div className="break-words" style={CELL_CLAMP_STYLE} title={plain}>
             {content}
           </div>
         );
@@ -123,8 +123,11 @@ export function AdminTable<RecordType extends object>({
    */
   const [insideOverlay, setInsideOverlay] = useState(false);
   useLayoutEffect(() => {
+    // Ngữ cảnh đã là `embedded` (overlay dùng chung đã khai) thì kết quả luôn `embedded`: bỏ dò DOM
+    // và setState để không phát sinh render thừa. Chỉ dò khi thừa hưởng `page` (drawer/modal antd thô).
+    if (contextSurface !== 'page') return;
     setInsideOverlay(Boolean(containerRef.current?.closest('.ant-drawer, .ant-modal')));
-  }, []);
+  }, [contextSurface]);
   const effectiveSurface: TableSurface =
     surface ?? (insideOverlay ? 'embedded' : contextSurface);
   // UX: bảng chưa có dòng nào giữ chiều cao tự nhiên (chỉ ô trống), không kéo cao hết màn hình.

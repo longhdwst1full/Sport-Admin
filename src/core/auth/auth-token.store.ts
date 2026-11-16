@@ -59,11 +59,40 @@ export function usesAuthCookieTransport(): boolean {
   return cookieTransport;
 }
 
-export function clearAuthTokens(): void {
+function resetLocalAuthState(): void {
   cookieTransportTokens = undefined;
   savedExpiry = undefined;
   tokenSavedAt = 0;
+}
+
+export interface ClearAuthTokensOptions {
+  /**
+   * Chỉ đặt `true` ở đường đăng xuất do người dùng chủ động (COOKIE mode): báo các tab khác xoá
+   * access token trong memory. Mặc định `false` — refresh thất bại hay lỗi cục bộ KHÔNG được
+   * đăng xuất nhầm các tab còn khoẻ.
+   */
+  broadcast?: boolean;
+}
+
+export function clearAuthTokens(options: ClearAuthTokensOptions = {}): void {
+  resetLocalAuthState();
   AuthService.clear();
+  notify();
+  if (options.broadcast && cookieTransport) {
+    try {
+      authChannel()?.postMessage({
+        type: AuthBroadcastMessage.TOKENS_CLEARED,
+      } satisfies AuthBroadcastPayload);
+    } catch {
+      // Kênh đã đóng: tab khác sẽ tự phát hiện khi request kế tiếp trả 401.
+    }
+  }
+}
+
+/** Tab khác đã đăng xuất: chỉ xoá trạng thái cục bộ, KHÔNG phát lại để tránh vòng lặp. */
+function acceptPeerLogout(): void {
+  if (!cookieTransport) return;
+  resetLocalAuthState();
   notify();
 }
 
@@ -145,6 +174,10 @@ function authChannel(): BroadcastChannel | undefined {
     channel.onmessage = (event: MessageEvent<AuthBroadcastPayload>) => {
       if (event.data?.type === AuthBroadcastMessage.TOKENS_REQUESTED) {
         publishCurrentAccessToken(event.data.accessTokenBefore);
+        return;
+      }
+      if (event.data?.type === AuthBroadcastMessage.TOKENS_CLEARED) {
+        acceptPeerLogout();
         return;
       }
       if (event.data?.type !== AuthBroadcastMessage.TOKENS_ROTATED) return;

@@ -2,7 +2,7 @@ import { CheckCircleFilled, PrinterOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Modal, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { MODAL_WIDTH } from '@/foundation/overlay';
-import { AdminTable, EMPTY_CELL, col } from '@/foundation/table';
+import { AdminTable, EMPTY_CELL, TableSurfaceProvider, col } from '@/foundation/table';
 import { PosPaymentMethod, type OrderDetailDto, type OrderItemDto } from '@/generated/api/orders/orders.schemas';
 import { PrintableOrderReceipt, printOrderReceipt } from '@/features/receipt';
 import { parseEnum } from '@/shared/utils/parse-enum';
@@ -42,66 +42,68 @@ export function PosReceiptModal({
   const paymentLabel = paymentMethod ? posPaymentMethodLabels[paymentMethod] : EMPTY_CELL;
 
   return (
-    <Modal
-      open={Boolean(order)}
-      width={MODAL_WIDTH.lg}
-      onCancel={onClose}
-      title={
-        <span className="flex items-center gap-2">
-          <CheckCircleFilled className="text-emerald-600" />
-          Đã bán xong
-        </span>
-      }
-      footer={[
-        <Button key="print" icon={<PrinterOutlined />} onClick={printOrderReceipt}>
-          In biên lai
-        </Button>,
-        <Button key="new" type="primary" onClick={onNewOrder}>
-          Bán đơn tiếp theo
-        </Button>,
-      ]}
-    >
-      {order && (
-        <div id="pos-receipt">
-          <Descriptions column={2} size="small" bordered className="mb-4">
-            <Descriptions.Item label="Mã đơn" span={2}>
-              <span className="font-mono text-base font-bold">{order.orderNo}</span>
-            </Descriptions.Item>
-            <Descriptions.Item label="Khách hàng">{order.recipient.name}</Descriptions.Item>
-            <Descriptions.Item label="Điện thoại">{order.recipient.phone}</Descriptions.Item>
-            <Descriptions.Item label="Chi nhánh">{order.branchName}</Descriptions.Item>
-            <Descriptions.Item label="Thanh toán">
-              {paymentLabel} <Tag color="green">Đã thu</Tag>
-            </Descriptions.Item>
-            {order.customerNote && (
-              <Descriptions.Item label="Ghi chú" span={2}>
-                {order.customerNote}
+    <TableSurfaceProvider value="embedded">
+      <Modal
+        open={Boolean(order)}
+        width={MODAL_WIDTH.lg}
+        onCancel={onClose}
+        title={
+          <span className="flex items-center gap-2">
+            <CheckCircleFilled className="text-emerald-600" />
+            Đã bán xong
+          </span>
+        }
+        footer={[
+          <Button key="print" icon={<PrinterOutlined />} onClick={printOrderReceipt}>
+            In biên lai
+          </Button>,
+          <Button key="new" type="primary" onClick={onNewOrder}>
+            Bán đơn tiếp theo
+          </Button>,
+        ]}
+      >
+        {order && (
+          <div id="pos-receipt">
+            <Descriptions column={2} size="small" bordered className="mb-4">
+              <Descriptions.Item label="Mã đơn" span={2}>
+                <span className="font-mono text-base font-bold">{order.orderNo}</span>
               </Descriptions.Item>
-            )}
-          </Descriptions>
+              <Descriptions.Item label="Khách hàng">{order.recipient.name}</Descriptions.Item>
+              <Descriptions.Item label="Điện thoại">{order.recipient.phone}</Descriptions.Item>
+              <Descriptions.Item label="Chi nhánh">{order.branchName}</Descriptions.Item>
+              <Descriptions.Item label="Thanh toán">
+                {paymentLabel} <Tag color="green">Đã thu</Tag>
+              </Descriptions.Item>
+              {order.customerNote && (
+                <Descriptions.Item label="Ghi chú" span={2}>
+                  {order.customerNote}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
 
-          <AdminTable
-            size="small"
-            rowKey="id"
-            pagination={false}
-            dataSource={order.items}
-            columns={RECEIPT_ITEM_COLUMNS}
-            summary={() => (
-              <Table.Summary.Row>
-                <Table.Summary.Cell index={0} colSpan={3} align="right">
-                  <span className="font-semibold">Tổng cộng</span>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={1} align="right">
-                  <span className="text-base font-bold text-emerald-700">
-                    {moneyFormatter.format(Number(order.grandTotal))}
-                  </span>
-                </Table.Summary.Cell>
-              </Table.Summary.Row>
-            )}
-          />
-        </div>
-      )}
-      <PrintableOrderReceipt order={order} />
-    </Modal>
+            <AdminTable
+              size="small"
+              rowKey="id"
+              pagination={false}
+              dataSource={order.items}
+              columns={RECEIPT_ITEM_COLUMNS}
+              summary={() => (
+                <Table.Summary.Row>
+                  <Table.Summary.Cell index={0} colSpan={3} align="right">
+                    <span className="font-semibold">Tổng cộng</span>
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={1} align="right">
+                    <span className="text-base font-bold text-emerald-700">
+                      {moneyFormatter.format(Number(order.grandTotal))}
+                    </span>
+                  </Table.Summary.Cell>
+                </Table.Summary.Row>
+              )}
+            />
+          </div>
+        )}
+        <PrintableOrderReceipt order={order} />
+      </Modal>
+    </TableSurfaceProvider>
   );
 }
