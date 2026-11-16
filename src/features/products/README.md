@@ -1,10 +1,11 @@
 # Products — maintenance note
 
-> **Document version:** 2.4.1
+> **Document version:** 2.4.2
 >
-> **Last updated:** 2026-11-15
+> **Last updated:** 2026-11-16
 >
-> **Change summary:** Bỏ bốn thẻ thống kê đầu danh sách Sản phẩm; giữ bộ lọc, bảng, tổng số bản ghi và chọn số dòng trong phân trang. Không đổi API hay lifecycle.
+> **Change summary:** Bật/tắt hiển thị, xuất bản, lưu trữ/khôi phục gặp 409 thì invalidate danh sách/detail sản phẩm để lần bấm sau mang version mới (test `use-product-list-actions.test.tsx`).
+> Trước đó: Bỏ bốn thẻ thống kê đầu danh sách Sản phẩm; giữ bộ lọc, bảng, tổng số bản ghi và chọn số dòng trong phân trang. Không đổi API hay lifecycle.
 
 ## Workspace Tạo/Sửa
 
@@ -117,7 +118,7 @@ Các operation từ `src/generated/api/catalog/catalog.ts` (kiểu ở `catalog.
 ## Checklist khi sửa
 
 - [ ] Sửa điều kiện publish phải cập nhật `product-workflow.policy.test.ts`.
-- [ ] Mutation gửi `expectedVersion`; xung đột version hiển thị rõ, không im lặng ghi đè.
+- [ ] Mutation gửi `expectedVersion`; xung đột version hiển thị rõ, không im lặng ghi đè, và 409 phải làm mới dữ liệu đang hiển thị.
 - [ ] Không đọc trực tiếp field DTO trong JSX — đi qua mapper.
 
 
@@ -137,6 +138,7 @@ Sản phẩm đã bán không được xoá cứng — dòng đơn hàng còn th
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 2.4.2 | 2026-11-16 | 409 ở toggle hiển thị và lệnh vòng đời → `invalidateProductQueries`; regression test hook. |
 | 2.4.1 | 2026-11-15 | Bỏ các thẻ Tổng sản phẩm/Hiển thị trên trang/Kích thước trang/Trang hiện tại; giữ phân trang của bảng. |
 | 2.4.0 | 2026-11-15 | Lọc status bằng enum/API hiện có, đồng bộ URL và reset trang khi đổi/xóa filter; regression hook/browser. |
 | 2.3.0 | 2026-10-17 | SKU/barcode do API sinh (bỏ ô nhập), nút "Thêm mới"; bỏ menu ba chấm ở danh sách (nút icon riêng), bỏ Tiếp tục/Quay lại ở footer (Tạo có ở mọi tab), chế độ chỉ xem đọc rõ cho sản phẩm lưu trữ, bố cục tab Thông tin lưới 3 cột. |

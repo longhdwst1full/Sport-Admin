@@ -1,10 +1,11 @@
 # Fulfillments — maintenance note
 
-> **Document version:** 1.2.0
+> **Document version:** 1.2.1
 >
-> **Last updated:** 2026-11-03
+> **Last updated:** 2026-11-16
 >
-> **Change summary:** GHN tự động: bàn giao không nhập mã vận đơn; disable đổi tay kết quả khi SHIPPED/GHN, đọc trạng thái nội bộ mỗi 15s khi tab hoạt động. Field shippingMethod/shippingProvider đến từ OpenAPI regenerate. Giao ngoài giữ nhập mã/tác vụ thủ công.
+> **Change summary:** In phiếu giao chỉ mở `labelUrl` http(s) (`toSafeExternalUrl`); URL khác bị chặn và đóng tab trống.
+> Trước đó: GHN tự động: bàn giao không nhập mã vận đơn; disable đổi tay kết quả khi SHIPPED/GHN, đọc trạng thái nội bộ mỗi 15s khi tab hoạt động. Field shippingMethod/shippingProvider đến từ OpenAPI regenerate. Giao ngoài giữ nhập mã/tác vụ thủ công.
 
 ## Phạm vi
 
@@ -47,6 +48,7 @@ Route gác bằng `fulfillment.view` (scope `GLOBAL;BRANCH;WAREHOUSE;OWN`). Back
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.2.1 | 2026-11-16 | SECURITY: kiểm tra scheme `labelUrl` trước khi gán vào tab cùng origin. |
 | 1.2.0 | 2026-11-03 | GHN auto handover, webhook-owned delivery outcome, detail polling và tests; API-20261103-GHN-HANDOVER. |
 | 1.1.0 | 2026-10-10 | URL filters, `StatusTag`/tone, modal thao tác dùng `FormModal`, bỏ `shared/constants/fulfillment-status-presentation`. |
 | 1.0.0 | 2026-09-13 | Tạo feature, lấp khoảng trống `listAdminFulfillments` chưa được dùng. |

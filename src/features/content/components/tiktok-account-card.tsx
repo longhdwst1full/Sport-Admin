@@ -25,6 +25,7 @@ import {
 } from '../constants/social.constants';
 import { socialCommandErrorMessage } from '../model/social-command-error';
 import { rememberTikTokReturnPath } from '../model/tiktok-connect-return';
+import { toSafeExternalUrl } from '@/shared/utils';
 
 function toTikTokConnectionState(account: TikTokAccountDto): TikTokConnectionState {
   if (!account.appConfigured) return TIKTOK_CONNECTION.APP_NOT_CONFIGURED;
@@ -49,8 +50,14 @@ export function TikTokAccountCard() {
   const connect = useMutation({
     mutationFn: () => startAdminTikTokConnect(),
     onSuccess: ({ authorizeUrl }) => {
+      // SECURITY: chỉ điều hướng tới URL http(s); `location.assign('javascript:…')` sẽ chạy script trên origin Admin.
+      const target = toSafeExternalUrl(authorizeUrl);
+      if (!target) {
+        void message.error('Liên kết kết nối TikTok không hợp lệ.');
+        return;
+      }
       rememberTikTokReturnPath(`${location.pathname}${location.search}`);
-      window.location.assign(authorizeUrl);
+      window.location.assign(target);
     },
     onError: (error) => void message.error(socialCommandErrorMessage(error)),
   });

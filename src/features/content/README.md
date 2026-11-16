@@ -1,10 +1,11 @@
 # Content — maintenance note
 
-> **Document version:** 3.15.0
+> **Document version:** 3.15.1
 >
-> **Last updated:** 2026-11-07
+> **Last updated:** 2026-11-16
 >
-> **Change summary:** API-20261107-FACEBOOK-HARD-DELETE: Facebook delete trả 204, xóa cache detail và làm mới hai danh sách, đóng drawer đã xóa; cảnh báo xóa vĩnh viễn và giữ website/TikTok dùng chung.
+> **Change summary:** Kết nối TikTok chỉ điều hướng tới `authorizeUrl` http(s) (`toSafeExternalUrl`).
+> Trước đó: API-20261107-FACEBOOK-HARD-DELETE: Facebook delete trả 204, xóa cache detail và làm mới hai danh sách, đóng drawer đã xóa; cảnh báo xóa vĩnh viễn và giữ website/TikTok dùng chung.
 > Trước đó: Giữ chính sách dọn nguồn video Facebook; preview bài đã đăng mở liên kết Facebook và không tải nguồn Cloudinary đã dọn. CSP chỉ cho phép media từ self/blob/Cloudinary; nguồn lỗi có cảnh báo thay vì player trống.
 > Trước đó: Chi tiết bài mạng xã hội tự cập nhật mỗi 10s khi Facebook/TikTok đang đăng hoặc chưa rõ kết quả; dừng khi kết thúc hoặc tab bị ẩn. Không tự gọi lệnh đăng lại/đồng bộ.
 > Trước đó: Thêm thẻ tài khoản Facebook qua `useGetAdminFacebookAccount`: tên/Page ID, liên kết Page, trạng thái token và quyền đã xác minh; quyền xem `social.post.manage`, không trả secret.
@@ -162,6 +163,7 @@ nghĩa là schema đã đỡ được vòng đời Nháp → Xuất bản → L�
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 3.15.1 | 2026-11-16 | SECURITY: kiểm tra scheme `authorizeUrl` TikTok trước `location.assign`. |
 | 3.15.0 | 2026-11-07 | API-20261107-FACEBOOK-HARD-DELETE: response 204, xóa cache detail, invalidate list, đóng drawer và cảnh báo purge DB. |
 | 3.13.0 | 2026-11-01 | Theo dõi tiến độ đăng video Facebook/TikTok tự động mỗi 10s khi còn đang xử lý; dừng khi kết thúc/tab ẩn. |
 | 3.12.0 | 2026-11-01 | Thẻ tài khoản Facebook: tên/Page ID/link, trạng thái xác minh và quyền Meta; generated operation getAdminFacebookAccount. |

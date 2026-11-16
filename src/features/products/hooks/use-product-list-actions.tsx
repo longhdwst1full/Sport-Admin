@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
 import { useCan } from '@/core/auth/permissions';
 import { useUpdateAdminProduct } from '@/generated/api/catalog/catalog';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import type { ProductListRow } from '../model/product-list.mapper';
 import { invalidateProductQueries } from './product-query-cache';
 import { useProductLifecycle } from './use-product-lifecycle';
@@ -23,7 +23,12 @@ export function useProductListActions() {
         await invalidateProductQueries(queryClient, updated);
         void message.success(data.isPublished ? 'Đã hiện sản phẩm trên website' : 'Đã ẩn sản phẩm khỏi website');
       },
-      onError: (error: unknown) => void message.error(getApiErrorMessage(error)),
+      onError: (error: unknown) => {
+        // CONCURRENCY: 409 = dòng đang hiển thị mang `version` cũ (người khác vừa sửa). Không tải lại danh sách thì
+        // lần bật/tắt kế tiếp vẫn gửi version cũ và 409 mãi tới khi cache list hết hạn.
+        if (getApiErrorPayload(error)?.statusCode === 409) void invalidateProductQueries(queryClient);
+        void message.error(getApiErrorMessage(error));
+      },
     },
   });
 

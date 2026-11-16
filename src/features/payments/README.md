@@ -1,8 +1,9 @@
 # Payment management
 
-> **Version:** 1.3.0  
-> **Updated:** 2026-11-07  
-> **Summary:** Nút "Gửi lại thông tin thanh toán" (`resendAdminPaymentInstruction`). Trước đó: Lọc/trang trên URL, drawer chuẩn `DetailDrawer`, từ chối bằng chứng qua `useConfirmWithReason`.
+> **Version:** 1.3.1  
+> **Updated:** 2026-11-16  
+> **Summary:** Mọi 409 của xác nhận/từ chối/tiền về trễ/hoàn tay đều tải lại chi tiết payment để lần gửi sau mang `expectedVersion` mới (test `payment-detail-drawer.test.tsx`).
+> Trước đó: Nút "Gửi lại thông tin thanh toán" (`resendAdminPaymentInstruction`). Trước đó: Lọc/trang trên URL, drawer chuẩn `DetailDrawer`, từ chối bằng chứng qua `useConfirmWithReason`.
 
 ## Scope
 
@@ -12,6 +13,7 @@
 - "Gửi lại thông tin thanh toán" (`resendAdminPaymentInstruction`, quyền `order.manage`): chỉ hiện cho chuyển khoản/VNPay `PENDING`/`FAILED`, đơn `PENDING_CONFIRMATION`, còn hạn (`model/payment-instruction-resend.policy.ts`); xác nhận trước khi gửi, báo lỗi theo mã `PAYMENT_INSTRUCTION_RESEND_*`, tải lại chi tiết khi trạng thái đã đổi/hết hạn.
 - Chuyển khoản chỉ được xác nhận khi có bằng chứng chờ duyệt. COD chỉ được ghi nhận sau khi Order ở `DELIVERED`.
 - Mutation gửi `expectedVersion` và `Idempotency-Key`; key chỉ được giữ khi retry đúng cùng payload, còn payload đổi sẽ sinh key mới.
+- CONCURRENCY: mọi 409 (version cũ, trạng thái đã đổi, key đã dùng) refetch `getAdminPayment`; version mới làm đổi signature nên lần gửi kế tiếp có key mới.
 - Sau mutation, Payment detail được cập nhật từ response; Payment list, Order detail và mọi trang Order list đều bị invalidate vì summary status đã thay đổi.
 
 ## UI states and maintenance
@@ -27,6 +29,7 @@
 
 | Version | Date | Change summary |
 | --- | --- | --- |
+| 1.3.1 | 2026-11-16 | 409 khi xác nhận/từ chối/ghi tiền về trễ/hoàn tay → refetch chi tiết; regression test drawer. |
 | 1.3.0 | 2026-11-07 | Nút gửi lại email thông tin thanh toán cho đơn chờ thanh toán. |
 | 1.2.0 | 2026-10-10 | URL filters, `StatusTag`/tone cho thanh toán và bằng chứng, `DetailDrawer`, `FormModal`, `useConfirmWithReason`. |
 | 1.1.0 | 2026-09-12 | Đồng bộ cache Order sau review Payment và khóa idempotency theo payload signature. |

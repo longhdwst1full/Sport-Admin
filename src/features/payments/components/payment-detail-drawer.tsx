@@ -82,6 +82,12 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
     queryFn: ({ signal }) => getAdminPayment(paymentId!, signal),
   });
   const payment = detail.data;
+  // CONCURRENCY: mọi 409 của payment (version cũ, trạng thái đã đổi, key đã dùng cho lần khác) đều cần bản mới:
+  // `expectedVersion` lấy từ `payment` đang cache (staleTime 20s), không tải lại thì bấm lại chắc chắn lại 409 và
+  // nút/trạng thái vẫn hiển thị theo bản cũ. Bản mới đổi version ⇒ signature đổi ⇒ lần gửi sau có key mới.
+  const reloadAfterConflict = (error: unknown) => {
+    if (getApiErrorPayload(error)?.statusCode === 409) void detail.refetch();
+  };
   const mutation = useMutation({
     retry: false,
     mutationFn: async (request: SettleRequest) => {
@@ -114,6 +120,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       resetAction();
     },
     onError: (error) => {
+      reloadAfterConflict(error);
       void message.error(getApiErrorMessage(error, 'Không cập nhật được thanh toán.'));
     },
   });
@@ -142,6 +149,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       resetLateReceipt();
     },
     onError: (error) => {
+      reloadAfterConflict(error);
       void message.error(getApiErrorMessage(error, 'Không ghi nhận được tiền về trễ.'));
     },
   });
@@ -171,6 +179,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: { paymentId?: string
       resetManualRefund();
     },
     onError: (error) => {
+      reloadAfterConflict(error);
       void message.error(getApiErrorMessage(error, 'Không ghi nhận được hoàn tiền thủ công.'));
     },
   });

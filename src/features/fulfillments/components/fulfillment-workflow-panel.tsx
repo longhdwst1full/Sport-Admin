@@ -39,6 +39,7 @@ import {
   returnConditionOptions,
 } from '../constants/fulfillment.constants';
 import { nextIdempotencyKey } from '@/shared/utils/idempotency';
+import { toSafeExternalUrl } from '@/shared/utils';
 
 type FulfillmentAction = 'pick' | 'pack' | 'ship' | 'deliver' | 'fail' | 'receive' | 'reship';
 
@@ -129,7 +130,14 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
   const printLabel = useMutation<FulfillmentLabelDto, unknown, { fulfillmentId: string; target: Window | null }>({
     mutationFn: ({ fulfillmentId }) => createAdminFulfillmentLabel(fulfillmentId),
     retry: false,
-    onSuccess: ({ labelUrl }, { target }) => {
+    onSuccess: ({ labelUrl: rawLabelUrl }, { target }) => {
+      // SECURITY: `target` là tab trống cùng origin Admin; chỉ gán URL http(s) để không chạy `javascript:` tại đây.
+      const labelUrl = toSafeExternalUrl(rawLabelUrl);
+      if (!labelUrl) {
+        target?.close();
+        void message.error('Hãng vận chuyển trả về liên kết phiếu giao không hợp lệ.');
+        return;
+      }
       if (target) {
         target.opener = null;
         target.location.href = labelUrl;

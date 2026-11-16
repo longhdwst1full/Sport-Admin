@@ -6,7 +6,7 @@ import {
   useReactivateAdminProduct,
 } from '@/generated/api/catalog/catalog';
 import { ProductType, type ProductDetailDto, type ProductStatus } from '@/generated/api/catalog/catalog.schemas';
-import { getApiErrorMessage } from '@/lib/api/error';
+import { getApiErrorMessage, getApiErrorPayload } from '@/lib/api/error';
 import { invalidateProductQueries } from './product-query-cache';
 
 /** Đủ thông tin để xác nhận và gửi lệnh vòng đời; dòng danh sách lẫn detail đều thoả. */
@@ -34,7 +34,11 @@ export function useProductLifecycle() {
         await invalidateProductQueries(queryClient, updated);
         void message.success(success);
       },
-      onError: (error: unknown) => void message.error(getApiErrorMessage(error, failure)),
+      onError: (error: unknown) => {
+        // CONCURRENCY: 409 = `expectedVersion` lấy từ dòng/chi tiết đã cũ; tải lại để lần bấm sau mang version mới.
+        if (getApiErrorPayload(error)?.statusCode === 409) void invalidateProductQueries(queryClient);
+        void message.error(getApiErrorMessage(error, failure));
+      },
     },
   });
   const publish = usePublishAdminProduct(
