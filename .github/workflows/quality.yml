@@ -8,6 +8,10 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      # Repo API là private: `contracts:check` tải contract bằng token này (thêm secret API_REPO_TOKEN,
+      # quyền đọc Contents của Sport-api-doc). Thiếu secret thì bước đó báo lỗi 404 kèm hướng dẫn.
+      CONTRACTS_GITHUB_TOKEN: ${{ secrets.API_REPO_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
