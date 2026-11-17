@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Dropdown, Layout, Menu, Tag, Tooltip, type MenuProps, Spin } from 'antd';
+import { Avatar, Badge, Button, Dropdown, Layout, Menu, Tag, Tooltip, type MenuProps, Spin } from 'antd';
 import {
   AppstoreOutlined,
   BankOutlined,
@@ -25,10 +25,11 @@ import {
 } from '@/app/navigation/navigation.config';
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import { setSidebarCollapsed, toggleSidebar } from '@/app/store/layout.slice';
-import { usePermissions } from '@/core/auth/permissions';
+import { useCan, usePermissions } from '@/core/auth/permissions';
 import { useAuth } from '@/core/auth/auth-context';
 import { CopilotLauncher, CopilotPageContextProvider } from '@/features/assistant-copilot';
 import { MfaSelfEnrollmentEntry } from '@/features/auth';
+import { OrderLiveWatcher, useOrderLiveSummary } from '@/features/orders';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
 import { PageContainer } from '@/foundation/layout/page-container';
 import { NavigationTabs } from '@/layouts/components/navigation-tabs';
@@ -42,6 +43,9 @@ const NOTIFICATIONS_PATH = '/notifications';
 const SettingsModal = lazy(() =>
   import('@/layouts/components/settings-modal').then((module) => ({ default: module.SettingsModal })),
 );
+
+/** Mục menu hiện số đơn chờ xác nhận. */
+const ORDERS_PATH = '/orders';
 
 // Icon nhóm là hằng: dựng một lần để menuItems memo ổn định.
 const GROUP_ICONS: Record<string, React.ReactNode> = {
@@ -102,6 +106,11 @@ export function AdminLayout() {
     }
   }
 
+  // Đơn mới/việc cần làm: hỏi định kỳ (một vòng hỏi dùng chung với `OrderLiveWatcher`).
+  const canViewOrders = useCan('order.view');
+  const liveSummary = useOrderLiveSummary(canViewOrders);
+  const pendingOrders = liveSummary.data?.pendingConfirmation ?? 0;
+
   const menuItems = useMemo<MenuProps['items']>(
     () =>
       Object.entries(NAVIGATION_GROUP_LABELS)
@@ -111,7 +120,15 @@ export function AdminLayout() {
           .map((item) => ({
             key: item.path,
             icon: item.icon,
-            label: item.label,
+            label:
+              item.path === ORDERS_PATH && pendingOrders > 0 ? (
+                <span className="flex items-center justify-between gap-2">
+                  {item.label}
+                  <Badge count={pendingOrders} overflowCount={99} size="small" title={`${pendingOrders} đơn chờ xác nhận`} />
+                </span>
+              ) : (
+                item.label
+              ),
           }));
 
         if (children.length === 0) return null;
@@ -128,7 +145,7 @@ export function AdminLayout() {
         };
       })
       .filter(Boolean) as MenuProps['items'],
-    [visibleItems],
+    [visibleItems, pendingOrders],
   );
 
   const user = auth.currentUser;
@@ -149,6 +166,7 @@ export function AdminLayout() {
     <Layout className="h-screen max-h-screen overflow-hidden bg-white">
       {/* ── Command Palette (Cmd+K) ──────────────────────────── */}
       <CommandPalette />
+      {canViewOrders && <OrderLiveWatcher />}
 
       {/* ── Body (Sidebar + Main) ─────────────────────────────── */}
       <Layout className="relative h-full min-h-0 overflow-hidden">

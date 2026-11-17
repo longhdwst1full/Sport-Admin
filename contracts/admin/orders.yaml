@@ -136,6 +136,36 @@ paths:
         - Admin Orders
       x-required-permissions:
         - order.manage
+  /api/v1/admin/orders/live-summary:
+    get:
+      operationId: getAdminOrderLiveSummary
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOrderLiveSummaryDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Số đơn mới hôm nay, đơn chờ xác nhận, chuyển khoản chờ đối soát và đơn web mới nhất (cho Admin polling)
+      tags:
+        - Admin Orders
+      x-required-permissions:
+        - order.view
   /api/v1/admin/orders:
     get:
       operationId: listAdminOrders
@@ -522,6 +552,22 @@ paths:
         - order.manage
 components:
   schemas:
+    AdminOrderLatestDto:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          example: "1"
+        orderNo:
+          type: string
+        placedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - orderNo
+        - placedAt
     AdminOrderListDto:
       type: object
       properties:
@@ -540,6 +586,33 @@ components:
         - page
         - limit
         - total
+    AdminOrderLiveSummaryDto:
+      type: object
+      properties:
+        ordersToday:
+          type: number
+          description: Đơn đặt từ 0 giờ hôm nay (giờ Việt Nam), mọi kênh
+        pendingConfirmation:
+          type: number
+          description: Đơn đang chờ cửa hàng xác nhận
+        paymentsAwaitingReview:
+          type: number
+          description: Đơn có ảnh chuyển khoản đang chờ đối soát
+        latestWebOrder:
+          nullable: true
+          description: Đơn web mới nhất; Admin so `id` với lần trước để báo đơn mới
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/AdminOrderLatestDto"
+        serverTime:
+          type: string
+          format: date-time
+      required:
+        - ordersToday
+        - pendingConfirmation
+        - paymentsAwaitingReview
+        - latestWebOrder
+        - serverTime
     CompleteOrderCommandDto:
       type: object
       properties:

@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.9.0
+> **Document version:** 1.10.0
 >
-> **Last updated:** 2026-11-16
+> **Last updated:** 2026-11-17
 >
-> **Change summary:** `PosOrderDrawer` nạp lười (`lazy` + `Suspense`, chỉ mount sau lần bấm "Tạo đơn" đầu) nên module POS không nằm trong chunk `/orders`. Trước đó: Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm.
+> **Change summary:** Báo đơn mới: polling `getAdminOrderLiveSummary`, số chờ xác nhận trên menu, `OrderLiveWatcher` (toast/âm báo/thông báo hệ điều hành). Trước đó: `PosOrderDrawer` nạp lười (`lazy` + `Suspense`, chỉ mount sau lần bấm "Tạo đơn" đầu) nên module POS không nằm trong chunk `/orders`. Trước đó: Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm.
 
 ## Phạm vi
 
@@ -29,6 +29,16 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 - "Huỷ sau giao thất bại" (`cancelAdminOrderAfterFailedDelivery`, `order.manage`): nút chỉ hiện khi `SHIPPED` + fulfillment `RETURNED`. Hộp xác nhận (`useConfirmWithReason` + `OrderFailedDeliveryCancelSummary`) hiện trạng thái đơn/thanh toán, tổng đơn và hệ quả; lý do ≥ 3 ký tự. Đơn đã thu (payment `SUCCESS`) → API giữ `SUCCESS` + cờ hoàn tay, UI cảnh báo kế toán hoàn ngoài hệ thống rồi ghi nhận ở màn Thanh toán (`recordManualRefundAdmin`). `OrderDetailDto` không có số tiền đã thu nên chỉ hiện tổng đơn làm tham chiếu.
 - Sau mutation, detail cache được cập nhật và toàn bộ list/tab Order được invalidate vì bản ghi có thể đổi tab.
 
+## Báo đơn mới (polling)
+
+- `useOrderLiveSummary` hỏi `getAdminOrderLiveSummary` mỗi 30 giây (tab ẩn 60 giây, quay lại tab hỏi ngay); mọi nơi dùng chung
+  một query key nên chỉ một vòng hỏi. Backend đếm theo phạm vi chi nhánh (`order.view`), không trả dữ liệu khách.
+- Layout hiện số `pendingConfirmation` cạnh menu "Đơn hàng" và gắn `OrderLiveWatcher` cho người có `order.view`.
+- `OrderLiveWatcher`: lần hỏi đầu chỉ lấy mốc `latestWebOrder.id`; id đổi thì toast "Có đơn hàng mới" (nút mở
+  `/orders?orderNo=…&open=1`), tiếng "ting" (Web Audio), thông báo hệ điều hành khi tab ẩn và đã được cấp quyền, rồi invalidate
+  danh sách đơn + KPI dashboard. Mỗi tab báo riêng; nhiều đơn giữa hai lần hỏi thì báo đơn mới nhất.
+- Không dùng SSE/WebSocket: API chạy serverless (Vercel). Telegram cho nhân viên do backend gửi (xem README Notification).
+
 ## Checklist khi sửa
 
 - [ ] Giữ đủ loading/error/empty/search debounce/pagination/detail states.
@@ -41,6 +51,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
 
 | Version | Date | Change summary | Source |
 | --- | --- | --- | --- |
+| 1.10.0 | 2026-11-17 | Báo đơn mới bằng polling `live-summary`, badge menu, `OrderLiveWatcher`. | Thông báo đơn hàng cho CSKH |
 | 1.9.0 | 2026-11-16 | `PosOrderDrawer` nạp lười qua barrel `@/features/pos`, giữ mounted sau lần mở đầu để giữ animation đóng và state. Props/open state không đổi. | perf/admin-quickwins |
 | 1.8.0 | 2026-10-20 | Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm. |  |
 | 1.7.0 | 2026-10-17 | Huỷ sau giao thất bại (policy/hook/footer/hộp xác nhận + cảnh báo hoàn tay); tab chỉ-lọc `AWAITING_SHIPMENT`. | Dashboard KPI + failed-delivery review |
