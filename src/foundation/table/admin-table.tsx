@@ -101,6 +101,8 @@ export function AdminTable<RecordType extends object>({
   size,
   ...props
 }: AdminTableProps<RecordType>) {
+  // `locale.emptyText` do chỗ gọi truyền (chữ thuần) vẫn được vẽ trong cùng khung trống để có chiều cao đồng nhất.
+  const { emptyText: customEmptyText, ...localeRest } = locale ?? {};
   // `size` truyền tay vẫn thắng: vài bảng nhúng trong drawer cần cố định độ cao dòng.
   const density = useTableDensity();
   const normalizedPagination =
@@ -167,23 +169,33 @@ export function AdminTable<RecordType extends object>({
         }}
         pagination={normalizedPagination}
         locale={{
+          // UX: bảng danh sách chính chưa có dòng nào vẫn có chiều cao vừa phải (không co thành một dòng chữ
+          // mỏng, cũng không kéo hết màn hình); bảng nhúng trong drawer/modal giữ gọn.
           emptyText: (
             <div
               data-testid="admin-table-empty"
-              className="py-8 text-center select-none"
+              className={`flex flex-col items-center justify-center py-8 text-center select-none ${
+                effectiveSurface === 'page' ? 'min-h-[260px]' : ''
+              }`}
             >
-              <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-ba-iron-100 text-ba-iron-400">
+              <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-ba-iron-100 text-ba-iron-400">
                 <InboxOutlined className="text-xl" />
               </div>
-              <div className="text-xs font-semibold text-ba-iron-700">
-                {emptyEntity ? `Chưa có ${emptyEntity} nào` : 'Chưa có dữ liệu'}
-              </div>
-              <div className="mt-0.5 text-[11px] text-ba-iron-400">
-                Thêm mới, hoặc nới bộ lọc nếu bạn đang tìm thứ gì đó.
-              </div>
+              {customEmptyText ? (
+                <div className="text-xs font-semibold text-ba-iron-700">{typeof customEmptyText === 'function' ? customEmptyText() : customEmptyText}</div>
+              ) : (
+                <>
+                  <div className="text-xs font-semibold text-ba-iron-700">
+                    {emptyEntity ? `Chưa có ${emptyEntity} nào` : 'Chưa có dữ liệu'}
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-ba-iron-400">
+                    Thêm mới, hoặc nới bộ lọc nếu bạn đang tìm thứ gì đó.
+                  </div>
+                </>
+              )}
             </div>
           ),
-          ...locale,
+          ...localeRest,
         }}
       />
     </div>

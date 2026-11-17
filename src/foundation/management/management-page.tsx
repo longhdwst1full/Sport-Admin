@@ -12,7 +12,8 @@ export interface ManagementMetric {
 }
 
 interface ManagementPageProps {
-  eyebrow: string;
+  /** Nhãn nhỏ phía trên tiêu đề; bỏ trống thì không hiện. */
+  eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
@@ -69,9 +70,11 @@ export function ManagementPage({
       {/* ── Page header ──────────────────────────────────── */}
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-4">
         <div className="max-w-3xl">
-          <Typography.Text className="!text-[10px] !font-bold !tracking-[0.16em] !text-slate-400">
-            {eyebrow.toUpperCase()}
-          </Typography.Text>
+          {eyebrow && (
+            <Typography.Text className="!text-[10px] !font-bold !tracking-[0.16em] !text-slate-400">
+              {eyebrow.toUpperCase()}
+            </Typography.Text>
+          )}
           <Typography.Title level={2} className="!mb-1 !mt-1 !text-slate-900">
             {title}
           </Typography.Title>
