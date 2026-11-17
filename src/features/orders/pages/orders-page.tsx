@@ -103,7 +103,6 @@ export function OrdersPage() {
   return (
     <PageTransition>
       <ManagementPage
-        eyebrow="Bán hàng"
         title="Quản lý đơn hàng"
         // Chỉ số việc cần làm lấy từ API tổng hợp (cùng nguồn với số trên menu và bộ báo đơn mới), tính trên TOÀN
         // bộ đơn trong phạm vi chi nhánh — không phụ thuộc trang/bộ lọc đang xem, nên không gây hiểu nhầm.
