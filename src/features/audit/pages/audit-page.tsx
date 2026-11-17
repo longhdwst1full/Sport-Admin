@@ -1,10 +1,6 @@
 import {
-  AuditOutlined,
   CopyOutlined,
   EyeOutlined,
-  HistoryOutlined,
-  LockOutlined,
-  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { App, Button, DatePicker, Descriptions, Empty, Select, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -144,15 +140,9 @@ export function AuditPage() {
   return (
     <PageTransition>
       <ManagementPage
-        eyebrow="Bảo mật & Truy vết hệ thống"
+        eyebrow="Bảo mật & truy vết"
         title="Nhật ký Audit Log"
-        description="Toàn bộ hành vi ghi và thay đổi trạng thái dữ liệu trên hệ thống đều được ghi nhận bất biến."
-        metrics={[
-          { key: 'page-events', label: 'Sự kiện trên trang', value: items.length, icon: <HistoryOutlined />, tone: 'blue' },
-          { key: 'privacy', label: 'Bảo vệ dữ liệu', value: 'Đã che thông tin', icon: <LockOutlined />, tone: 'green' },
-          { key: 'scope', label: 'Phạm vi truy vết', value: 'Toàn hệ thống', icon: <SafetyCertificateOutlined />, tone: 'green' },
-          { key: 'page-idx', label: 'Trang truy vấn', value: `Trang ${page + 1}`, icon: <AuditOutlined />, tone: 'orange' },
-        ]}
+        description="Mọi thao tác ghi và đổi trạng thái dữ liệu đều được lưu lại, không thể sửa."
         filters={
           <FilterBar actions={<RefreshButton onRefresh={query.refetch} loading={query.isFetching} />}>
             <SearchInput

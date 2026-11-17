@@ -262,13 +262,11 @@ export function ReviewsPage() {
           </div>
         )}
 
+        {/* UX: thanh thao tác hàng loạt chỉ hiện khi đã chọn dòng; lúc chưa chọn không chiếm chỗ bằng dòng gợi ý. */}
         <PermissionGate permission="catalog.review.moderate">
+          {selectedIds.length > 0 && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <span className="text-sm font-semibold text-slate-700">
-              {selectedIds.length === 0
-                ? 'Chọn đánh giá trong bảng để hậu kiểm'
-                : `Đã chọn ${selectedIds.length} đánh giá`}
-            </span>
+            <span className="text-sm font-semibold text-slate-700">Đã chọn {selectedIds.length} đánh giá</span>
             <Space size="small">
               <Popconfirm
                 title={`Khôi phục hiển thị ${approvable.length} đánh giá?`}
@@ -301,13 +299,12 @@ export function ReviewsPage() {
                   Ẩn{hideable.length > 0 ? ` (${hideable.length})` : ''}
                 </Button>
               </Popconfirm>
-              {selectedIds.length > 0 && (
-                <Button type="text" onClick={() => setSelectedIds([])}>
-                  Bỏ chọn
-                </Button>
-              )}
+              <Button type="text" onClick={() => setSelectedIds([])}>
+                Bỏ chọn
+              </Button>
             </Space>
           </div>
+          )}
         </PermissionGate>
 
         <AdminTable

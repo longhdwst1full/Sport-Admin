@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { MailOutlined, PhoneOutlined, PlusOutlined, SettingOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
+import { MailOutlined, PhoneOutlined, PlusOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Select } from 'antd';
 import { useListAdminCustomers } from '@/generated/api/customers/customers';
 import { CustomerKind, CustomerStatus } from '@/generated/api/customers/customers.schemas';
@@ -10,10 +10,8 @@ import { ManagementPage } from '@/foundation/management';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import {
   ADMIN_TABLE_DEFAULT_PAGE_SIZE,
-  ColumnSettingsModal,
   FilterBar,
   RefreshButton,
-  useColumnVisibility,
 } from '@/foundation/table';
 import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { PageTransition } from '@/foundation/layout/page-transition';
@@ -22,10 +20,8 @@ import { CustomerFormDrawer } from '../components/customer-form-drawer';
 import { CustomerTable } from '../components/customer-table';
 import { useCustomerLifecycle } from '../hooks/use-customer-lifecycle';
 import {
-  CUSTOMER_COLUMN_ITEMS,
   customerKindOptions,
   customerStatusOptions,
-  moneyFormatter,
 } from '../constants/customer.constants';
 import { toCustomerRowView, type CustomerRowView } from '../model/customer.mapper';
 
@@ -49,7 +45,6 @@ export function CustomersPage() {
   const [selectedId, setSelectedId] = useState<string>();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CustomerRowView>();
-  const columnsState = useColumnVisibility(CUSTOMER_COLUMN_ITEMS, 'customers');
 
 
   const customers = useListAdminCustomers({
@@ -62,12 +57,7 @@ export function CustomersPage() {
     status,
   });
   const rows = useMemo(() => (customers.data?.items ?? []).map(toCustomerRowView), [customers.data]);
-
   const lifecycle = useCustomerLifecycle();
-  const pageSpend = (customers.data?.items ?? []).reduce(
-    (sum, item) => sum + Number(item.lifetimeValue),
-    0,
-  );
 
   return (
     <PageTransition>
@@ -75,41 +65,11 @@ export function CustomersPage() {
         eyebrow="Chăm sóc khách hàng"
         title="Quản lý khách hàng"
         description="Danh sách khách đã mua hàng, kèm số đơn, số tiền đã chi và lịch sử đặt hàng."
-        metrics={[
-          {
-            key: 'total',
-            label: 'Tổng khách khớp lọc',
-            value: customers.data?.total ?? 0,
-            icon: <TeamOutlined />,
-            tone: 'blue',
-          },
-          {
-            key: 'page',
-            label: 'Khách trên trang',
-            value: rows.length,
-            icon: <UserOutlined />,
-            tone: 'orange',
-          },
-          {
-            key: 'spend',
-            label: 'Chi tiêu của khách trên trang',
-            value: moneyFormatter.format(pageSpend),
-            icon: <WalletOutlined />,
-            tone: 'green',
-          },
-        ]}
         filters={
           <FilterBar
             actions={
               <>
                 <RefreshButton onRefresh={customers.refetch} loading={customers.isFetching} />
-                <Button
-                  icon={<SettingOutlined />}
-                  onClick={columnsState.open}
-                  className="text-slate-600"
-                >
-                  Tuỳ chỉnh cột
-                </Button>
                 {canCreateStandaloneCustomer && (
                   <PermissionGate permission="customer.manage">
                     <Button
@@ -180,7 +140,6 @@ export function CustomersPage() {
           loading={customers.isLoading || customers.isFetching}
           page={page}
           total={customers.data?.total ?? 0}
-          applyColumns={columnsState.apply}
           onPageChange={(nextPage: number) => url.set('page', nextPage > 1 ? nextPage : undefined)}
           onOpen={setSelectedId}
           busyId={lifecycle.busyId}
@@ -206,7 +165,6 @@ export function CustomersPage() {
 
       <CustomerDetailDrawer customerId={selectedId} onClose={() => setSelectedId(undefined)} />
 
-      <ColumnSettingsModal {...columnsState.modalProps} columns={CUSTOMER_COLUMN_ITEMS} />
     </PageTransition>
   );
 }

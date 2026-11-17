@@ -1,11 +1,8 @@
 import {
   BarChartOutlined,
-  FacebookOutlined,
-  FileTextOutlined,
   GlobalOutlined,
   PlusOutlined,
   ShareAltOutlined,
-  WarningOutlined,
 } from '@ant-design/icons';
 import { Button, Dropdown, Segmented, Tabs, Tooltip } from 'antd';
 import { lazy, Suspense, useCallback, useState } from 'react';
@@ -123,9 +120,9 @@ export function ContentPage() {
   return (
     <PageTransition>
       <ManagementPage
-        eyebrow="Quản trị nội dung CMS"
+        eyebrow="Nội dung CMS"
         title="Bài viết & Tin tức"
-        description="Soạn thảo, quản lý bài viết trên storefront và bài đăng Facebook Page, TikTok."
+        description="Soạn và quản lý bài viết trên website, cùng bài đăng Facebook Page và TikTok."
         actions={
           <div className="flex flex-wrap gap-2">
             <RefreshButton onRefresh={list.refetch} loading={list.isFetching} />
@@ -152,30 +149,6 @@ export function ContentPage() {
             )}
           </div>
         }
-        metrics={[
-          { key: 'total', label: 'Bài khớp bộ lọc', value: posts.total, icon: <FileTextOutlined />, tone: 'blue' },
-          {
-            key: 'website',
-            label: 'Đang hiện trên web (trang này)',
-            value: posts.pageStats.website,
-            icon: <GlobalOutlined />,
-            tone: 'green',
-          },
-          {
-            key: 'facebook',
-            label: 'Có bản Facebook (trang này)',
-            value: posts.pageStats.facebook,
-            icon: <FacebookOutlined />,
-            tone: 'blue',
-          },
-          {
-            key: 'attention',
-            label: 'Lỗi / chưa rõ kết quả (trang này)',
-            value: posts.pageStats.attention,
-            icon: <WarningOutlined />,
-            tone: 'red',
-          },
-        ]}
         filters={
           <ContentPostFilters
             filters={filters}

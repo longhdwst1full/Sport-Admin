@@ -1,4 +1,4 @@
-import { EditOutlined, PlusOutlined, PoweroffOutlined, ProfileOutlined } from '@ant-design/icons';
+import { EditOutlined, PlusOutlined, PoweroffOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { App, Button, Popconfirm, Tag } from 'antd';
 import { useMemo, useState } from 'react';
@@ -106,9 +106,6 @@ export function AttributesPage() {
             </PermissionGate>
           </div>
         )}
-        metrics={[
-          { key: 'total', label: 'Tổng thuộc tính', value: attributesQuery.data?.items.length ?? 0, icon: <ProfileOutlined />, tone: 'blue' },
-        ]}
         filters={(
           <FilterBar actions={<RefreshButton onRefresh={attributesQuery.refetch} loading={attributesQuery.isFetching} />}>
             <SearchInput value={list.searchValue} placeholder="Tìm theo mã hoặc tên..." onChange={list.onSearch} />

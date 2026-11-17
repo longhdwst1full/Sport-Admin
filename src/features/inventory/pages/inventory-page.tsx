@@ -110,9 +110,9 @@ export function InventoryPage() {
   return (
     <PageTransition>
       <ManagementPage
-        eyebrow="Quản trị kho vận"
+        eyebrow="Kho vận"
         title="Tồn kho & Sổ kho"
-        description="Theo dõi tồn khả dụng theo từng kho, đối soát phiếu điều chỉnh và audit sổ kho bất biến từ cơ sở dữ liệu."
+        description="Theo dõi tồn khả dụng theo kho, đối soát phiếu điều chỉnh và sổ kho (chỉ ghi thêm, không sửa được)."
         actions={
           <div className="flex flex-wrap gap-2">
             <RefreshButton onRefresh={refresh} loading={isRefreshing} />

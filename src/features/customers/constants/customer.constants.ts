@@ -3,20 +3,7 @@ import {
   CustomerStatus,
 } from '@/generated/api/customers/customers.schemas';
 import type { StatusPresentation } from '@/foundation/management/status-tag';
-import type { ColumnItem } from '@/foundation/table';
 import { toOptions } from '@/shared/utils/options';
-
-/** Cột bật/tắt được trong "Tuỳ chỉnh cột"; `id` khớp `key` của cột trong bảng. */
-export const CUSTOMER_COLUMN_ITEMS: ColumnItem[] = [
-  { id: 'customer', label: 'Khách hàng', fixed: true },
-  { id: 'contact', label: 'Liên hệ' },
-  { id: 'kind', label: 'Loại khách' },
-  { id: 'orderCount', label: 'Số đơn' },
-  { id: 'lifetimeValue', label: 'Đã chi tiêu' },
-  { id: 'lastOrder', label: 'Mua gần nhất' },
-  { id: 'status', label: 'Trạng thái' },
-  { id: 'actions', label: 'Thao tác', fixed: true },
-];
 
 export { moneyFormatter } from '@/lib/format/money';
 

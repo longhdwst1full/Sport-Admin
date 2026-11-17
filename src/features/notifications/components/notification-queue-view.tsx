@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react';
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
-  MailOutlined,
   StopOutlined,
 } from '@ant-design/icons';
 import { App, Select } from 'antd';
@@ -75,18 +74,11 @@ export function NotificationQueueView({ switcher }: { switcher: ReactNode }) {
 
   return (
     <ManagementPage
-      eyebrow="Vận hành email"
+      eyebrow="Email"
       title="Thông báo email"
-      description="Theo dõi hàng đợi gửi email nghiệp vụ và đưa lại hàng đợi các thông báo đã dừng xử lý sau khi khắc phục nguyên nhân."
+      description="Theo dõi hàng đợi gửi email và đưa lại hàng đợi các thông báo đã dừng sau khi khắc phục lỗi."
       actions={switcher}
       metrics={[
-        {
-          key: 'total',
-          label: 'Kết quả phù hợp',
-          value: notifications.data?.total ?? 0,
-          icon: <MailOutlined />,
-          tone: 'blue',
-        },
         {
           key: 'pending',
           label: 'Chờ gửi trên trang',

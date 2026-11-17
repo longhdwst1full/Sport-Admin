@@ -12,13 +12,12 @@ import {
   useDeleteAdminPost,
   useListAdminSocialPosts,
 } from '@/generated/api/content/content';
-import { AnyContentPostType, type SocialPostSummaryDto } from '@/generated/api/content/content.schemas';
+import type { SocialPostSummaryDto } from '@/generated/api/content/content.schemas';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { useListPageReset } from '@/shared/hooks/use-list-page-reset';
 import { useSearchState } from '@/shared/hooks/use-search-state';
 import { useUrlFilters } from '@/shared/hooks/use-url-filters';
 import { CONTENT_TAB, LEGACY_SOCIAL_TAB } from '../constants/social.constants';
-import { needsAttention } from '../model/social-actions.policy';
 import { parseSocialFilters, toSocialListParams } from '../model/social-post-filters';
 
 export const CONTENT_PAGE_SIZE = ADMIN_TABLE_DEFAULT_PAGE_SIZE;
@@ -59,14 +58,6 @@ export function useContentPosts() {
   );
   const rows = useMemo(() => list.data?.items ?? [], [list.data]);
   const total = list.data?.meta.total ?? 0;
-  const pageStats = useMemo(
-    () => ({
-      facebook: rows.filter((row) => row.facebook).length,
-      attention: rows.filter((row) => needsAttention(row.facebook?.status) || needsAttention(row.tiktok?.status)).length,
-      website: rows.filter((row) => row.postType !== AnyContentPostType.SOCIAL && row.isPublished).length,
-    }),
-    [rows],
-  );
 
   // CACHE: màn này đọc danh sách gộp; danh sách bài website vẫn invalidate cho màn khác.
   // Chi tiết của bài vừa đổi cũng invalidate: version tăng, form sửa/drawer đọc cache cũ sẽ gửi version lệch (409).
@@ -99,5 +90,5 @@ export function useContentPosts() {
     },
   });
 
-  return { filters, updateParams, search, page, setPage, list, rows, total, pageStats, visibility, archive };
+  return { filters, updateParams, search, page, setPage, list, rows, total, visibility, archive };
 }

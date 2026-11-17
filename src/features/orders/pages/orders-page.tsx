@@ -2,8 +2,8 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
 import { useCopilotPageHints } from '@/features/assistant-copilot';
 import {
+  ClockCircleOutlined,
   DollarOutlined,
-  InboxOutlined,
   PhoneOutlined,
   PlusOutlined,
   SettingOutlined,
@@ -27,7 +27,7 @@ import { PageTransition } from '@/foundation/layout/page-transition';
 import { useUrlSearch } from '@/shared/hooks/use-url-search';
 import { OrderDetailDrawer } from '../components/order-detail-drawer';
 import { OrderTable } from '../components/order-table';
-import { moneyFormatter } from '@/lib/format/money';
+import { useOrderLiveSummary } from '../hooks/use-order-live-summary';
 import { ORDER_COLUMN_ITEMS, orderFilterOnlyTabs, orderTabs } from '../constants/order.constants';
 import { toOrderRow } from '../model/order.mapper';
 
@@ -98,43 +98,37 @@ export function OrdersPage() {
     patchUrl({ open: undefined });
   }, [autoOpenId, patchUrl]);
 
-  const totalValue = rows.reduce((sum, order) => sum + Number(order.grandTotal), 0);
+  const { data: summary } = useOrderLiveSummary(true);
 
   return (
     <PageTransition>
       <ManagementPage
-        eyebrow="Vận hành bán hàng"
+        eyebrow="Bán hàng"
         title="Quản lý đơn hàng"
-        description="Theo dõi toàn bộ đơn hàng từ lúc đặt, xác nhận, đóng gói, xuất kho đến giao hàng thành công."
+        // Chỉ số việc cần làm lấy từ API tổng hợp (cùng nguồn với số trên menu và bộ báo đơn mới), tính trên TOÀN
+        // bộ đơn trong phạm vi chi nhánh — không phụ thuộc trang/bộ lọc đang xem, nên không gây hiểu nhầm.
         metrics={[
           {
-            key: 'total',
-            label: 'Tổng đơn khớp lọc',
-            value: orders.data?.total ?? 0,
+            key: 'today',
+            label: 'Đơn hôm nay',
+            value: summary?.ordersToday ?? '—',
             icon: <ShoppingCartOutlined />,
             tone: 'blue',
           },
           {
-            key: 'page',
-            label: 'Đơn trên trang',
-            value: rows.length,
-            icon: <InboxOutlined />,
-            tone: 'green',
-          },
-          {
-            key: 'items',
-            label: 'Sản phẩm trên trang',
-            value: rows.reduce((sum, order) => sum + order.itemCount, 0),
-            icon: <ShoppingCartOutlined />,
+            key: 'pending',
+            label: 'Chờ xác nhận',
+            value: summary?.pendingConfirmation ?? '—',
+            icon: <ClockCircleOutlined />,
             tone: 'orange',
           },
           {
-            key: 'value',
-            label: 'Doanh thu trên trang',
-            value: moneyFormatter.format(totalValue),
+            key: 'payment-review',
+            label: 'Chờ đối soát thanh toán',
+            value: summary?.paymentsAwaitingReview ?? '—',
             icon: <DollarOutlined />,
-            tone: 'green',
-            hint: 'Giá đã bao gồm VAT',
+            tone: 'red',
+            hint: 'Đơn có ảnh chuyển khoản chưa duyệt',
           },
         ]}
         filters={

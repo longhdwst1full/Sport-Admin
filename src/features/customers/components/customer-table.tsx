@@ -140,7 +140,6 @@ export function CustomerTable({
   loading,
   page,
   total,
-  applyColumns,
   onPageChange,
   onOpen,
   onEdit,
@@ -152,8 +151,6 @@ export function CustomerTable({
   loading: boolean;
   page: number;
   total: number;
-  /** Lọc cột theo cài đặt ẩn/hiện (`useColumnVisibility().apply`). */
-  applyColumns: (columns: ColumnsType<CustomerRowView>) => ColumnsType<CustomerRowView>;
   onPageChange: (page: number) => void;
   onOpen: (id: string) => void;
   onEdit: (row: CustomerRowView) => void;
@@ -169,7 +166,7 @@ export function CustomerTable({
       rowKey="id"
       dataSource={rows}
       loading={loading}
-      columns={applyColumns(columns)}
+      columns={columns}
       tableLayout="fixed"
       scroll={{ x: 1220 }}
       onRow={(row) => ({ onClick: () => onOpen(row.id), style: { cursor: 'pointer' } })}

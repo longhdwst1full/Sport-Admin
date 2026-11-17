@@ -1,9 +1,6 @@
 import { CACHE_POLICY } from '@/shared/constants/query-cache-policy';
 import {
-  BankOutlined,
   EditOutlined,
-  EnvironmentOutlined,
-  InboxOutlined,
   PlusOutlined,
   PoweroffOutlined,
 } from '@ant-design/icons';
@@ -95,7 +92,6 @@ export function OrganizationPage() {
       ),
     [allRows, keyword, status],
   );
-  const regionCount = new Set(branches.map((branch) => branch.address.province)).size;
   const hasError = branchesQuery.isError || (canViewWarehouses && warehousesQuery.isError);
   const refresh = async () => {
     await Promise.all([
@@ -191,23 +187,6 @@ export function OrganizationPage() {
           </Button>
         </PermissionGate>
       }
-      metrics={[
-        { key: 'branches', label: 'Chi nhánh', value: branches.length, icon: <BankOutlined /> },
-        {
-          key: 'warehouses',
-          label: 'Kho bán hàng',
-          value: warehouses.length,
-          icon: <InboxOutlined />,
-          tone: 'orange',
-        },
-        {
-          key: 'regions',
-          label: 'Khu vực',
-          value: regionCount,
-          icon: <EnvironmentOutlined />,
-          tone: 'blue',
-        },
-      ]}
       filters={
         <FilterBar
           actions={
