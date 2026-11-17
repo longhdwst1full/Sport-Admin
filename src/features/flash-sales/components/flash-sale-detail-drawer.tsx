@@ -270,6 +270,8 @@ export function FlashSaleDetailDrawer({
                 size="middle"
                 dataSource={campaign.items}
                 pagination={false}
+                // Danh sách dài thì cuộn trong bảng (tiêu đề cột đứng yên) thay vì kéo dài cả drawer.
+                scroll={{ x: 'max-content', y: 'min(55vh, 480px)' }}
                 loading={detail.isFetching}
                 locale={{ emptyText: 'Chưa có suất bán nào trong chiến dịch.' }}
                 columns={itemColumns}

@@ -104,6 +104,7 @@ export function FlashSalesPage() {
           total={campaigns.data?.total ?? 0}
           onPageChange={(next) => url.set('page', next > 1 ? next : undefined)}
           onOpen={setSelectedId}
+          canManage={canManage}
         />
       </ManagementPage>
 

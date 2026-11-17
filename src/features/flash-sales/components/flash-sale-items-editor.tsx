@@ -269,7 +269,7 @@ export function FlashSaleItemsEditor({
         size="small"
         pagination={false}
         dataSource={items}
-        scroll={{ x: 690 }}
+        scroll={{ x: 690, y: 'min(50vh, 420px)' }}
         locale={{ emptyText: 'Chưa có suất bán nào. Chọn sản phẩm ở trên rồi bấm Thêm.' }}
         columns={columns}
       />

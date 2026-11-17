@@ -7,9 +7,11 @@ import { toOptions } from '@/shared/utils/options';
 export const flashSaleStatusPresentation: Record<FlashSaleCampaignStatus, StatusPresentation> = {
   DRAFT: { label: 'Nháp', color: 'neutral' },
   SCHEDULED: { label: 'Đã lên lịch', color: 'info' },
-  ACTIVE: { label: 'Đang chạy', color: 'success' },
-  ENDED: { label: 'Đã kết thúc', color: 'neutral' },
-  CANCELLED: { label: 'Đã huỷ', color: 'neutral' },
+  // Đang chạy dùng `progress` (cyan) để nổi hẳn khỏi "Đã lên lịch" xanh dương; kết thúc bình thường (accent,
+  // tím) khác với huỷ (danger, đỏ) để nhìn bảng là biết chiến dịch nào bị dừng giữa chừng.
+  ACTIVE: { label: 'Đang chạy', color: 'progress' },
+  ENDED: { label: 'Đã kết thúc', color: 'accent' },
+  CANCELLED: { label: 'Đã huỷ', color: 'danger' },
 };
 
 export const flashSaleStatusOptions = toOptions(flashSaleStatusPresentation);
