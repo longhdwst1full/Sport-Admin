@@ -175,7 +175,7 @@ export function BannersPage() {
       <ManagementPage
         eyebrow="Quản trị nội dung CMS"
         title="Banner"
-        description="Banner trang chủ, thẻ khuyến mãi, chân trang và đầu trang danh mục trên storefront."
+        description="Banner trang chủ, khuyến mãi, chân trang và đầu trang danh mục."
         actions={(
           <PermissionGate permission={BANNER_PERMISSION.MANAGE}>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditor({ open: true })}>

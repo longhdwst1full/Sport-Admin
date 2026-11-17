@@ -239,7 +239,7 @@ function ReturnActionForm({
               className="mb-4"
               type="info"
               showIcon
-              message="Chỉ hàng còn bán được mới nhập lại kho bán. Hàng hỏng chọn giữ lại hoặc huỷ; hàng không nhận được không được hoàn tiền."
+              message="Chỉ hàng còn bán được mới nhập lại kho bán; hàng không nhận được không được hoàn tiền."
             />
             <AdminTable
               rowKey="id"

@@ -76,7 +76,6 @@ export function NotificationQueueView({ switcher }: { switcher: ReactNode }) {
     <ManagementPage
       eyebrow="Email"
       title="Thông báo email"
-      description="Theo dõi hàng đợi gửi email và đưa lại hàng đợi các thông báo đã dừng sau khi khắc phục lỗi."
       actions={switcher}
       metrics={[
         {

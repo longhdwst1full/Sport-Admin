@@ -40,7 +40,7 @@ export function OrderFailedDeliveryCancelSummary({ order }: OrderFailedDeliveryC
           type="warning"
           showIcon
           message="Đơn đã thu tiền: cần hoàn tiền thủ công"
-          description="Thanh toán giữ trạng thái Thành công và được gắn cờ chờ hoàn tay. Kế toán chuyển trả số đã thu cho khách ngoài hệ thống, rồi ghi nhận hoàn tiền ở màn Thanh toán. Khách nhận email báo khoản hoàn thủ công."
+          description="Thanh toán giữ trạng thái Thành công và gắn cờ chờ hoàn tay. Kế toán chuyển trả khách ngoài hệ thống rồi ghi nhận hoàn tiền ở màn Thanh toán; khách nhận email báo."
         />
       ) : (
         <Alert type="info" showIcon message="Chưa thu tiền: giao dịch thanh toán chờ thu sẽ bị huỷ, không phát sinh hoàn tiền." />

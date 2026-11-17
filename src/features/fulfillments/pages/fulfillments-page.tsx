@@ -40,7 +40,6 @@ export function FulfillmentsPage() {
       <ManagementPage
         eyebrow="Vận hành kho"
         title="Giao vận"
-        description="Hàng đợi xử lý tại kho: lấy hàng, đóng gói, bàn giao và nhận hàng hoàn."
         metrics={[
           {
             key: 'total',

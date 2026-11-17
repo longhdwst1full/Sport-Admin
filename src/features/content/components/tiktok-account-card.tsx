@@ -99,7 +99,7 @@ export function TikTokAccountCard() {
             {data.connected && (
               <Popconfirm
                 title="Ngắt kết nối tài khoản TikTok?"
-                description="Xoá token đã lưu (không thu hồi phía TikTok). Video đang đăng dừng lại tới khi kết nối lại; chỉ số TikTok ngừng đồng bộ."
+                description="Xoá token đã lưu (không thu hồi phía TikTok). Video đang đăng dừng lại và chỉ số ngừng đồng bộ tới khi kết nối lại."
                 okText="Ngắt kết nối"
                 okButtonProps={{ danger: true }}
                 cancelText="Huỷ"

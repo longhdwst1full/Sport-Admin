@@ -55,7 +55,7 @@ interface MasterDataListQuery<T> {
 
 interface MasterDataListPageProps<T extends MasterDataRow> {
   title: string;
-  description: string;
+  description?: string;
   /** Tên thực thể viết thường, dùng trong nhãn nút/xác nhận (ví dụ `thương hiệu`). */
   entity: string;
   permission: string;

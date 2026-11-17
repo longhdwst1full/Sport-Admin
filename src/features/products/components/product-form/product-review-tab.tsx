@@ -180,7 +180,7 @@ export function ProductReviewTab({
           type="info"
           showIcon
           message={`Sẽ ghi ${openingTotal} sản phẩm tồn đầu${branchLabel ? ` tại ${branchLabel}` : ''}`}
-          description="Tồn đầu được ghi bằng một phiếu điều chỉnh kho riêng ngay sau khi tạo sản phẩm, nên tra lại được vì sao kho có số lượng này."
+          description="Tồn đầu được ghi bằng một phiếu điều chỉnh kho riêng sau khi tạo sản phẩm."
         />
       )}
     </div>

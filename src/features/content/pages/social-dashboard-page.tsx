@@ -180,7 +180,6 @@ export function SocialDashboardPage() {
       <ManagementPage
         eyebrow="Quản trị nội dung CMS"
         title="Dashboard mạng xã hội"
-        description="Theo dõi hiệu quả bài đăng Facebook và TikTok theo khoảng ngày."
         actions={
           <div className="flex flex-wrap gap-2">
             <RefreshButton onRefresh={dashboard.refetch} loading={dashboard.isFetching} />

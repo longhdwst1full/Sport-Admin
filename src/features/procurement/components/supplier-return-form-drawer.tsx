@@ -70,7 +70,7 @@ export function SupplierReturnFormDrawer({ open, editing, onClose, onCreated }: 
         : returnable.isPending ? <TableSkeleton rows={3} />
         : returnable.error ? <QueryErrorAlert message="Không tải được số còn trả của phiếu nhập" error={returnable.error} retry={returnable.refetch} />
         : <>
-          <Alert className="!mb-3" type="info" showIcon message="Chỉ trả SKU thuộc phiếu nhập gốc. Số còn trả = số nhập − số trên các phiếu trả chưa huỷ; hệ thống kiểm tra lại khi lưu." />
+          <Alert className="!mb-3" type="info" showIcon message="Chỉ trả SKU thuộc phiếu nhập gốc, tối đa bằng số nhập trừ số đã trả." />
           <LineItemsFields variantOptions={receiptVariantOptions} quantityName="quantity" quantityLabel="Số trả" unitCostRequired={false} costName="invoiceUnitCost" costLabel="Giá hoá đơn" quantityLimits={quantityLimits} />
         </>}
     </Form>

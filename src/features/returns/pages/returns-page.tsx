@@ -48,7 +48,6 @@ export function ReturnsPage() {
       <ManagementPage
         eyebrow="Hậu mãi"
         title="Đổi trả & hoàn tiền"
-        description="Duyệt yêu cầu trả, nhận và kiểm hàng, hoàn tiền có chứng từ để đối chiếu."
         metrics={[
           metric('decision', 'Chờ duyệt', counts?.awaitingDecision, <ClockCircleOutlined />, 'orange'),
           metric('receipt', 'Chờ nhận hàng', counts?.awaitingReceipt, <InboxOutlined />, 'blue'),

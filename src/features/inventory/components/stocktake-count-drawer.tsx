@@ -156,7 +156,7 @@ export function StocktakeCountDrawer({
         type="warning"
         showIcon
         message="Ô trống nghĩa là chưa đếm, không phải đếm ra 0"
-        description="Nếu vị trí đó thực sự không còn hàng, hãy nhập số 0. Phiếu chỉ nộp được khi mọi dòng đã có số đếm. Tồn hệ thống được ẩn để số đếm phản ánh đúng hàng trên kệ."
+        description="Không còn hàng thì nhập 0. Phiếu chỉ nộp được khi mọi dòng đã có số đếm."
       />
       <AdminTable
         rowKey="sku"

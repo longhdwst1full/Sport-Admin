@@ -74,7 +74,7 @@ export function ProductBundleManager({ product, onChanged }: ProductPanelProps) 
     <div className="space-y-4">
       <FormSection
         title="Thành phần đã khai"
-        description="Tồn bán được của combo tính từ SKU thành phần. Combo chỉ xuất bản được khi mọi SKU combo đang bán đã có thành phần."
+        description="Combo chỉ xuất bản được khi mọi SKU combo đang bán đã có thành phần."
         icon={<ApartmentOutlined />}
       >
         {declared.length === 0 ? (

@@ -96,7 +96,6 @@ export function AttributesPage() {
       <ManagementPage
         eyebrow="Dữ liệu danh mục gốc"
         title="Thuộc tính sản phẩm"
-        description="Danh mục thông số kỹ thuật dùng chung (chất liệu, kích thước, màu…) để nhập thống nhất cho mọi sản phẩm."
         actions={(
           <div className="flex flex-wrap gap-2">
             <PermissionGate permission="catalog.product.manage">

@@ -77,7 +77,6 @@ export function CategoriesPage() {
   return (
     <MasterDataListPage<CategoryDto>
       title="Danh mục"
-      description="Quản trị cấu trúc cây ngành hàng thể thao hiển thị trên Storefront."
       entity="danh mục"
       permission="catalog.category.manage"
       totalMetric={{ key: 'categories', label: 'Tổng danh mục', icon: <AppstoreOutlined />, tone: 'orange' }}

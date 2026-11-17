@@ -69,7 +69,7 @@ export function ProductOpeningStockTab({
   return (
     <FormSection
       title="Tồn đầu theo chi nhánh / kho"
-      description="Sản phẩm dùng chung toàn hệ thống; số lượng quản lý riêng theo từng kho. V1 mỗi chi nhánh có đúng một kho. Để 0 nếu chưa nhập hàng."
+      description="Số lượng quản lý riêng theo từng kho. Để 0 nếu chưa nhập hàng."
       icon={<InboxOutlined />}
     >
       <div className="grid gap-4 md:grid-cols-2">

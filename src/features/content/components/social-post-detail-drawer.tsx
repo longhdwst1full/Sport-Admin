@@ -150,7 +150,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
               type="info"
               showIcon
               message="Facebook đang xử lý video"
-              description="Hệ thống tự kiểm tra và cập nhật khi Facebook xử lý xong. Có thể bấm Đối soát nếu cần kiểm tra ngay; không đăng lại để tránh bài trùng."
+              description="Hệ thống tự cập nhật khi Facebook xử lý xong. Có thể bấm Đối soát; không đăng lại để tránh bài trùng."
             />
           )}
           {facebook?.status === FacebookPublicationStatus.UNCERTAIN && !videoProcessing && (

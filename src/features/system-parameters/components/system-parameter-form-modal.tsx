@@ -88,7 +88,7 @@ export function SystemParameterFormModal({
           type="info"
           showIcon
           message="Tham số hệ thống"
-          description="Code đang đọc tham số này theo mã. Chỉ sửa được giá trị; mã, kiểu và khoảng hợp lệ do catalog trong mã nguồn quyết định."
+          description="Chỉ sửa được giá trị; mã, kiểu và khoảng hợp lệ do catalog quyết định."
         />
       )}
       {!isEdit && (
@@ -97,7 +97,7 @@ export function SystemParameterFormModal({
           type="warning"
           showIcon
           message="Tham số tuỳ biến không được code sử dụng"
-          description="Đây chỉ là chỗ lưu giá trị vận hành. Muốn một tham số ảnh hưởng tới nghiệp vụ thì phải khai báo trong catalog ở mã nguồn."
+          description="Tham số chỉ có hiệu lực khi đã khai báo trong catalog ở mã nguồn."
         />
       )}
 

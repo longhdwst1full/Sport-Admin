@@ -199,7 +199,7 @@ export function ReviewsPage() {
       <ManagementPage
         eyebrow="Ý kiến khách hàng"
         title="Đánh giá & Nhận xét"
-        description="Đánh giá của khách đã mua hiển thị ngay trên storefront; hậu kiểm ở đây là ẩn đánh giá vi phạm hoặc khôi phục lại."
+        description="Đánh giá hiển thị ngay trên website; tại đây ẩn đánh giá vi phạm hoặc khôi phục lại."
         metrics={[
           {
             key: 'total',

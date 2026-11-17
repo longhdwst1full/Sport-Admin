@@ -26,7 +26,6 @@ export function ProcurementPage() {
   return <PageTransition><ManagementPage
     eyebrow="Mua hàng & cung ứng"
     title="Quản lý nhập hàng"
-    description="Quản lý nhà cung cấp, đơn mua hàng, phiếu nhập và hàng trả nhà cung cấp theo đúng luồng duyệt và sổ kho."
   >
     <Tabs
       destroyOnHidden

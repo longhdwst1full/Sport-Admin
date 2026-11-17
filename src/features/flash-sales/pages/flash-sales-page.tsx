@@ -44,7 +44,7 @@ export function FlashSalesPage() {
       <ManagementPage
         eyebrow="Khuyến mãi & tiếp thị"
         title="Flash Sale"
-        description="Chiến dịch giảm giá theo khung giờ với số suất giới hạn cho từng SKU."
+        description="Giảm giá theo khung giờ, giới hạn số suất theo SKU."
         metrics={[
           {
             key: 'total',

@@ -49,7 +49,6 @@ export function SupportTicketsPage() {
       <ManagementPage
         eyebrow="Chăm sóc khách hàng"
         title="Hàng đợi hỗ trợ"
-        description="Tiếp nhận, giao việc, trả lời và đóng yêu cầu hỗ trợ của khách hàng."
         filters={(
           <FilterBar actions={<RefreshButton onRefresh={list.refetch} loading={list.isFetching} />}>
             <SearchInput

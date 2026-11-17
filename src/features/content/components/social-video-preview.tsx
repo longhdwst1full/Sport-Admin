@@ -71,7 +71,7 @@ export function SocialVideoPreview({
             type="info"
             showIcon
             message="Xem video đã đăng trên Facebook"
-            description="Hệ thống tiếp tục dọn video nguồn sau khi đăng. Vui lòng mở Facebook để xem lại video; khả năng truy cập phụ thuộc trạng thái bài và quyền trên Facebook."
+            description="Video nguồn đã được dọn sau khi đăng. Mở Facebook để xem lại."
             action={<Button href={facebookUrl} target="_blank" rel="noopener noreferrer">Xem trên Facebook</Button>}
           />
         ) : detail.isError && !videoUrl ? (
@@ -87,7 +87,7 @@ export function SocialVideoPreview({
             type="warning"
             showIcon
             message="Không phát được video nguồn"
-            description="Video có thể đã được dọn khỏi kho lưu trữ, bị chặn hoặc không còn truy cập được. Nếu nguồn đã bị xóa, cần tải lại video hoặc xem bài trên nền tảng đã đăng."
+            description="Video có thể đã bị dọn hoặc không còn truy cập được. Tải lại video hoặc xem bài trên nền tảng đã đăng."
           />
         ) : (
           <div className="overflow-hidden rounded-xl bg-black shadow-inner">

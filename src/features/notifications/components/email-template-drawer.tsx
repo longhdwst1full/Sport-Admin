@@ -161,7 +161,7 @@ export function EmailTemplateDrawer({ template, canManage, onClose }: EmailTempl
             <Alert
               type="warning"
               showIcon
-              message="Tham số của mẫu này chưa được đồng bộ vào cơ sở dữ liệu nên chưa lưu được. Khởi động lại API để đồng bộ danh mục tham số."
+              message="Tham số của mẫu chưa đồng bộ nên chưa lưu được. Khởi động lại API để đồng bộ."
             />
           )}
           <Controller

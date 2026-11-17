@@ -129,7 +129,7 @@ export function TikTokPublicationSection({
               type="info"
               showIcon
               message="Video đã đăng không thể sửa trong hệ thống"
-              description="TikTok không cung cấp API sửa caption hoặc video đã đăng. Nếu nội dung sai, hãy xoá video trong ứng dụng TikTok rồi tạo một bài mới; thao tác Xoá tại đây chỉ ngừng theo dõi video trong hệ thống."
+              description="Không sửa được video đã đăng. Nếu sai, xoá video trong ứng dụng TikTok rồi tạo bài mới; Xoá tại đây chỉ ngừng theo dõi."
             />
           )}
 

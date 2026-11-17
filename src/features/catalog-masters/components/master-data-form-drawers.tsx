@@ -425,7 +425,7 @@ export function CategoryFormDrawer({
 
       <Form.Item
         label={fieldLabel('Cho phép đổi trả')}
-        extra="Tắt với hàng không nhận trả (đồ lót, hàng vệ sinh...). Khách và nhân viên sẽ không tạo được phiếu trả cho sản phẩm thuộc danh mục này."
+        extra="Tắt với hàng không nhận trả (đồ lót, hàng vệ sinh...); sẽ không tạo được phiếu trả cho danh mục này."
       >
         <Controller
           name="returnable"

@@ -220,7 +220,7 @@ export function StocktakeDetailDrawer({ id, onClose }: { id?: string; onClose: (
                 type="warning"
                 showIcon
                 message={`${drifted} dòng có phát sinh kho sau khi đếm`}
-                description="Số ghi sổ đã cộng bù phần phát sinh sau thời điểm đếm, nên tồn cuối vẫn đúng. Chỉ cần đếm lại nếu bạn ghi số ra giấy rồi mới nhập vào hệ thống muộn hơn."
+                description="Số ghi sổ đã cộng bù phát sinh sau thời điểm đếm. Chỉ cần đếm lại nếu bạn ghi số ra giấy rồi nhập muộn."
               />
             )}
             {stocktake.status === 'CANCELLED' && stocktake.cancelReason && (

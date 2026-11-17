@@ -171,7 +171,7 @@ function ProductWorkspaceTabContent({ tab, workspace }: { tab: ProductFormTab; w
                   type="info"
                   showIcon
                   message="Khai thành phần combo ngay sau khi tạo"
-                  description="Thành phần gắn với SKU combo thật, nên cần tạo sản phẩm trước. Tạo xong, mở sản phẩm từ danh sách để khai thành phần ở mục này."
+                  description="Tạo sản phẩm trước, sau đó mở lại để khai thành phần combo."
                 />
               </div>
             ))}

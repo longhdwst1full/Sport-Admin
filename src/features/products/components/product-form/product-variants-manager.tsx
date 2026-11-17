@@ -125,7 +125,7 @@ export function ProductVariantsManager({ product, onChanged }: ProductPanelProps
     <div className="space-y-4">
       <FormSection
         title="Biến thể bán hàng (SKU)"
-        description="SKU và barcode do hệ thống sinh, không sửa được. Sửa tên, kích thước hoặc lưu trữ từng SKU; thao tác lưu ngay."
+        description="SKU và barcode không sửa được. Thao tác lưu ngay."
         icon={<BarcodeOutlined />}
         extra={<Tag color="blue">{product.variants.length} biến thể</Tag>}
       >

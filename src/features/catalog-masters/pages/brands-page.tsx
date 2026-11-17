@@ -72,7 +72,6 @@ export function BrandsPage() {
   return (
     <MasterDataListPage<BrandDto>
       title="Thương hiệu"
-      description="Quản trị danh sách thương hiệu ủy quyền chính hãng trên hệ thống."
       entity="thương hiệu"
       permission="catalog.brand.manage"
       totalMetric={{ key: 'brands', label: 'Tổng thương hiệu', icon: <TagsOutlined />, tone: 'blue' }}

@@ -31,7 +31,7 @@ export function PaymentsPage() {
 
   return (
     <>
-      <ManagementPage eyebrow="Vận hành tài chính" title="Thanh toán" description="Đối soát chuyển khoản và ghi nhận COD theo đúng phạm vi chi nhánh."
+      <ManagementPage eyebrow="Vận hành tài chính" title="Thanh toán"
         metrics={[
           { key: 'total', label: 'Thanh toán phù hợp', value: payments.data?.total ?? 0, icon: <BankOutlined />, tone: 'blue' },
           { key: 'awaiting', label: 'Chờ đối soát trên trang', value: rows.filter((item) => item.status === 'AWAITING_CONFIRMATION').length, icon: <SafetyCertificateOutlined />, tone: 'orange' },

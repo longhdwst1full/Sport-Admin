@@ -31,7 +31,6 @@ export function ProductsPage() {
       <ManagementPage
         eyebrow="Danh mục hàng hoá"
         title="Sản phẩm"
-        description="Quản lý danh mục sản phẩm, biến thể, giá và trạng thái xuất bản."
         actions={
           <PermissionGate permission="catalog.product.manage">
             <Button

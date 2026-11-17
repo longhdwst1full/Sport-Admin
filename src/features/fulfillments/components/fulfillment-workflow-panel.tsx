@@ -326,7 +326,7 @@ export function FulfillmentWorkflowPanel({ orderId }: FulfillmentWorkflowPanelPr
             <Alert type="info" showIcon message={`Đã có vận đơn GHN ${fulfillment.trackingNo ?? ''}`.trim()} description="Bàn giao chỉ ghi nhận xuất kho, không tạo vận đơn thứ hai." />
           )}
           {action === 'ship' && automaticGhn && fulfillment.carrierShipmentStatus !== 'CREATED' && (
-            <Alert type="info" showIcon message="Tự động tạo vận đơn GHN" description="Hệ thống lấy người nhận, SĐT, địa chỉ, hàng hóa, khối lượng/kích thước và COD từ đơn đã lưu. Chỉ cần xác nhận bàn giao; mã vận đơn do GHN cấp, không nhập tay." />
+            <Alert type="info" showIcon message="Tự động tạo vận đơn GHN" description="Thông tin lấy từ đơn đã lưu; mã vận đơn do GHN cấp, không nhập tay." />
           )}
           {action === 'ship' && !automaticGhn && fulfillment.carrierShipmentStatus !== 'CREATED' && (
             <div className="grid gap-3 sm:grid-cols-2">

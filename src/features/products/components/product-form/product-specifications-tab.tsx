@@ -29,7 +29,7 @@ export function ProductSpecificationsTab({
   return (
     <FormSection
       title="Thông số kỹ thuật"
-      description="Chọn thuộc tính trong từ điển (Danh mục → Thuộc tính) rồi nhập giá trị. Thông số hiện ở trang chi tiết sản phẩm."
+      description="Chọn thuộc tính trong từ điển (Danh mục → Thuộc tính) rồi nhập giá trị."
       icon={<ProfileOutlined />}
     >
       <Controller

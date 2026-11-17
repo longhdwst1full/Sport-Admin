@@ -117,7 +117,6 @@ export function MediaLibraryPage() {
     <ManagementPage
       eyebrow="Tệp đa phương tiện"
       title="Thư viện ảnh"
-      description="Tất cả ảnh đã tải lên Cloudinary, nơi đang dùng từng ảnh và xoá ảnh không còn dùng."
       metrics={[
         { key: 'total', label: 'Kết quả phù hợp', value: total, icon: <PictureOutlined />, tone: 'blue' },
         {

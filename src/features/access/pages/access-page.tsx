@@ -77,7 +77,7 @@ export function AccessPage() {
     <ManagementPage
       eyebrow="Danh tính & truy cập"
       title="Người dùng & phân quyền"
-      description="Hệ thống có một tài khoản Admin duy nhất; Admin tạo và phân quyền BRANCH_MANAGER hoặc STAFF theo chi nhánh."
+      description="Admin tạo và phân quyền BRANCH_MANAGER hoặc STAFF theo chi nhánh."
       actions={
         canManageUsers && (
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setStaffCreationOpen(true)}>
@@ -116,7 +116,7 @@ export function AccessPage() {
           showIcon
           type="warning"
           message="Môi trường phát triển đang bỏ qua kiểm tra quyền ở cả giao diện và API"
-          description="Chỉ dùng cho môi trường phát triển cục bộ. Staging/production bắt buộc AUTH_BYPASS=false và kiểm tra quyền/phạm vi phía server."
+          description="Chỉ dùng cục bộ; staging/production bắt buộc AUTH_BYPASS=false."
         />
       )}
       {hasError && (

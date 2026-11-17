@@ -103,7 +103,7 @@ export function StocktakeCreateDrawer({
         type="info"
         showIcon
         message="Tồn hệ thống được chụp ngay khi tạo phiếu"
-        description="Trong lúc đếm, màn nhập số sẽ không hiển thị tồn hệ thống để số đếm phản ánh đúng hàng trên kệ. Chênh lệch chỉ hiện ra ở bước soát trước khi duyệt."
+        description="Tồn hệ thống bị ẩn khi đếm; chênh lệch chỉ hiện ở bước soát trước khi duyệt."
       />
       <Form layout="vertical" onFinish={() => void submit()}>
         <Form.Item

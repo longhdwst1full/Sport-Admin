@@ -81,7 +81,7 @@ export function RoleFormDrawer({
           type="error"
           showIcon
           message={`Áp dụng cho ${editing?.activeAssignmentCount} phân quyền đang hiệu lực`}
-          description="Quyền gắn với vai trò, không gắn riêng từng người: lưu ở đây đổi quyền của mọi nhân viên đang giữ vai trò này."
+          description="Lưu sẽ đổi quyền của mọi nhân viên đang giữ vai trò này."
         />
       )}
       <Alert
@@ -89,7 +89,7 @@ export function RoleFormDrawer({
         type="warning"
         showIcon
         message="Đổi quyền có hiệu lực ngay"
-        description="Người đang đăng nhập với vai trò này sẽ phải lấy lại token; phiên hiện tại mất quyền vừa gỡ ở lần gọi API kế tiếp."
+        description="Người đang đăng nhập với vai trò này mất quyền vừa gỡ ở lần gọi API kế tiếp."
       />
 
       <Form form={form} layout="vertical" onFinish={onSubmit}>

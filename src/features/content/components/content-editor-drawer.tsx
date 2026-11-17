@@ -202,7 +202,7 @@ export function ContentEditorDrawer({
           label="Nội dung"
           required
           {...fieldStatus(fieldErrors.body)}
-          extra="Ảnh trong nội dung dùng công cụ Image tích hợp của CKEditor 4; editor có vùng nhập HTML dự phòng nếu CDN không khả dụng."
+          extra="Chèn ảnh bằng công cụ Image của editor."
         >
           <RichTextEditor
             value={body}

@@ -64,7 +64,6 @@ export function CustomersPage() {
       <ManagementPage
         eyebrow="Chăm sóc khách hàng"
         title="Quản lý khách hàng"
-        description="Danh sách khách đã mua hàng, kèm số đơn, số tiền đã chi và lịch sử đặt hàng."
         filters={
           <FilterBar
             actions={

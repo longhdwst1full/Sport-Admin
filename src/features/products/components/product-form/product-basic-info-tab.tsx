@@ -71,7 +71,7 @@ export function ProductBasicInfoTab({
       {/* Định danh + phân loại gộp một khối, lưới 3 cột trên màn rộng để ô ngắn không chiếm cả dòng. */}
       <FormSection
         title="Thông tin chung"
-        description="Tên, loại và phân loại quyết định sản phẩm xuất hiện ở đâu ngoài cửa hàng. Mã sản phẩm cùng đường dẫn do hệ thống tự sinh từ tên."
+        description="Mã sản phẩm và đường dẫn do hệ thống tự sinh từ tên."
         icon={<AppstoreOutlined />}
       >
         <div className="grid gap-x-4 sm:grid-cols-2 lg:grid-cols-3">

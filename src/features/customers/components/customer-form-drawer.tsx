@@ -280,7 +280,7 @@ export function CustomerFormDrawer({
 
           <FormSection
             title="Sổ địa chỉ"
-            description="Địa chỉ lưu cùng lúc với hồ sơ. Địa chỉ bị xoá khỏi danh sách chỉ ngừng sử dụng, đơn cũ vẫn tra lại được nơi đã giao."
+            description="Địa chỉ bị xoá chỉ ngừng sử dụng; đơn cũ vẫn giữ nơi đã giao."
             icon={<EnvironmentOutlined />}
           >
           <Form.List name="addresses">

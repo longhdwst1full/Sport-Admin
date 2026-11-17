@@ -33,7 +33,7 @@ export function ProductVariantsTab({
   return (
     <FormSection
       title="Biến thể bán hàng (SKU)"
-      description="Khai báo màu sắc, kích thước hoặc phiên bản khách sẽ chọn khi mua. SKU và barcode do hệ thống tự sinh khi lưu."
+      description="SKU và barcode do hệ thống tự sinh khi lưu."
       icon={<BarcodeOutlined />}
       extra={<Tag color="blue">{variantFields.fields.length} biến thể</Tag>}
     >
@@ -42,7 +42,7 @@ export function ProductVariantsTab({
         type="info"
         showIcon
         message="Sản phẩm và toàn bộ biến thể được lưu cùng một lần"
-        description="Sản phẩm, biến thể, giá, ảnh và thông số được lưu trong một lần; một biến thể không hợp lệ thì không tạo gì cả. Sau khi tạo, thêm/sửa biến thể và lịch giá ở cùng tab này."
+        description="Mọi dữ liệu được lưu trong một lần; một biến thể không hợp lệ thì không tạo gì cả."
       />
       {productType === ProductType.BUNDLE && (
         <Alert
@@ -50,7 +50,7 @@ export function ProductVariantsTab({
           type="info"
           showIcon
           message="Combo không có tồn vật lý riêng"
-          description="Sau khi tạo, khai báo thành phần cho từng SKU combo ở mục Combo cùng tab; combo chỉ xuất bản được khi đã có thành phần."
+          description="Combo chỉ xuất bản được khi đã khai báo thành phần ở mục Combo."
         />
       )}
       <div className="space-y-4">

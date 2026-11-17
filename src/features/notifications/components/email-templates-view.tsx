@@ -29,7 +29,7 @@ export function EmailTemplatesView({ switcher }: { switcher: ReactNode }) {
     <ManagementPage
       eyebrow="Vận hành email"
       title="Thông báo email"
-      description="Tuỳ chỉnh tiêu đề và đoạn mở đầu của email gửi khách. Bảng thông tin, số tiền và nút bấm do hệ thống tự dựng."
+      description="Tuỳ chỉnh tiêu đề và đoạn mở đầu email gửi khách; phần còn lại do hệ thống dựng."
       actions={switcher}
       metrics={[
         { key: 'total', label: 'Mẫu email', value: rows.length, icon: <MailOutlined />, tone: 'blue' },
