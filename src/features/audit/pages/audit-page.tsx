@@ -159,6 +159,7 @@ export function AuditPage() {
               options={ENTITY_TYPE_OPTIONS}
             />
             <SearchInput
+              width="field"
               placeholder="Mã request"
               value={search.values.requestId}
               onChange={search.setter('requestId')}

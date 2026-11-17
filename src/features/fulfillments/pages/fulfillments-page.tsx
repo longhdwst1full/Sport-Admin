@@ -69,10 +69,9 @@ export function FulfillmentsPage() {
             actions={<RefreshButton onRefresh={fulfillments.refetch} loading={fulfillments.isFetching} />}
           >
             <SearchInput
-              className="w-full sm:!w-[360px]"
               value={search.values.search}
               onChange={search.setter('search')}
-              placeholder="Mã giao vận, mã đơn, tracking, tên, SĐT hoặc email người nhận"
+              placeholder="Mã giao vận, mã đơn, tracking, tên, SĐT"
             />
             <Select
               allowClear

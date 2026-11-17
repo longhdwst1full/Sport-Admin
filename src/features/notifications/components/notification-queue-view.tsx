@@ -104,7 +104,6 @@ export function NotificationQueueView({ switcher }: { switcher: ReactNode }) {
       filters={
         <FilterBar actions={<RefreshButton onRefresh={notifications.refetch} loading={notifications.isFetching} />}>
           <SearchInput
-            className="min-w-64 flex-1"
             value={search.values.q}
             onChange={search.setter('q')}
             placeholder="Loại sự kiện, loại hoặc ID nghiệp vụ"

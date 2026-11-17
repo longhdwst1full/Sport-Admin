@@ -53,7 +53,7 @@ export function InventoryMovementPanel() {
   return (
     <Card variant="borderless">
       <div className="mb-4 flex flex-wrap gap-3">
-        <SearchInput placeholder="Lọc theo SKU" value={sku.value} className="max-w-xs" onChange={sku.setValue} />
+        <SearchInput placeholder="Lọc theo SKU" value={sku.value} width="field" onChange={sku.setValue} />
         <Select allowClear showSearch optionFilterProp="label" placeholder="Tất cả kho" className="min-w-60" loading={warehouses.query.isPending} options={warehouses.options} value={warehouseCode} onChange={(value?: string) => filters.setFilter('warehouse', value)} />
         <Select allowClear placeholder="Loại biến động" className="min-w-44" options={movementTypeOptions} value={movementType} onChange={(value?: InventoryMovementType) => filters.setFilter('type', value)} />
       </div>

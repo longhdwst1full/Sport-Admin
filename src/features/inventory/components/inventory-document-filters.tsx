@@ -21,7 +21,6 @@ export function InventoryDocumentFilters<TStatus extends string>({
   return (
     <div className="mb-4 flex flex-wrap gap-3">
       <SearchInput
-        className="max-w-sm"
         value={filters.search.value}
         onChange={filters.search.setValue}
         placeholder={searchPlaceholder}

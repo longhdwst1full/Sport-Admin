@@ -196,7 +196,6 @@ export function BannersPage() {
         filters={(
           <FilterBar actions={<RefreshButton onRefresh={list.refetch} loading={list.isFetching} />}>
             <SearchInput
-              className="min-w-64 flex-1"
               value={search.value}
               maxLength={BANNER_LIMITS.SEARCH_MAX}
               onChange={search.setValue}

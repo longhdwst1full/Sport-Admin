@@ -134,7 +134,6 @@ export function InventoryBalancePanel({ onAdjust }: { onAdjust: (balance: Invent
           <SearchInput
             placeholder="Tìm SKU hoặc tên sản phẩm..."
             value={search.value}
-            className="w-72"
             onChange={search.setValue}
           />
           <Select

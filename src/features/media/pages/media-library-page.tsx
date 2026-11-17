@@ -131,7 +131,6 @@ export function MediaLibraryPage() {
       filters={
         <FilterBar actions={<RefreshButton onRefresh={assets.refetch} loading={assets.isFetching} />}>
           <SearchInput
-            className="min-w-64 flex-1"
             value={search.values.search}
             onChange={search.setter('search')}
             placeholder="Mã công khai, thư mục hoặc mô tả ảnh"

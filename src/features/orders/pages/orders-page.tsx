@@ -161,12 +161,14 @@ export function OrdersPage() {
             />
             <SearchInput
               icon={<UserOutlined className="text-slate-400" />}
+              width="field"
               value={search.values.name}
               placeholder="Nhập tên người nhận..."
               onChange={search.setter('name')}
             />
             <SearchInput
               icon={<PhoneOutlined className="text-slate-400" />}
+              width="field"
               value={search.values.phone}
               placeholder="Nhập số điện thoại..."
               onChange={search.setter('phone')}

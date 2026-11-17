@@ -89,7 +89,6 @@ export function MediaLibraryPickerModal({
     >
       <div className="mb-3 flex flex-wrap gap-2">
         <SearchInput
-          className="min-w-64 flex-1"
           value={search.value}
           maxLength={100}
           placeholder="Tìm theo mã công khai, thư mục hoặc mô tả ảnh"

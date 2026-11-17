@@ -53,7 +53,6 @@ export function SupportTicketsPage() {
         filters={(
           <FilterBar actions={<RefreshButton onRefresh={list.refetch} loading={list.isFetching} />}>
             <SearchInput
-              className="min-w-64 flex-1"
               value={search.value}
               onChange={search.setValue}
               placeholder="Mã phiếu, tiêu đề, tên hoặc SĐT khách"

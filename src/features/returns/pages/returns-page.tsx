@@ -65,7 +65,6 @@ export function ReturnsPage() {
             )}
           >
             <SearchInput
-              className="min-w-64 flex-1"
               value={search.value}
               onChange={search.setValue}
               placeholder="Mã phiếu, mã đơn, tên hoặc SĐT khách"

@@ -89,21 +89,21 @@ export function CustomersPage() {
           >
             <SearchInput
               icon={<UserOutlined className="text-slate-400" />}
-              className="!w-56"
+              width="field"
               value={search.values.name}
               placeholder="Nhập tên khách hàng..."
               onChange={search.setter('name')}
             />
             <SearchInput
               icon={<PhoneOutlined className="text-slate-400" />}
-              className="!w-48"
+              width="field"
               value={search.values.phone}
               placeholder="Nhập số điện thoại..."
               onChange={search.setter('phone')}
             />
             <SearchInput
               icon={<MailOutlined className="text-slate-400" />}
-              className="!w-56"
+              width="field"
               value={search.values.email}
               placeholder="Nhập địa chỉ email..."
               onChange={search.setter('email')}
