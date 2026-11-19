@@ -1,4 +1,16 @@
 /**
+ * SECURITY: ô bắt đầu bằng `= + - @` (hoặc tab/CR) bị Excel/Sheets hiểu là công thức (CSV injection, ví dụ
+ * dữ liệu nhập `=HYPERLINK(...)`). Thêm `'` đầu ô để thành chữ thuần. Số thập phân thuần (`-15`, `-15.5`)
+ * giữ nguyên; chuỗi bắt đầu bằng `+` (kể cả số điện thoại `+84…`) vẫn bị thêm `'` — đánh đổi chấp nhận được.
+ */
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+
+export function neutralizeCsvFormula(value: string): string {
+  return FORMULA_PREFIX.test(value) && !PLAIN_NUMBER.test(value) ? `'${value}` : value;
+}
+
+/**
  * Export table data to CSV with UTF-8 BOM so Vietnamese characters display properly in Excel.
  * Inspired by dragon-admin-web export utility.
  */
@@ -13,14 +25,14 @@ export function exportTableToCsv<T extends object>({
 }) {
   if (!data || data.length === 0) return;
 
-  const headerRow = columns.map((col) => `"${col.label.replace(/"/g, '""')}"`).join(',');
+  const headerRow = columns.map((col) => `"${neutralizeCsvFormula(col.label).replace(/"/g, '""')}"`).join(',');
 
   const dataRows = data.map((row) =>
     columns
       .map((col) => {
         const cell = (row as Record<string, unknown>)[col.key];
         const raw = col.format ? col.format(cell, row) : cell;
-        const val = raw === null || raw === undefined ? '' : String(raw);
+        const val = neutralizeCsvFormula(raw === null || raw === undefined ? '' : String(raw));
         return `"${val.replace(/"/g, '""')}"`;
       })
       .join(','),
