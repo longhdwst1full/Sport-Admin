@@ -1,6 +1,7 @@
 import { DeleteOutlined, StarFilled, UploadOutlined } from '@ant-design/icons';
 import { App, Button, Image, Upload } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { cloudinaryThumbnailUrl, THUMBNAIL_DPR } from '@/lib/media/cloudinary-url';
 import { uploadImage } from '@/lib/media/upload-image';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
 
@@ -28,7 +29,7 @@ export function ProductImagePicker({
   onChange: (next: PendingProductImage[]) => void;
 }) {
   const { message } = App.useApp();
-  const { uploading, customRequest } = useImageUpload(uploadImage);
+  const { uploading, pendingCount, progress, customRequest } = useImageUpload(uploadImage);
   // SECURITY: upload đi qua endpoint media yêu cầu media.asset.upload.
   const canUpload = useCan('media.asset.upload');
 
@@ -40,7 +41,7 @@ export function ProductImagePicker({
             key={image.assetId}
             className="relative overflow-hidden rounded-xl border border-slate-200"
           >
-            <Image width={92} height={92} loading="lazy" alt={`Ảnh sản phẩm ${index + 1}`} src={image.url} className="object-cover" />
+            <Image width={92} height={92} loading="lazy" alt={`Ảnh sản phẩm ${index + 1}`} src={cloudinaryThumbnailUrl(image.url, { width: 92 * THUMBNAIL_DPR })} preview={{ src: image.url }} className="object-cover" />
             {index === 0 && (
               <span className="absolute left-1 top-1 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
                 <StarFilled /> Ảnh chính
@@ -87,7 +88,7 @@ export function ProductImagePicker({
         }
       >
         <Button icon={<UploadOutlined />} loading={uploading} disabled={disabled || !canUpload}>
-          Tải ảnh lên
+          {uploading ? `Đang tải ${pendingCount} ảnh… ${progress}%` : 'Tải ảnh lên'}
         </Button>
       </Upload>
     </div>

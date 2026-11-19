@@ -48,6 +48,24 @@ export function assertWithinMaxBytes(file: File, maxBytes: number, label = 'Ản
   }
 }
 
+const FORMATS_BY_IMAGE_TYPE: Record<string, readonly string[]> = {
+  'image/jpeg': ['jpg', 'jpeg'],
+  'image/png': ['png'],
+  'image/webp': ['webp'],
+  'image/avif': ['avif'],
+};
+
+/**
+ * Chọn tệp gửi đi sau khi có chữ ký: bản đã nén (`prepared`) nếu định dạng của nó nằm trong
+ * `allowedFormats` đã ký, ngược lại quay về bản gốc. Sau đó kiểm `maxBytes` trên tệp được chọn.
+ */
+export function chooseSignedUploadFile(original: File, prepared: File, allowedFormats: readonly string[]): File {
+  if (prepared === original) return original;
+  const formats = FORMATS_BY_IMAGE_TYPE[prepared.type] ?? [];
+  const allowed = allowedFormats.map((format) => format.toLowerCase());
+  return formats.some((format) => allowed.includes(format)) ? prepared : original;
+}
+
 const ALLOWED_VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime']);
 
 /** Định dạng video `accept` của ô chọn tệp; khớp `allowedFormats` mp4/mov API cấp cho video. */
@@ -68,6 +86,7 @@ export async function uploadToCloudinary(
   file: File,
   signed: CloudinarySignedUpload,
   signal?: AbortSignal,
+  onProgress?: (fraction: number) => void,
 ): Promise<CloudinaryUploadResponse> {
   const form = new FormData();
   form.set('file', file);
@@ -80,7 +99,16 @@ export async function uploadToCloudinary(
   form.set('overwrite', String(signed.overwrite));
   form.set('unique_filename', String(signed.uniqueFilename));
 
-  const uploaded = await axios.post<CloudinaryUploadResponse>(signed.uploadUrl, form, { signal });
+  const uploaded = await axios.post<CloudinaryUploadResponse>(signed.uploadUrl, form, {
+    signal,
+    onUploadProgress: onProgress
+      ? (event) => {
+          // `total` gồm cả phần bao multipart; thiếu `total` thì ước theo kích thước tệp.
+          const total = event.total ?? file.size;
+          if (total > 0) onProgress(Math.min(event.loaded / total, 1));
+        }
+      : undefined,
+  });
   return uploaded.data;
 }
 

@@ -1,7 +1,8 @@
 import { DeleteOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
 import { App, Avatar, Button, Upload } from 'antd';
 import { useCan } from '@/core/auth/permissions';
-import { uploadImage } from '@/lib/media/upload-image';
+import { cloudinaryThumbnailUrl, THUMBNAIL_DPR } from '@/lib/media/cloudinary-url';
+import { uploadAvatarImage } from '@/lib/media/upload-image';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
 
 /**
@@ -11,6 +12,8 @@ import { useImageUpload } from '@/shared/hooks/use-image-upload';
  * lại đường dẫn có sẵn. Ở hồ sơ khách thì chỉ có một ảnh và người nhập luôn tải lên, nên ô này chỉ
  * hiện đúng ảnh tròn kèm hai nút; đường dẫn không phải thứ ai cần đọc.
  */
+const AVATAR_SIZE = 88;
+
 export function CustomerAvatarField({
   url,
   disabled,
@@ -21,15 +24,15 @@ export function CustomerAvatarField({
   onChange: (next: { url: string; assetId?: string }) => void;
 }) {
   const { message } = App.useApp();
-  const { uploading, customRequest } = useImageUpload(uploadImage);
+  const { uploading, customRequest } = useImageUpload(uploadAvatarImage);
   // SECURITY: upload đi qua endpoint media yêu cầu media.asset.upload.
   const canUpload = useCan('media.asset.upload');
 
   return (
     <div className="flex flex-col items-center gap-2">
       <Avatar
-        size={88}
-        src={url || undefined}
+        size={AVATAR_SIZE}
+        src={url ? cloudinaryThumbnailUrl(url, { width: AVATAR_SIZE * THUMBNAIL_DPR }) : undefined}
         icon={<UserOutlined />}
         className="!bg-slate-100 !text-slate-400 ring-4 ring-white shadow-sm"
       />

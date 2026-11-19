@@ -1,6 +1,7 @@
 import { UploadOutlined } from '@ant-design/icons';
 import { App, Button, Image, Input, Space, Upload } from 'antd';
 import { useCan } from '@/core/auth/permissions';
+import { cloudinaryThumbnailUrl, THUMBNAIL_DPR } from '@/lib/media/cloudinary-url';
 import { uploadImage } from '@/lib/media/upload-image';
 import { useImageUpload } from '@/shared/hooks/use-image-upload';
 import { IMAGE_FALLBACK_SRC } from '../constants/media-library.constants';
@@ -14,13 +15,21 @@ interface ImageUploadFieldProps {
 
 export function ImageUploadField({ value, onChange, disabled }: ImageUploadFieldProps) {
   const { message } = App.useApp();
-  const { uploading, customRequest } = useImageUpload(uploadImage);
+  const { uploading, progress, customRequest } = useImageUpload(uploadImage);
   // SECURITY: upload đi qua endpoint media yêu cầu media.asset.upload; nhập URL thủ công thì không.
   const canUpload = useCan('media.asset.upload');
 
   return (
     <Space.Compact block>
-      {value ? <Image fallback={IMAGE_FALLBACK_SRC} width={40} height={32} src={value} className="object-cover" /> : null}
+      {value ? <Image
+          fallback={IMAGE_FALLBACK_SRC}
+          width={40}
+          height={32}
+          loading="lazy"
+          src={cloudinaryThumbnailUrl(value, { width: 40 * THUMBNAIL_DPR })}
+          preview={{ src: value }}
+          className="object-cover"
+        /> : null}
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -42,7 +51,7 @@ export function ImageUploadField({ value, onChange, disabled }: ImageUploadField
         }
       >
         <Button icon={<UploadOutlined />} loading={uploading} disabled={disabled || !canUpload}>
-          Upload
+          {uploading && progress > 0 ? `${progress}%` : 'Upload'}
         </Button>
       </Upload>
     </Space.Compact>

@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { App, Button, Image, Upload } from 'antd';
+import { cloudinaryThumbnailUrl, THUMBNAIL_DPR } from '@/lib/media/cloudinary-url';
 import { uploadSignedImage, type UploadedSignedImage } from '@/lib/media/upload-signed-image';
 
 export const MAX_EVIDENCE_IMAGES = 5;
@@ -26,6 +27,15 @@ export function EvidenceImageUpload({ value, onChange, sign, disabled, onUploadi
   const latest = useRef(value);
   latest.current = value;
   const pending = useRef(0);
+  // Đóng modal/unmount giữa chừng: huỷ mọi lượt đang nén/chờ/tải để không tốn băng thông vô ích.
+  const controllers = useRef(new Set<AbortController>());
+  useEffect(() => {
+    const active = controllers.current;
+    return () => {
+      active.forEach((controller) => controller.abort());
+      active.clear();
+    };
+  }, []);
 
   const track = (delta: number) => {
     pending.current += delta;
@@ -37,7 +47,14 @@ export function EvidenceImageUpload({ value, onChange, sign, disabled, onUploadi
     <div className="flex flex-wrap gap-2">
       {value.map((image) => (
         <div key={image.publicId} className="relative">
-          <Image width={88} height={88} src={image.previewUrl} className="rounded-lg object-cover" />
+          <Image
+            width={88}
+            height={88}
+            loading="lazy"
+            src={cloudinaryThumbnailUrl(image.previewUrl, { width: 88 * THUMBNAIL_DPR })}
+            preview={{ src: image.previewUrl }}
+            className="rounded-lg object-cover"
+          />
           <Button
             size="small"
             danger
@@ -66,7 +83,9 @@ export function EvidenceImageUpload({ value, onChange, sign, disabled, onUploadi
               return;
             }
             track(1);
-            void uploadSignedImage(file, sign)
+            const controller = new AbortController();
+            controllers.current.add(controller);
+            void uploadSignedImage(file, sign, controller.signal)
               .then((uploaded) => {
                 const next = [...latest.current, uploaded].slice(0, MAX_EVIDENCE_IMAGES);
                 latest.current = next;
@@ -74,11 +93,15 @@ export function EvidenceImageUpload({ value, onChange, sign, disabled, onUploadi
                 onSuccess?.(uploaded);
               })
               .catch((error: unknown) => {
+                if (controller.signal.aborted) return;
                 const uploadError = error instanceof Error ? error : new Error('Tải ảnh thất bại.');
                 onError?.(uploadError);
                 void message.error(uploadError.message);
               })
-              .finally(() => track(-1));
+              .finally(() => {
+                controllers.current.delete(controller);
+                track(-1);
+              });
           }}
         >
           <button

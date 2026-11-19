@@ -14,6 +14,7 @@ import { useCan } from '@/core/auth/permissions';
 import type { ColumnsType } from 'antd/es/table';
 import { FormModal } from '@/foundation/overlay';
 import { AdminTable, col, TableActionButton } from '@/foundation/table';
+import { cloudinaryThumbnailUrl, THUMBNAIL_DPR } from '@/lib/media/cloudinary-url';
 import { uploadImage } from '@/lib/media/upload-image';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { toVariantOptions } from '../model/product-lookup-options';
@@ -56,8 +57,8 @@ export function ProductMediaPanel({ product, onChanged }: ProductPanelProps) {
   });
   // Upload ảnh rồi gắn luôn vào sản phẩm là một thao tác từ góc nhìn người dùng: chỉ báo
   // "đã upload xong" (onSuccess) sau khi cả hai bước cùng thành công.
-  const { uploading, customRequest } = useImageUpload((file) =>
-    uploadImage(file).then(async (asset) => {
+  const { uploading, customRequest } = useImageUpload((file, signal, options) =>
+    uploadImage(file, signal, options).then(async (asset) => {
       await attach.mutateAsync({
         id: product.id,
         data: {
@@ -125,7 +126,7 @@ export function ProductMediaPanel({ product, onChanged }: ProductPanelProps) {
 
   // Cột phụ thuộc phiên bản sản phẩm và các mutation của khối này nên dựng lại mỗi render, không memo.
   const mediaColumns: ColumnsType<ProductMediaDto> = [
-    { title: 'Ảnh', width: 74, render: (_, row) => <Image width={52} height={52} loading="lazy" alt={row.altText ?? product.name} className="object-cover" src={row.thumbnailUrl ?? row.secureUrl} /> },
+    { title: 'Ảnh', width: 74, render: (_, row) => <Image width={52} height={52} loading="lazy" alt={row.altText ?? product.name} className="object-cover" src={cloudinaryThumbnailUrl(row.thumbnailUrl ?? row.secureUrl, { width: 52 * THUMBNAIL_DPR })} preview={{ src: row.secureUrl }} /> },
     col.text<ProductMediaDto>('altText', 'Mô tả ảnh', { width: undefined }),
     {
       title: 'Phạm vi',
