@@ -22,6 +22,11 @@ export interface CloudinarySignedUpload {
   eagerAsync?: boolean;
   /** Kích thước mỗi phần khi tải theo phần; `null` = server không yêu cầu chia phần. */
   chunkSizeBytes?: number | null;
+  /**
+   * Incoming transformation đã ký cho ảnh (thu nhỏ ảnh quá lớn); `null`/thiếu = không ký. Khác null thì PHẢI
+   * gửi nguyên văn, nếu không Cloudinary từ chối chữ ký.
+   */
+  transformation?: string | null;
 }
 
 export type CloudinaryResourceType = 'IMAGE' | 'VIDEO';
@@ -98,6 +103,7 @@ export async function uploadToCloudinary(
   form.set('allowed_formats', signed.allowedFormats.join(','));
   form.set('overwrite', String(signed.overwrite));
   form.set('unique_filename', String(signed.uniqueFilename));
+  if (signed.transformation) form.set('transformation', signed.transformation);
 
   const uploaded = await axios.post<CloudinaryUploadResponse>(signed.uploadUrl, form, {
     signal,
