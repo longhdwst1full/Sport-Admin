@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useGetAdminRealtimeConfig } from '@/generated/api/system/system';
 import { getListAdminNotificationsQueryKey } from '@/generated/api/notifications/notifications';
 import { getGetAdminOrderLiveSummaryQueryKey, useGetAdminOrderLiveSummary } from '@/generated/api/orders/orders';
 import {
@@ -48,9 +49,17 @@ function isDocumentHidden(): boolean {
 export function useOrderLiveSummary(enabled: boolean) {
   const queryClient = useQueryClient();
   const realtimeStatus = useSyncExternalStore(onStaffAlertStatusChange, getStaffAlertStatus);
+  // CONFIG: địa chỉ + khoá công khai lấy từ tham số hệ thống (đổi không cần build lại). Chờ hỏi xong (kể cả lỗi) rồi mới
+  // nối, để không mở kết nối bằng cấu hình dự phòng rồi lại đóng ngay khi có giá trị từ API.
+  const realtimeConfig = useGetAdminRealtimeConfig({
+    query: { enabled, staleTime: 5 * 60_000, retry: false, refetchOnWindowFocus: false },
+  });
+  const configSettled = realtimeConfig.isSuccess || realtimeConfig.isError;
+  const runtimeUrl = realtimeConfig.data?.url;
+  const runtimeAnonKey = realtimeConfig.data?.anonKey;
 
   useEffect(() => {
-    if (!enabled) return undefined;
+    if (!enabled || !configSettled) return undefined;
     return subscribeStaffAlerts(() => {
       // `cancelRefetch: false`: nhiều nơi cùng nghe thì các lệnh trùng nhau gộp vào lượt đang chạy, không huỷ lẫn nhau.
       void queryClient.invalidateQueries(
@@ -63,8 +72,8 @@ export function useOrderLiveSummary(enabled: boolean) {
         { queryKey: getListAdminNotificationsQueryKey().slice(0, 1) },
         { cancelRefetch: false },
       );
-    });
-  }, [enabled, queryClient]);
+    }, { url: runtimeUrl, anonKey: runtimeAnonKey });
+  }, [enabled, configSettled, runtimeUrl, runtimeAnonKey, queryClient]);
 
   return useGetAdminOrderLiveSummary({
     query: {

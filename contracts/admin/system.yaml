@@ -46,6 +46,36 @@ paths:
         - Admin System
       x-required-permissions:
         - system.module.view
+  /api/v1/admin/system/parameters/realtime-config:
+    get:
+      operationId: getAdminRealtimeConfig
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminRealtimeConfigDto"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: ./_components.yaml#/components/schemas/ErrorResponseDto
+      security:
+        - bearer: []
+      summary: Địa chỉ + khoá công khai Supabase Realtime để Admin nhận tín hiệu đơn mới
+      tags:
+        - Admin System
+      x-required-permissions:
+        - order.view
   /api/v1/admin/system/parameters:
     get:
       operationId: listAdminSystemParameters
@@ -287,6 +317,19 @@ paths:
         - system.parameter.manage
 components:
   schemas:
+    AdminRealtimeConfigDto:
+      type: object
+      properties:
+        url:
+          type: string
+          example: https://abcd1234.supabase.co
+          description: Rỗng nếu chưa khai hoặc không phải https://*.supabase.co
+        anonKey:
+          type: string
+          description: Khoá công khai (publishable/anon); rỗng nếu chưa khai hoặc bị từ chối vì trông như khoá đặc quyền
+      required:
+        - url
+        - anonKey
     CreateSystemParameterDto:
       type: object
       properties:

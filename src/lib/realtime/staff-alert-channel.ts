@@ -43,8 +43,22 @@ let alertTrigger: ReturnType<typeof createCoalescedTrigger> | undefined;
 /** Một timer duy nhất: hết hạn thì hạ `live` → `connected` (nhịp tim ngừng = đường ống có thể đã gãy). */
 let heartbeatStaleTimer: ReturnType<typeof setTimeout> | undefined;
 let subscribed = false;
+/** Cấu hình của kết nối đang mở: để `disconnect` biết còn cấu hình hay không mà không đọc lại nguồn khác. */
+let configured = false;
 
-function readConfig(): ChannelConfig | undefined {
+/** Cấu hình từ API (tham số hệ thống SUPABASE_URL / SUPABASE_ANON_KEY); chuỗi rỗng = chưa khai. */
+export interface StaffAlertRuntimeConfig {
+  url?: string;
+  anonKey?: string;
+}
+
+/**
+ * CONFIG: tham số hệ thống do API trả (đổi từ Admin, không cần build lại) THẮNG; biến `VITE_SUPABASE_*` lúc build chỉ là
+ * dự phòng khi tham số còn trống. Cần đủ CẢ HAI giá trị, không trộn URL của nguồn này với khoá của nguồn kia.
+ */
+function readConfig(runtime?: StaffAlertRuntimeConfig): ChannelConfig | undefined {
+  const fromRuntime = { url: runtime?.url?.trim().replace(/\/+$/, ''), anonKey: runtime?.anonKey?.trim() };
+  if (fromRuntime.url && fromRuntime.anonKey) return { url: fromRuntime.url, anonKey: fromRuntime.anonKey };
   const url = import.meta.env.VITE_SUPABASE_URL?.trim().replace(/\/+$/, '');
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
   return url && anonKey ? { url, anonKey } : undefined;
@@ -77,6 +91,7 @@ function onHeartbeat(): void {
 }
 
 function connect(config: ChannelConfig): void {
+  configured = true;
   setStatus('connecting');
   alertTrigger = createCoalescedTrigger(notifyAlert, STAFF_ALERT_MIN_INTERVAL_MS);
   client = new RealtimeClient(`${config.url.replace(/^http/i, 'ws')}/realtime/v1`, {
@@ -123,17 +138,17 @@ function disconnect(): void {
   channel = undefined;
   if (activeClient && activeChannel) void activeClient.removeChannel(activeChannel);
   void activeClient?.disconnect();
-  setStatus(readConfig() ? 'disconnected' : 'unavailable');
+  setStatus(configured ? 'disconnected' : 'unavailable');
 }
 
 /**
- * Nghe tín hiệu "có việc mới cho nhân viên". Trả hàm huỷ. Thiếu `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` thì
+ * Nghe tín hiệu "có việc mới cho nhân viên". Trả hàm huỷ. Thiếu cấu hình (tham số API hoặc `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`) thì
  * không làm gì (trạng thái `unavailable`) và nơi gọi tự rơi về polling.
  *
  * Đếm tham chiếu: người nghe đầu tiên mở kết nối, người cuối cùng đóng (đăng xuất/rời layout thì ngắt WebSocket).
  */
-export function subscribeStaffAlerts(onAlert: Listener): () => void {
-  const config = readConfig();
+export function subscribeStaffAlerts(onAlert: Listener, runtimeConfig?: StaffAlertRuntimeConfig): () => void {
+  const config = readConfig(runtimeConfig);
   if (!config) return () => undefined;
   alertListeners.add(onAlert);
   if (!client) connect(config);

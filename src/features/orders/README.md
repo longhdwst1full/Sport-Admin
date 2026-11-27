@@ -1,10 +1,10 @@
 # Orders — maintenance note
 
-> **Document version:** 1.12.0
+> **Document version:** 1.13.0
 >
-> **Last updated:** 2026-11-26
+> **Last updated:** 2026-11-27
 >
-> **Change summary:** Nhịp tim Realtime (`heartbeat` từ pg_cron mỗi 5 phút): còn nhận nhịp tim thì kênh `live` và polling `live-summary` thưa xuống 10 phút; chỉ nối mà chưa có nhịp tim thì giữ 60 giây. Trước đó: Báo đơn mới tức thì qua Supabase Realtime (tín hiệu rỗng từ trigger DB, chỉ sự kiện về đơn; polling hạ còn dự phòng 60 giây khi kênh nối). Trước đó: Báo đơn mới: polling `getAdminOrderLiveSummary`, số chờ xác nhận trên menu, `OrderLiveWatcher` (toast/âm báo/thông báo hệ điều hành). Trước đó: `PosOrderDrawer` nạp lười (`lazy` + `Suspense`, chỉ mount sau lần bấm "Tạo đơn" đầu) nên module POS không nằm trong chunk `/orders`. Trước đó: Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm.
+> **Change summary:** Cấu hình Supabase Realtime đọc từ tham số hệ thống qua `getAdminRealtimeConfig` (biến `VITE_SUPABASE_*` chỉ còn là dự phòng). Trước đó: Nhịp tim Realtime (`heartbeat` từ pg_cron mỗi 5 phút): còn nhận nhịp tim thì kênh `live` và polling `live-summary` thưa xuống 10 phút; chỉ nối mà chưa có nhịp tim thì giữ 60 giây. Trước đó: Báo đơn mới tức thì qua Supabase Realtime (tín hiệu rỗng từ trigger DB, chỉ sự kiện về đơn; polling hạ còn dự phòng 60 giây khi kênh nối). Trước đó: Báo đơn mới: polling `getAdminOrderLiveSummary`, số chờ xác nhận trên menu, `OrderLiveWatcher` (toast/âm báo/thông báo hệ điều hành). Trước đó: `PosOrderDrawer` nạp lười (`lazy` + `Suspense`, chỉ mount sau lần bấm "Tạo đơn" đầu) nên module POS không nằm trong chunk `/orders`. Trước đó: Dòng đơn có nhãn "Giá flash sale" (`OrderItemDto.flashSale`) ở chi tiết đơn, hoá đơn in, biên lai POS — phân biệt dòng flash và dòng giá thường cùng sản phẩm.
 
 ## Phạm vi
 
@@ -38,7 +38,7 @@ Feature hiển thị aggregate `orders`, snapshot người nhận/sản phẩm/t
   đầu, tối đa 1 lần/5 giây — kênh công khai nên tín hiệu giả chỉ gây một refetch bị chặn tần suất. Tín hiệu không mang dữ
   liệu; số liệu thật vẫn lấy qua API có xác thực, theo chi nhánh.
 - **Cố ý không** báo phiếu hỗ trợ và job đồng bộ (Facebook/TikTok, thẻ job health vẫn polling 60 giây riêng).
-- Cấu hình: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (công khai, dùng anon key, KHÔNG dùng service_role) đặt ở Vercel; thiếu một
+- Cấu hình (ưu tiên từ trên xuống): tham số hệ thống `SUPABASE_URL` + `SUPABASE_ANON_KEY` do API trả qua `getAdminRealtimeConfig` (đổi ở Admin, không cần build lại; API bỏ URL không phải `https://*.supabase.co` và khoá dạng service_role), rồi mới tới biến build `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (công khai, dùng anon key, KHÔNG dùng service_role) đặt ở Vercel. Hook chờ hỏi cấu hình xong (kể cả lỗi) rồi mới nối. Cần đủ cả cặp từ cùng một nguồn; thiếu một
   trong hai thì tắt Realtime. CSP `connect-src` đã cho `https://*.supabase.co wss://*.supabase.co`. Cài trigger bên API:
   `yarn trigger:realtime-ping:set` (xem README Notification).
 - **Nhịp tim (`heartbeat`):** pg_cron của DB phát sự kiện `heartbeat` (rỗng) lên CÙNG kênh mỗi 5 phút, chỉ khi trigger báo đơn

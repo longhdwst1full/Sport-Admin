@@ -91,6 +91,39 @@ describe('staff alert channel', () => {
     expect(channel.getStaffAlertStatus()).toBe('connecting');
   });
 
+  describe('cấu hình từ tham số hệ thống (API)', () => {
+    it('tham số API thắng biến VITE_* lúc build', async () => {
+      const channel = await load();
+      channel.subscribeStaffAlerts(vi.fn(), { url: 'https://param.supabase.co/', anonKey: 'param-key' });
+      expect(fake.state.url).toBe('wss://param.supabase.co/realtime/v1');
+      expect(fake.state.options).toEqual({ params: { apikey: 'param-key' } });
+    });
+
+    it('không có biến VITE_* vẫn nối được nhờ tham số API', async () => {
+      vi.stubEnv('VITE_SUPABASE_URL', '');
+      vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+      const channel = await load();
+      channel.subscribeStaffAlerts(vi.fn(), { url: 'https://param.supabase.co', anonKey: 'param-key' });
+      expect(fake.state.instances).toBe(1);
+    });
+
+    it('tham số API thiếu một nửa thì dùng nguyên cặp VITE_*, không trộn hai nguồn', async () => {
+      const channel = await load();
+      channel.subscribeStaffAlerts(vi.fn(), { url: 'https://param.supabase.co', anonKey: '' });
+      expect(fake.state.url).toBe('wss://abc.supabase.co/realtime/v1');
+      expect(fake.state.options).toEqual({ params: { apikey: 'anon-key' } });
+    });
+
+    it('API chưa khai và không có VITE_* → không nối, trạng thái unavailable (rơi về polling)', async () => {
+      vi.stubEnv('VITE_SUPABASE_URL', '');
+      vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+      const channel = await load();
+      channel.subscribeStaffAlerts(vi.fn(), { url: '', anonKey: '' });
+      expect(fake.state.instances).toBe(0);
+      expect(channel.getStaffAlertStatus()).toBe('unavailable');
+    });
+  });
+
   it('shares one connection between listeners and closes it only after the last one leaves', async () => {
     const channel = await load();
     const first = channel.subscribeStaffAlerts(vi.fn());
