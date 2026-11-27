@@ -86,7 +86,6 @@ export function RichTextEditorImplementation({
     () => ({
       skin: 'moono-lisa',
       height: `${height ?? (variant === 'plain' ? 220 : 320)}px`,
-      ...(variant === 'plain' ? PLAIN_TEXT_CONFIG : {}),
       versionCheck: false,
       removePlugins: ['ExportPdf'],
       entities: false,
@@ -97,6 +96,7 @@ export function RichTextEditorImplementation({
       fillEmptyBlocks: false,
       pasteFilter: null,
       editorplaceholder: placeholder,
+      ...(variant === 'plain' ? PLAIN_TEXT_CONFIG : {}),
       ...(variant === 'email' ? EMAIL_CONFIG : {}),
       font_names:
         'Arial/Arial, Helvetica, sans-serif;' +

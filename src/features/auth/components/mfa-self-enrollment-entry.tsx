@@ -22,6 +22,7 @@ export function MfaSelfEnrollmentEntry() {
           size="small"
           icon={<SafetyCertificateOutlined />}
           loading={starting}
+          aria-label={data.enforced ? 'Bắt buộc bật xác thực 2 lớp' : 'Bật xác thực 2 lớp'}
           onClick={() => void startSelfEnrollment()}
           className="!text-amber-600 hover:!bg-slate-200/70"
         >

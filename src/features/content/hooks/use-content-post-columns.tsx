@@ -240,7 +240,7 @@ export function useContentPostColumns(handlers: ContentPostColumnHandlers): Colu
             </>
           );
         },
-        { title: '', width: 200, fixed: undefined },
+        { title: '', width: 200, fixed: 'right' },
       ),
     ],
     [

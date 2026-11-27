@@ -155,7 +155,7 @@ export function MasterDataListPage<T extends MasterDataRow>({
               </Popconfirm>
             </>
           ) : null,
-        { title: '', width: 130, fixed: undefined },
+        { title: '', width: 130, fixed: 'right' },
       ),
     ],
     [canManage, columns, deleteConfirm, deletingId, entity, onDelete, onToggleStatus, openDrawer, toggleDescription],

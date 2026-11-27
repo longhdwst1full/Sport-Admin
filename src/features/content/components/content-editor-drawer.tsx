@@ -150,6 +150,19 @@ export function ContentEditorDrawer({
     });
   };
 
+  const initial = loadedSource && loadedSource !== 'new' ? loadedSource : undefined;
+  const isDirty = () => {
+    if (!loadedSource) return false;
+    return (
+      title !== (initial?.title ?? '') ||
+      postType !== (initial?.postType ?? ContentPostType.NEWS) ||
+      excerpt !== (initial?.excerpt ?? '') ||
+      coverUrl !== (initial?.coverUrl ?? '') ||
+      relatedProducts !== (initial?.relatedProductSlugs ?? []).join(', ') ||
+      body !== (initial?.body ?? '')
+    );
+  };
+
   return (
     <FormDrawer
       title={editing ? `Sửa bài viết ${editing.slug}` : 'Soạn bài viết'}
@@ -159,7 +172,8 @@ export function ContentEditorDrawer({
       onSubmit={submit}
       submitting={savePost.isPending}
       submitDisabled={Boolean(editing) && !editingFull}
-      submitText="Tạo và xuất bản"
+      isDirty={isDirty}
+      submitText={editing ? 'Lưu thay đổi' : 'Tạo và xuất bản'}
     >
       {editing && !editingFull ? (
         <DetailSkeleton />

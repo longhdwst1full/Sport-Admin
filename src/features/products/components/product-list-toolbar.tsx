@@ -38,7 +38,7 @@ export function ProductListToolbar({
 }) {
   return (
     <FilterBar actions={<RefreshButton onRefresh={onRefresh} loading={refreshing} />}>
-      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <SearchInput value={name} placeholder="Nhập tên sản phẩm..." className="!w-full" onChange={onNameChange} />
         <SearchInput
           value={sku}

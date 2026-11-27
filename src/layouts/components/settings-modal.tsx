@@ -52,7 +52,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       {/* ── Modal Header ─────────────────────────────────────── */}
       <div className="border-b border-slate-100 bg-white px-6 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/20">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#151d2f] text-amber-400 shadow-sm">
             <SettingOutlined className="text-lg" />
           </div>
           <div>
@@ -132,7 +132,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                           >
                             {/* Active check indicator */}
                             {isSelected && (
-                              <span className="absolute top-2 right-2 flex size-4 items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold shadow-xs">
+                              <span className="absolute top-2 right-2 flex size-4 items-center justify-center rounded-full bg-amber-500 text-slate-900 text-[10px] font-bold shadow-xs">
                                 ✓
                               </span>
                             )}
@@ -171,7 +171,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                             </span>
                             <span
                               className={`text-[11px] mt-0.5 transition-colors ${
-                                isSelected ? 'text-amber-700/90 font-medium' : 'text-slate-400'
+                                isSelected ? 'text-amber-800 font-medium' : 'text-slate-600'
                               }`}
                             >
                               {opt.desc}
@@ -192,17 +192,17 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               children: (
                 <div className="space-y-4">
                   <Card size="small" className="!rounded-xl !border-slate-200 !shadow-xs">
-                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">
                       Hạ tầng & Kết nối
                     </div>
                     <Descriptions column={1} size="small" className="dctd-profile-descriptions">
-                      <Descriptions.Item label={<span className="text-slate-500 text-xs">Ứng dụng</span>}>
+                      <Descriptions.Item label={<span className="text-slate-600 text-xs">Ứng dụng</span>}>
                         <span className="font-semibold text-slate-900">Bảo An Sport Admin Portal</span>
                       </Descriptions.Item>
-                      <Descriptions.Item label={<span className="text-slate-500 text-xs">Môi trường</span>}>
+                      <Descriptions.Item label={<span className="text-slate-600 text-xs">Môi trường</span>}>
                         <span className="font-mono text-xs text-slate-700">{import.meta.env.MODE}</span>
                       </Descriptions.Item>
-                      <Descriptions.Item label={<span className="text-slate-500 text-xs">Backend API</span>}>
+                      <Descriptions.Item label={<span className="text-slate-600 text-xs">Backend API</span>}>
                         {/* Đọc từ cấu hình build thay vì hard-code, để bản Preview/dev không hiển thị URL production. */}
                         <span className="font-mono text-xs text-slate-700">{API_URL}</span>
                       </Descriptions.Item>
@@ -222,11 +222,11 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           size="small"
           icon={<ReloadOutlined />}
           onClick={handleReset}
-          className="!text-slate-400 hover:!text-slate-700"
+          className="!text-slate-600 hover:!text-slate-900"
         >
           Khôi phục mặc định
         </Button>
-        <Button type="primary" onClick={onClose} className="!rounded-xl !bg-emerald-600 hover:!bg-emerald-500 !px-5 font-semibold">
+        <Button type="primary" onClick={onClose} className="!px-5 font-semibold">
           Hoàn tất
         </Button>
       </div>

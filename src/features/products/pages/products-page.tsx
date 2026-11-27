@@ -2,6 +2,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useState } from 'react';
 import { PermissionGate } from '@/core/auth/permissions';
+import { PageSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { ManagementPage } from '@/foundation/management';
 import { ProductListTable } from '../components/product-list-table';
@@ -69,30 +70,33 @@ export function ProductsPage() {
           />
         }
       >
-        {list.query.isError && (
+        {list.query.isPending && !list.query.data ? (
+          <PageSkeleton />
+        ) : list.query.isError ? (
           <QueryErrorAlert
             error={list.query.error}
             message="Không tải được danh sách sản phẩm"
             retry={() => void list.query.refetch()}
           />
+        ) : (
+          <ProductListTable
+            rows={list.rows}
+            loading={list.query.isFetching}
+            page={list.query.data?.meta.page ?? list.page}
+            pageSize={list.query.data?.meta.limit ?? list.pageSize}
+            total={total}
+            canManage={actions.canManage}
+            canPublish={actions.canPublish}
+            visibilityBusyId={actions.visibilityBusyId}
+            archiveBusyId={actions.archiveBusyId}
+            onPageChange={list.onPageChange}
+            onOpen={openWorkspace}
+            onToggleVisibility={actions.toggleVisibility}
+            onArchive={actions.confirmArchive}
+            onPublish={actions.confirmPublish}
+            publishBusyId={actions.publishBusyId}
+          />
         )}
-        <ProductListTable
-          rows={list.rows}
-          loading={list.query.isPending}
-          page={list.query.data?.meta.page ?? list.page}
-          pageSize={list.query.data?.meta.limit ?? list.pageSize}
-          total={total}
-          canManage={actions.canManage}
-          canPublish={actions.canPublish}
-          visibilityBusyId={actions.visibilityBusyId}
-          archiveBusyId={actions.archiveBusyId}
-          onPageChange={list.onPageChange}
-          onOpen={openWorkspace}
-          onToggleVisibility={actions.toggleVisibility}
-          onArchive={actions.confirmArchive}
-          onPublish={actions.confirmPublish}
-          publishBusyId={actions.publishBusyId}
-        />
       </ManagementPage>
 
       <ProductWorkspaceDrawer

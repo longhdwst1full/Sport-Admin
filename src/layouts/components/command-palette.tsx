@@ -91,7 +91,12 @@ export function CommandPalette() {
       />
 
       {/* Palette */}
-      <div className="relative w-full max-w-lg animate-scale-in rounded-2xl border border-slate-200 bg-white shadow-elevated">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tìm nhanh chức năng"
+        className="relative w-full max-w-lg animate-scale-in rounded-2xl border border-slate-200 bg-white shadow-elevated"
+      >
         {/* Search input */}
         <div className="flex items-center gap-3 border-b border-slate-100 px-4">
           <SearchOutlined className="text-slate-400" />

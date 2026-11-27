@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Avatar, Badge, Button, Dropdown, Layout, Menu, Tag, Tooltip, type MenuProps, Spin } from 'antd';
+import { Avatar, Badge, Button, Dropdown, Layout, Menu, Tag, Tooltip, type MenuProps } from 'antd';
 import {
   AppstoreOutlined,
   BankOutlined,
@@ -31,6 +31,7 @@ import { CopilotLauncher, CopilotPageContextProvider } from '@/features/assistan
 import { MfaSelfEnrollmentEntry } from '@/features/auth';
 import { OrderLiveWatcher, useOrderLiveSummary } from '@/features/orders';
 import { BrandLogo } from '@/foundation/brand/brand-logo';
+import { PageSkeleton } from '@/foundation/feedback/page-skeleton';
 import { PageContainer } from '@/foundation/layout/page-container';
 import { NavigationTabs } from '@/layouts/components/navigation-tabs';
 import { CommandPalette } from '@/layouts/components/command-palette';
@@ -425,7 +426,7 @@ export function AdminLayout() {
               <div className="dctd-page-enter flex min-h-0 flex-1 flex-col" key={location.pathname}>
                 {/* Lỗi/tải lười của một trang chỉ ảnh hưởng vùng nội dung, shell (menu, header) vẫn dùng được. */}
                 <PageErrorBoundary resetKey={location.pathname}>
-                  <Suspense fallback={<div className="grid flex-1 place-items-center py-16"><Spin /></div>}>
+                  <Suspense fallback={<PageSkeleton />}>
                     <Outlet />
                   </Suspense>
                 </PageErrorBoundary>

@@ -187,7 +187,7 @@ export function ReviewsPage() {
       ...REVIEW_TABLE_COLUMNS,
       col.actions<ProductReviewDto>(
         (row) => <TableActionButton label="Xem chi tiết đánh giá" icon={<EyeOutlined />} onClick={() => setDetail(row)} />,
-        { key: 'detail', title: '', width: 72, fixed: undefined },
+        { key: 'detail', title: '', width: 72, fixed: 'right' },
       ),
     ],
     [],

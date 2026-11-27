@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { EnvironmentOutlined, PlusOutlined as AddIcon, StopOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Form, Input, Space, Switch } from 'antd';
+import { Alert, App, Button, Form, Input, Popconfirm, Space, Switch } from 'antd';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { FormSection } from '@/foundation/layout/form-section';
@@ -265,12 +265,21 @@ export function CustomerFormDrawer({
                 className="!mb-0"
               >
                 <Space>
-                  <Switch
-                    checked={blocked}
-                    loading={statusPending}
+                  <Popconfirm
+                    title={blocked ? 'Mở khoá hồ sơ khách này?' : 'Chặn hồ sơ khách này?'}
+                    description={blocked ? 'Khách có thể đặt hàng trở lại.' : 'Khách sẽ không thể đặt đơn mới; lịch sử mua vẫn giữ nguyên.'}
+                    okText={blocked ? 'Mở lại' : 'Chặn hồ sơ'}
+                    okButtonProps={{ danger: !blocked }}
+                    cancelText="Huỷ"
                     disabled={!current || statusPending}
-                    onChange={toggleBlocked}
-                  />
+                    onConfirm={() => toggleBlocked(!blocked)}
+                  >
+                    <Switch
+                      checked={blocked}
+                      loading={statusPending}
+                      disabled={!current || statusPending}
+                    />
+                  </Popconfirm>
                   <StatusTag status={blocked ? 'BLOCKED' : 'ACTIVE'} presentations={customerBlockPresentation} />
                 </Space>
               </Form.Item>

@@ -8,6 +8,7 @@ import { RefreshButton } from '@/foundation/table';
 import { useGetAdminSocialPost } from '@/generated/api/content/content';
 import { AnyContentPostType, FacebookPublicationStatus, SocialMediaDtoKind } from '@/generated/api/content/content.schemas';
 import { formatDateTime } from '@/lib/format/datetime';
+import { htmlToPlainText } from '@/shared/utils/plain-text-html';
 import {
   fbOriginLabels,
   fbPublishTypeLabels,
@@ -280,7 +281,7 @@ export function SocialPostDetailDrawer({ postId, onClose }: { postId: string; on
 
           <Typography.Title level={5}>Nội dung</Typography.Title>
           <Typography.Paragraph className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm">
-            {post.body || <span className="text-slate-400">(trống)</span>}
+            {htmlToPlainText(post.body) || <span className="text-slate-500">(trống)</span>}
           </Typography.Paragraph>
           <Typography.Paragraph type="secondary" className="text-xs">
             Cập nhật lần cuối {formatDateTime(post.updatedAt)}

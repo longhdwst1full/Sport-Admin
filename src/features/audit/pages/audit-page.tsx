@@ -131,7 +131,7 @@ export function AuditPage() {
       ...AUDIT_COLUMNS,
       col.actions<AuditLogDto>(
         (row) => <TableActionButton label="Xem chi tiết" icon={<EyeOutlined />} onClick={() => setSelected(row)} />,
-        { title: '', width: 80, fixed: undefined },
+        { title: '', width: 80, fixed: 'right' },
       ),
     ],
     [],

@@ -109,7 +109,7 @@ export function LoginMfaStep({ challenge, onAuthenticated, onRestart }: LoginMfa
         loading={submitting}
         disabled={!MFA_CODE_PATTERN.test(code)}
         onClick={() => void submit(code)}
-        className="!h-11 !rounded-xl !bg-gradient-to-r !from-emerald-600 !to-teal-600 !text-sm !font-semibold !shadow-md !shadow-emerald-600/20 hover:!from-emerald-500 hover:!to-teal-500 active:scale-[0.99] transition-all"
+        className="!h-11 !font-semibold"
       >
         {submitting ? 'Đang xác thực...' : enrolling ? 'Kích hoạt & đăng nhập' : 'Xác nhận mã'}
       </Button>

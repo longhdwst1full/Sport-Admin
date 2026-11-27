@@ -1,7 +1,7 @@
 import { Alert, Divider, Drawer, Form, Tabs } from 'antd';
 import { DetailSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
-import { DRAWER_WIDTH } from '@/foundation/overlay';
+import { DRAWER_WIDTH, useConfirmDiscard } from '@/foundation/overlay';
 import { ProductType } from '@/generated/api/catalog/catalog.schemas';
 import { parseEnum } from '@/shared/utils/parse-enum';
 import { useProductWorkspace, type ProductWorkspace } from '../hooks/use-product-workspace';
@@ -45,6 +45,10 @@ export function ProductWorkspaceDrawer({
 }) {
   const workspace = useProductWorkspace({ open, slug, onCreated: onCreated ?? onClose });
   const { product, isEdit, detail, mutationPending } = workspace;
+  const requestClose = useConfirmDiscard(
+    () => workspace.form.formState.isDirty && !mutationPending,
+    () => { if (!mutationPending) onClose(); },
+  );
 
   return (
     <Drawer
@@ -55,7 +59,7 @@ export function ProductWorkspaceDrawer({
       styles={{ body: { background: 'var(--color-surface-sunken)', padding: 16 } }}
       push={false}
       open={open}
-      onClose={() => { if (!mutationPending) onClose(); }}
+      onClose={requestClose}
       closable={!mutationPending}
       maskClosable={!mutationPending}
       keyboard={!mutationPending}

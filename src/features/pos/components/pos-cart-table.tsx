@@ -23,6 +23,7 @@ export function PosCartTable({
       {
         title: 'Sản phẩm',
         dataIndex: 'name',
+        width: 280,
         render: (_value, line) => (
           <div className="flex items-start gap-3">
             <PosItemThumb name={line.name} imageUrl={line.imageUrl} size={48} />

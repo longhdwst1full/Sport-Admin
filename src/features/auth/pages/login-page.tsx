@@ -126,10 +126,10 @@ export function LoginPage() {
         aria-hidden
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        {/* Soft radial glow from the top */}
-        <div className="absolute left-1/2 -top-[300px] -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-gradient-to-b from-emerald-200/50 via-teal-100/30 to-transparent blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-slate-200/40 blur-2xl" />
-        <div className="absolute -bottom-40 -right-40 h-[400px] w-[400px] rounded-full bg-emerald-100/30 blur-2xl" />
+        {/* Soft radial glow from the top (Navy + Amber ERP palette) */}
+        <div className="absolute left-1/2 -top-[300px] -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-gradient-to-b from-amber-200/40 via-amber-100/20 to-transparent blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-slate-200/50 blur-2xl" />
+        <div className="absolute -bottom-40 -right-40 h-[400px] w-[400px] rounded-full bg-amber-100/35 blur-2xl" />
 
         {/* Subtle grid pattern */}
         <div
@@ -149,8 +149,8 @@ export function LoginPage() {
             <BrandLogo className="!max-w-[170px]" />
           </div>
 
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-3 py-1 text-xs font-medium text-emerald-800 backdrop-blur-xs">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-[#151d2f] px-3 py-1 text-xs font-medium text-amber-300 shadow-xs">
+            <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
             <span>Cổng Quản Trị Hệ Thống</span>
           </div>
         </div>
@@ -158,19 +158,19 @@ export function LoginPage() {
         {/* Card */}
         <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-7 shadow-elevated backdrop-blur-xl sm:p-9">
           {/* Subtle top primary line */}
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-[#151d2f]" />
 
           {/* Form Header */}
           <div className="mb-6 text-center">
             <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               {challenge ? 'Xác thực 2 lớp' : 'Đăng nhập'}
             </h1>
-            <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">
+            <p className="mt-1.5 text-xs text-slate-600 sm:text-sm text-balance">
               {challenge?.kind === 'MFA_ENROLLMENT_REQUIRED'
                 ? 'Thiết lập Google Authenticator cho tài khoản của bạn'
                 : challenge
                   ? 'Nhập mã từ ứng dụng Google Authenticator'
-                  : 'Nhập thông tin xác thực để truy cập bảng điều khiển'}
+                  : 'Đăng nhập để truy cập hệ thống quản trị'}
             </p>
           </div>
 
@@ -205,10 +205,9 @@ export function LoginPage() {
                   <Input
                     {...field}
                     size="large"
-                    prefix={<UserOutlined className="mr-1 text-slate-400" />}
+                    prefix={<UserOutlined className="mr-1 text-slate-500" />}
                     placeholder="email@baoansport.vn hoặc SĐT"
                     autoComplete="username"
-                    className="!rounded-xl !border-slate-200 hover:!border-emerald-500 focus:!border-emerald-600 !py-2.5 !text-sm"
                   />
                 )}
               />
@@ -232,10 +231,9 @@ export function LoginPage() {
                   <Input.Password
                     {...field}
                     size="large"
-                    prefix={<LockOutlined className="mr-1 text-slate-400" />}
+                    prefix={<LockOutlined className="mr-1 text-slate-500" />}
                     placeholder="••••••••"
                     autoComplete="current-password"
-                    className="!rounded-xl !border-slate-200 hover:!border-emerald-500 focus:!border-emerald-600 !py-2.5 !text-sm"
                   />
                 )}
               />
@@ -250,7 +248,6 @@ export function LoginPage() {
                   // họ không muốn máy này nhớ mình nữa.
                   if (!event.target.checked) forgetIdentifier();
                 }}
-                className="!text-sm !text-slate-600"
               >
                 Ghi nhớ đăng nhập
               </Checkbox>
@@ -260,7 +257,7 @@ export function LoginPage() {
                 tài khoản ở màn Người dùng & quyền.
               */}
               <Tooltip title="Liên hệ quản trị viên để được cấp lại mật khẩu tại màn Người dùng & quyền.">
-                <span className="cursor-help text-sm font-medium text-slate-400 underline decoration-dotted">
+                <span className="cursor-help text-sm font-medium text-slate-600 underline decoration-dotted">
                   Quên mật khẩu?
                 </span>
               </Tooltip>
@@ -272,7 +269,7 @@ export function LoginPage() {
               type="primary"
               htmlType="submit"
               loading={login.isPending || preparingChallenge}
-              className="!h-11 !rounded-xl !bg-gradient-to-r !from-emerald-600 !to-teal-600 !text-sm !font-semibold !shadow-md !shadow-emerald-600/20 hover:!from-emerald-500 hover:!to-teal-500 active:scale-[0.99] transition-all"
+              className="!h-11 !font-semibold"
             >
               {login.isPending || preparingChallenge ? 'Đang xác thực...' : 'Đăng nhập vào hệ thống'}
             </Button>
@@ -281,7 +278,7 @@ export function LoginPage() {
         </div>
 
         {/* Footer info */}
-        <div className="mt-6 text-center text-xs text-slate-400">
+        <div className="mt-6 text-center text-xs text-slate-600">
           © {new Date().getFullYear()} Bảo An Sport · Quản trị phân quyền nội bộ
         </div>
       </div>

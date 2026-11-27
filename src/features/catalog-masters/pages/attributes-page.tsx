@@ -85,7 +85,7 @@ export function AttributesPage() {
               </Popconfirm>
             </>
           ) : null,
-        { title: '', width: 100, fixed: undefined },
+        { title: '', width: 100, fixed: 'right' },
       ),
     ],
     [canManage, toggleStatus],

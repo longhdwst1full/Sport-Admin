@@ -13,6 +13,7 @@ import {
 import { Button, Tabs } from 'antd';
 import { useListAdminOrders } from '@/generated/api/orders/orders';
 import { OrderStatusGroup } from '@/generated/api/orders/orders.schemas';
+import { PageSkeleton } from '@/foundation/feedback/page-skeleton';
 import { QueryErrorAlert } from '@/foundation/feedback/query-error-alert';
 import { SearchInput } from '@/foundation/inputs/search-input';
 import { ManagementPage } from '@/foundation/management';
@@ -183,27 +184,29 @@ export function OrdersPage() {
           className="mb-3"
         />
 
-        {orders.isError && (
+        {orders.isPending && !orders.data ? (
+          <PageSkeleton />
+        ) : orders.isError ? (
           <QueryErrorAlert
             message="Không tải được danh sách đơn hàng"
             error={orders.error}
             retry={() => void orders.refetch()}
           />
+        ) : (
+          <OrderTable
+            rows={rows}
+            loading={orders.isFetching}
+            page={page}
+            pageSize={pageSize}
+            total={orders.data?.total ?? 0}
+            colVisibility={columnsState.visibility}
+            onPageChange={(nextPage, nextPageSize) => {
+              url.set('page', nextPageSize === pageSize && nextPage > 1 ? nextPage : undefined);
+              setPageSize(nextPageSize);
+            }}
+            onOpen={setSelectedId}
+          />
         )}
-
-        <OrderTable
-          rows={rows}
-          loading={orders.isLoading || orders.isFetching}
-          page={page}
-          pageSize={pageSize}
-          total={orders.data?.total ?? 0}
-          colVisibility={columnsState.visibility}
-          onPageChange={(nextPage, nextPageSize) => {
-            url.set('page', nextPageSize === pageSize && nextPage > 1 ? nextPage : undefined);
-            setPageSize(nextPageSize);
-          }}
-          onOpen={setSelectedId}
-        />
       </ManagementPage>
 
       <ColumnSettingsModal {...columnsState.modalProps} columns={ORDER_COLUMN_ITEMS} />

@@ -164,7 +164,7 @@ export function BannersPage() {
               ))}
             </>
           ) : null,
-        { title: '', width: 150, fixed: undefined },
+        { title: '', width: 150, fixed: 'right' },
       ),
     ],
     [canManage],
